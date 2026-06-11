@@ -5,8 +5,10 @@ import { Card, CardBody } from "@/components/ui/card";
 import { Field, Input, Select } from "@/components/ui/field";
 import { Notice } from "@/components/ui/notice";
 import { Badge, verificationBadgeTone } from "@/components/ui/badge";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { VERIFICATION_LABELS, TITLE_LABELS } from "@/lib/types";
 import { updateProfile } from "./actions";
+import { uploadAvatar, uploadLogo } from "./upload-actions";
 
 export const metadata: Metadata = { title: "Profile" };
 
@@ -32,7 +34,44 @@ export default async function ProfilePage({
       {message === "saved" ? (
         <Notice tone="success">Your changes have been saved.</Notice>
       ) : null}
+      {message === "avatar-updated" ? (
+        <Notice tone="success">Your photo has been updated.</Notice>
+      ) : null}
+      {message === "logo-updated" ? (
+        <Notice tone="success">Your logo has been updated.</Notice>
+      ) : null}
       {error ? <Notice tone="error">{error}</Notice> : null}
+
+      {/* Photo & logo uploads (public buckets) */}
+      <Card>
+        <CardBody>
+          <div className="flex items-center justify-between">
+            <h2 className="font-semibold text-ink">Photo &amp; logo</h2>
+            <Badge tone="neutral">Public</Badge>
+          </div>
+          <p className="mt-1 text-sm text-slate-500">
+            Used on your account and, where enabled, your public realtor card.
+            PNG, JPG, or WebP up to 5&nbsp;MB.
+          </p>
+          <div className="mt-4 grid gap-6 sm:grid-cols-2">
+            <UploadTile
+              title="Profile photo"
+              currentUrl={profile.avatar_url}
+              action={uploadAvatar}
+              accept="image/png,image/jpeg,image/webp"
+              fallback="No photo yet"
+              rounded
+            />
+            <UploadTile
+              title="Brokerage logo"
+              currentUrl={profile.logo_url}
+              action={uploadLogo}
+              accept="image/png,image/jpeg,image/webp,image/svg+xml"
+              fallback="No logo yet"
+            />
+          </div>
+        </CardBody>
+      </Card>
 
       <Card>
         <CardBody>
@@ -98,6 +137,58 @@ export default async function ProfilePage({
           </form>
         </CardBody>
       </Card>
+    </div>
+  );
+}
+
+function UploadTile({
+  title,
+  currentUrl,
+  action,
+  accept,
+  fallback,
+  rounded,
+}: {
+  title: string;
+  currentUrl: string | null;
+  action: (formData: FormData) => void;
+  accept: string;
+  fallback: string;
+  rounded?: boolean;
+}) {
+  return (
+    <div className="flex gap-4">
+      <div
+        className={`flex size-20 shrink-0 items-center justify-center overflow-hidden border border-slate-200 bg-slate-50 ${
+          rounded ? "rounded-full" : "rounded-lg"
+        }`}
+      >
+        {currentUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={currentUrl}
+            alt={title}
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <span className="px-2 text-center text-[10px] text-slate-400">
+            {fallback}
+          </span>
+        )}
+      </div>
+      <form action={action} className="flex-1 space-y-2">
+        <p className="text-sm font-medium text-slate-700">{title}</p>
+        <input
+          type="file"
+          name="file"
+          accept={accept}
+          required
+          className="block w-full text-sm text-slate-600 file:mr-3 file:rounded-md file:border-0 file:bg-slate-100 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-slate-700 hover:file:bg-slate-200"
+        />
+        <SubmitButton size="sm" variant="secondary" pendingLabel="Uploading…">
+          {currentUrl ? "Replace" : "Upload"}
+        </SubmitButton>
+      </form>
     </div>
   );
 }

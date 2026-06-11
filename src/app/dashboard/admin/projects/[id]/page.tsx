@@ -6,6 +6,7 @@ import { Card, CardBody } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Field, Input, Textarea, Select } from "@/components/ui/field";
+import { Notice } from "@/components/ui/notice";
 import { RECORD_STATUS, RECORD_STATUS_OPTIONS } from "@/lib/status";
 import type { RecordStatus } from "@/lib/status";
 import {
@@ -14,16 +15,26 @@ import {
   publishProject,
   unpublishProject,
 } from "./actions";
+import { ProjectUploads } from "./uploads";
 
 export const metadata: Metadata = { title: "Edit project" };
 export const dynamic = "force-dynamic";
 
+const UPLOAD_MESSAGES: Record<string, string> = {
+  "media-added": "Image uploaded.",
+  "floorplan-added": "Floorplan added.",
+  "document-added": "Document uploaded.",
+};
+
 export default async function AdminProjectEditor({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ error?: string; message?: string }>;
 }) {
   const { id } = await params;
+  const { error, message } = await searchParams;
   const supabase = await createClient();
 
   const { data: project } = await supabase
@@ -38,6 +49,39 @@ export default async function AdminProjectEditor({
     .select("*")
     .eq("project_id", id)
     .maybeSingle();
+
+  // Upload-managed assets.
+  const [{ data: media }, { data: floorplans }, { data: documents }] =
+    await Promise.all([
+      supabase
+        .from("project_media")
+        .select("id, url, alt_text")
+        .eq("project_id", id)
+        .order("created_at", { ascending: true }),
+      supabase
+        .from("project_floorplans")
+        .select("id, plan_name, unit_type, sqft_interior, price_public, floorplan_image_url")
+        .eq("project_id", id)
+        .order("created_at", { ascending: true }),
+      supabase
+        .from("project_documents")
+        .select("id, title, document_type, file_url, created_at")
+        .eq("project_id", id)
+        .order("created_at", { ascending: true }),
+    ]);
+
+  // Short-lived signed URLs for the PRIVATE documents bucket.
+  const docPaths = (documents ?? []).map((d) => d.file_url as string);
+  const signed = docPaths.length
+    ? (
+        await supabase.storage
+          .from("project-documents")
+          .createSignedUrls(docPaths, 3600)
+      ).data ?? []
+    : [];
+  const signedByPath = new Map(
+    signed.map((s) => [s.path ?? "", s.signedUrl]),
+  );
 
   const recordStatus = project.record_status as RecordStatus;
   const isLive =
@@ -70,6 +114,11 @@ export default async function AdminProjectEditor({
           </Badge>
         </div>
       </div>
+
+      {message && UPLOAD_MESSAGES[message] ? (
+        <Notice tone="success">{UPLOAD_MESSAGES[message]}</Notice>
+      ) : null}
+      {error ? <Notice tone="error">{error}</Notice> : null}
 
       {/* Publish controls */}
       <Card>
@@ -312,6 +361,29 @@ export default async function AdminProjectEditor({
           </form>
         </CardBody>
       </Card>
+
+      <ProjectUploads
+        projectId={id}
+        heroUrl={project.hero_image_url ?? null}
+        media={(media ?? []) as { id: string; url: string; alt_text: string | null }[]}
+        floorplans={
+          (floorplans ?? []) as {
+            id: string;
+            plan_name: string | null;
+            unit_type: string | null;
+            sqft_interior: number | null;
+            price_public: number | null;
+            floorplan_image_url: string | null;
+          }[]
+        }
+        documents={(documents ?? []).map((d) => ({
+          id: d.id as string,
+          title: d.title as string,
+          document_type: d.document_type as string,
+          signedUrl: signedByPath.get(d.file_url as string) ?? null,
+          path: d.file_url as string,
+        }))}
+      />
     </div>
   );
 }
