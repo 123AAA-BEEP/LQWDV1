@@ -5,6 +5,7 @@ import { requireUserProfile, isApproved } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardBody } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { ButtonLink } from "@/components/ui/button";
 import { VerificationRequired } from "@/components/dashboard/locked";
 import { formatPriceBand } from "@/lib/types";
 
@@ -89,12 +90,23 @@ export default async function ProjectDetailPage({
           ) : null}
           <Badge tone="neutral">{project.record_status}</Badge>
         </div>
-        <h1 className="mt-2 text-2xl font-semibold tracking-tight text-ink">
-          {project.project_name}
-        </h1>
-        <p className="text-slate-500">
-          {[project.builder_name, location].filter(Boolean).join(" · ")}
-        </p>
+        <div className="mt-2 flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight text-ink">
+              {project.project_name}
+            </h1>
+            <p className="text-slate-500">
+              {[project.builder_name, location].filter(Boolean).join(" · ")}
+            </p>
+          </div>
+          <ButtonLink
+            href={`/dashboard/projects/${slug}/update`}
+            variant="secondary"
+            size="sm"
+          >
+            Suggest an update
+          </ButtonLink>
+        </div>
       </div>
 
       {project.hero_image_url ? (

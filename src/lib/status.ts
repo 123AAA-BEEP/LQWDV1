@@ -63,3 +63,18 @@ export const RECORD_STATUS_OPTIONS: RecordStatus[] = [
   "published",
   "archived",
 ];
+
+export const UPDATE_TYPE_LABELS: Record<string, string> = {
+  pricing: "Pricing",
+  incentives: "Incentives",
+  availability: "Availability / status",
+  broker_portal: "Broker portal",
+  media: "Media / images",
+  general: "General correction",
+};
+
+export const UPDATE_TYPE_OPTIONS = Object.keys(UPDATE_TYPE_LABELS);
+
+export function updateTypeLabel(type: string): string {
+  return UPDATE_TYPE_LABELS[type] ?? type;
+}
