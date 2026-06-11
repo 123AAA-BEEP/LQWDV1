@@ -3,11 +3,11 @@ import { requireUserProfile } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody } from "@/components/ui/card";
 import { Field, Input, Select } from "@/components/ui/field";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { Notice } from "@/components/ui/notice";
 import { Badge, verificationBadgeTone } from "@/components/ui/badge";
-import { SubmitButton } from "@/components/ui/submit-button";
 import { VERIFICATION_LABELS, TITLE_LABELS } from "@/lib/types";
-import { updateProfile } from "./actions";
+import { updateProfile, changeEmail } from "./actions";
 import { uploadAvatar, uploadLogo } from "./upload-actions";
 
 export const metadata: Metadata = { title: "Profile" };
@@ -39,6 +39,12 @@ export default async function ProfilePage({
       ) : null}
       {message === "logo-updated" ? (
         <Notice tone="success">Your logo has been updated.</Notice>
+      ) : null}
+      {message === "email-change-pending" ? (
+        <Notice tone="info">
+          A confirmation link has been sent to your new email address. Click it
+          to complete the change. Your email won&apos;t update until you confirm.
+        </Notice>
       ) : null}
       {error ? <Notice tone="error">{error}</Notice> : null}
 
@@ -134,6 +140,35 @@ export default async function ProfilePage({
             </label>
 
             <Button type="submit">Save changes</Button>
+          </form>
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardBody>
+          <h2 className="font-semibold text-ink">Change email address</h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Current: <span className="font-medium text-slate-700">{email}</span>
+          </p>
+          <p className="mt-0.5 text-sm text-slate-500">
+            A confirmation link will be sent to the new address. Your email
+            won&apos;t change until you click it.
+          </p>
+          <form action={changeEmail} className="mt-4 flex flex-wrap items-end gap-3">
+            <div className="flex-1 min-w-48">
+              <Field label="New email address" htmlFor="new_email">
+                <Input
+                  id="new_email"
+                  name="new_email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                />
+              </Field>
+            </div>
+            <SubmitButton variant="secondary" pendingLabel="Sending…">
+              Send confirmation
+            </SubmitButton>
           </form>
         </CardBody>
       </Card>

@@ -4,7 +4,7 @@ import { requireUserProfile, isApproved } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardBody } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/field";
+import { Input, Select } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { VerificationRequired } from "@/components/dashboard/locked";
 import { formatPriceBand } from "@/lib/types";
@@ -13,10 +13,29 @@ import type { ProjectListItem } from "@/lib/types";
 export const metadata: Metadata = { title: "Projects" };
 export const dynamic = "force-dynamic";
 
+const SALES_STATUS_OPTIONS = [
+  { value: "coming_soon", label: "Coming soon" },
+  { value: "selling", label: "Selling" },
+  { value: "paused", label: "Paused" },
+  { value: "sold_out", label: "Sold out" },
+  { value: "completed", label: "Completed" },
+];
+
+const CONSTRUCTION_STATUS_OPTIONS = [
+  { value: "preconstruction", label: "Preconstruction" },
+  { value: "under_construction", label: "Under construction" },
+  { value: "completed", label: "Completed" },
+];
+
 export default async function ProjectsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{
+    q?: string;
+    city?: string;
+    sales_status?: string;
+    construction_status?: string;
+  }>;
 }) {
   const { profile } = await requireUserProfile();
 
@@ -31,10 +50,22 @@ export default async function ProjectsPage({
     );
   }
 
-  const { q } = await searchParams;
+  const { q, city, sales_status, construction_status } = await searchParams;
   const query = (q ?? "").trim();
+  const cityFilter = (city ?? "").trim();
+  const salesFilter = sales_status ?? "";
+  const constructionFilter = construction_status ?? "";
 
   const supabase = await createClient();
+
+  // Fetch distinct cities for the city dropdown.
+  const { data: cityRows } = await supabase
+    .from("projects")
+    .select("city")
+    .not("city", "is", null)
+    .order("city", { ascending: true });
+  const cities = [...new Set((cityRows ?? []).map((r) => r.city as string))];
+
   let request = supabase
     .from("projects")
     .select(
@@ -48,9 +79,20 @@ export default async function ProjectsPage({
       `project_name.ilike.%${query}%,city.ilike.%${query}%,builder_name.ilike.%${query}%`,
     );
   }
+  if (cityFilter) {
+    request = request.eq("city", cityFilter);
+  }
+  if (salesFilter) {
+    request = request.eq("sales_status", salesFilter);
+  }
+  if (constructionFilter) {
+    request = request.eq("construction_status", constructionFilter);
+  }
 
   const { data } = await request;
   const projects = (data as ProjectListItem[] | null) ?? [];
+
+  const hasActiveFilter = query || cityFilter || salesFilter || constructionFilter;
 
   return (
     <div className="space-y-6">
@@ -63,22 +105,65 @@ export default async function ProjectsPage({
         </p>
       </div>
 
-      <form method="get" className="flex gap-2">
-        <Input
-          name="q"
-          placeholder="Search by project, city, or builder…"
-          defaultValue={query}
-        />
-        <Button type="submit" variant="secondary">
-          Search
-        </Button>
+      <form method="get" className="space-y-3">
+        <div className="flex gap-2">
+          <Input
+            name="q"
+            placeholder="Search by project, city, or builder…"
+            defaultValue={query}
+            className="flex-1"
+          />
+          <Button type="submit" variant="secondary">
+            Search
+          </Button>
+          {hasActiveFilter ? (
+            <Link href="/dashboard/projects">
+              <Button type="button" variant="secondary">
+                Clear
+              </Button>
+            </Link>
+          ) : null}
+        </div>
+
+        <div className="flex flex-wrap gap-3">
+          <div className="min-w-36 flex-1">
+            <Select name="city" defaultValue={cityFilter}>
+              <option value="">All cities</option>
+              {cities.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </Select>
+          </div>
+          <div className="min-w-44 flex-1">
+            <Select name="sales_status" defaultValue={salesFilter}>
+              <option value="">All sales statuses</option>
+              {SALES_STATUS_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </Select>
+          </div>
+          <div className="min-w-52 flex-1">
+            <Select name="construction_status" defaultValue={constructionFilter}>
+              <option value="">All construction statuses</option>
+              {CONSTRUCTION_STATUS_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </Select>
+          </div>
+        </div>
       </form>
 
       {projects.length === 0 ? (
         <Card>
           <CardBody className="text-center text-sm text-slate-500">
-            {query
-              ? `No projects match “${query}”.`
+            {hasActiveFilter
+              ? "No projects match the selected filters."
               : "No projects yet. Check back soon."}
           </CardBody>
         </Card>
@@ -100,10 +185,15 @@ export default async function ProjectsPage({
                     ) : null}
                   </div>
                   <CardBody>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       {p.sales_status ? (
                         <Badge tone="brand">
                           {p.sales_status.replace(/_/g, " ")}
+                        </Badge>
+                      ) : null}
+                      {p.construction_status ? (
+                        <Badge tone="neutral">
+                          {p.construction_status.replace(/_/g, " ")}
                         </Badge>
                       ) : null}
                       {p.record_status !== "published" ? (

@@ -39,3 +39,31 @@ export async function updateProfile(formData: FormData) {
   }
   redirect("/dashboard/profile?message=saved");
 }
+
+export async function changeEmail(formData: FormData) {
+  const newEmail = String(formData.get("new_email") ?? "").trim().toLowerCase();
+  if (!newEmail) {
+    redirect("/dashboard/profile?error=" + encodeURIComponent("Email address is required."));
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  if (newEmail === user.email) {
+    redirect("/dashboard/profile?error=" + encodeURIComponent("That is already your email address."));
+  }
+
+  const { error } = await supabase.auth.updateUser(
+    { email: newEmail },
+    { emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/auth/callback?next=/dashboard/profile` },
+  );
+
+  if (error) {
+    redirect("/dashboard/profile?error=" + encodeURIComponent("Could not send confirmation email. Please try again."));
+  }
+
+  redirect("/dashboard/profile?message=email-change-pending");
+}
