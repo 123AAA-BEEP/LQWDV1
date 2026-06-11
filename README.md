@@ -77,8 +77,10 @@ src/
 
 ## Status
 
-Foundation complete: auth, profile bootstrap + verification gating, landing
+Core product complete: auth, profile bootstrap + verification gating, landing
 page, dashboard shell, protected routes, project browsing + detail (broker-only
-views), public project pages with lead capture, and the new-property submission
-flow. **Next:** admin review console (verification, submissions, update requests,
-publishing controls).
+views), public project pages with lead capture, the new-property submission
+flow, and the **admin review console** (verification / submission / update-request
+queues, approve-reject-needs-changes actions, canonical project editing, and
+public-page publish/unpublish controls). Admin areas are admin-only via RLS +
+app guards.

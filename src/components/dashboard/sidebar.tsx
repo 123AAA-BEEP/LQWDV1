@@ -15,11 +15,16 @@ const NAV = [
 export function Sidebar({
   name,
   email,
+  isAdmin = false,
 }: {
   name: string;
   email: string | null;
+  isAdmin?: boolean;
 }) {
   const pathname = usePathname();
+  const nav = isAdmin
+    ? [...NAV, { href: "/dashboard/admin", label: "Admin" }]
+    : NAV;
 
   return (
     <aside className="flex w-60 shrink-0 flex-col border-r border-slate-200 bg-white">
@@ -29,7 +34,7 @@ export function Sidebar({
         </Link>
       </div>
       <nav className="flex-1 space-y-1 p-3">
-        {NAV.map((item) => {
+        {nav.map((item) => {
           const active = item.exact
             ? pathname === item.href
             : pathname.startsWith(item.href);
