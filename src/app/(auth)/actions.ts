@@ -28,13 +28,44 @@ export async function signIn(formData: FormData) {
 export async function signUp(formData: FormData) {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
+  const firstName = String(formData.get("first_name") ?? "").trim();
+  const lastName = String(formData.get("last_name") ?? "").trim();
+  const phone = String(formData.get("phone") ?? "").trim();
+  const brokerageName = String(formData.get("brokerage_name") ?? "").trim();
+  const reco = String(formData.get("reco_registration_number") ?? "").trim();
+  const title = String(formData.get("title") ?? "").trim();
   const origin = await originUrl();
+
+  const fail = (msg: string) =>
+    redirect(`/signup?error=${encodeURIComponent(msg)}`);
+
+  if (!firstName || !lastName) fail("First and last name are required.");
+  if (!email) fail("Email is required.");
+  if (!phone) fail("Phone number is required.");
+  if (!brokerageName) fail("Brokerage is required.");
+  if (!reco) fail("RECO registration number is required.");
+  if (!["sales_representative", "broker", "broker_of_record"].includes(title)) {
+    fail("Please select your title.");
+  }
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    options: { emailRedirectTo: `${origin}/auth/callback?next=/dashboard` },
+    options: {
+      emailRedirectTo: `${origin}/auth/callback?next=/dashboard`,
+      // Carried on the auth user so the profile can be populated on first
+      // dashboard load, even when email confirmation is enabled (no session
+      // exists at signup time to write directly to the profiles table).
+      data: {
+        first_name: firstName,
+        last_name: lastName,
+        phone,
+        brokerage_name: brokerageName,
+        reco_registration_number: reco,
+        title,
+      },
+    },
   });
 
   if (error) {

@@ -28,6 +28,16 @@ export async function requireUserProfile(): Promise<{
     .maybeSingle();
 
   if (!profile) {
+    // Populate from the metadata captured at signup (auth.signUp options.data).
+    const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
+    const str = (k: string) =>
+      typeof meta[k] === "string" && meta[k] ? (meta[k] as string) : null;
+    const title = str("title");
+    const validTitle =
+      title && ["sales_representative", "broker", "broker_of_record"].includes(title)
+        ? title
+        : null;
+
     const { data: inserted } = await supabase
       .from("profiles")
       .insert({
@@ -35,6 +45,12 @@ export async function requireUserProfile(): Promise<{
         email: user.email ?? null,
         role: "realtor",
         verification_status: "pending",
+        first_name: str("first_name"),
+        last_name: str("last_name"),
+        phone: str("phone"),
+        brokerage_name: str("brokerage_name"),
+        reco_registration_number: str("reco_registration_number"),
+        title: validTitle,
       })
       .select("*")
       .single();
