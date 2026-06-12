@@ -14,11 +14,11 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "LIQWD — The ultimate broker portal for new homes in Ontario",
+    default: "LIQWD — The Ultimate Broker Portal for New Homes in Ontario",
     template: "%s · LIQWD",
   },
   description:
-    "LIQWD is the ultimate broker portal for new homes in Ontario. Free for verified realtors. Built in Canada.",
+    "LIQWD is the Ultimate Broker Portal for new homes in Ontario. Free for verified realtors. Built in Canada.",
 };
 
 export default function RootLayout({

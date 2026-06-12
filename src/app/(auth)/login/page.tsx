@@ -20,7 +20,7 @@ export default async function LoginPage({
         Log in to LIQWD
       </h1>
       <p className="mt-1 text-sm text-slate-500">
-        The broker portal for new homes in Ontario.
+        The Broker Portal for new homes in Ontario.
       </p>
 
       {message === "check-email" ? (

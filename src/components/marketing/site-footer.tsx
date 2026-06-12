@@ -3,27 +3,39 @@ import { BRAND } from "@/lib/brand";
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-slate-200 bg-slate-50">
-      <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-10 sm:flex-row sm:items-center sm:justify-between">
+    <footer className="border-t border-slate-200 bg-white">
+      <div className="mx-auto flex max-w-6xl flex-col gap-8 px-6 py-14 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <div className="text-lg font-semibold text-ink">{BRAND.name}</div>
-          <p className="mt-1 text-sm text-slate-500">
-            The ultimate broker portal for new homes in Ontario. Built in
+          <div className="flex items-baseline gap-0.5">
+            <span className="text-lg font-semibold tracking-tight text-ink">
+              {BRAND.name}
+            </span>
+            <span aria-hidden className="size-1 rounded-full bg-brand-500" />
+          </div>
+          <p className="mt-2 max-w-xs text-sm leading-relaxed text-slate-500">
+            The Ultimate Broker Portal for new homes in Ontario. Built in
             Canada.
           </p>
         </div>
-        <nav className="flex items-center gap-4 text-sm text-slate-600">
-          <Link href="/login" className="hover:text-slate-900">
+        <nav className="flex items-center gap-6 text-sm text-slate-600">
+          <Link href="/login" className="hover:text-ink">
             Log in
           </Link>
-          <Link href="/signup" className="hover:text-slate-900">
+          <Link href="/signup" className="hover:text-ink">
             Sign up
           </Link>
         </nav>
       </div>
-      <div className="border-t border-slate-200 py-4 text-center text-xs text-slate-400">
-        © {new Date().getFullYear()} {BRAND.name}. RECO verification required.
-        Not affiliated with or endorsed by RECO.
+      <div className="border-t border-slate-200">
+        <div className="mx-auto flex max-w-6xl flex-col gap-2 px-6 py-5 text-xs text-slate-400 sm:flex-row sm:items-center sm:justify-between">
+          <span>
+            © {new Date().getFullYear()} {BRAND.name}. All rights reserved.
+          </span>
+          <span>
+            RECO verification required. Not affiliated with or endorsed by
+            RECO.
+          </span>
+        </div>
       </div>
     </footer>
   );

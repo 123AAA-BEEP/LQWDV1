@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ButtonLink } from "@/components/ui/button";
 import {
   HERO,
@@ -13,7 +14,7 @@ function CheckIcon() {
     <svg
       viewBox="0 0 20 20"
       fill="currentColor"
-      className="mt-0.5 size-5 shrink-0 text-brand-600"
+      className="mt-1 size-4 shrink-0 text-brand-600"
       aria-hidden
     >
       <path
@@ -25,130 +26,176 @@ function CheckIcon() {
   );
 }
 
+/** Uppercase micro-label used to open each section. */
+function SectionLabel({ index, children }: { index: string; children: string }) {
+  return (
+    <p className="flex items-baseline gap-3 text-xs font-medium uppercase tracking-[0.2em] text-slate-400">
+      <span className="font-mono text-brand-600">{index}</span>
+      {children}
+    </p>
+  );
+}
+
 export default function LandingPage() {
   return (
     <>
       {/* Hero */}
-      <section className="border-b border-slate-200 bg-gradient-to-b from-slate-50 to-white">
-        <div className="mx-auto max-w-6xl px-4 py-20 sm:py-28">
-          <div className="max-w-3xl">
-            <p className="text-sm font-medium uppercase tracking-wide text-brand-700">
-              {HERO.supporting}
-            </p>
-            <h1 className="mt-4 text-4xl font-semibold tracking-tight text-ink sm:text-6xl">
-              {HERO.headline}
-            </h1>
-            <p className="mt-2 text-2xl font-medium text-slate-500 sm:text-3xl">
-              {HERO.subheadline}
-            </p>
-            <p className="mt-6 max-w-2xl text-lg leading-relaxed text-slate-600">
-              {HERO.body}
-            </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <ButtonLink href="/signup" size="lg">
-                {HERO.primaryCta}
-              </ButtonLink>
-              <ButtonLink href="/signup" variant="secondary" size="lg">
-                {HERO.secondaryCta}
-              </ButtonLink>
-            </div>
+      <section className="bg-white">
+        <div className="mx-auto max-w-6xl px-6 pb-24 pt-24 sm:pb-32 sm:pt-36">
+          <p className="flex items-center gap-3 text-xs font-medium uppercase tracking-[0.2em] text-slate-500">
+            <span aria-hidden className="h-px w-8 bg-brand-500" />
+            {HERO.supporting}
+          </p>
+          <h1 className="mt-8 max-w-4xl text-balance text-5xl font-semibold leading-[1.05] tracking-tight text-ink sm:text-6xl lg:text-7xl">
+            {HERO.headline}
+            <span className="block text-slate-400">{HERO.subheadline}</span>
+          </h1>
+          <p className="mt-8 max-w-2xl text-pretty text-lg leading-relaxed text-slate-600">
+            {HERO.body}
+          </p>
+          <div className="mt-10 flex flex-wrap items-center gap-6">
+            <ButtonLink href="/signup" size="lg" className="px-8">
+              {HERO.primaryCta}
+            </ButtonLink>
+            <Link
+              href="/signup"
+              className="group inline-flex items-center gap-2 text-base font-medium text-ink"
+            >
+              {HERO.secondaryCta}
+              <span
+                aria-hidden
+                className="transition-transform group-hover:translate-x-1"
+              >
+                →
+              </span>
+            </Link>
           </div>
         </div>
       </section>
 
-      {/* Proof bar */}
-      <section className="border-b border-slate-200 bg-white">
-        <div className="mx-auto grid max-w-6xl grid-cols-2 gap-px overflow-hidden px-4 py-8 sm:grid-cols-4">
-          {PROOF_POINTS.map((point) => (
-            <div key={point} className="px-2 text-center">
-              <span className="text-sm font-medium text-slate-700">
-                {point}
-              </span>
-            </div>
+      {/* Proof strip */}
+      <section className="border-y border-slate-200">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-8 gap-y-3 px-6 py-6">
+          {PROOF_POINTS.map((point, i) => (
+            <span
+              key={point}
+              className="flex items-center gap-8 text-xs font-medium uppercase tracking-[0.18em] text-slate-500"
+            >
+              {i > 0 ? (
+                <span
+                  aria-hidden
+                  className="hidden size-1 rounded-full bg-brand-500 sm:block"
+                />
+              ) : null}
+              {point}
+            </span>
           ))}
         </div>
       </section>
 
-      {/* Benefits */}
-      <section className="mx-auto max-w-6xl px-4 py-20">
-        <h2 className="text-3xl font-semibold tracking-tight text-ink">
-          One portal for new-home inventory
-        </h2>
-        <ul className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {BENEFITS.map((benefit) => (
-            <li
-              key={benefit}
-              className="flex gap-3 rounded-xl border border-slate-200 bg-white p-5"
-            >
-              <CheckIcon />
-              <span className="text-slate-700">{benefit}</span>
-            </li>
-          ))}
-        </ul>
+      {/* Benefits — editorial numbered list */}
+      <section className="mx-auto max-w-6xl px-6 py-24 sm:py-32">
+        <div className="grid gap-12 lg:grid-cols-12 lg:gap-16">
+          <div className="lg:col-span-4">
+            <SectionLabel index="01">What you get</SectionLabel>
+            <h2 className="mt-4 text-balance text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
+              One portal for new-home inventory
+            </h2>
+          </div>
+          <ol className="divide-y divide-slate-200 lg:col-span-8">
+            {BENEFITS.map((benefit, i) => (
+              <li key={benefit} className="flex gap-6 py-7 first:pt-0 last:pb-0">
+                <span className="pt-0.5 font-mono text-sm tabular-nums text-brand-600">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <p className="text-pretty text-lg leading-relaxed text-slate-700">
+                  {benefit}
+                </p>
+              </li>
+            ))}
+          </ol>
+        </div>
       </section>
 
       {/* Verification */}
-      <section className="border-y border-slate-200 bg-slate-50">
-        <div className="mx-auto grid max-w-6xl gap-10 px-4 py-20 lg:grid-cols-2">
-          <div>
-            <h2 className="text-3xl font-semibold tracking-tight text-ink">
-              {VERIFICATION.heading}
-            </h2>
-            <p className="mt-4 text-lg leading-relaxed text-slate-600">
-              {VERIFICATION.body}
-            </p>
+      <section className="border-y border-slate-200 bg-slate-50/60">
+        <div className="mx-auto max-w-6xl px-6 py-24 sm:py-32">
+          <div className="grid gap-12 lg:grid-cols-12 lg:gap-16">
+            <div className="lg:col-span-4">
+              <SectionLabel index="02">Verified access</SectionLabel>
+              <h2 className="mt-4 text-balance text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
+                {VERIFICATION.heading}
+              </h2>
+            </div>
+            <div className="lg:col-span-8">
+              <p className="max-w-2xl text-pretty text-lg leading-relaxed text-slate-600">
+                {VERIFICATION.body}
+              </p>
+              <ul className="mt-10 space-y-5">
+                {VERIFICATION.bullets.map((b) => (
+                  <li key={b} className="flex gap-3">
+                    <CheckIcon />
+                    <span className="text-slate-700">{b}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
-          <ul className="space-y-4">
-            {VERIFICATION.bullets.map((b) => (
-              <li key={b} className="flex gap-3">
-                <CheckIcon />
-                <span className="text-slate-700">{b}</span>
-              </li>
-            ))}
-          </ul>
         </div>
       </section>
 
       {/* Why */}
-      <section className="mx-auto max-w-6xl px-4 py-20">
-        <div className="grid gap-10 lg:grid-cols-2">
-          <div>
-            <h2 className="text-3xl font-semibold tracking-tight text-ink">
+      <section className="mx-auto max-w-6xl px-6 py-24 sm:py-32">
+        <div className="grid gap-12 lg:grid-cols-12 lg:gap-16">
+          <div className="lg:col-span-4">
+            <SectionLabel index="03">Why LIQWD</SectionLabel>
+            <h2 className="mt-4 text-balance text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
               {WHY.heading}
             </h2>
-            <p className="mt-4 text-lg leading-relaxed text-slate-600">
+          </div>
+          <div className="lg:col-span-8">
+            <p className="max-w-2xl text-pretty text-lg leading-relaxed text-slate-600">
               {WHY.body}
             </p>
+            <ul className="mt-10 flex flex-wrap gap-3">
+              {WHY.bullets.map((b) => (
+                <li
+                  key={b}
+                  className="rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-medium text-slate-700"
+                >
+                  {b.replace(/\.$/, "")}
+                </li>
+              ))}
+            </ul>
           </div>
-          <ul className="grid gap-3 sm:grid-cols-2">
-            {WHY.bullets.map((b) => (
-              <li key={b} className="flex gap-3">
-                <CheckIcon />
-                <span className="text-slate-700">{b}</span>
-              </li>
-            ))}
-          </ul>
         </div>
       </section>
 
       {/* Signup CTA */}
-      <section className="border-t border-slate-200 bg-ink">
-        <div className="mx-auto max-w-6xl px-4 py-20 text-center">
-          <h2 className="text-3xl font-semibold tracking-tight text-white">
+      <section className="bg-ink">
+        <div className="mx-auto max-w-6xl px-6 py-28 text-center sm:py-36">
+          <p className="text-xs font-medium uppercase tracking-[0.2em] text-brand-400">
+            Free for verified realtors
+          </p>
+          <h2 className="mx-auto mt-6 max-w-2xl text-balance text-4xl font-semibold tracking-tight text-white sm:text-5xl">
             {SIGNUP_SECTION.heading}
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-lg text-slate-300">
+          <p className="mx-auto mt-6 max-w-xl text-pretty text-lg leading-relaxed text-slate-400">
             {SIGNUP_SECTION.body}
           </p>
-          <div className="mt-8 flex justify-center gap-3">
-            <ButtonLink href="/signup" size="lg">
+          <div className="mt-10 flex flex-wrap justify-center gap-4">
+            <ButtonLink
+              href="/signup"
+              size="lg"
+              className="bg-white px-8 text-ink hover:bg-slate-100"
+            >
               Sign up free
             </ButtonLink>
             <ButtonLink
               href="/signup"
               size="lg"
               variant="secondary"
-              className="border-slate-600 bg-transparent text-white hover:bg-slate-800"
+              className="border-slate-700 bg-transparent text-white hover:bg-slate-800"
             >
               Start verification
             </ButtonLink>
