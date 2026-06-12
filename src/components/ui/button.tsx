@@ -2,7 +2,13 @@ import Link from "next/link";
 import type { ComponentProps } from "react";
 import { cn } from "@/lib/cn";
 
-type Variant = "primary" | "secondary" | "ghost" | "danger";
+type Variant =
+  | "primary"
+  | "secondary"
+  | "ghost"
+  | "danger"
+  | "white"
+  | "outlineLight";
 type Size = "sm" | "md" | "lg";
 
 const base =
@@ -14,6 +20,9 @@ const variants: Record<Variant, string> = {
     "border border-slate-300 bg-white text-slate-900 hover:bg-slate-50",
   ghost: "text-slate-700 hover:bg-slate-100",
   danger: "bg-red-600 text-white hover:bg-red-700",
+  // For use on dark backgrounds (e.g. the ink CTA panel).
+  white: "bg-white text-ink hover:bg-slate-100",
+  outlineLight: "border border-slate-700 text-white hover:bg-slate-800",
 };
 
 const sizes: Record<Size, string> = {
