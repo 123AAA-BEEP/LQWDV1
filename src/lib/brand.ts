@@ -6,14 +6,14 @@
  */
 export const BRAND = {
   name: "LIQWD",
-  tagline: "The ultimate broker portal",
-  subtagline: "For new homes in Ontario",
+  tagline: "The Ultimate Broker Portal",
+  subtagline: "For New Homes in Ontario",
   supportingLine: "Free for verified realtors. Built in Canada.",
 } as const;
 
 export const HERO = {
-  headline: "The ultimate broker portal",
-  subheadline: "For new homes in Ontario",
+  headline: "The Ultimate Broker Portal",
+  subheadline: "For New Homes in Ontario",
   supporting: "Free for verified realtors. Built in Canada.",
   body: "Access broker portals, track active new-home projects, and move faster on the opportunities that matter. LIQWD gives Ontario realtors one place to work through new-home inventory without bouncing between disconnected portals, scattered files, and outdated updates.",
   primaryCta: "Sign up free",
