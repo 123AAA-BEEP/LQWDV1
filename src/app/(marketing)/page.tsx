@@ -184,19 +184,10 @@ export default function LandingPage() {
             {SIGNUP_SECTION.body}
           </p>
           <div className="mt-10 flex flex-wrap justify-center gap-4">
-            <ButtonLink
-              href="/signup"
-              size="lg"
-              className="bg-white px-8 text-ink hover:bg-slate-100"
-            >
+            <ButtonLink href="/signup" size="lg" variant="white" className="px-8">
               Sign up free
             </ButtonLink>
-            <ButtonLink
-              href="/signup"
-              size="lg"
-              variant="secondary"
-              className="border-slate-700 bg-transparent text-white hover:bg-slate-800"
-            >
+            <ButtonLink href="/signup" size="lg" variant="outlineLight">
               Start verification
             </ButtonLink>
           </div>
