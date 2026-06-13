@@ -38,7 +38,7 @@
     "price_from_public": 749990,
     "price_to_public": 959990,
     "price_currency": "CAD",
-    "hero_image_url": "https://prodlisting.livabl.com/imageSponsors/xlarge/2025_12_23_09_52_59_2025_12_23_04_52_45_594_gtl-the-nine-parkaerialdusk-web.webp",
+    "hero_image_url": "https://mzdqlhopxfknwqxxuonn.supabase.co/storage/v1/object/public/project-media/the-nine.webp",
     "hero_image_alt": "The Nine, Mississauga — aerial view at dusk",
     "cover_image_url": null,
     "sales_centre_name": "The Nine sales center",
@@ -54,7 +54,7 @@
     "last_verified_at": "2026-06-13T13:01:22Z",
     "external_source": "livbl",
     "external_source_url": "https://www.livabl.com/mississauga-on/the-nine",
-    "import_notes": "storeys and total_units not stated (19 = number of floor plans, not units). Official community website link present on page but its URL was not captured in the text paste; website_url left null. ownership_type normalized to 'freehold' from page label 'Freehold'. Livabl shows a 'Featured' badge, but is_featured kept false per seed policy. Page lists average price/sqft as $449. Livabl last update Jun 03, 2026. hero_image_alt generated from image filename ('parkaerialdusk'). latitude/longitude not available from text paste. hero_image_url stored as direct prodlisting.livabl.com asset (Next.js image proxy wrapper and resize params removed).",
+    "import_notes": "storeys and total_units not stated (19 = number of floor plans, not units). Official community website link present on page but its URL was not captured in the text paste; website_url left null. ownership_type normalized to 'freehold' from page label 'Freehold'. Livabl shows a 'Featured' badge, but is_featured kept false per seed policy. Page lists average price/sqft as $449. Livabl last update Jun 03, 2026. hero_image_alt generated from image filename ('parkaerialdusk'). latitude/longitude not available from text paste. hero_image_url points to Supabase project-media bucket (path the-nine.webp); the image file must be uploaded there for the URL to resolve. No Livabl image hotlink is stored.",
     "published_at": null
   }
 ]
