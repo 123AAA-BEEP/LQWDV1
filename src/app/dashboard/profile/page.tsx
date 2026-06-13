@@ -8,7 +8,7 @@ import { Notice } from "@/components/ui/notice";
 import { Badge, verificationBadgeTone } from "@/components/ui/badge";
 import { VERIFICATION_LABELS, TITLE_LABELS } from "@/lib/types";
 import { updateProfile, changeEmail } from "./actions";
-import { uploadAvatar, uploadLogo } from "./upload-actions";
+import { UploadTile } from "./upload-tile";
 
 export const metadata: Metadata = { title: "Profile" };
 
@@ -18,7 +18,7 @@ export default async function ProfilePage({
   searchParams: Promise<{ error?: string; message?: string }>;
 }) {
   const { error, message } = await searchParams;
-  const { profile, email } = await requireUserProfile();
+  const { profile, email, userId } = await requireUserProfile();
 
   return (
     <div className="space-y-6">
@@ -61,17 +61,19 @@ export default async function ProfilePage({
           </p>
           <div className="mt-4 grid gap-6 sm:grid-cols-2">
             <UploadTile
+              kind="avatar"
               title="Profile photo"
               currentUrl={profile.avatar_url}
-              action={uploadAvatar}
+              userId={userId}
               accept="image/png,image/jpeg,image/webp"
               fallback="No photo yet"
               rounded
             />
             <UploadTile
+              kind="logo"
               title="Brokerage logo"
               currentUrl={profile.logo_url}
-              action={uploadLogo}
+              userId={userId}
               accept="image/png,image/jpeg,image/webp,image/svg+xml"
               fallback="No logo yet"
             />
@@ -172,58 +174,6 @@ export default async function ProfilePage({
           </form>
         </CardBody>
       </Card>
-    </div>
-  );
-}
-
-function UploadTile({
-  title,
-  currentUrl,
-  action,
-  accept,
-  fallback,
-  rounded,
-}: {
-  title: string;
-  currentUrl: string | null;
-  action: (formData: FormData) => void;
-  accept: string;
-  fallback: string;
-  rounded?: boolean;
-}) {
-  return (
-    <div className="flex gap-4">
-      <div
-        className={`flex size-20 shrink-0 items-center justify-center overflow-hidden border border-slate-200 bg-slate-50 ${
-          rounded ? "rounded-full" : "rounded-lg"
-        }`}
-      >
-        {currentUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={currentUrl}
-            alt={title}
-            className="h-full w-full object-cover"
-          />
-        ) : (
-          <span className="px-2 text-center text-[10px] text-slate-400">
-            {fallback}
-          </span>
-        )}
-      </div>
-      <form action={action} className="flex-1 space-y-2">
-        <p className="text-sm font-medium text-slate-700">{title}</p>
-        <input
-          type="file"
-          name="file"
-          accept={accept}
-          required
-          className="block w-full text-sm text-slate-600 file:mr-3 file:rounded-md file:border-0 file:bg-slate-100 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-slate-700 hover:file:bg-slate-200"
-        />
-        <SubmitButton size="sm" variant="secondary" pendingLabel="Uploading…">
-          {currentUrl ? "Replace" : "Upload"}
-        </SubmitButton>
-      </form>
     </div>
   );
 }

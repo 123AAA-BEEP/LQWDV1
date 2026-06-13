@@ -1,15 +1,30 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardBody } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
-import { SubmitButton } from "@/components/ui/submit-button";
+import { Notice } from "@/components/ui/notice";
 import { formatPriceBand } from "@/lib/types";
+import { createClient } from "@/lib/supabase/client";
 import {
-  uploadProjectMedia,
+  validateUpload,
+  extFor,
+  safeName,
+  IMAGE_MIME,
+  DOC_MIME,
+  MEDIA_MAX,
+  DOC_MAX,
+} from "@/lib/upload";
+import {
+  recordProjectMedia,
   deleteProjectMedia,
   setHeroImage,
-  addFloorplan,
+  recordFloorplan,
   deleteFloorplan,
-  uploadDocument,
+  recordDocument,
   deleteDocument,
 } from "./media-actions";
 
@@ -50,8 +65,130 @@ export function ProjectUploads({
   floorplans: FloorplanRow[];
   documents: DocRow[];
 }) {
+  const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState<null | "media" | "floorplan" | "document">(
+    null,
+  );
+
+  /**
+   * Uploads a file straight to Supabase Storage from the browser, bypassing
+   * Vercel's 4.5 MB Server Action body limit. Returns the storage path or null.
+   */
+  async function uploadToBucket(
+    bucket: string,
+    path: string,
+    file: File,
+  ): Promise<string | null> {
+    const supabase = createClient();
+    const { error: upErr } = await supabase.storage
+      .from(bucket)
+      .upload(path, file, { contentType: file.type });
+    if (upErr) {
+      setError("Upload failed. Please try again.");
+      return null;
+    }
+    return path;
+  }
+
+  async function handleMedia(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setError(null);
+    const form = e.currentTarget;
+    const input = form.elements.namedItem("file") as HTMLInputElement;
+    const v = validateUpload(input.files?.[0] ?? null, {
+      types: IMAGE_MIME,
+      max: MEDIA_MAX,
+    });
+    if (v.error || !v.file) {
+      setError(v.error);
+      return;
+    }
+    setBusy("media");
+    const path = `${projectId}/media-${Date.now()}.${extFor(v.file.type)}`;
+    const ok = await uploadToBucket("project-media", path, v.file);
+    if (ok) {
+      const fd = new FormData();
+      fd.set("project_id", projectId);
+      fd.set("path", path);
+      await recordProjectMedia(fd);
+      form.reset();
+      router.refresh();
+    }
+    setBusy(null);
+  }
+
+  async function handleFloorplan(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setError(null);
+    const form = e.currentTarget;
+    const fd = new FormData(form);
+    fd.set("project_id", projectId);
+
+    const fileInput = form.elements.namedItem("file") as HTMLInputElement;
+    const file = fileInput.files?.[0];
+    setBusy("floorplan");
+    if (file && file.size > 0) {
+      const v = validateUpload(file, { types: IMAGE_MIME, max: MEDIA_MAX });
+      if (v.error || !v.file) {
+        setError(v.error);
+        setBusy(null);
+        return;
+      }
+      const path = `${projectId}/floorplans/fp-${Date.now()}.${extFor(v.file.type)}`;
+      const ok = await uploadToBucket("project-media", path, v.file);
+      if (!ok) {
+        setBusy(null);
+        return;
+      }
+      fd.set("image_path", path);
+    }
+    fd.delete("file");
+    await recordFloorplan(fd);
+    form.reset();
+    router.refresh();
+    setBusy(null);
+  }
+
+  async function handleDocument(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setError(null);
+    const form = e.currentTarget;
+    const title = (
+      form.elements.namedItem("title") as HTMLInputElement
+    ).value.trim();
+    if (!title) {
+      setError("A document title is required.");
+      return;
+    }
+    const input = form.elements.namedItem("file") as HTMLInputElement;
+    const v = validateUpload(input.files?.[0] ?? null, {
+      types: DOC_MIME,
+      max: DOC_MAX,
+    });
+    if (v.error || !v.file) {
+      setError(v.error);
+      return;
+    }
+    setBusy("document");
+    const path = `${projectId}/${Date.now()}-${safeName(v.file.name)}`;
+    const ok = await uploadToBucket("project-documents", path, v.file);
+    if (ok) {
+      const fd = new FormData(form);
+      fd.set("project_id", projectId);
+      fd.set("path", path);
+      fd.delete("file");
+      await recordDocument(fd);
+      form.reset();
+      router.refresh();
+    }
+    setBusy(null);
+  }
+
   return (
     <>
+      {error ? <Notice tone="error">{error}</Notice> : null}
+
       {/* Media (public) */}
       <Card>
         <CardBody>
@@ -121,10 +258,9 @@ export function ProjectUploads({
           )}
 
           <form
-            action={uploadProjectMedia}
+            onSubmit={handleMedia}
             className="mt-4 flex flex-wrap items-end gap-3 border-t border-slate-100 pt-4"
           >
-            <input type="hidden" name="project_id" value={projectId} />
             <input
               type="file"
               name="file"
@@ -132,9 +268,9 @@ export function ProjectUploads({
               required
               className={fileInputClass}
             />
-            <SubmitButton size="sm" pendingLabel="Uploading…">
-              Upload image
-            </SubmitButton>
+            <Button type="submit" size="sm" disabled={busy === "media"}>
+              {busy === "media" ? "Uploading…" : "Upload image"}
+            </Button>
           </form>
         </CardBody>
       </Card>
@@ -192,10 +328,9 @@ export function ProjectUploads({
           )}
 
           <form
-            action={addFloorplan}
+            onSubmit={handleFloorplan}
             className="mt-4 space-y-3 border-t border-slate-100 pt-4"
           >
-            <input type="hidden" name="project_id" value={projectId} />
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label="Plan name" htmlFor="plan_name">
                 <Input id="plan_name" name="plan_name" />
@@ -221,9 +356,9 @@ export function ProjectUploads({
                 className={fileInputClass}
               />
             </div>
-            <SubmitButton size="sm" pendingLabel="Saving…">
-              Add floorplan
-            </SubmitButton>
+            <Button type="submit" size="sm" disabled={busy === "floorplan"}>
+              {busy === "floorplan" ? "Saving…" : "Add floorplan"}
+            </Button>
           </form>
         </CardBody>
       </Card>
@@ -288,10 +423,9 @@ export function ProjectUploads({
           )}
 
           <form
-            action={uploadDocument}
+            onSubmit={handleDocument}
             className="mt-4 space-y-3 border-t border-slate-100 pt-4"
           >
-            <input type="hidden" name="project_id" value={projectId} />
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label="Title" htmlFor="title">
                 <Input id="title" name="title" required />
@@ -312,9 +446,9 @@ export function ProjectUploads({
               required
               className={fileInputClass}
             />
-            <SubmitButton size="sm" pendingLabel="Uploading…">
-              Upload document
-            </SubmitButton>
+            <Button type="submit" size="sm" disabled={busy === "document"}>
+              {busy === "document" ? "Uploading…" : "Upload document"}
+            </Button>
           </form>
         </CardBody>
       </Card>
