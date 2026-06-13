@@ -1,43 +1,27 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import {
-  validateUpload,
-  extFor,
-  AVATAR_MAX,
-  IMAGE_MIME,
-  LOGO_MIME,
-} from "@/lib/upload";
 
 const PROFILE = "/dashboard/profile";
 
-/**
- * Uploads an avatar to the PUBLIC `avatars` bucket under {user_id}/ and
- * stores the public URL on the profile. Storage RLS limits writes to the
- * owner's own folder. Replacing re-uses the same path (upsert).
+/*
+ * Avatar/logo files are uploaded DIRECTLY from the browser to Supabase
+ * Storage (see the profile page's UploadTile) to avoid Vercel's 4.5 MB
+ * Server Action body limit. These actions only record the resulting public
+ * URL on the profile. Storage RLS restricts writes to the owner's folder.
  */
-export async function uploadAvatar(formData: FormData) {
-  const { file, error } = validateUpload(formData.get("file"), {
-    types: IMAGE_MIME,
-    max: AVATAR_MAX,
-  });
+
+export async function recordAvatar(formData: FormData) {
+  const path = String(formData.get("path") ?? "");
+  if (!path) return;
 
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
-  if (error) redirect(`${PROFILE}?error=${encodeURIComponent(error)}`);
-
-  const f = file as File;
-  const path = `${user.id}/avatar.${extFor(f.type)}`;
-  const { error: upErr } = await supabase.storage
-    .from("avatars")
-    .upload(path, f, { upsert: true, contentType: f.type });
-  if (upErr) {
-    redirect(`${PROFILE}?error=${encodeURIComponent("Upload failed. Please try again.")}`);
-  }
 
   const {
     data: { publicUrl },
@@ -48,34 +32,18 @@ export async function uploadAvatar(formData: FormData) {
     .update({ avatar_url: `${publicUrl}?v=${Date.now()}` })
     .eq("id", user.id);
 
-  redirect(`${PROFILE}?message=avatar-updated`);
+  revalidatePath(PROFILE);
 }
 
-/**
- * Uploads a logo to the PUBLIC `logos` bucket under {user_id}/ and stores the
- * public URL on the profile.
- */
-export async function uploadLogo(formData: FormData) {
-  const { file, error } = validateUpload(formData.get("file"), {
-    types: LOGO_MIME,
-    max: AVATAR_MAX,
-  });
+export async function recordLogo(formData: FormData) {
+  const path = String(formData.get("path") ?? "");
+  if (!path) return;
 
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
-  if (error) redirect(`${PROFILE}?error=${encodeURIComponent(error)}`);
-
-  const f = file as File;
-  const path = `${user.id}/logo.${extFor(f.type)}`;
-  const { error: upErr } = await supabase.storage
-    .from("logos")
-    .upload(path, f, { upsert: true, contentType: f.type });
-  if (upErr) {
-    redirect(`${PROFILE}?error=${encodeURIComponent("Upload failed. Please try again.")}`);
-  }
 
   const {
     data: { publicUrl },
@@ -86,5 +54,5 @@ export async function uploadLogo(formData: FormData) {
     .update({ logo_url: `${publicUrl}?v=${Date.now()}` })
     .eq("id", user.id);
 
-  redirect(`${PROFILE}?message=logo-updated`);
+  revalidatePath(PROFILE);
 }

@@ -1,48 +1,29 @@
 "use server";
 
-import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { assertAdmin } from "@/lib/admin";
-import {
-  validateUpload,
-  extFor,
-  safeName,
-  pathFromPublicUrl,
-  IMAGE_MIME,
-  DOC_MIME,
-  MEDIA_MAX,
-  DOC_MAX,
-} from "@/lib/upload";
+import { pathFromPublicUrl } from "@/lib/upload";
 
 const editorPath = (id: string) => `/dashboard/admin/projects/${id}`;
 
-/* ----------------------------- Project media ---------------------------- */
-// PUBLIC bucket `project-media`. Stores the public URL on project_media.
+/*
+ * Files are uploaded DIRECTLY from the browser to Supabase Storage (see
+ * uploads.tsx) to avoid Vercel's 4.5 MB Server Action body limit. These
+ * actions only record the resulting storage path/URL in the database, and
+ * re-check admin authorization server-side. Storage RLS independently
+ * restricts who may write to these buckets.
+ */
 
-export async function uploadProjectMedia(formData: FormData) {
+/* ----------------------------- Project media ---------------------------- */
+
+export async function recordProjectMedia(formData: FormData) {
   const projectId = String(formData.get("project_id") ?? "");
-  if (!projectId) return;
+  const path = String(formData.get("path") ?? "");
+  if (!projectId || !path) return;
 
   const supabase = await createClient();
   await assertAdmin(supabase);
-
-  const { file, error } = validateUpload(formData.get("file"), {
-    types: IMAGE_MIME,
-    max: MEDIA_MAX,
-  });
-  if (error) {
-    redirect(`${editorPath(projectId)}?error=${encodeURIComponent(error)}`);
-  }
-
-  const f = file as File;
-  const path = `${projectId}/media-${Date.now()}.${extFor(f.type)}`;
-  const { error: upErr } = await supabase.storage
-    .from("project-media")
-    .upload(path, f, { contentType: f.type });
-  if (upErr) {
-    redirect(`${editorPath(projectId)}?error=${encodeURIComponent("Upload failed.")}`);
-  }
 
   const {
     data: { publicUrl },
@@ -56,7 +37,7 @@ export async function uploadProjectMedia(formData: FormData) {
     is_public: true,
   });
 
-  redirect(`${editorPath(projectId)}?message=media-added`);
+  revalidatePath(editorPath(projectId));
 }
 
 export async function deleteProjectMedia(formData: FormData) {
@@ -98,7 +79,6 @@ export async function setHeroImage(formData: FormData) {
 }
 
 /* ------------------------------ Floorplans ------------------------------ */
-// PUBLIC bucket `project-media` (floorplans subfolder).
 
 function numOrNull(v: FormDataEntryValue | null): number | null {
   const s = String(v ?? "").trim();
@@ -107,47 +87,29 @@ function numOrNull(v: FormDataEntryValue | null): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-export async function addFloorplan(formData: FormData) {
+export async function recordFloorplan(formData: FormData) {
   const projectId = String(formData.get("project_id") ?? "");
   if (!projectId) return;
 
   const supabase = await createClient();
   await assertAdmin(supabase);
 
-  let imageUrl: string | null = null;
-  const fileEntry = formData.get("file");
-  if (fileEntry instanceof File && fileEntry.size > 0) {
-    const { file, error } = validateUpload(fileEntry, {
-      types: IMAGE_MIME,
-      max: MEDIA_MAX,
-    });
-    if (error) {
-      redirect(`${editorPath(projectId)}?error=${encodeURIComponent(error)}`);
-    }
-    const f = file as File;
-    const path = `${projectId}/floorplans/fp-${Date.now()}.${extFor(f.type)}`;
-    const { error: upErr } = await supabase.storage
-      .from("project-media")
-      .upload(path, f, { contentType: f.type });
-    if (upErr) {
-      redirect(`${editorPath(projectId)}?error=${encodeURIComponent("Upload failed.")}`);
-    }
-    imageUrl = supabase.storage.from("project-media").getPublicUrl(path).data
-      .publicUrl;
-  }
+  const imagePath = String(formData.get("image_path") ?? "");
+  const imageUrl = imagePath
+    ? supabase.storage.from("project-media").getPublicUrl(imagePath).data
+        .publicUrl
+    : null;
 
   await supabase.from("project_floorplans").insert({
     project_id: projectId,
     plan_name: String(formData.get("plan_name") ?? "") || null,
     unit_type: String(formData.get("unit_type") ?? "") || null,
-    beds: numOrNull(formData.get("beds")),
-    baths: numOrNull(formData.get("baths")),
     sqft_interior: numOrNull(formData.get("sqft_interior")),
     price_public: numOrNull(formData.get("price_public")),
     floorplan_image_url: imageUrl,
   });
 
-  redirect(`${editorPath(projectId)}?message=floorplan-added`);
+  revalidatePath(editorPath(projectId));
 }
 
 export async function deleteFloorplan(formData: FormData) {
@@ -177,35 +139,15 @@ export async function deleteFloorplan(formData: FormData) {
 // PRIVATE bucket `project-documents`. Stores the storage PATH (not a public
 // URL). Read access is via short-lived signed URLs for authorized users only.
 
-export async function uploadDocument(formData: FormData) {
+export async function recordDocument(formData: FormData) {
   const projectId = String(formData.get("project_id") ?? "");
   const title = String(formData.get("title") ?? "").trim();
   const documentType = String(formData.get("document_type") ?? "brochure").trim();
-  if (!projectId) return;
+  const path = String(formData.get("path") ?? "");
+  if (!projectId || !path || !title) return;
 
   const supabase = await createClient();
   const adminId = await assertAdmin(supabase);
-
-  if (!title) {
-    redirect(`${editorPath(projectId)}?error=${encodeURIComponent("A document title is required.")}`);
-  }
-
-  const { file, error } = validateUpload(formData.get("file"), {
-    types: DOC_MIME,
-    max: DOC_MAX,
-  });
-  if (error) {
-    redirect(`${editorPath(projectId)}?error=${encodeURIComponent(error)}`);
-  }
-
-  const f = file as File;
-  const path = `${projectId}/${Date.now()}-${safeName(f.name)}`;
-  const { error: upErr } = await supabase.storage
-    .from("project-documents")
-    .upload(path, f, { contentType: f.type });
-  if (upErr) {
-    redirect(`${editorPath(projectId)}?error=${encodeURIComponent("Upload failed.")}`);
-  }
 
   await supabase.from("project_documents").insert({
     project_id: projectId,
@@ -217,7 +159,7 @@ export async function uploadDocument(formData: FormData) {
     uploaded_by_user_id: adminId,
   });
 
-  redirect(`${editorPath(projectId)}?message=document-added`);
+  revalidatePath(editorPath(projectId));
 }
 
 export async function deleteDocument(formData: FormData) {
