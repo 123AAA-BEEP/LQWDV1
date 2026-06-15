@@ -1,0 +1,170 @@
+import openpyxl, re, uuid, sys, datetime, os
+
+XLSX = sys.argv[1]
+OUT  = sys.argv[2]
+EXISTING = set(s for s in open('/tmp/existing_slugs.txt').read().split('|') if s)
+NS = uuid.UUID('6f1d2c3e-0000-4000-8000-000000000001')  # same namespace as PDF batch
+TODAY = '2026-06-15'
+
+PT = {'single family':'single_family','townhouse':'townhouse','condo':'condo',
+      'condominium':'condo','high rise':'condo','mid rise':'condo','low rise':'condo'}
+STATUS = {'active':'selling','coming soon':'coming_soon','sold out':'sold_out',
+          'registration':'coming_soon','selling':'selling','sold':'sold_out'}
+CSTATUS = {'pre-construction':'preconstruction','preconstruction':'preconstruction',
+           'under construction':'under_construction','construction':'under_construction',
+           'completed':'completed','complete':'completed','occupancy':'completed'}
+PTLABEL = {'single_family':'single-family homes','townhouse':'townhomes','condo':'condominiums'}
+
+def s(v):
+    if v is None: return None
+    if isinstance(v, float) and v.is_integer(): v = int(v)
+    v = str(v).strip()
+    return v or None
+def i(v):
+    if v is None: return None
+    try:
+        n = int(float(v));  return n
+    except: return None
+def money(v):
+    if v is None: return None
+    try: return round(float(v),2)
+    except: return None
+def d(v):
+    if isinstance(v,(datetime.datetime,datetime.date)): return v.strftime('%Y-%m-%d')
+    return None
+def mY(v):
+    if isinstance(v,(datetime.datetime,datetime.date)): return v.strftime('%b %Y')
+    return None
+def Q(v): return 'null' if v is None else "'"+str(v).replace("'","''")+"'"
+def NQ(v): return 'null' if v in (None,'') else str(v)
+def slugify(x):
+    x=re.sub(r"[''`]","",x.lower()); x=re.sub(r'[^a-z0-9]+','-',x).strip('-'); return re.sub(r'-+','-',x)
+
+wb = openpyxl.load_workbook(XLSX, data_only=True)
+ws = wb.worksheets[0]
+rows = list(ws.iter_rows(values_only=True))
+hdr = [s(h) for h in rows[0]]
+idx = {h:n for n,h in enumerate(hdr) if h}
+def g(row, name): 
+    n = idx.get(name); 
+    return row[n] if n is not None and n < len(row) else None
+
+recs=[]
+for row in rows[1:]:
+    inv = i(g(row,'Inventory number'))
+    name = s(g(row,'Development name'))
+    if not inv or not name: continue
+    recs.append({
+      'inv':inv,'name':name,
+      'status':s(g(row,'Status')),'builder':s(g(row,'Developer')),
+      'submarket':s(g(row,'Submarket')),'ptype':s(g(row,'Product type')),
+      'remaining':i(g(row,'Current remaining inventory')),'total':i(g(row,'Total units')),
+      'market':s(g(row,'Market')),'released':i(g(row,'Total number of units released')),
+      'address':s(g(row,'Address')),'cstatus':s(g(row,'Construction status')),
+      'occ':g(row,'First occ. date'),'yet':i(g(row,'Units yet to be released')),
+      'smin':i(g(row,'Min size (sq. ft)')),'smax':i(g(row,'Max size (sq. ft)')),
+      'pmin':money(g(row,'Min price')),'pmax':money(g(row,'Max price')),
+      'storeys':i(g(row,'Number of storeys')),'ctype':s(g(row,'Construction type')),
+      'maint':s(g(row,'Maintenance fee PPSF')),'lottype':s(g(row,'Lot type')),
+      'lotsize':s(g(row,'Lot size (ft.)')),'salesstart':g(row,'Sales start date'),
+      'tenure':s(g(row,'Tenure')),'salesteam':s(g(row,'Sales team')),
+      'updated':g(row,'Last updated date'),'mortgage':s(g(row,'Mortgage program')),
+      'phone':s(g(row,'Contact number')),'coop':s(g(row,'Cooperation status')),
+      'mls':s(g(row,'MLS Zone')),'region':s(g(row,'Region')),
+      'muni':s(g(row,'Municipality')),'psub':s(g(row,'Product subtype')),
+    })
+
+# slugs
+used=set(EXISTING)
+for r in recs:
+    base=slugify(r['name']) or ('project-'+str(r['inv']))
+    muni=slugify(r['muni'] or '')
+    cand=base
+    if cand in used and muni: cand=f"{base}-{muni}"
+    n=2
+    while cand in used: cand=f"{base}-{n}"; n+=1
+    used.add(cand); r['slug']=cand
+    r['id']=str(uuid.uuid5(NS,'altus:'+str(r['inv'])))
+
+def own(t):
+    if not t: return None
+    t=t.lower()
+    if 'condominium' in t: return 'condominium'
+    if 'common element' in t: return 'freehold_common_element'
+    if 'freehold' in t: return 'freehold'
+    return None
+def descr(r):
+    sub=(r['psub']+' ' if r['psub'] else '')
+    pt=PTLABEL.get(PT.get((r['ptype'] or '').lower(),''), (r['ptype'] or 'New homes').lower())
+    by=f" by {r['builder']}" if r['builder'] else ''
+    loc=r['muni'] or 'the GTA'; reg=f" ({r['region']} Region)" if r['region'] else ''
+    out=f"{sub}{pt}{by} in {loc}{reg}."
+    return out[0].upper()+out[1:]
+def notes(r):
+    bits=[f"Source: Altus Group new-homes export.",
+          f"Altus inventory #{r['inv']}.",
+          f"Submarket: {r['submarket']}." if r['submarket'] else None,
+          f"Market: {r['market']}." if r['market'] else None,
+          f"Remaining inventory: {r['remaining']}." if r['remaining'] is not None else None,
+          f"Units released: {r['released']}." if r['released'] is not None else None,
+          f"Units yet to be released: {r['yet']}." if r['yet'] is not None else None,
+          f"Construction type: {r['ctype']}." if r['ctype'] else None,
+          f"Maintenance fee PPSF: {r['maint']}." if r['maint'] else None,
+          f"Lot: {r['lottype']} {r['lotsize']}ft.".strip() if (r['lottype'] or r['lotsize']) else None,
+          f"Sales start: {d(r['salesstart'])}." if d(r['salesstart']) else None,
+          f"Mortgage program: {r['mortgage']}." if r['mortgage'] else None,
+          f"MLS Zone: {r['mls']}." if r['mls'] else None,
+          f"Sales team: {r['salesteam']}." if r['salesteam'] else None,
+          f"Cooperation: {r['coop']}." if r['coop'] else None,
+          f"Altus last updated: {d(r['updated'])}." if d(r['updated']) else None,
+          f"Imported {TODAY}."]
+    return ' '.join(b for b in bits if b)
+
+proj=[]; comm=[]
+for r in recs:
+    pt=PT.get((r['ptype'] or '').lower())
+    ss=STATUS.get((r['status'] or '').lower(),'unknown')
+    cs=CSTATUS.get((r['cstatus'] or '').lower())
+    occ=mY(r['occ'])
+    proj.append(f"""('{r['id']}', {Q(r['slug'])}, {Q(r['name'])}, {Q(r['builder'])},
+  {Q(pt)}, {Q(ss)}, {Q(cs)}, {Q(own(r['tenure']))},
+  {Q(r['address'])}, {Q(r['muni'])}, {Q(r['muni'])}, 'Ontario',
+  {NQ(r['total'] if r['total'] else None)}, {NQ(r['storeys'])},
+  {NQ(r['smin'])}, {NQ(r['smax'])}, {NQ(r['pmin'])}, {NQ(r['pmax'])}, 'CAD',
+  {Q('Est. occupancy '+occ if occ else None)}, {Q(d(r['occ']))},
+  {Q(r['phone'])}, {Q(descr(r))},
+  'Altus Group', {Q(r['builder'])}, {Q(notes(r))},
+  {Q(d(r['updated']))}, true, 'draft', false)""")
+    if r['coop'] or r['salesteam']:
+        cid=str(uuid.uuid5(NS,'altus-comm:'+str(r['inv'])))
+        neg=' '.join(x for x in [f"Cooperation status: {r['coop']}." if r['coop'] else None,
+                                 f"Sales team: {r['salesteam']}." if r['salesteam'] else None] if x)
+        comm.append(f"('{cid}', '{r['id']}', null, null, {Q(neg)})")
+
+sql=[]
+sql.append("-- LIQWD — Altus Group batch import (Georgina, York Region)")
+sql.append(f"-- Generated {TODAY} from structured Altus xlsx export. {len(proj)} projects.")
+sql.append("-- Idempotent: deterministic uuid5 ids + ON CONFLICT DO NOTHING. Re-runnable.")
+sql.append("-- Altus inventory numbers live ONLY in admin-only provenance (import_notes); never public.\n")
+sql.append("""insert into public.projects (
+  id, slug, project_name, builder_name,
+  project_type, sales_status, construction_status, ownership_type,
+  address_full, city, municipality, province,
+  total_units, storeys,
+  size_range_sqft_min, size_range_sqft_max, price_from_public, price_to_public, price_currency,
+  occupancy_estimate_text, occupancy_start_date,
+  sales_centre_phone, description_short,
+  external_source, builder_names_raw, import_notes,
+  last_verified_at, is_seeded, record_status, public_page_enabled
+) values""")
+sql.append(",\n".join(proj))
+sql.append("on conflict (id) do nothing;\n")
+sql.append("""insert into public.project_private_commercials (
+  id, project_id, commission_summary, commission_percent, negotiability_notes
+) values""")
+sql.append(",\n".join(comm))
+sql.append("on conflict (project_id) do nothing;\n")
+open(OUT,'w').write("\n".join(sql))
+print(f"projects={len(proj)} commercials={len(comm)} -> {OUT}")
+print("construction_status values seen:", sorted(set((r['cstatus'] or '') for r in recs)))
+print("sample slugs:", [r['slug'] for r in recs[:6]])
