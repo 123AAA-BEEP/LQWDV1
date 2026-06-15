@@ -158,7 +158,7 @@ export default async function ProjectDetailPage({
                 />
                 {commercials.negotiability_notes ? (
                   <Detail
-                    label="Notes"
+                    label="Commission notes"
                     value={commercials.negotiability_notes}
                     full
                   />
