@@ -38,7 +38,7 @@ export default async function SuggestUpdatePage({
 
   const supabase = await createClient();
   const { data: project } = await supabase
-    .from("projects")
+    .from("broker_projects_view")
     .select("id, slug, project_name")
     .eq("slug", slug)
     .maybeSingle();

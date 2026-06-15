@@ -32,8 +32,9 @@ export default async function ProjectDetailPage({
   }
 
   const supabase = await createClient();
+  // Broker-safe view: excludes private import/source provenance (admin-only).
   const { data: project } = await supabase
-    .from("projects")
+    .from("broker_projects_view")
     .select("*")
     .eq("slug", slug)
     .maybeSingle();
