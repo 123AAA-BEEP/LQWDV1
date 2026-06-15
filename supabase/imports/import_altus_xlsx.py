@@ -51,7 +51,7 @@ def g(row, name):
 
 recs=[]
 for row in rows[1:]:
-    inv = i(g(row,'Inventory number'))
+    inv = s(g(row,'Inventory number'))
     name = s(g(row,'Development name'))
     if not inv or not name: continue
     recs.append({
@@ -73,6 +73,22 @@ for row in rows[1:]:
       'mls':s(g(row,'MLS Zone')),'region':s(g(row,'Region')),
       'muni':s(g(row,'Municipality')),'psub':s(g(row,'Product subtype')),
     })
+
+# diagnostics + dedupe by inventory number (keep most-recently-updated)
+total_data = sum(1 for row in rows[1:] if any(c is not None for c in row))
+print(f"[diag] data rows={total_data} parsed recs={len(recs)}")
+by_inv = {}
+for r in recs:
+    k = r['inv']
+    if k not in by_inv:
+        by_inv[k] = r
+    else:
+        a = by_inv[k].get('updated'); b = r.get('updated')
+        # keep the row with the later 'Last updated date' (fallback: keep existing)
+        if b is not None and (a is None or (hasattr(b,'date') and hasattr(a,'date') and b > a)):
+            by_inv[k] = r
+recs = list(by_inv.values())
+print(f"[diag] distinct inventory={len(recs)} (deduped {len(by_inv)} keys)")
 
 # slugs
 used=set(EXISTING)
@@ -124,7 +140,11 @@ proj=[]; comm=[]
 for r in recs:
     pt=PT.get((r['ptype'] or '').lower())
     ss=STATUS.get((r['status'] or '').lower(),'unknown')
-    cs=CSTATUS.get((r['cstatus'] or '').lower())
+    cs=None
+    _cv=(r['cstatus'] or '').lower()
+    if 'under construction' in _cv: cs='under_construction'
+    elif 'pre-construction' in _cv or 'preconstruction' in _cv: cs='preconstruction'
+    elif 'complete' in _cv or 'occupancy' in _cv: cs='completed'
     occ=mY(r['occ'])
     proj.append(f"""('{r['id']}', {Q(r['slug'])}, {Q(r['name'])}, {Q(r['builder'])},
   {Q(pt)}, {Q(ss)}, {Q(cs)}, {Q(own(r['tenure']))},
@@ -158,12 +178,26 @@ sql.append("""insert into public.projects (
   last_verified_at, is_seeded, record_status, public_page_enabled
 ) values""")
 sql.append(",\n".join(proj))
-sql.append("on conflict (id) do nothing;\n")
+sql.append("""on conflict (id) do update set
+  project_name=excluded.project_name, builder_name=excluded.builder_name,
+  project_type=excluded.project_type, sales_status=excluded.sales_status,
+  construction_status=excluded.construction_status, ownership_type=excluded.ownership_type,
+  address_full=excluded.address_full, city=excluded.city, municipality=excluded.municipality,
+  province=excluded.province, total_units=excluded.total_units, storeys=excluded.storeys,
+  size_range_sqft_min=excluded.size_range_sqft_min, size_range_sqft_max=excluded.size_range_sqft_max,
+  price_from_public=excluded.price_from_public, price_to_public=excluded.price_to_public,
+  price_currency=excluded.price_currency, occupancy_estimate_text=excluded.occupancy_estimate_text,
+  occupancy_start_date=excluded.occupancy_start_date, sales_centre_phone=excluded.sales_centre_phone,
+  description_short=excluded.description_short, external_source=excluded.external_source,
+  builder_names_raw=excluded.builder_names_raw, import_notes=excluded.import_notes,
+  last_verified_at=excluded.last_verified_at, updated_at=now();\n""")
 sql.append("""insert into public.project_private_commercials (
   id, project_id, commission_summary, commission_percent, negotiability_notes
 ) values""")
 sql.append(",\n".join(comm))
-sql.append("on conflict (project_id) do nothing;\n")
+sql.append("""on conflict (project_id) do update set
+  commission_summary=excluded.commission_summary, commission_percent=excluded.commission_percent,
+  negotiability_notes=excluded.negotiability_notes, updated_at=now();\n""")
 open(OUT,'w').write("\n".join(sql))
 print(f"projects={len(proj)} commercials={len(comm)} -> {OUT}")
 print("construction_status values seen:", sorted(set((r['cstatus'] or '') for r in recs)))
