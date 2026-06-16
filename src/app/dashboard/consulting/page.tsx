@@ -16,13 +16,13 @@ const FRACTIONAL_SERVICES: Service[] = [
     name: "Fractional sales & marketing",
     tagline: "Hire a fractional CMO or sales lead",
     description:
-      "On-demand senior sales and marketing leadership for developers who need strategy and execution without a full-time hire.",
+      "On-demand senior sales and marketing leadership without a full-time hire — strategy and execution for your launches.",
   },
   {
     name: "Marketing & PR agencies",
     tagline: "Access vetted agency partners",
     description:
-      "Connect developers with marketing, PR, and creative agencies — and flag accounts that may be ready to switch providers as a lead-gen signal.",
+      "Get matched with marketing, PR, and creative agencies that specialize in new-home developments.",
   },
   {
     name: "Event staff",
@@ -44,22 +44,25 @@ const FRACTIONAL_SERVICES: Service[] = [
   },
 ];
 
-export default function AdminConsulting() {
+export default function DeveloperConsulting() {
   return (
     <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight text-ink">
+          Hire a fractional &amp; access consulting services
+        </h1>
+        <p className="mt-1 text-slate-500">
+          On-demand fractional talent, agencies, event staff, and research to
+          help you launch and sell your developments.
+        </p>
+      </div>
+
       <Card className="border-brand-200 bg-brand-50">
-        <CardBody className="space-y-2">
-          <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-lg font-semibold text-ink">
-              Hire a fractional &amp; access consulting services
-            </h2>
-            <Badge tone="brand">Coming soon</Badge>
-          </div>
+        <CardBody className="flex flex-wrap items-center gap-3">
+          <Badge tone="brand">Coming soon</Badge>
           <p className="text-sm text-slate-600">
-            A future marketplace connecting developers with fractional talent,
-            agencies, event staff, and research — and a lead-generation surface
-            for LIQWD to flag developers who may need a new marketing or PR
-            partner. This is a placeholder for the section we&apos;ll build out.
+            This marketplace is on the way. Browse the services we&apos;re
+            building out below.
           </p>
         </CardBody>
       </Card>

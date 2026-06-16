@@ -17,15 +17,21 @@ export function Sidebar({
   name,
   email,
   isAdmin = false,
+  isDeveloper = false,
 }: {
   name: string;
   email: string | null;
   isAdmin?: boolean;
+  isDeveloper?: boolean;
 }) {
   const pathname = usePathname();
-  const nav = isAdmin
-    ? [...NAV, { href: "/dashboard/admin", label: "Admin" }]
-    : NAV;
+  const nav = [
+    ...NAV,
+    ...(isDeveloper
+      ? [{ href: "/dashboard/consulting", label: "Consulting" }]
+      : []),
+    ...(isAdmin ? [{ href: "/dashboard/admin", label: "Admin" }] : []),
+  ];
 
   return (
     <aside className="flex w-60 shrink-0 flex-col border-r border-slate-200 bg-white">
