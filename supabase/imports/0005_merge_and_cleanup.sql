@@ -54,4 +54,15 @@ update public.project_private_commercials
 set negotiability_notes = null
 where negotiability_notes ilike 'Cooperation status:%';
 
+-- 3. Name-variant overlap not caught by the exact name+city match above:
+--    Livabl "The Nine" vs Altus "Nine" (same Mattamy community in Mississauga).
+--    Adopt the proper community name on the Altus phases and drop the empty
+--    Livabl duplicate (it carried no hero/description).
+update public.projects
+set project_name = 'The Nine'
+where city = 'Mississauga' and project_name = 'Nine' and builder_name = 'Mattamy Homes';
+
+delete from public.projects
+where slug = 'the-nine' and external_source = 'livabl';
+
 commit;
