@@ -18,6 +18,7 @@ import {
 } from "./actions";
 import { ProjectUploads } from "./uploads";
 import { AgentSelect } from "./agent-select";
+import { SeoFields } from "./seo-fields";
 
 export const metadata: Metadata = { title: "Edit project" };
 export const dynamic = "force-dynamic";
@@ -464,38 +465,15 @@ export default async function AdminProjectEditor({
                 required
               />
             </Field>
-            <Field label="SEO title" htmlFor="seo_title">
-              <Input
-                id="seo_title"
-                name="seo_title"
-                defaultValue={page?.seo_title ?? ""}
-              />
-            </Field>
-            <Field label="Meta description" htmlFor="seo_meta_description">
-              <Textarea
-                id="seo_meta_description"
-                name="seo_meta_description"
-                defaultValue={page?.seo_meta_description ?? ""}
-              />
-            </Field>
-            <Field label="Page summary" htmlFor="page_summary">
-              <Textarea
-                id="page_summary"
-                name="page_summary"
-                defaultValue={page?.page_summary ?? ""}
-              />
-            </Field>
-            <Field
-              label="Public description"
-              htmlFor="page_description"
-              hint="Approved, public-safe copy shown on the public page."
-            >
-              <Textarea
-                id="page_description"
-                name="page_description"
-                defaultValue={page?.page_description ?? ""}
-              />
-            </Field>
+            <SeoFields
+              projectId={id}
+              defaults={{
+                seo_title: page?.seo_title ?? "",
+                seo_meta_description: page?.seo_meta_description ?? "",
+                page_summary: page?.page_summary ?? "",
+                page_description: page?.page_description ?? "",
+              }}
+            />
             <label className="flex items-center gap-3 text-sm text-slate-600">
               <input
                 type="checkbox"
