@@ -99,13 +99,18 @@ export default async function ProjectDetailPage({
               {[project.builder_name, location].filter(Boolean).join(" · ")}
             </p>
           </div>
-          <ButtonLink
-            href={`/dashboard/projects/${slug}/update`}
-            variant="secondary"
-            size="sm"
-          >
-            Suggest an update
-          </ButtonLink>
+          <div className="flex flex-wrap gap-2">
+            <ButtonLink href={`/dashboard/projects/${slug}/propose`} size="sm">
+              Submit a proposal
+            </ButtonLink>
+            <ButtonLink
+              href={`/dashboard/projects/${slug}/update`}
+              variant="secondary"
+              size="sm"
+            >
+              Suggest an update
+            </ButtonLink>
+          </div>
         </div>
       </div>
 

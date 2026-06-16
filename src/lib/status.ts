@@ -17,6 +17,15 @@ export type UpdateStatus =
   | "approved"
   | "rejected";
 
+export type ProposalStatus =
+  | "submitted"
+  | "under_review"
+  | "countered"
+  | "accepted"
+  | "declined"
+  | "withdrawn"
+  | "expired";
+
 export type RecordStatus =
   | "draft"
   | "pending_review"
@@ -43,6 +52,30 @@ export const UPDATE_STATUS: Record<
   needs_changes: { label: "Needs changes", tone: "warning" },
   approved: { label: "Approved", tone: "success" },
   rejected: { label: "Rejected", tone: "danger" },
+};
+
+export const PROPOSAL_STATUS: Record<
+  ProposalStatus,
+  { label: string; tone: Tone }
+> = {
+  submitted: { label: "Submitted", tone: "warning" },
+  under_review: { label: "Under review", tone: "warning" },
+  countered: { label: "Countered", tone: "brand" },
+  accepted: { label: "Accepted", tone: "success" },
+  declined: { label: "Declined", tone: "danger" },
+  withdrawn: { label: "Withdrawn", tone: "neutral" },
+  expired: { label: "Expired", tone: "neutral" },
+};
+
+/** Statuses that still need an admin decision (the "to review" queue). */
+export const PROPOSAL_OPEN_STATUSES: ProposalStatus[] = [
+  "submitted",
+  "under_review",
+];
+
+export const PROPOSAL_FORMAT_LABELS: Record<string, string> = {
+  worksheet: "Worksheet",
+  freeform: "Freeform",
 };
 
 export const RECORD_STATUS: Record<
