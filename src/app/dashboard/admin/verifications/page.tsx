@@ -55,20 +55,40 @@ export default async function VerificationsQueue() {
   const pendingRows = (pending as unknown as Row[]) ?? [];
   const recentRows = (recent as unknown as Row[]) ?? [];
 
+  // Also surface users who signed up + confirmed email (profile = pending) but
+  // haven't submitted the RECO form yet, so an admin can verify them directly.
+  const { data: pendingProfiles } = await supabase
+    .from("profiles")
+    .select("id, first_name, last_name, email, created_at")
+    .eq("verification_status", "pending")
+    .order("created_at", { ascending: true });
+
+  const submittedIds = new Set(pendingRows.map((r) => r.profile_id));
+  const unsubmitted = ((pendingProfiles ?? []) as {
+    id: string;
+    first_name: string | null;
+    last_name: string | null;
+    email: string | null;
+    created_at: string;
+  }[]).filter((p) => !submittedIds.has(p.id));
+
+  const totalPending = pendingRows.length + unsubmitted.length;
+
   return (
     <div className="space-y-8">
       <section className="space-y-3">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-          Pending ({pendingRows.length})
+          Pending ({totalPending})
         </h2>
-        {pendingRows.length === 0 ? (
+        {totalPending === 0 ? (
           <Card>
             <CardBody className="text-center text-sm text-slate-500">
-              No verification requests are waiting for review.
+              No users are waiting for verification.
             </CardBody>
           </Card>
         ) : (
-          pendingRows.map((r) => (
+          <>
+            {pendingRows.map((r) => (
             <Card key={r.id}>
               <CardBody className="space-y-3">
                 <div className="flex flex-wrap items-start justify-between gap-2">
@@ -133,7 +153,50 @@ export default async function VerificationsQueue() {
                 </div>
               </CardBody>
             </Card>
-          ))
+            ))}
+            {unsubmitted.map((u) => (
+              <Card key={u.id}>
+                <CardBody className="space-y-3">
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div>
+                      <p className="font-medium text-slate-800">
+                        {[u.first_name, u.last_name].filter(Boolean).join(" ") ||
+                          u.email ||
+                          "Unknown user"}
+                      </p>
+                      <p className="text-xs text-slate-400">{u.email}</p>
+                    </div>
+                    <span className="text-xs text-slate-400">
+                      {new Date(u.created_at).toLocaleDateString("en-CA")}
+                    </span>
+                  </div>
+                  <p className="text-xs text-amber-600">
+                    Signed up — RECO form not submitted yet.
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <DecisionButton
+                      profileId={u.id}
+                      decision="approved"
+                      label="Approve"
+                      variant="primary"
+                    />
+                    <DecisionButton
+                      profileId={u.id}
+                      decision="rejected"
+                      label="Reject"
+                      variant="secondary"
+                    />
+                    <DecisionButton
+                      profileId={u.id}
+                      decision="suspended"
+                      label="Suspend"
+                      variant="danger"
+                    />
+                  </div>
+                </CardBody>
+              </Card>
+            ))}
+          </>
         )}
       </section>
 
@@ -177,7 +240,7 @@ function DecisionButton({
   label,
   variant,
 }: {
-  requestId: string;
+  requestId?: string;
   profileId: string;
   decision: string;
   label: string;
@@ -185,7 +248,9 @@ function DecisionButton({
 }) {
   return (
     <form action={decideVerification}>
-      <input type="hidden" name="request_id" value={requestId} />
+      {requestId ? (
+        <input type="hidden" name="request_id" value={requestId} />
+      ) : null}
       <input type="hidden" name="profile_id" value={profileId} />
       <input type="hidden" name="decision" value={decision} />
       <Button type="submit" size="sm" variant={variant}>

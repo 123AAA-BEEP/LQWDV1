@@ -16,6 +16,14 @@ function str(v: FormDataEntryValue | null): string | null {
   return s || null;
 }
 
+// Tri-state boolean from a Select: "" -> null (unknown), "true"/"false".
+function bool(v: FormDataEntryValue | null): boolean | null {
+  const s = String(v ?? "");
+  if (s === "true") return true;
+  if (s === "false") return false;
+  return null;
+}
+
 /** Edits canonical project fields (admin-only). */
 export async function updateProject(formData: FormData) {
   const id = String(formData.get("project_id") ?? "");
@@ -44,6 +52,36 @@ export async function updateProject(formData: FormData) {
 
   revalidatePath(`/dashboard/admin/projects/${id}`);
   revalidatePath("/dashboard/admin/projects");
+}
+
+/**
+ * Upserts the broker-only commission/negotiability terms (admin-only).
+ * Approved brokers read these via RLS; only admins (and, later, a scoped
+ * verified-builder role) write them.
+ */
+export async function saveCommercials(formData: FormData) {
+  const projectId = String(formData.get("project_id") ?? "");
+  if (!projectId) return;
+
+  const supabase = await createClient();
+  await assertAdmin(supabase);
+
+  await supabase.from("project_private_commercials").upsert(
+    {
+      project_id: projectId,
+      commission_summary: str(formData.get("commission_summary")),
+      commission_percent: num(formData.get("commission_percent")),
+      commission_is_negotiable: bool(formData.get("commission_is_negotiable")),
+      price_is_negotiable: bool(formData.get("price_is_negotiable")),
+      incentives_are_negotiable: bool(formData.get("incentives_are_negotiable")),
+      negotiability_notes: str(formData.get("negotiability_notes")),
+      private_incentive_notes: str(formData.get("private_incentive_notes")),
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "project_id" },
+  );
+
+  revalidatePath(`/dashboard/admin/projects/${projectId}`);
 }
 
 /** Creates/updates the public publishing layer for a project (admin-only). */

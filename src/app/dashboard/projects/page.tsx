@@ -60,14 +60,14 @@ export default async function ProjectsPage({
 
   // Fetch distinct cities for the city dropdown.
   const { data: cityRows } = await supabase
-    .from("projects")
+    .from("broker_projects_view")
     .select("city")
     .not("city", "is", null)
     .order("city", { ascending: true });
   const cities = [...new Set((cityRows ?? []).map((r) => r.city as string))];
 
   let request = supabase
-    .from("projects")
+    .from("broker_projects_view")
     .select(
       "id, slug, project_name, builder_name, city, sales_status, construction_status, occupancy_estimate_text, price_from_public, price_to_public, hero_image_url, record_status",
     )

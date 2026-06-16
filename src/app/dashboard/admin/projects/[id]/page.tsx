@@ -11,6 +11,7 @@ import { RECORD_STATUS, RECORD_STATUS_OPTIONS } from "@/lib/status";
 import type { RecordStatus } from "@/lib/status";
 import {
   updateProject,
+  saveCommercials,
   savePublicPage,
   publishProject,
   unpublishProject,
@@ -49,6 +50,15 @@ export default async function AdminProjectEditor({
     .select("*")
     .eq("project_id", id)
     .maybeSingle();
+
+  // Broker-only commercial terms (admin-writable).
+  const { data: commercials } = await supabase
+    .from("project_private_commercials")
+    .select("*")
+    .eq("project_id", id)
+    .maybeSingle();
+  const tri = (v: boolean | null | undefined) =>
+    v === true ? "true" : v === false ? "false" : "";
 
   // Upload-managed assets.
   const [{ data: media }, { data: floorplans }, { data: documents }] =
@@ -288,6 +298,100 @@ export default async function AdminProjectEditor({
               </Select>
             </Field>
             <Button type="submit">Save project</Button>
+          </form>
+        </CardBody>
+      </Card>
+
+      {/* Broker-only commission & negotiability */}
+      <Card>
+        <CardBody>
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold text-ink">Commission &amp; negotiability</h3>
+            <Badge tone="warning">Broker-only</Badge>
+          </div>
+          <p className="mt-1 text-sm text-slate-500">
+            Private commercial terms. Visible to approved brokers; never shown on
+            the public page.
+          </p>
+          <form action={saveCommercials} className="mt-4 space-y-4">
+            <input type="hidden" name="project_id" value={id} />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Commission summary" htmlFor="commission_summary">
+                <Input
+                  id="commission_summary"
+                  name="commission_summary"
+                  defaultValue={commercials?.commission_summary ?? ""}
+                />
+              </Field>
+              <Field label="Commission %" htmlFor="commission_percent">
+                <Input
+                  id="commission_percent"
+                  name="commission_percent"
+                  type="number"
+                  step="0.01"
+                  defaultValue={commercials?.commission_percent ?? ""}
+                />
+              </Field>
+              <Field label="Commission negotiable" htmlFor="commission_is_negotiable">
+                <Select
+                  id="commission_is_negotiable"
+                  name="commission_is_negotiable"
+                  defaultValue={tri(commercials?.commission_is_negotiable)}
+                >
+                  <option value="">Unknown</option>
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
+                </Select>
+              </Field>
+              <Field label="Price negotiable" htmlFor="price_is_negotiable">
+                <Select
+                  id="price_is_negotiable"
+                  name="price_is_negotiable"
+                  defaultValue={tri(commercials?.price_is_negotiable)}
+                >
+                  <option value="">Unknown</option>
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
+                </Select>
+              </Field>
+              <Field
+                label="Incentives negotiable"
+                htmlFor="incentives_are_negotiable"
+              >
+                <Select
+                  id="incentives_are_negotiable"
+                  name="incentives_are_negotiable"
+                  defaultValue={tri(commercials?.incentives_are_negotiable)}
+                >
+                  <option value="">Unknown</option>
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
+                </Select>
+              </Field>
+            </div>
+            <Field
+              label="Commission notes"
+              htmlFor="negotiability_notes"
+              hint="Shown to brokers in the Commission & negotiability panel."
+            >
+              <Textarea
+                id="negotiability_notes"
+                name="negotiability_notes"
+                defaultValue={commercials?.negotiability_notes ?? ""}
+              />
+            </Field>
+            <Field
+              label="Private incentive notes"
+              htmlFor="private_incentive_notes"
+              hint="Short-term / broker-only incentive details."
+            >
+              <Textarea
+                id="private_incentive_notes"
+                name="private_incentive_notes"
+                defaultValue={commercials?.private_incentive_notes ?? ""}
+              />
+            </Field>
+            <Button type="submit">Save commission details</Button>
           </form>
         </CardBody>
       </Card>
