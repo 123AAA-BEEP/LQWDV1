@@ -28,7 +28,13 @@ const BULK_OPTIONS: { value: string; label: string }[] = [
   { value: "unpublish", label: "Unpublish" },
 ];
 
-export function ProjectsAdmin({ rows }: { rows: AdminProjectRow[] }) {
+export function ProjectsAdmin({
+  rows,
+  searching,
+}: {
+  rows: AdminProjectRow[];
+  searching?: boolean;
+}) {
   const router = useRouter();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [status, setStatus] = useState("approved");
@@ -71,8 +77,9 @@ export function ProjectsAdmin({ rows }: { rows: AdminProjectRow[] }) {
     return (
       <Card>
         <CardBody className="text-center text-sm text-slate-500">
-          No projects yet. Approve a submission to create the first canonical
-          project.
+          {searching
+            ? "No projects match your search."
+            : "No projects yet. Approve a submission to create the first canonical project."}
         </CardBody>
       </Card>
     );
