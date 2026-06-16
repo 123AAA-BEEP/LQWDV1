@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ButtonLink } from "@/components/ui/button";
+import { BrokerageStrip } from "@/components/marketing/brokerage-strip";
 import {
   HERO,
   PROOF_POINTS,
@@ -92,6 +93,9 @@ export default function LandingPage() {
           ))}
         </div>
       </section>
+
+      {/* Social proof — brokerage trust strip */}
+      <BrokerageStrip />
 
       {/* Benefits — editorial numbered list */}
       <section className="mx-auto max-w-6xl px-6 py-24 sm:py-32">

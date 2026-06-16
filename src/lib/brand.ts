@@ -61,3 +61,25 @@ export const SIGNUP_SECTION = {
   heading: "Get verified. Get access.",
   body: "Join LIQWD for free and unlock a better way to work through new-home opportunities in Ontario.",
 } as const;
+
+/**
+ * Social-proof strip on the realtor landing. Framed as "agents from these
+ * brokerages use LIQWD" — NOT brokerage endorsement (keeps within the
+ * no-implied-endorsement guardrail). Drop real logo SVGs into
+ * /public/brokerages and set `logo` to render them; otherwise a styled
+ * wordmark of `name` is shown.
+ */
+export interface Brokerage {
+  name: string;
+  logo: string | null;
+}
+
+export const TRUST: { heading: string; brokerages: Brokerage[] } = {
+  heading: "Trusted by agents from leading Canadian brokerages.",
+  brokerages: [
+    { name: "eXp Realty", logo: null },
+    { name: "Royal LePage", logo: null },
+    { name: "HomeLife", logo: null },
+    { name: "RE/MAX", logo: null },
+  ],
+};
