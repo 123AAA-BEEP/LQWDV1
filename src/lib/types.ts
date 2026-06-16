@@ -90,6 +90,23 @@ export interface PublicProject {
   price_to_public: number | null;
   price_currency: string | null;
   hero_image_url: string | null;
+  is_featured: boolean;
+  is_advertiser: boolean;
+  /** Derived: COALESCE(show_similar_override, NOT is_advertiser). */
+  show_similar_block: boolean;
+}
+
+/** Lightweight public-safe card for the related/similar-properties modules. */
+export interface PublicProjectCard {
+  project_id: string;
+  slug: string;
+  project_name: string;
+  builder_name: string | null;
+  city: string | null;
+  neighbourhood: string | null;
+  hero_image_url: string | null;
+  price_from_public: number | null;
+  price_to_public: number | null;
 }
 
 export interface RealtorCard {

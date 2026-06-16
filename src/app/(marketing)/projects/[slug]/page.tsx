@@ -6,6 +6,7 @@ import { formatPriceBand } from "@/lib/types";
 import type { PublicProject, RealtorCard } from "@/lib/types";
 import { TITLE_LABELS } from "@/lib/types";
 import { LeadForm } from "./lead-form";
+import { SimilarProperties } from "./similar";
 
 export const dynamic = "force-dynamic";
 
@@ -178,6 +179,8 @@ export default async function PublicProjectPage({
           ) : null}
         </div>
       </div>
+
+      <SimilarProperties project={project} />
     </div>
   );
 }

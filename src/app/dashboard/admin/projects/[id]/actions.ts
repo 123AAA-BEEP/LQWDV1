@@ -16,6 +16,14 @@ function str(v: FormDataEntryValue | null): string | null {
   return s || null;
 }
 
+/** Three-state similar-properties override: "show" | "hide" | "" (auto). */
+function triState(v: FormDataEntryValue | null): boolean | null {
+  const s = String(v ?? "");
+  if (s === "show") return true;
+  if (s === "hide") return false;
+  return null;
+}
+
 /** Edits canonical project fields (admin-only). */
 export async function updateProject(formData: FormData) {
   const id = String(formData.get("project_id") ?? "");
@@ -39,6 +47,8 @@ export async function updateProject(formData: FormData) {
       price_to_public: num(formData.get("price_to_public")),
       hero_image_url: str(formData.get("hero_image_url")),
       record_status: str(formData.get("record_status")) ?? "draft",
+      is_advertiser: formData.get("is_advertiser") === "on",
+      show_similar_override: triState(formData.get("show_similar_override")),
     })
     .eq("id", id);
 

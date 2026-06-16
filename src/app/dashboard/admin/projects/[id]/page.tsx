@@ -287,6 +287,50 @@ export default async function AdminProjectEditor({
                 ))}
               </Select>
             </Field>
+
+            {/* Advertising & similar-properties controls */}
+            <div className="space-y-4 rounded-lg border border-slate-200 bg-slate-50/60 p-4">
+              <p className="text-sm font-semibold text-ink">
+                Advertising & similar properties
+              </p>
+              <label className="flex items-start gap-3 text-sm text-slate-700">
+                <input
+                  type="checkbox"
+                  name="is_advertiser"
+                  defaultChecked={project.is_advertiser ?? false}
+                  className="mt-0.5 size-4"
+                />
+                <span>
+                  Paying advertiser
+                  <span className="mt-0.5 block text-xs text-slate-500">
+                    When on, the &ldquo;similar properties&rdquo; block is hidden
+                    on this page by default, so competitors aren&rsquo;t shown.
+                  </span>
+                </span>
+              </label>
+              <Field
+                label="Similar-properties block"
+                htmlFor="show_similar_override"
+                hint="Auto = show on free listings, hide for paying advertisers. Use show/hide to force it."
+              >
+                <Select
+                  id="show_similar_override"
+                  name="show_similar_override"
+                  defaultValue={
+                    project.show_similar_override === true
+                      ? "show"
+                      : project.show_similar_override === false
+                        ? "hide"
+                        : ""
+                  }
+                >
+                  <option value="">Auto (based on advertiser status)</option>
+                  <option value="show">Always show</option>
+                  <option value="hide">Always hide</option>
+                </Select>
+              </Field>
+            </div>
+
             <Button type="submit">Save project</Button>
           </form>
         </CardBody>
