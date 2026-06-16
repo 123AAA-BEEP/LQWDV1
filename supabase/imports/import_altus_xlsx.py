@@ -4,10 +4,11 @@ XLSX = sys.argv[1]
 OUT  = sys.argv[2]
 EXISTING = set(s for s in open('/tmp/existing_slugs.txt').read().split('|') if s)
 NS = uuid.UUID('6f1d2c3e-0000-4000-8000-000000000001')  # same namespace as PDF batch
-TODAY = '2026-06-15'
+TODAY = '2026-06-16'
 
 PT = {'single family':'single_family','townhouse':'townhouse','condo':'condo',
-      'condominium':'condo','high rise':'condo','mid rise':'condo','low rise':'condo'}
+      'condominium':'condo','high rise':'condo','mid rise':'condo','low rise':'condo',
+      'apartment':'condo'}
 STATUS = {'active':'selling','coming soon':'coming_soon','sold out':'sold_out',
           'registration':'coming_soon','selling':'selling','sold':'sold_out'}
 CSTATUS = {'pre-construction':'preconstruction','preconstruction':'preconstruction',
@@ -41,9 +42,25 @@ def slugify(x):
     x=re.sub(r"[''`]","",x.lower()); x=re.sub(r'[^a-z0-9]+','-',x).strip('-'); return re.sub(r'-+','-',x)
 
 wb = openpyxl.load_workbook(XLSX, data_only=True)
-ws = wb.worksheets[0]
+# Optional 3rd arg: sheet name or 0-based index (defaults to first sheet).
+if len(sys.argv) > 3:
+    sel = sys.argv[3]
+    ws = wb[sel] if sel in wb.sheetnames else wb.worksheets[int(sel)]
+else:
+    ws = wb.worksheets[0]
 rows = list(ws.iter_rows(values_only=True))
 hdr = [s(h) for h in rows[0]]
+# Some exports have a leading blank index column in the DATA rows that the
+# header lacks (data shifted one column right). Detect by checking whether the
+# 'Inventory number' values actually sit one column right of the header, and
+# realign the header if so.
+inv_pos = next((n for n, h in enumerate(hdr) if h == 'Inventory number'), None)
+if inv_pos is not None:
+    sample = [r for r in rows[1:8] if any(c is not None for c in r)]
+    here = sum(1 for r in sample if inv_pos < len(r) and r[inv_pos] not in (None, ''))
+    right = sum(1 for r in sample if inv_pos + 1 < len(r) and r[inv_pos + 1] not in (None, ''))
+    if right > here:
+        hdr = [None] + hdr
 idx = {h:n for n,h in enumerate(hdr) if h}
 def g(row, name): 
     n = idx.get(name); 
@@ -161,12 +178,8 @@ for r in recs:
                                  f"Sales team: {r['salesteam']}." if r['salesteam'] else None] if x)
         comm.append(f"('{cid}', '{r['id']}', null, null, {Q(neg)})")
 
-sql=[]
-sql.append("-- LIQWD — Altus Group batch import (Georgina, York Region)")
-sql.append(f"-- Generated {TODAY} from structured Altus xlsx export. {len(proj)} projects.")
-sql.append("-- Idempotent: deterministic uuid5 ids + ON CONFLICT DO NOTHING. Re-runnable.")
-sql.append("-- Altus inventory numbers live ONLY in admin-only provenance (import_notes); never public.\n")
-sql.append("""insert into public.projects (
+BATCH = 40  # rows per INSERT statement (keeps each statement small enough to apply)
+PCOLS = """insert into public.projects (
   id, slug, project_name, builder_name,
   project_type, sales_status, construction_status, ownership_type,
   address_full, city, municipality, province,
@@ -176,9 +189,8 @@ sql.append("""insert into public.projects (
   sales_centre_phone, description_short,
   external_source, builder_names_raw, import_notes,
   last_verified_at, is_seeded, record_status, public_page_enabled
-) values""")
-sql.append(",\n".join(proj))
-sql.append("""on conflict (id) do update set
+) values"""
+PCONFLICT = """on conflict (id) do update set
   project_name=excluded.project_name, builder_name=excluded.builder_name,
   project_type=excluded.project_type, sales_status=excluded.sales_status,
   construction_status=excluded.construction_status, ownership_type=excluded.ownership_type,
@@ -190,14 +202,27 @@ sql.append("""on conflict (id) do update set
   occupancy_start_date=excluded.occupancy_start_date, sales_centre_phone=excluded.sales_centre_phone,
   description_short=excluded.description_short, external_source=excluded.external_source,
   builder_names_raw=excluded.builder_names_raw, import_notes=excluded.import_notes,
-  last_verified_at=excluded.last_verified_at, updated_at=now();\n""")
-sql.append("""insert into public.project_private_commercials (
+  last_verified_at=excluded.last_verified_at, updated_at=now();"""
+CCOLS = """insert into public.project_private_commercials (
   id, project_id, commission_summary, commission_percent, negotiability_notes
-) values""")
-sql.append(",\n".join(comm))
-sql.append("""on conflict (project_id) do update set
+) values"""
+CCONFLICT = """on conflict (project_id) do update set
   commission_summary=excluded.commission_summary, commission_percent=excluded.commission_percent,
-  negotiability_notes=excluded.negotiability_notes, updated_at=now();\n""")
+  negotiability_notes=excluded.negotiability_notes, updated_at=now();"""
+
+sql=[]
+sql.append("-- LIQWD — Altus Group batch import")
+sql.append(f"-- Generated {TODAY} from structured Altus xlsx export. {len(proj)} projects.")
+sql.append("-- Idempotent: deterministic uuid5 ids + ON CONFLICT. Re-runnable. Batched INSERTs.")
+sql.append("-- Altus inventory numbers live ONLY in admin-only provenance (import_notes); never public.\n")
+for k in range(0, len(proj), BATCH):
+    sql.append(PCOLS)
+    sql.append(",\n".join(proj[k:k+BATCH]))
+    sql.append(PCONFLICT + "\n")
+for k in range(0, len(comm), BATCH):
+    sql.append(CCOLS)
+    sql.append(",\n".join(comm[k:k+BATCH]))
+    sql.append(CCONFLICT + "\n")
 open(OUT,'w').write("\n".join(sql))
 print(f"projects={len(proj)} commercials={len(comm)} -> {OUT}")
 print("construction_status values seen:", sorted(set((r['cstatus'] or '') for r in recs)))
