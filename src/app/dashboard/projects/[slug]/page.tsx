@@ -163,6 +163,13 @@ export default async function ProjectDetailPage({
                     full
                   />
                 ) : null}
+                {commercials.private_incentive_notes ? (
+                  <Detail
+                    label="Incentive notes"
+                    value={commercials.private_incentive_notes}
+                    full
+                  />
+                ) : null}
               </dl>
             ) : (
               <Empty>No commission details on file.</Empty>
