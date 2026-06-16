@@ -4,7 +4,8 @@ import { useState } from "react";
 import { Field, Input, Textarea } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { Notice } from "@/components/ui/notice";
-import { generateSeo, type SeoFieldsValue } from "./seo-actions";
+import { generateSeo } from "./seo-actions";
+import type { SeoFieldsValue } from "@/lib/seo";
 
 /**
  * The four public-page SEO fields plus a "Generate with AI" button. Controlled

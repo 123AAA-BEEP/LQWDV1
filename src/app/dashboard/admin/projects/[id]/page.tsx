@@ -22,6 +22,8 @@ import { SeoFields } from "./seo-fields";
 
 export const metadata: Metadata = { title: "Edit project" };
 export const dynamic = "force-dynamic";
+// Headroom for inline SEO generation on publish.
+export const maxDuration = 60;
 
 const UPLOAD_MESSAGES: Record<string, string> = {
   "media-added": "Image uploaded.",

@@ -7,6 +7,8 @@ import { ProjectsAdmin } from "./projects-admin";
 
 export const metadata: Metadata = { title: "Manage projects" };
 export const dynamic = "force-dynamic";
+// Headroom for inline SEO generation on (bulk) publish.
+export const maxDuration = 60;
 
 const PAGE_SIZE = 100;
 const SELECT =
