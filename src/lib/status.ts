@@ -78,6 +78,71 @@ export const PROPOSAL_FORMAT_LABELS: Record<string, string> = {
   freeform: "Freeform",
 };
 
+// ---- RFP / Deal Desk --------------------------------------------------------
+
+export type RfpStatus =
+  | "draft"
+  | "open"
+  | "shortlisting"
+  | "awarded"
+  | "closed"
+  | "cancelled";
+
+export type RfpProposalStatus =
+  | "submitted"
+  | "shortlisted"
+  | "awarded"
+  | "declined"
+  | "withdrawn";
+
+export const RFP_STATUS: Record<RfpStatus, { label: string; tone: Tone }> = {
+  draft: { label: "Draft", tone: "neutral" },
+  open: { label: "Open", tone: "success" },
+  shortlisting: { label: "Shortlisting", tone: "brand" },
+  awarded: { label: "Awarded", tone: "success" },
+  closed: { label: "Closed", tone: "neutral" },
+  cancelled: { label: "Cancelled", tone: "danger" },
+};
+
+export const RFP_PROPOSAL_STATUS: Record<
+  RfpProposalStatus,
+  { label: string; tone: Tone }
+> = {
+  submitted: { label: "Submitted", tone: "warning" },
+  shortlisted: { label: "Shortlisted", tone: "brand" },
+  awarded: { label: "Awarded", tone: "success" },
+  declined: { label: "Declined", tone: "danger" },
+  withdrawn: { label: "Withdrawn", tone: "neutral" },
+};
+
+export const RFP_TYPE_LABELS: Record<string, string> = {
+  new_listing: "New listing mandate",
+  bulk_purchase: "Bulk purchase",
+  inventory_unit: "Inventory unit",
+  trouble_unit: "Trouble unit",
+  full_development: "Full development",
+};
+
+export const RFP_TYPE_OPTIONS = Object.keys(RFP_TYPE_LABELS);
+
+export const DEAL_SIDE_LABELS: Record<string, string> = {
+  buy: "Buy-side",
+  list: "List-side",
+};
+
+export const RFP_VISIBILITY_LABELS: Record<string, string> = {
+  invited: "Invitation-only",
+  all_ultra: "All ultra realtors",
+};
+
+export function rfpTypeLabel(type: string): string {
+  return RFP_TYPE_LABELS[type] ?? type;
+}
+
+export function dealSideLabel(side: string): string {
+  return DEAL_SIDE_LABELS[side] ?? side;
+}
+
 export const RECORD_STATUS: Record<
   RecordStatus,
   { label: string; tone: Tone }

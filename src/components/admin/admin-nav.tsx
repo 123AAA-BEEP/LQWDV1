@@ -10,6 +10,8 @@ const TABS = [
   { href: "/dashboard/admin/submissions", label: "Submissions" },
   { href: "/dashboard/admin/updates", label: "Update requests" },
   { href: "/dashboard/admin/proposals", label: "Proposals" },
+  { href: "/dashboard/admin/rfps", label: "RFPs" },
+  { href: "/dashboard/admin/realtors", label: "Realtors" },
   { href: "/dashboard/admin/projects", label: "Projects" },
 ];
 
