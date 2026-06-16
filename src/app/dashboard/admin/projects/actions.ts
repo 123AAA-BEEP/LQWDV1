@@ -3,9 +3,15 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { assertAdmin } from "@/lib/admin";
+import { maybeGenerateSeoOnPublish } from "@/lib/seo";
 
 // record_status values an admin may set in bulk from the Projects list.
 const BULK_STATUSES = new Set(["draft", "approved", "archived"]);
+
+// Cap inline SEO generations per bulk publish so the action stays within the
+// serverless function time budget. Larger publishes fill the rest on re-run
+// (idempotent) or via the per-project editor button.
+const BULK_SEO_LIMIT = 8;
 
 /**
  * Sets record_status on many projects at once (admin-only). Used by the
@@ -91,6 +97,16 @@ export async function bulkPublish(formData: FormData) {
       published_at: now,
     })
     .in("id", ids);
+
+  // Auto-fill empty SEO for the newly-published pages, bounded by the time
+  // budget. Pages that already have SEO are skipped without an AI call, so the
+  // budget only counts real generations.
+  let budget = BULK_SEO_LIMIT;
+  for (const id of ids) {
+    if (budget <= 0) break;
+    const generated = await maybeGenerateSeoOnPublish(id);
+    if (generated) budget -= 1;
+  }
 
   revalidatePath("/dashboard/admin/projects");
 }

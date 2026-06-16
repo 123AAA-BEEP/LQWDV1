@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { assertAdmin } from "@/lib/admin";
+import { maybeGenerateSeoOnPublish } from "@/lib/seo";
 
 function num(v: FormDataEntryValue | null): number | null {
   const s = String(v ?? "").trim();
@@ -161,6 +162,9 @@ export async function publishProject(formData: FormData) {
       published_at: now,
     })
     .eq("id", projectId);
+
+  // Auto-fill any empty SEO fields now that the page is going live.
+  await maybeGenerateSeoOnPublish(projectId);
 
   revalidatePath(`/dashboard/admin/projects/${projectId}`);
   revalidatePath("/dashboard/admin/projects");
