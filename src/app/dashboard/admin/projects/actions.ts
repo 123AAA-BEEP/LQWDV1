@@ -30,3 +30,87 @@ export async function bulkSetProjectStatus(formData: FormData) {
 
   revalidatePath("/dashboard/admin/projects");
 }
+
+function idsFrom(formData: FormData): string[] {
+  return formData
+    .getAll("ids")
+    .map((v) => String(v))
+    .filter(Boolean);
+}
+
+/**
+ * Publishes many projects at once (admin-only). Mirrors the per-project
+ * publishProject: ensures an active public_project_pages row and flips the
+ * three flags the public view requires.
+ */
+export async function bulkPublish(formData: FormData) {
+  const ids = idsFrom(formData);
+  if (ids.length === 0) return;
+
+  const supabase = await createClient();
+  await assertAdmin(supabase);
+  const now = new Date().toISOString();
+
+  const { data: projects } = await supabase
+    .from("projects")
+    .select("id, slug")
+    .in("id", ids);
+  const { data: pages } = await supabase
+    .from("public_project_pages")
+    .select("project_id")
+    .in("project_id", ids);
+  const havePage = new Set((pages ?? []).map((p) => p.project_id));
+
+  const toInsert = (projects ?? [])
+    .filter((p) => !havePage.has(p.id))
+    .map((p) => ({
+      project_id: p.id,
+      slug: p.slug,
+      is_active: true,
+      published_at: now,
+    }));
+  if (toInsert.length > 0) {
+    await supabase.from("public_project_pages").insert(toInsert);
+  }
+
+  const existingIds = (projects ?? [])
+    .filter((p) => havePage.has(p.id))
+    .map((p) => p.id);
+  if (existingIds.length > 0) {
+    await supabase
+      .from("public_project_pages")
+      .update({ is_active: true, published_at: now })
+      .in("project_id", existingIds);
+  }
+
+  await supabase
+    .from("projects")
+    .update({
+      public_page_enabled: true,
+      record_status: "published",
+      published_at: now,
+    })
+    .in("id", ids);
+
+  revalidatePath("/dashboard/admin/projects");
+}
+
+/** Unpublishes many projects at once (admin-only). Leaves record_status as-is. */
+export async function bulkUnpublish(formData: FormData) {
+  const ids = idsFrom(formData);
+  if (ids.length === 0) return;
+
+  const supabase = await createClient();
+  await assertAdmin(supabase);
+
+  await supabase
+    .from("public_project_pages")
+    .update({ is_active: false })
+    .in("project_id", ids);
+  await supabase
+    .from("projects")
+    .update({ public_page_enabled: false })
+    .in("id", ids);
+
+  revalidatePath("/dashboard/admin/projects");
+}

@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/field";
 import { RECORD_STATUS } from "@/lib/status";
 import type { RecordStatus } from "@/lib/status";
-import { bulkSetProjectStatus } from "./actions";
+import { bulkSetProjectStatus, bulkPublish, bulkUnpublish } from "./actions";
 
 export interface AdminProjectRow {
   id: string;
@@ -24,6 +24,8 @@ const BULK_OPTIONS: { value: string; label: string }[] = [
   { value: "approved", label: "Approve" },
   { value: "draft", label: "Set to Draft" },
   { value: "archived", label: "Archive" },
+  { value: "publish", label: "Publish" },
+  { value: "unpublish", label: "Unpublish" },
 ];
 
 export function ProjectsAdmin({ rows }: { rows: AdminProjectRow[] }) {
@@ -51,9 +53,15 @@ export function ProjectsAdmin({ rows }: { rows: AdminProjectRow[] }) {
     if (selected.size === 0) return;
     setBusy(true);
     const fd = new FormData();
-    fd.set("status", status);
     selected.forEach((id) => fd.append("ids", id));
-    await bulkSetProjectStatus(fd);
+    if (status === "publish") {
+      await bulkPublish(fd);
+    } else if (status === "unpublish") {
+      await bulkUnpublish(fd);
+    } else {
+      fd.set("status", status);
+      await bulkSetProjectStatus(fd);
+    }
     setSelected(new Set());
     setBusy(false);
     router.refresh();
