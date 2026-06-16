@@ -46,6 +46,14 @@ Tabs: Overview, Verifications, Submissions, Update requests, Projects, Settings.
   (assigned agent dropdown — lists ALL realtors, warns if not public; SEO fields + Generate button), uploads.
 - "Suggest an update" (broker) supports image attachments (private `project-documents` bucket).
 
+## Public site & routing (same domain, separate layouts via route groups)
+- `(marketing)` → **realtor/agent** site at `/` (broker-portal pitch + brokerage trust strip).
+  Header/footer: `SiteHeader`/`SiteFooter`, agent CTAs (Sign up / Log in).
+- `(public)` → **consumer marketplace**: `/projects` (browse grid + search/filters, reads
+  `public_projects_view`) and `/projects/[slug]` (detail + lead form). Own `PublicHeader`/
+  `PublicFooter` (no broker-portal CTAs; "For agents →" cross-link). Shows only published projects.
+- `/dashboard/*` → authenticated app (gated). No subdomains — separation is by path + layout.
+
 ## Conventions / gotchas
 - Develop on `claude/peaceful-carson-jwbehu`; ship via PR → merge to `main` (Vercel auto-deploys).
 - Run `npx tsc --noEmit` and `npm run lint` before committing.
