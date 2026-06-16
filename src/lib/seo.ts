@@ -16,6 +16,30 @@ const SYSTEM =
   "Write accurate, public-safe copy using ONLY the supplied project facts — never invent prices, dates, unit counts, or features that aren't given; omit anything unknown. " +
   "Weave in the city/neighbourhood and builder naturally for local SEO. No hype clichés, no ALL CAPS, no emojis.";
 
+// Baseline per-field guidance. Admin-configured instructions (from
+// seo_prompt_settings) are appended to these at generation time.
+const FIELD_DESCRIPTIONS = {
+  seo_title: "Up to 60 characters. Include the project name and city.",
+  seo_meta_description:
+    "150–160 characters. Compelling and keyword-aware; one or two sentences.",
+  page_summary: "One or two plain-language sentences for the page header.",
+  page_description:
+    "One or two short paragraphs of public-safe marketing copy about the project.",
+} as const;
+
+interface SeoPromptSettings {
+  overall_instructions: string | null;
+  seo_title_instructions: string | null;
+  seo_meta_description_instructions: string | null;
+  page_summary_instructions: string | null;
+  page_description_instructions: string | null;
+}
+
+function describe(base: string, custom: string | null | undefined): string {
+  const extra = (custom ?? "").trim();
+  return extra ? `${base} Additional instruction: ${extra}` : base;
+}
+
 /**
  * Generates SEO metadata for a project using Claude Opus 4.8. Reads only
  * public-safe project fields (never the admin-only provenance). Returns null
@@ -36,12 +60,26 @@ export async function generateSeoFields(
     .maybeSingle();
   if (!project) return null;
 
+  const { data: settings } = await supabase
+    .from("seo_prompt_settings")
+    .select(
+      "overall_instructions, seo_title_instructions, seo_meta_description_instructions, page_summary_instructions, page_description_instructions",
+    )
+    .eq("id", 1)
+    .maybeSingle();
+  const s = (settings ?? null) as SeoPromptSettings | null;
+
+  const overall = (s?.overall_instructions ?? "").trim();
+  const system = overall
+    ? `${SYSTEM}\n\nHouse style / additional instructions:\n${overall}`
+    : SYSTEM;
+
   try {
     const client = new Anthropic();
     const message = await client.messages.create({
       model: "claude-opus-4-8",
       max_tokens: 1024,
-      system: SYSTEM,
+      system,
       tools: [
         {
           name: "emit_seo",
@@ -51,23 +89,31 @@ export async function generateSeoFields(
             properties: {
               seo_title: {
                 type: "string",
-                description:
-                  "Up to 60 characters. Include the project name and city.",
+                description: describe(
+                  FIELD_DESCRIPTIONS.seo_title,
+                  s?.seo_title_instructions,
+                ),
               },
               seo_meta_description: {
                 type: "string",
-                description:
-                  "150–160 characters. Compelling and keyword-aware; one or two sentences.",
+                description: describe(
+                  FIELD_DESCRIPTIONS.seo_meta_description,
+                  s?.seo_meta_description_instructions,
+                ),
               },
               page_summary: {
                 type: "string",
-                description:
-                  "One or two plain-language sentences for the page header.",
+                description: describe(
+                  FIELD_DESCRIPTIONS.page_summary,
+                  s?.page_summary_instructions,
+                ),
               },
               page_description: {
                 type: "string",
-                description:
-                  "One or two short paragraphs of public-safe marketing copy about the project.",
+                description: describe(
+                  FIELD_DESCRIPTIONS.page_description,
+                  s?.page_description_instructions,
+                ),
               },
             },
             required: [
