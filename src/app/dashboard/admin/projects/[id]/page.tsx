@@ -60,6 +60,18 @@ export default async function AdminProjectEditor({
   const tri = (v: boolean | null | undefined) =>
     v === true ? "true" : v === false ? "false" : "";
 
+  // Approved realtors assignable as the public-page contact agent.
+  const { data: agents } = await supabase
+    .from("public_realtor_cards")
+    .select("profile_id, first_name, last_name, brokerage")
+    .order("last_name", { ascending: true });
+  const agentList = (agents ?? []) as {
+    profile_id: string;
+    first_name: string | null;
+    last_name: string | null;
+    brokerage: string | null;
+  }[];
+
   // Upload-managed assets.
   const [{ data: media }, { data: floorplans }, { data: documents }] =
     await Promise.all([
@@ -406,6 +418,26 @@ export default async function AdminProjectEditor({
           </p>
           <form action={savePublicPage} className="mt-4 space-y-4">
             <input type="hidden" name="project_id" value={id} />
+            <Field
+              label="Assigned agent"
+              htmlFor="assigned_realtor_profile_id"
+              hint="Approved realtor shown as the contact card on the public page. Type to filter."
+            >
+              <Select
+                id="assigned_realtor_profile_id"
+                name="assigned_realtor_profile_id"
+                defaultValue={page?.assigned_realtor_profile_id ?? ""}
+              >
+                <option value="">— None —</option>
+                {agentList.map((a) => (
+                  <option key={a.profile_id} value={a.profile_id}>
+                    {[a.first_name, a.last_name].filter(Boolean).join(" ") ||
+                      "Unnamed agent"}
+                    {a.brokerage ? ` — ${a.brokerage}` : ""}
+                  </option>
+                ))}
+              </Select>
+            </Field>
             <Field
               label="Slug"
               htmlFor="slug"
