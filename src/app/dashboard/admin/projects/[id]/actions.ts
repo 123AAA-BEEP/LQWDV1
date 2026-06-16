@@ -97,6 +97,9 @@ export async function savePublicPage(formData: FormData) {
     {
       project_id: projectId,
       slug,
+      assigned_realtor_profile_id: str(
+        formData.get("assigned_realtor_profile_id"),
+      ),
       seo_title: str(formData.get("seo_title")),
       seo_meta_description: str(formData.get("seo_meta_description")),
       page_summary: str(formData.get("page_summary")),
