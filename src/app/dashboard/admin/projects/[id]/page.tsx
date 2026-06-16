@@ -17,6 +17,7 @@ import {
   unpublishProject,
 } from "./actions";
 import { ProjectUploads } from "./uploads";
+import { AgentSelect } from "./agent-select";
 
 export const metadata: Metadata = { title: "Edit project" };
 export const dynamic = "force-dynamic";
@@ -60,17 +61,40 @@ export default async function AdminProjectEditor({
   const tri = (v: boolean | null | undefined) =>
     v === true ? "true" : v === false ? "false" : "";
 
-  // Approved realtors assignable as the public-page contact agent.
-  const { data: agents } = await supabase
-    .from("public_realtor_cards")
-    .select("profile_id, first_name, last_name, brokerage")
+  // All realtors are assignable; the editor flags any who aren't approved +
+  // public-profile-enabled (their card won't render on the public page).
+  const { data: realtors } = await supabase
+    .from("profiles")
+    .select(
+      "id, first_name, last_name, brokerage_name, verification_status, is_public_profile_enabled",
+    )
+    .eq("role", "realtor")
     .order("last_name", { ascending: true });
-  const agentList = (agents ?? []) as {
-    profile_id: string;
-    first_name: string | null;
-    last_name: string | null;
-    brokerage: string | null;
-  }[];
+  const agentOptions = (
+    (realtors ?? []) as {
+      id: string;
+      first_name: string | null;
+      last_name: string | null;
+      brokerage_name: string | null;
+      verification_status: string;
+      is_public_profile_enabled: boolean;
+    }[]
+  ).map((r) => {
+    const name =
+      [r.first_name, r.last_name].filter(Boolean).join(" ") || "Unnamed agent";
+    const eligible =
+      r.verification_status === "approved" && r.is_public_profile_enabled;
+    const suffix = eligible
+      ? ""
+      : r.verification_status !== "approved"
+        ? ` (${r.verification_status})`
+        : " (profile not public)";
+    return {
+      id: r.id,
+      label: `${name}${r.brokerage_name ? ` — ${r.brokerage_name}` : ""}${suffix}`,
+      eligible,
+    };
+  });
 
   // Upload-managed assets.
   const [{ data: media }, { data: floorplans }, { data: documents }] =
@@ -421,22 +445,12 @@ export default async function AdminProjectEditor({
             <Field
               label="Assigned agent"
               htmlFor="assigned_realtor_profile_id"
-              hint="Approved realtor shown as the contact card on the public page. Type to filter."
+              hint="Realtor shown as the contact card on the public page. Lists all agents; only approved + public-profile-enabled agents render publicly."
             >
-              <Select
-                id="assigned_realtor_profile_id"
-                name="assigned_realtor_profile_id"
+              <AgentSelect
+                agents={agentOptions}
                 defaultValue={page?.assigned_realtor_profile_id ?? ""}
-              >
-                <option value="">— None —</option>
-                {agentList.map((a) => (
-                  <option key={a.profile_id} value={a.profile_id}>
-                    {[a.first_name, a.last_name].filter(Boolean).join(" ") ||
-                      "Unnamed agent"}
-                    {a.brokerage ? ` — ${a.brokerage}` : ""}
-                  </option>
-                ))}
-              </Select>
+              />
             </Field>
             <Field
               label="Slug"
