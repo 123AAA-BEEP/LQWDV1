@@ -71,3 +71,8 @@ export function isApproved(profile: Pick<Profile, "verification_status">) {
 export function isAdmin(profile: Pick<Profile, "role">) {
   return profile.role === "admin";
 }
+
+/** Developers (and admins) get the developer console for listing opportunities. */
+export function isDeveloper(profile: Pick<Profile, "role">) {
+  return profile.role === "developer" || profile.role === "admin";
+}

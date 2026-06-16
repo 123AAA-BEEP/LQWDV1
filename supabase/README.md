@@ -11,7 +11,8 @@ supabase/
 ├── migrations/
 │   ├── 0001_structural.sql     # tables, constraints, indexes, triggers, public views
 │   ├── 0002_rls_policies.sql   # helper functions, escalation guard, RLS + policies
-│   └── 0003_storage.sql        # storage buckets + storage.objects policies
+│   ├── 0003_storage.sql        # storage buckets + storage.objects policies
+│   └── 0004_opportunities.sql  # developer opportunities marketplace + market views
 └── seed.sql                    # optional, idempotent smoke-test fixtures
 ```
 
@@ -30,7 +31,8 @@ Run each file as its own query, in this exact order:
 | 1 | `migrations/0001_structural.sql` | Creates all tables, check constraints, FKs, unique constraints, indexes, the shared `updated_at` trigger, and the two public-safe **definer** views: `public_projects_view` and `public_realtor_cards`. |
 | 2 | `migrations/0002_rls_policies.sql` | Adds helper functions (`is_admin`, `is_approved`, `has_project_access`, `safe_uuid`), the profile escalation-guard trigger, enables RLS on every table, sets base grants, and creates all access policies. |
 | 3 | `migrations/0003_storage.sql` | Creates the `avatars`, `logos`, `project-media`, and `project-documents` buckets and their `storage.objects` access policies. |
-| 4 | `seed.sql` *(optional)* | Inserts one brokerage, one approved realtor (+ its `auth.users` row), one published project with an active public page, public media, private rows (commercials, broker portal, incentive, floorplan, restricted document), and a sample lead — enough to smoke-test the public view and the RLS boundary. |
+| 4 | `migrations/0004_opportunities.sql` | Creates the developer opportunities marketplace: `opportunities`, `opportunity_units`, `opportunity_bids`, `notifications`, the `is_opportunity_owner()` helper, RLS, and the two definer **market views** (`opportunities_market_view`, `opportunity_units_market_view`) that enforce per-field hiding (`hidden_fields`) so anything a developer keeps private never reaches the realtor side. |
+| 5 | `seed.sql` *(optional)* | Inserts one brokerage, one approved realtor (+ its `auth.users` row), one published project with an active public page, public media, private rows (commercials, broker portal, incentive, floorplan, restricted document), and a sample lead — enough to smoke-test the public view and the RLS boundary. |
 
 > The SQL Editor runs as a superuser, so it bypasses RLS — migrations and seed
 > data apply cleanly.
@@ -88,10 +90,14 @@ The scripts cover schema, RLS, and bucket definitions. These remain dashboard-si
   app/dashboard, then run the bootstrap SQL in section 2.
 - **Storage (verify):** confirm `avatars`, `logos`, `project-media`, and
   `project-documents` exist, and that **`project-documents` is private**.
-- **Advisor / linter notice (expected):** `public_projects_view` and
-  `public_realtor_cards` will be flagged as "security definer view." This is
-  **intentional** — they are the controlled public gateways — so those two
-  warnings can be dismissed.
+- **Advisor / linter notice (expected):** `public_projects_view`,
+  `public_realtor_cards`, `opportunities_market_view`, and
+  `opportunity_units_market_view` will be flagged as "security definer view."
+  This is **intentional** — they are the controlled gateways that expose only
+  safe/masked columns — so those warnings can be dismissed.
+- **Enabling a paying developer:** a developer signs up as a normal account,
+  then an admin enables the developer console from
+  **Admin → Opportunities → Developer access** (sets `profiles.role = 'developer'`).
 
 ### Storage path conventions (required by the storage policies)
 

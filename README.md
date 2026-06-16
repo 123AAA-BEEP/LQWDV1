@@ -84,3 +84,15 @@ flow, and the **admin review console** (verification / submission / update-reque
 queues, approve-reject-needs-changes actions, canonical project editing, and
 public-page publish/unpublish controls). Admin areas are admin-only via RLS +
 app guards.
+
+The **developer opportunities marketplace** lets paying developer accounts list
+"secret deals" (one or many properties/units), hide any field they want to keep
+private (address, price, commission, incentive, …) to protect appraisal
+comparables before closing, and field realtor bids that move commission,
+incentive, or price up or down — a two-sided free market. Realtors browse and
+bid from the dashboard; a notifications portal keeps both sides in the loop on
+new deals, bids, and responses; and admins oversee and moderate everything
+(suspend/restore listings, enable developer access) from
+**Admin → Opportunities**. Field hiding is enforced at the database layer by the
+`opportunities_market_view` / `opportunity_units_market_view` definer views, so
+hidden data never reaches the realtor side.

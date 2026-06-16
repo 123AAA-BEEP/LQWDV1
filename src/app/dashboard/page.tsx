@@ -25,6 +25,14 @@ export default async function DashboardHome() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <ActionCard
+          title="Opportunities"
+          body="See live developer deals and bid commission, incentive, or price."
+          href="/dashboard/opportunities"
+          cta="View opportunities"
+          enabled={approved}
+          lockedHint="Available after verification"
+        />
+        <ActionCard
           title="Browse projects"
           body="Search active new-home projects across Ontario."
           href="/dashboard/projects"

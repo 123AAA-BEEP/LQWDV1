@@ -102,6 +102,97 @@ export interface RealtorCard {
   phone: string | null;
 }
 
+export interface Opportunity {
+  id: string;
+  developer_id: string;
+  title: string;
+  deal_type: string;
+  summary: string | null;
+  city: string | null;
+  province: string | null;
+  unit_count: number | null;
+  asking_price: number | null;
+  price_basis: string;
+  commission_percent: number | null;
+  incentive_amount: number | null;
+  incentive_notes: string | null;
+  hidden_fields: string[];
+  address_full: string | null;
+  internal_notes: string | null;
+  status: string;
+  admin_notes: string | null;
+  created_at: string;
+  updated_at: string;
+  published_at: string | null;
+}
+
+export interface OpportunityUnit {
+  id: string;
+  opportunity_id: string;
+  label: string;
+  unit_type: string | null;
+  beds: number | null;
+  baths: number | null;
+  sqft: number | null;
+  asking_price: number | null;
+  address_full: string | null;
+  internal_notes: string | null;
+  status: string;
+  sort_order: number;
+}
+
+/** A row from opportunities_market_view — already masked for the realtor side. */
+export interface OpportunityMarketRow {
+  id: string;
+  title: string;
+  deal_type: string;
+  summary: string | null;
+  status: string;
+  province: string | null;
+  price_basis: string;
+  hidden_fields: string[];
+  published_at: string | null;
+  created_at: string;
+  city: string | null;
+  unit_count: number | null;
+  asking_price: number | null;
+  commission_percent: number | null;
+  incentive_amount: number | null;
+  incentive_notes: string | null;
+  address_full: string | null;
+  developer_name: string | null;
+  bid_count: number;
+}
+
+export interface OpportunityBid {
+  id: string;
+  opportunity_id: string;
+  realtor_id: string;
+  bid_commission_percent: number | null;
+  bid_incentive_amount: number | null;
+  bid_price: number | null;
+  message: string | null;
+  status: string;
+  developer_response: string | null;
+  responded_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface NotificationRow {
+  id: string;
+  user_id: string;
+  type: string;
+  title: string;
+  body: string | null;
+  link_url: string | null;
+  opportunity_id: string | null;
+  bid_id: string | null;
+  is_read: boolean;
+  created_at: string;
+  read_at: string | null;
+}
+
 export const TITLE_LABELS: Record<RealtorTitle, string> = {
   sales_representative: "Sales Representative",
   broker: "Broker",
