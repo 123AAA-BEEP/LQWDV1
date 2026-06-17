@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ButtonLink } from "@/components/ui/button";
 import { LogoMarquee } from "@/components/marketing/logo-marquee";
 import { HeroShowcase } from "@/components/marketing/hero-showcase";
+import { HeroVisual } from "@/components/marketing/hero-visual";
 import {
   HERO,
   PROOF_POINTS,
@@ -49,34 +50,42 @@ export default function LandingPage() {
           aria-hidden
           className="hero-grid pointer-events-none absolute inset-0 -z-10"
         />
-        <div className="mx-auto max-w-6xl px-6 pb-24 pt-24 sm:pb-28 sm:pt-36">
-          <p className="flex items-center gap-3 text-xs font-medium uppercase tracking-[0.2em] text-slate-500">
-            <span aria-hidden className="h-px w-8 bg-brand-500" />
-            {HERO.supporting}
-          </p>
-          <h1 className="mt-8 max-w-4xl text-balance text-5xl font-semibold leading-[1.05] tracking-tight text-ink sm:text-6xl lg:text-7xl">
-            {HERO.headline}
-            <span className="block text-slate-400">{HERO.subheadline}</span>
-          </h1>
-          <p className="mt-8 max-w-2xl text-pretty text-lg leading-relaxed text-slate-600">
-            {HERO.body}
-          </p>
-          <div className="mt-10 flex flex-wrap items-center gap-6">
-            <ButtonLink href="/signup" size="lg" className="px-8">
-              {HERO.primaryCta}
-            </ButtonLink>
-            <Link
-              href="/signup"
-              className="group inline-flex items-center gap-2 text-base font-medium text-ink"
-            >
-              {HERO.secondaryCta}
-              <span
-                aria-hidden
-                className="transition-transform group-hover:translate-x-1"
-              >
-                →
-              </span>
-            </Link>
+        <div className="mx-auto max-w-6xl px-6 pb-20 pt-20 sm:pb-28 sm:pt-28">
+          <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
+            <div>
+              <p className="flex items-center gap-3 text-xs font-medium uppercase tracking-[0.2em] text-slate-500">
+                <span aria-hidden className="h-px w-8 bg-brand-500" />
+                {HERO.supporting}
+              </p>
+              <h1 className="mt-6 text-balance text-4xl font-semibold leading-[1.05] tracking-tight text-ink sm:text-5xl lg:text-6xl">
+                {HERO.headline}
+                <span className="block text-slate-400">{HERO.subheadline}</span>
+              </h1>
+              <p className="mt-6 max-w-xl text-pretty text-lg leading-relaxed text-slate-600">
+                {HERO.body}
+              </p>
+              <div className="mt-9 flex flex-wrap items-center gap-6">
+                <ButtonLink href="/signup" size="lg" className="px-8">
+                  {HERO.primaryCta}
+                </ButtonLink>
+                <Link
+                  href="/signup"
+                  className="group inline-flex items-center gap-2 text-base font-medium text-ink"
+                >
+                  {HERO.secondaryCta}
+                  <span
+                    aria-hidden
+                    className="transition-transform group-hover:translate-x-1"
+                  >
+                    →
+                  </span>
+                </Link>
+              </div>
+            </div>
+
+            <div className="lg:pl-4">
+              <HeroVisual />
+            </div>
           </div>
         </div>
       </section>

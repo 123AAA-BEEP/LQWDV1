@@ -20,6 +20,21 @@ export const HERO = {
   secondaryCta: "Get verified",
 } as const;
 
+/**
+ * Hero visual — supplied skyline image plus a teal "glass" card rendered in
+ * code (kept on-brand vs. the green used in the showcase images). Edit the
+ * card copy freely; swap in a real figure if you want a hard number.
+ */
+export const HERO_VISUAL = {
+  src: "/hero/skyline.webp",
+  alt: "Modern Toronto waterfront condo towers at golden hour",
+  card: {
+    eyebrow: "New-home opportunities",
+    title: "Bonus commission",
+    body: "Exclusive incentives, surfaced before you pitch.",
+  },
+} as const;
+
 export const PROOF_POINTS = [
   "Free for realtors",
   "Made in Canada",
