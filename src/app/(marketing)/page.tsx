@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { ButtonLink } from "@/components/ui/button";
+import { LogoMarquee } from "@/components/marketing/logo-marquee";
+import { ProductPreview } from "@/components/marketing/product-preview";
 import {
   HERO,
   PROOF_POINTS,
@@ -7,6 +9,8 @@ import {
   VERIFICATION,
   WHY,
   SIGNUP_SECTION,
+  LOGO_STRIP,
+  BROKERAGES,
 } from "@/lib/brand";
 
 function CheckIcon() {
@@ -40,8 +44,12 @@ export default function LandingPage() {
   return (
     <>
       {/* Hero */}
-      <section className="bg-white">
-        <div className="mx-auto max-w-6xl px-6 pb-24 pt-24 sm:pb-32 sm:pt-36">
+      <section className="relative isolate bg-white">
+        <div
+          aria-hidden
+          className="hero-grid pointer-events-none absolute inset-0 -z-10"
+        />
+        <div className="mx-auto max-w-6xl px-6 pb-24 pt-24 sm:pb-28 sm:pt-36">
           <p className="flex items-center gap-3 text-xs font-medium uppercase tracking-[0.2em] text-slate-500">
             <span aria-hidden className="h-px w-8 bg-brand-500" />
             {HERO.supporting}
@@ -70,11 +78,19 @@ export default function LandingPage() {
               </span>
             </Link>
           </div>
+
+          {/* Product preview — swap the placeholder for a real screenshot. */}
+          <div className="mt-16 sm:mt-20">
+            <ProductPreview />
+          </div>
         </div>
       </section>
 
+      {/* Brokerage logo marquee */}
+      <LogoMarquee logos={BROKERAGES} label={LOGO_STRIP.label} />
+
       {/* Proof strip */}
-      <section className="border-y border-slate-200">
+      <section className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-8 gap-y-3 px-6 py-6">
           {PROOF_POINTS.map((point, i) => (
             <span
@@ -104,11 +120,14 @@ export default function LandingPage() {
           </div>
           <ol className="divide-y divide-slate-200 lg:col-span-8">
             {BENEFITS.map((benefit, i) => (
-              <li key={benefit} className="flex gap-6 py-7 first:pt-0 last:pb-0">
+              <li
+                key={benefit}
+                className="group flex gap-6 py-7 transition-colors first:pt-0 last:pb-0"
+              >
                 <span className="pt-0.5 font-mono text-sm tabular-nums text-brand-600">
                   {String(i + 1).padStart(2, "0")}
                 </span>
-                <p className="text-pretty text-lg leading-relaxed text-slate-700">
+                <p className="text-pretty text-lg leading-relaxed text-slate-700 transition-colors group-hover:text-ink">
                   {benefit}
                 </p>
               </li>
@@ -161,7 +180,7 @@ export default function LandingPage() {
               {WHY.bullets.map((b) => (
                 <li
                   key={b}
-                  className="rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-medium text-slate-700"
+                  className="rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50"
                 >
                   {b.replace(/\.$/, "")}
                 </li>
@@ -172,7 +191,11 @@ export default function LandingPage() {
       </section>
 
       {/* Signup CTA */}
-      <section className="bg-ink">
+      <section className="relative isolate overflow-hidden bg-ink">
+        <div
+          aria-hidden
+          className="cta-glow pointer-events-none absolute inset-0 -z-10"
+        />
         <div className="mx-auto max-w-6xl px-6 py-28 text-center sm:py-36">
           <p className="text-xs font-medium uppercase tracking-[0.2em] text-brand-400">
             Free for verified realtors

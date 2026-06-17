@@ -37,3 +37,69 @@ body {
   outline: 2px solid var(--color-brand-600);
   outline-offset: 2px;
 }
+
+/* Faint dotted grid behind the hero (masked so it fades out). */
+.hero-grid {
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    rgba(15, 23, 42, 0.05) 1px,
+    transparent 0
+  );
+  background-size: 28px 28px;
+  -webkit-mask-image: radial-gradient(
+    ellipse 80% 60% at 50% 0%,
+    #000 40%,
+    transparent 100%
+  );
+  mask-image: radial-gradient(
+    ellipse 80% 60% at 50% 0%,
+    #000 40%,
+    transparent 100%
+  );
+}
+
+/* Low-alpha teal glow behind the dark signup CTA (restrained, no neon). */
+.cta-glow {
+  background: radial-gradient(
+    60% 60% at 50% 0%,
+    rgba(20, 184, 166, 0.18),
+    transparent 70%
+  );
+}
+
+/* Continuous logo marquee — see components/marketing/logo-marquee.tsx. */
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+.animate-marquee {
+  animation: marquee 45s linear infinite;
+}
+
+/* Fade logos in/out at the container edges. */
+.marquee-mask {
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 8%,
+    #000 92%,
+    transparent
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 8%,
+    #000 92%,
+    transparent
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee {
+    animation: none;
+  }
+}

@@ -61,3 +61,22 @@ export const SIGNUP_SECTION = {
   heading: "Get verified. Get access.",
   body: "Join LIQWD for free and unlock a better way to work through new-home opportunities in Ontario.",
 } as const;
+
+/**
+ * Brokerage logo marquee on the landing page.
+ * IMPORTANT: only list brokerages you have permission to display — showing a
+ * logo implies a relationship. Add assets to /public/logos/<name>.svg and set
+ * `src` on each entry; until then they render as neutral placeholder wordmarks.
+ */
+export const LOGO_STRIP = {
+  label: "Working across Ontario's new-home market",
+} as const;
+
+export const BROKERAGES = [
+  { name: "Brokerage 01" },
+  { name: "Brokerage 02" },
+  { name: "Brokerage 03" },
+  { name: "Brokerage 04" },
+  { name: "Brokerage 05" },
+  { name: "Brokerage 06" },
+] as const;
