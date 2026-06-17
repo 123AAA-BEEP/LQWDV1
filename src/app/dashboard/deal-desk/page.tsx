@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Notice } from "@/components/ui/notice";
 import { VerificationRequired } from "@/components/dashboard/locked";
+import { LockedTease } from "@/components/dashboard/tier-ui";
 import {
   RFP_STATUS,
   RFP_PROPOSAL_STATUS,
@@ -19,6 +20,15 @@ import { withdrawRfpProposal } from "./actions";
 
 export const metadata: Metadata = { title: "Deal Desk" };
 export const dynamic = "force-dynamic";
+
+// Illustrative deal requests shown (blurred) behind the Ultra teaser for
+// non-Ultra realtors. Representative only — not real RFP data.
+const SAMPLE_DEALS = [
+  { title: "Bulk purchase — 12 units, downtown midrise", meta: "Bulk buy · buy side · 12 units · due soon" },
+  { title: "Listing mandate — boutique condo, 80 suites", meta: "Listing mandate · sell side · 80 units" },
+  { title: "Inventory units — suburban towns, builder direct", meta: "Inventory · buy side · 6 units" },
+  { title: "Full development — masterplanned community", meta: "Full development · sell side" },
+];
 
 interface RfpRow {
   id: string;
@@ -62,18 +72,26 @@ export default async function DealDeskPage({
     return (
       <div className="space-y-6">
         <Header />
-        <Card>
-          <CardBody className="text-center">
-            <h2 className="text-lg font-semibold text-ink">Invitation only</h2>
-            <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">
-              The Deal Desk is reserved for LIQWD <strong>Ultra</strong>{" "}
-              realtors — vetted agents invited to respond to developer{" "}
-              <strong>deal requests</strong> (formally, Requests for Proposals,
-              or “RFPs”): bulk purchases, listing mandates, inventory and trouble
-              units, and full developments. We extend access by invitation.
-            </p>
-          </CardBody>
-        </Card>
+        <LockedTease
+          tier="ultra"
+          title="Deal Desk is Ultra — by invitation only"
+          blurb="Vetted Ultra realtors respond to developer deal requests: bulk purchases, listing mandates, inventory & trouble units, and full developments. Access is extended by invitation."
+          cta={{ label: "Interested? Get in touch", href: "mailto:hello@liqwd.ca?subject=LIQWD%20Ultra%20%E2%80%94%20Deal%20Desk" }}
+        >
+          <div className="space-y-2 p-1">
+            {SAMPLE_DEALS.map((d) => (
+              <Card key={d.title}>
+                <CardBody className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate font-medium text-slate-800">{d.title}</p>
+                    <p className="text-xs text-slate-400">{d.meta}</p>
+                  </div>
+                  <Badge tone="brand">Open</Badge>
+                </CardBody>
+              </Card>
+            ))}
+          </div>
+        </LockedTease>
       </div>
     );
   }
