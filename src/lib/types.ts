@@ -124,6 +124,63 @@ export const VERIFICATION_LABELS: Record<VerificationStatus, string> = {
   suspended: "Suspended",
 };
 
+export type MandateStatus = "draft" | "active" | "matched" | "closed";
+export type PreApprovalStatus = "none" | "pre_qualified" | "pre_approved";
+
+export interface BuyerMandate {
+  id: string;
+  submitted_by_user_id: string;
+  buyer_label: string | null;
+  status: MandateStatus;
+  location_areas: string | null;
+  location_radius_km: number | null;
+  price_min: number | null;
+  price_max: number | null;
+  financing_type: string | null;
+  size_sqft_min: number | null;
+  size_sqft_max: number | null;
+  beds_min: number | null;
+  baths_min: number | null;
+  lot_notes: string | null;
+  property_type: string | null;
+  condition: string | null;
+  timeline: string | null;
+  must_haves: string | null;
+  nice_to_haves: string | null;
+  pre_approval_status: PreApprovalStatus;
+  pre_approval_amount: number | null;
+  lender: string | null;
+  pre_approval_expiry: string | null;
+  proof_of_funds: boolean;
+  rep_agreement_signed: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * A mandate is "Verified" when the buyer is fully pre-approved with funds and a
+ * signed representation agreement, and the pre-approval has not lapsed. This is
+ * the trust signal listing-side sees. (Stage 2 confirms via parsed documents.)
+ */
+export function isMandateVerified(
+  m: Pick<
+    BuyerMandate,
+    | "pre_approval_status"
+    | "pre_approval_expiry"
+    | "proof_of_funds"
+    | "rep_agreement_signed"
+  >,
+): boolean {
+  const notExpired =
+    !m.pre_approval_expiry || new Date(m.pre_approval_expiry) >= new Date();
+  return (
+    m.pre_approval_status === "pre_approved" &&
+    m.proof_of_funds &&
+    m.rep_agreement_signed &&
+    notExpired
+  );
+}
+
 /** Format a CAD price band like "From $599,000" / "$599,000 – $1,250,000". */
 export function formatPriceBand(
   from: number | null,

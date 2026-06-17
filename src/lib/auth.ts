@@ -107,3 +107,8 @@ export function isUltra(
 export function isPro(profile: Pick<Profile, "plan">) {
   return profile.plan === "pro";
 }
+
+/** Developer accounts (the inventory / deal side). */
+export function isDeveloper(profile: Pick<Profile, "role">) {
+  return profile.role === "developer";
+}
