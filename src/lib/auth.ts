@@ -112,3 +112,20 @@ export function isPro(profile: Pick<Profile, "plan">) {
 export function isDeveloper(profile: Pick<Profile, "role">) {
   return profile.role === "developer";
 }
+
+/**
+ * Whether a developer may request a connect on a mandate — entitlement seam.
+ * True with an active access subscription OR remaining à la carte credits.
+ * (Pricing-agnostic: Stripe flips these fields; the mechanic just reads them.)
+ */
+export function developerCanConnect(
+  profile: Pick<
+    Profile,
+    "role" | "developer_mandate_access" | "mandate_connect_credits"
+  >,
+) {
+  return (
+    profile.role === "developer" &&
+    (profile.developer_mandate_access || profile.mandate_connect_credits > 0)
+  );
+}
