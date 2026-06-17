@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
   // Pro tier (realtor). Never touches realtor_tier (Ultra stays invite-only).
   async function setPlanByCustomer(
     customerId: string,
-    plan: "free" | "pro",
+    plan: "free" | "pro" | "ultra",
     subscriptionId: string | null,
   ) {
     await admin
@@ -86,10 +86,11 @@ export async function POST(req: NextRequest) {
       }
 
       if (s.mode === "subscription") {
+        const plan = kind === "ultra" ? "ultra" : "pro";
         const updates =
           kind === "developer"
             ? { developer_mandate_access: true }
-            : { plan: "pro" as const };
+            : { plan };
         if (userId) {
           await admin
             .from("profiles")
@@ -102,7 +103,7 @@ export async function POST(req: NextRequest) {
         } else if (customerId && kind === "developer") {
           await setDevAccessByCustomer(customerId, true);
         } else if (customerId) {
-          await setPlanByCustomer(customerId, "pro", subscriptionId);
+          await setPlanByCustomer(customerId, plan, subscriptionId);
         }
       }
       break;
@@ -117,7 +118,8 @@ export async function POST(req: NextRequest) {
       if (sub.metadata?.kind === "developer") {
         await setDevAccessByCustomer(customerId, active);
       } else {
-        await setPlanByCustomer(customerId, active ? "pro" : "free", sub.id);
+        const plan = sub.metadata?.kind === "ultra" ? "ultra" : "pro";
+        await setPlanByCustomer(customerId, active ? plan : "free", sub.id);
       }
       break;
     }

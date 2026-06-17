@@ -90,22 +90,27 @@ export function isAdmin(profile: Pick<Profile, "role">) {
   return profile.role === "admin";
 }
 
-/** Approved + ultra tier = Deal Desk (RFP) access. Invitation-only. */
+/**
+ * Ultra = the paid top tier ($19.99/mo) → unlocks Deal Desk. Realtors buy it
+ * via Stripe (plan = 'ultra'); admins may also comp it via realtor_tier = 'ultra'
+ * (the override the Realtors admin tab still controls). Either path, plus an
+ * approved verification, grants access.
+ */
 export function isUltra(
-  profile: Pick<Profile, "verification_status" | "realtor_tier">,
+  profile: Pick<Profile, "verification_status" | "realtor_tier" | "plan">,
 ) {
   return (
     profile.verification_status === "approved" &&
-    profile.realtor_tier === "ultra"
+    (profile.plan === "ultra" || profile.realtor_tier === "ultra")
   );
 }
 
 /**
- * Paid self-serve "Pro" tier (premium tooling). DISTINCT from Ultra: Pro is
- * purchasable, Ultra is invitation-only. Being Pro does NOT grant Deal Desk.
+ * Pro = paid tooling tier ($9.99/mo). Ultra is the higher paid tier and
+ * includes everything in Pro, so Ultra members are Pro too.
  */
 export function isPro(profile: Pick<Profile, "plan">) {
-  return profile.plan === "pro";
+  return profile.plan === "pro" || profile.plan === "ultra";
 }
 
 /** Developer accounts (the inventory / deal side). */

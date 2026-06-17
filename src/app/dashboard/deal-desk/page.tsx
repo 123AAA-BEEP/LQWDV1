@@ -74,9 +74,9 @@ export default async function DealDeskPage({
         <Header />
         <LockedTease
           tier="ultra"
-          title="Deal Desk is Ultra — by invitation only"
-          blurb="Vetted Ultra realtors respond to developer deal requests: bulk purchases, listing mandates, inventory & trouble units, and full developments. Access is extended by invitation."
-          cta={{ label: "Interested? Get in touch", href: "mailto:hello@liqwd.ca?subject=LIQWD%20Ultra%20%E2%80%94%20Deal%20Desk" }}
+          title="Deal Desk is an Ultra feature"
+          blurb="Ultra realtors respond to developer deal requests: bulk purchases, listing mandates, inventory & trouble units, and full developments. Upgrade to Ultra to unlock it."
+          cta={{ label: "Upgrade to Ultra", href: "/dashboard/upgrade" }}
         >
           <div className="space-y-2 p-1">
             {SAMPLE_DEALS.map((d) => (
@@ -273,8 +273,8 @@ function Header() {
         Deal Desk
       </h1>
       <p className="mt-1 text-slate-500">
-        Invitation-only developer deal requests — Requests for Proposals (RFPs)
-        — for LIQWD Ultra realtors.
+        Developer deal requests — Requests for Proposals (RFPs) — for LIQWD
+        Ultra realtors.
       </p>
     </div>
   );

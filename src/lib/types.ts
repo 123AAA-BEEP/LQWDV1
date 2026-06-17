@@ -17,8 +17,8 @@ export type RealtorTitle =
 
 export type RealtorTier = "standard" | "ultra";
 
-/** Paid self-serve tooling tier. Distinct from the invitation-only Ultra tier. */
-export type Plan = "free" | "pro";
+/** Paid self-serve subscription ladder. Ultra includes everything in Pro. */
+export type Plan = "free" | "pro" | "ultra";
 
 export type SubmissionStatus =
   | "draft"

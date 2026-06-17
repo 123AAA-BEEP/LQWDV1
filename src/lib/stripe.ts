@@ -7,8 +7,10 @@ import Stripe from "stripe";
  *
  *   STRIPE_SECRET_KEY              — server secret (sk_...)
  *   STRIPE_WEBHOOK_SECRET          — signing secret for /api/stripe/webhook
- *   STRIPE_PRO_PRICE_ID            — recurring Price for realtor Pro
+ *   STRIPE_PRO_PRICE_ID            — recurring Price for realtor Pro ($9.99/mo)
  *   STRIPE_PRO_PRICE_LABEL         — optional, e.g. "$9.99 / mo"
+ *   STRIPE_ULTRA_PRICE_ID          — recurring Price for realtor Ultra ($19.99/mo)
+ *   STRIPE_ULTRA_PRICE_LABEL       — optional, e.g. "$19.99 / mo"
  *   STRIPE_DEVELOPER_PRICE_ID      — recurring Price for developer access
  *   STRIPE_DEVELOPER_PRICE_LABEL   — optional, e.g. "$199 / mo"
  *   STRIPE_CONNECT_CREDITS_PRICE_ID    — one-time Price for a connect-credit pack
@@ -17,6 +19,13 @@ import Stripe from "stripe";
  */
 export function isStripeConfigured(): boolean {
   return Boolean(process.env.STRIPE_SECRET_KEY && process.env.STRIPE_PRO_PRICE_ID);
+}
+
+/** Ultra ($19.99/mo) — paid top tier that also unlocks Deal Desk. */
+export function isUltraSubConfigured(): boolean {
+  return Boolean(
+    process.env.STRIPE_SECRET_KEY && process.env.STRIPE_ULTRA_PRICE_ID,
+  );
 }
 
 /** Developer subscription (unlimited connects) is available. */
@@ -34,6 +43,7 @@ export function isConnectCreditsConfigured(): boolean {
 }
 
 export const proPriceLabel = process.env.STRIPE_PRO_PRICE_LABEL ?? null;
+export const ultraPriceLabel = process.env.STRIPE_ULTRA_PRICE_LABEL ?? null;
 export const developerPriceLabel = process.env.STRIPE_DEVELOPER_PRICE_LABEL ?? null;
 export const connectCreditsLabel =
   process.env.STRIPE_CONNECT_CREDITS_PRICE_LABEL ?? null;
