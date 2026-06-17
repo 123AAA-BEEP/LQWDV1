@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { requireUserProfile, isApproved } from "@/lib/auth";
+import { requireUserProfile, isApproved, isUltra } from "@/lib/auth";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, CardBody } from "@/components/ui/card";
 
@@ -8,6 +8,7 @@ export const metadata: Metadata = { title: "Dashboard" };
 export default async function DashboardHome() {
   const { profile } = await requireUserProfile();
   const approved = isApproved(profile);
+  const ultra = isUltra(profile);
   const firstName = profile.first_name ?? "there";
 
   return (
@@ -29,6 +30,28 @@ export default async function DashboardHome() {
           body="Search active new-home projects across Ontario."
           href="/dashboard/projects"
           cta="View projects"
+          enabled={approved}
+          lockedHint="Available after verification"
+        />
+        <ActionCard
+          title="Deal Desk"
+          body={
+            ultra
+              ? "Respond to developer deal requests (Requests for Proposals) — bulk buys, listing mandates, and full developments."
+              : "Invitation-only developer deal requests for vetted LIQWD Ultra realtors."
+          }
+          href="/dashboard/deal-desk"
+          cta="Open Deal Desk"
+          enabled={ultra}
+          lockedHint={
+            approved ? "Invitation only" : "Available after verification"
+          }
+        />
+        <ActionCard
+          title="My proposals"
+          body="Track the counter-offers you’ve sent to developers and where each one stands."
+          href="/dashboard/proposals"
+          cta="View proposals"
           enabled={approved}
           lockedHint="Available after verification"
         />

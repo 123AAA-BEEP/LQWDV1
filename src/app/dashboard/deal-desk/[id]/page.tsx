@@ -18,7 +18,7 @@ import type { RfpStatus, RfpProposalStatus } from "@/lib/status";
 import { formatPriceBand } from "@/lib/types";
 import { submitRfpProposal } from "../actions";
 
-export const metadata: Metadata = { title: "RFP" };
+export const metadata: Metadata = { title: "Deal request" };
 export const dynamic = "force-dynamic";
 
 export default async function DealDeskRfpPage({
@@ -35,9 +35,10 @@ export default async function DealDeskRfpPage({
   if (!isUltra(profile)) notFound();
 
   const supabase = await createClient();
-  // RLS returns the RFP only if this realtor is eligible to see it.
+  // Realtors read through the masked view: hidden fields come back null, and
+  // the view re-applies eligibility (returns nothing if not eligible).
   const { data: rfp } = await supabase
-    .from("deal_rfps")
+    .from("deal_rfps_realtor_view")
     .select("*")
     .eq("id", id)
     .maybeSingle();
@@ -45,6 +46,7 @@ export default async function DealDeskRfpPage({
   if (!rfp) notFound();
 
   const status = rfp.status as RfpStatus;
+  const hidden = (rfp.hidden_fields as string[] | null) ?? [];
   const canRespond = status === "open" || status === "shortlisting";
 
   // Has this realtor already responded?
@@ -94,20 +96,30 @@ export default async function DealDeskRfpPage({
 
       <Card>
         <CardBody className="space-y-3">
-          {rfp.brief ? (
+          {hidden.includes("brief") ? (
+            <p className="text-sm italic text-slate-400">
+              The developer has withheld the full brief for this deal.
+            </p>
+          ) : rfp.brief ? (
             <p className="leading-relaxed text-slate-600">{rfp.brief}</p>
           ) : null}
           <dl className="grid gap-2 text-sm sm:grid-cols-3">
-            {rfp.target_units != null ? (
+            {hidden.includes("target_units") ? (
+              <Fact label="Target units" value="Hidden by developer" muted />
+            ) : rfp.target_units != null ? (
               <Fact label="Target units" value={String(rfp.target_units)} />
             ) : null}
-            {rfp.target_price != null ? (
+            {hidden.includes("target_price") ? (
+              <Fact label="Target price" value="Hidden by developer" muted />
+            ) : rfp.target_price != null ? (
               <Fact
                 label="Target price"
                 value={formatPriceBand(rfp.target_price, null) ?? "—"}
               />
             ) : null}
-            {rfp.deadline_at ? (
+            {hidden.includes("deadline") ? (
+              <Fact label="Deadline" value="Hidden by developer" muted />
+            ) : rfp.deadline_at ? (
               <Fact
                 label="Deadline"
                 value={new Date(rfp.deadline_at).toLocaleDateString("en-CA")}
@@ -208,7 +220,7 @@ export default async function DealDeskRfpPage({
         </Card>
       ) : (
         <Notice tone="info">
-          This RFP is no longer accepting responses.
+          This deal request is no longer accepting responses.
         </Notice>
       )}
     </div>
@@ -219,17 +231,25 @@ function Fact({
   label,
   value,
   full,
+  muted,
 }: {
   label: string;
   value: string;
   full?: boolean;
+  muted?: boolean;
 }) {
   return (
     <div className={full ? "sm:col-span-2" : ""}>
       <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">
         {label}
       </dt>
-      <dd className="text-sm text-slate-800">{value}</dd>
+      <dd
+        className={
+          muted ? "text-sm italic text-slate-400" : "text-sm text-slate-800"
+        }
+      >
+        {value}
+      </dd>
     </div>
   );
 }

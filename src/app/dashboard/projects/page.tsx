@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { requireUserProfile, isApproved } from "@/lib/auth";
+import { requireUserProfile, isApproved, isAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardBody } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -58,12 +58,22 @@ export default async function ProjectsPage({
 
   const supabase = await createClient();
 
+  // Realtors only browse vetted projects; admins see every record state so they
+  // can find drafts / pending-review rows. Anything not approved or published
+  // is internal-only and must not surface in the broker browse list.
+  const VISIBLE_RECORD_STATUSES = ["approved", "published"];
+  const restrictByStatus = !isAdmin(profile);
+
   // Fetch distinct cities for the city dropdown.
-  const { data: cityRows } = await supabase
+  let cityRequest = supabase
     .from("broker_projects_view")
     .select("city")
     .not("city", "is", null)
     .order("city", { ascending: true });
+  if (restrictByStatus) {
+    cityRequest = cityRequest.in("record_status", VISIBLE_RECORD_STATUSES);
+  }
+  const { data: cityRows } = await cityRequest;
   const cities = [...new Set((cityRows ?? []).map((r) => r.city as string))];
 
   let request = supabase
@@ -73,6 +83,10 @@ export default async function ProjectsPage({
     )
     .order("created_at", { ascending: false })
     .limit(60);
+
+  if (restrictByStatus) {
+    request = request.in("record_status", VISIBLE_RECORD_STATUSES);
+  }
 
   if (query) {
     request = request.or(

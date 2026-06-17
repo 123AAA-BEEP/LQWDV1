@@ -67,9 +67,10 @@ export default async function DealDeskPage({
             <h2 className="text-lg font-semibold text-ink">Invitation only</h2>
             <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">
               The Deal Desk is reserved for LIQWD <strong>Ultra</strong>{" "}
-              realtors — vetted agents invited to bid on developer RFPs: bulk
-              purchases, listing mandates, inventory and trouble units, and
-              full developments. We extend access by invitation.
+              realtors — vetted agents invited to respond to developer{" "}
+              <strong>deal requests</strong> (formally, Requests for Proposals,
+              or “RFPs”): bulk purchases, listing mandates, inventory and trouble
+              units, and full developments. We extend access by invitation.
             </p>
           </CardBody>
         </Card>
@@ -78,10 +79,11 @@ export default async function DealDeskPage({
   }
 
   const supabase = await createClient();
-  // RLS returns only RFPs this ultra realtor is eligible to see.
+  // Realtors read RFPs through the masked view (hidden fields are nulled and
+  // the base deal_rfps table is admin-only). The view re-applies eligibility.
   const [{ data: open }, { data: mine }] = await Promise.all([
     supabase
-      .from("deal_rfps")
+      .from("deal_rfps_realtor_view")
       .select(
         "id, title, rfp_type, deal_side, status, target_units, target_price, deadline_at",
       )
@@ -89,15 +91,38 @@ export default async function DealDeskPage({
       .order("deadline_at", { ascending: true, nullsFirst: false }),
     supabase
       .from("deal_rfp_proposals")
-      .select(
-        "id, price_offer, units, status, admin_notes, created_at, rfp:deal_rfps!rfp_id(id,title)",
-      )
+      .select("id, price_offer, units, status, admin_notes, created_at, rfp_id")
       .eq("submitted_by_user_id", userId)
       .order("created_at", { ascending: false }),
   ]);
 
   const rfps = (open as unknown as RfpRow[]) ?? [];
-  const responses = (mine as unknown as MyResponse[]) ?? [];
+  const proposalRows =
+    (mine as unknown as (Omit<MyResponse, "rfp"> & { rfp_id: string })[]) ?? [];
+
+  // Resolve RFP titles through the masked view (base table is admin-only).
+  const rfpIds = [...new Set(proposalRows.map((p) => p.rfp_id))];
+  const titleById = new Map<string, string>();
+  if (rfpIds.length > 0) {
+    const { data: titleRows } = await supabase
+      .from("deal_rfps_realtor_view")
+      .select("id, title")
+      .in("id", rfpIds);
+    for (const t of (titleRows ?? []) as { id: string; title: string }[]) {
+      titleById.set(t.id, t.title);
+    }
+  }
+  const responses: MyResponse[] = proposalRows.map((p) => ({
+    id: p.id,
+    price_offer: p.price_offer,
+    units: p.units,
+    status: p.status,
+    admin_notes: p.admin_notes,
+    created_at: p.created_at,
+    rfp: titleById.has(p.rfp_id)
+      ? { id: p.rfp_id, title: titleById.get(p.rfp_id) as string }
+      : null,
+  }));
 
   return (
     <div className="space-y-8">
@@ -111,12 +136,13 @@ export default async function DealDeskPage({
 
       <section className="space-y-3">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-          Open RFPs ({rfps.length})
+          Open deal requests ({rfps.length})
         </h2>
         {rfps.length === 0 ? (
           <Card>
             <CardBody className="text-center text-sm text-slate-500">
-              No open RFPs right now. We’ll notify you when a new deal lands.
+              No open deal requests right now. We’ll notify you when a new deal
+              lands.
             </CardBody>
           </Card>
         ) : (
@@ -180,7 +206,7 @@ export default async function DealDeskPage({
                             {p.rfp.title}
                           </Link>
                         ) : (
-                          "RFP"
+                          "Deal request"
                         )}
                       </p>
                       <p className="text-xs text-slate-400">
@@ -229,7 +255,8 @@ function Header() {
         Deal Desk
       </h1>
       <p className="mt-1 text-slate-500">
-        Invitation-only developer RFPs for LIQWD Ultra realtors.
+        Invitation-only developer deal requests — Requests for Proposals (RFPs)
+        — for LIQWD Ultra realtors.
       </p>
     </div>
   );

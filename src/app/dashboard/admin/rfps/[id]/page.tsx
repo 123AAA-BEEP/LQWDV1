@@ -10,13 +10,16 @@ import {
   RFP_STATUS,
   RFP_PROPOSAL_STATUS,
   RFP_VISIBILITY_LABELS,
+  RFP_HIDEABLE_FIELDS,
   rfpTypeLabel,
   dealSideLabel,
 } from "@/lib/status";
 import type { RfpStatus, RfpProposalStatus } from "@/lib/status";
 import { formatPriceBand } from "@/lib/types";
+import { SubmitButton } from "@/components/ui/submit-button";
 import {
   updateRfpStatus,
+  updateRfpHiddenFields,
   inviteRealtor,
   removeInvitation,
   decideRfpProposal,
@@ -58,6 +61,7 @@ export default async function RfpDetailPage({
   if (!rfp) notFound();
 
   const status = rfp.status as RfpStatus;
+  const hidden = (rfp.hidden_fields as string[] | null) ?? [];
 
   const [{ data: invitations }, { data: ultra }, { data: proposals }] =
     await Promise.all([
@@ -183,6 +187,44 @@ export default async function RfpDetailPage({
           ) : null}
         </CardBody>
       </Card>
+
+      <section className="space-y-3">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+          Hidden from realtors
+        </h2>
+        <Card>
+          <CardBody>
+            <p className="mb-3 text-xs text-slate-500">
+              Checked fields are masked everywhere realtors see this deal — use
+              this to withhold sensitive details (e.g. the target price) before
+              closing. You still see the full values above.
+            </p>
+            <form action={updateRfpHiddenFields} className="space-y-3">
+              <input type="hidden" name="rfp_id" value={rfp.id} />
+              <div className="flex flex-wrap gap-x-4 gap-y-2">
+                {RFP_HIDEABLE_FIELDS.map((f) => (
+                  <label
+                    key={f.key}
+                    className="flex items-center gap-2 text-sm text-slate-700"
+                  >
+                    <input
+                      type="checkbox"
+                      name="hidden_fields"
+                      value={f.key}
+                      defaultChecked={hidden.includes(f.key)}
+                      className="h-4 w-4 rounded border-slate-300"
+                    />
+                    {f.label}
+                  </label>
+                ))}
+              </div>
+              <SubmitButton pendingLabel="Saving…" size="sm">
+                Save hidden fields
+              </SubmitButton>
+            </form>
+          </CardBody>
+        </Card>
+      </section>
 
       {rfp.visibility === "invited" ? (
         <section className="space-y-3">
