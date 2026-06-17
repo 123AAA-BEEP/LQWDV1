@@ -89,3 +89,13 @@ export function isApproved(profile: Pick<Profile, "verification_status">) {
 export function isAdmin(profile: Pick<Profile, "role">) {
   return profile.role === "admin";
 }
+
+/** Approved + ultra tier = Deal Desk (RFP) access. */
+export function isUltra(
+  profile: Pick<Profile, "verification_status" | "realtor_tier">,
+) {
+  return (
+    profile.verification_status === "approved" &&
+    profile.realtor_tier === "ultra"
+  );
+}

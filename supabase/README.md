@@ -12,7 +12,10 @@ supabase/
 │   ├── 0001_structural.sql     # tables, constraints, indexes, triggers, public views
 │   ├── 0002_rls_policies.sql   # helper functions, escalation guard, RLS + policies
 │   ├── 0003_storage.sql        # storage buckets + storage.objects policies
-│   └── 0004_restrict_project_provenance.sql  # admin-only import/source fields + broker view
+│   ├── 0004_restrict_project_provenance.sql  # admin-only import/source fields + broker view
+│   ├── 0005_seo_prompt_settings.sql  # SEO prompt settings
+│   ├── 0006_deal_proposals.sql # worksheet proposals table, RLS (Deal Desk, Phase 1)
+│   └── 0007_deal_rfps.sql      # ultra tier + RFP tables + confidential RLS (Phase 1)
 └── seed.sql                    # optional, idempotent smoke-test fixtures
 ```
 
@@ -32,7 +35,10 @@ Run each file as its own query, in this exact order:
 | 2 | `migrations/0002_rls_policies.sql` | Adds helper functions (`is_admin`, `is_approved`, `has_project_access`, `safe_uuid`), the profile escalation-guard trigger, enables RLS on every table, sets base grants, and creates all access policies. |
 | 3 | `migrations/0003_storage.sql` | Creates the `avatars`, `logos`, `project-media`, and `project-documents` buckets and their `storage.objects` access policies. |
 | 4 | `migrations/0004_restrict_project_provenance.sql` | Locks the private import/source-provenance fields on `projects` (`external_source`, `external_source_url`, `import_notes`, `builder_names_raw`, `description_ai_draft`) to **admins only**: base-table SELECT becomes admin-only and a new broker-safe definer view, `broker_projects_view`, exposes every other column to approved realtors. **Ship this with the app code that reads `broker_projects_view`** — once base SELECT is admin-only, any realtor page still querying `projects` directly returns no rows. |
-| 5 | `seed.sql` *(optional)* | Inserts one brokerage, one approved realtor (+ its `auth.users` row), one published project with an active public page, public media, private rows (commercials, broker portal, incentive, floorplan, restricted document), and a sample lead — enough to smoke-test the public view and the RLS boundary. |
+| 5 | `migrations/0005_seo_prompt_settings.sql` | SEO prompt settings. |
+| 6 | `migrations/0006_deal_proposals.sql` | Creates `project_proposals` (realtor-initiated worksheet/freeform counter-offers), its indexes, `updated_at` trigger, RLS policies, and grants. See `docs/monetization-deal-desk.md`. |
+| 7 | `migrations/0007_deal_rfps.sql` | Adds `profiles.realtor_tier` (admin-controlled ultra gate), `deal_rfps` / `deal_rfp_invitations` / `deal_rfp_proposals`, the `is_ultra` / `is_invited_to_rfp` / `can_respond_to_rfp` helpers, and confidential RLS. See `docs/monetization-deal-desk.md`. |
+| 8 | `seed.sql` *(optional)* | Inserts one brokerage, one approved realtor (+ its `auth.users` row), one published project with an active public page, public media, private rows (commercials, broker portal, incentive, floorplan, restricted document), and a sample lead — enough to smoke-test the public view and the RLS boundary. |
 
 > The SQL Editor runs as a superuser, so it bypasses RLS — migrations and seed
 > data apply cleanly.
