@@ -99,8 +99,8 @@ export default function LandingPage() {
           aria-hidden
           className="hero-grid pointer-events-none absolute inset-0 -z-10"
         />
-        <div className="mx-auto max-w-6xl px-6 pb-16 pt-12 sm:pb-24 sm:pt-20">
-          <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
+        <div className="mx-auto max-w-6xl px-6 pb-14 pt-10 sm:pb-20 sm:pt-16">
+          <div className="grid items-start gap-10 lg:grid-cols-2 lg:gap-16">
             <div>
               <p className="flex items-center gap-3 text-xs font-medium uppercase tracking-[0.2em] text-slate-500">
                 <span aria-hidden className="h-px w-8 bg-brand-500" />
@@ -132,7 +132,9 @@ export default function LandingPage() {
               </div>
             </div>
 
-            <div className="lg:pl-4">
+            {/* Cap + top-align so the square visual doesn't push the CTA below
+                the fold on laptop viewports. */}
+            <div className="mx-auto w-full max-w-sm sm:max-w-md lg:ml-auto lg:max-w-[28rem] lg:pl-4">
               <HeroVisual />
             </div>
           </div>
