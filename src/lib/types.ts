@@ -42,6 +42,8 @@ export interface Profile {
   verification_status: VerificationStatus;
   realtor_tier: RealtorTier;
   plan: Plan;
+  developer_mandate_access: boolean;
+  mandate_connect_credits: number;
   stripe_customer_id: string | null;
   stripe_subscription_id: string | null;
   avatar_url: string | null;

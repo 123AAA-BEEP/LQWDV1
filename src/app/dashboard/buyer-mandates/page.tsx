@@ -1,14 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Lock, Plus, ShieldCheck } from "lucide-react";
+import { Lock, Plus, ShieldCheck, Mail, Phone, Clock, X } from "lucide-react";
 import {
   requireUserProfile,
   isApproved,
   isPro,
   isAdmin,
   isDeveloper,
+  developerCanConnect,
 } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { Card, CardBody } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
@@ -16,6 +18,10 @@ import { Notice } from "@/components/ui/notice";
 import { VerificationRequired } from "@/components/dashboard/locked";
 import { formatPriceBand, isMandateVerified } from "@/lib/types";
 import type { BuyerMandate } from "@/lib/types";
+import { requestConnect, withdrawConnect } from "./connect-actions";
+
+type ConnectStatus = "requested" | "accepted" | "declined" | "withdrawn";
+type Contact = { email: string | null; phone: string | null };
 
 export const metadata: Metadata = { title: "Buyer mandates" };
 export const dynamic = "force-dynamic";
@@ -34,10 +40,10 @@ interface Row extends BuyerMandate {
 export default async function BuyerMandatesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ created?: string }>;
+  searchParams: Promise<{ created?: string; connect?: string }>;
 }) {
   const { profile, userId } = await requireUserProfile();
-  const { created } = await searchParams;
+  const { created, connect } = await searchParams;
   const admin = isAdmin(profile);
 
   if (!admin && !isApproved(profile) && !isDeveloper(profile)) {
@@ -53,23 +59,70 @@ export default async function BuyerMandatesPage({
   // + broker identity; contact exchange is the paywalled "connect", Stage 2b).
   if (isDeveloper(profile) && !admin) {
     const supabase = await createClient();
-    const { data } = await supabase
-      .from("buyer_mandates_developer_view")
-      .select("*")
-      .order("created_at", { ascending: false });
-    const mandates = (data as unknown as DeveloperRow[] | null) ?? [];
+    const [{ data: viewRows }, { data: myReqs }] = await Promise.all([
+      supabase
+        .from("buyer_mandates_developer_view")
+        .select("*")
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("mandate_connect_requests")
+        .select("id, mandate_id, status")
+        .eq("developer_user_id", userId),
+    ]);
+    const mandates = (viewRows as unknown as DeveloperRow[] | null) ?? [];
+    const reqByMandate = new Map(
+      ((myReqs as { id: string; mandate_id: string; status: ConnectStatus }[]) ?? []).map(
+        (r) => [r.mandate_id, r],
+      ),
+    );
+
+    // Reveal broker contact only where this developer's request was accepted.
+    const acceptedBrokerIds = mandates
+      .filter((m) => reqByMandate.get(m.id)?.status === "accepted")
+      .map((m) => m.broker_id);
+    const contactById = new Map<string, Contact>();
+    if (acceptedBrokerIds.length > 0) {
+      const { data: contacts } = await createAdminClient()
+        .from("profiles")
+        .select("id, email, phone")
+        .in("id", acceptedBrokerIds);
+      for (const c of (contacts as ({ id: string } & Contact)[]) ?? []) {
+        contactById.set(c.id, { email: c.email, phone: c.phone });
+      }
+    }
+
+    const canConnect = developerCanConnect(profile);
 
     return (
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-ink">
-            Buyer mandate marketplace
-          </h1>
-          <p className="mt-1 text-slate-500">
-            Active buyer mandates that may match your inventory. Verified
-            mandates are backed by pre-approval, funds, and a signed agreement.
-          </p>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight text-ink">
+              Buyer mandate marketplace
+            </h1>
+            <p className="mt-1 text-slate-500">
+              Active buyer mandates that may match your inventory. Verified
+              mandates are backed by pre-approval, funds, and a signed agreement.
+            </p>
+          </div>
+          <ButtonLink href="/dashboard/developer" variant="secondary" size="sm">
+            {canConnect ? "Manage access" : "Get access"}
+          </ButtonLink>
         </div>
+
+        {connect === "sent" ? (
+          <Notice tone="success">Request sent — we&apos;ll notify you when the broker responds.</Notice>
+        ) : null}
+        {connect === "exists" ? (
+          <Notice tone="info">You&apos;ve already requested a connect on that mandate.</Notice>
+        ) : null}
+        {!canConnect ? (
+          <Notice tone="warning">
+            You can browse mandates freely. To request an intro, you&apos;ll need
+            connect access — <Link href="/dashboard/developer" className="font-medium underline">get set up here</Link>.
+          </Notice>
+        ) : null}
+
         {mandates.length === 0 ? (
           <Card>
             <CardBody className="text-center text-sm text-slate-500">
@@ -79,7 +132,13 @@ export default async function BuyerMandatesPage({
         ) : (
           <div className="grid gap-4 sm:grid-cols-2">
             {mandates.map((m) => (
-              <DeveloperMandateCard key={m.id} m={m} />
+              <DeveloperMandateCard
+                key={m.id}
+                m={m}
+                request={reqByMandate.get(m.id) ?? null}
+                contact={contactById.get(m.broker_id) ?? null}
+                canConnect={canConnect}
+              />
             ))}
           </div>
         )}
@@ -198,12 +257,23 @@ interface DeveloperRow {
   timeline: string | null;
   must_haves: string | null;
   verified: boolean;
+  broker_id: string;
   broker_first_name: string | null;
   broker_last_name: string | null;
   broker_brokerage: string | null;
 }
 
-function DeveloperMandateCard({ m }: { m: DeveloperRow }) {
+function DeveloperMandateCard({
+  m,
+  request,
+  contact,
+  canConnect,
+}: {
+  m: DeveloperRow;
+  request: { id: string; status: ConnectStatus } | null;
+  contact: Contact | null;
+  canConnect: boolean;
+}) {
   const band = formatPriceBand(m.price_min, m.price_max);
   const broker =
     [m.broker_first_name, m.broker_last_name].filter(Boolean).join(" ") || "A broker";
@@ -231,16 +301,63 @@ function DeveloperMandateCard({ m }: { m: DeveloperRow }) {
             <span className="font-medium text-slate-700">Must-haves:</span> {m.must_haves}
           </p>
         ) : null}
-        <p className="mt-3 text-xs text-slate-400">via {broker}{m.broker_brokerage ? ` · ${m.broker_brokerage}` : ""}</p>
+        <p className="mt-3 flex-1 text-xs text-slate-400">
+          via {broker}
+          {m.broker_brokerage ? ` · ${m.broker_brokerage}` : ""}
+        </p>
+
         <div className="mt-4 border-t border-slate-100 pt-3">
-          <button
-            type="button"
-            disabled
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-400"
-            title="Connecting with brokers is coming soon"
-          >
-            <Lock className="size-3.5" aria-hidden /> Request connect — soon
-          </button>
+          {request?.status === "accepted" ? (
+            <div className="rounded-lg bg-emerald-50 px-3 py-2 text-sm">
+              <p className="font-medium text-emerald-800">Connected — reach out:</p>
+              <p className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-emerald-700">
+                {contact?.email ? (
+                  <a href={`mailto:${contact.email}`} className="inline-flex items-center gap-1 hover:underline">
+                    <Mail className="size-3.5" aria-hidden /> {contact.email}
+                  </a>
+                ) : null}
+                {contact?.phone ? (
+                  <a href={`tel:${contact.phone}`} className="inline-flex items-center gap-1 hover:underline">
+                    <Phone className="size-3.5" aria-hidden /> {contact.phone}
+                  </a>
+                ) : null}
+                {!contact?.email && !contact?.phone ? "Contact on file with the broker." : null}
+              </p>
+            </div>
+          ) : request?.status === "requested" ? (
+            <div className="flex items-center justify-between gap-2">
+              <span className="inline-flex items-center gap-1.5 text-sm font-medium text-amber-700">
+                <Clock className="size-3.5" aria-hidden /> Request pending
+              </span>
+              <form action={withdrawConnect}>
+                <input type="hidden" name="request_id" value={request.id} />
+                <button type="submit" className="text-xs font-medium text-slate-500 hover:text-slate-800">
+                  Withdraw
+                </button>
+              </form>
+            </div>
+          ) : request?.status === "declined" ? (
+            <span className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500">
+              <X className="size-3.5" aria-hidden /> Not a match this time
+            </span>
+          ) : canConnect ? (
+            <form action={requestConnect}>
+              <input type="hidden" name="mandate_id" value={m.id} />
+              <button
+                type="submit"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-ink px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800"
+              >
+                Request connect
+              </button>
+            </form>
+          ) : (
+            <Link
+              href="/dashboard/developer"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50"
+            >
+              <Lock className="size-3.5" aria-hidden /> Get access to connect
+            </Link>
+          )}
         </div>
       </CardBody>
     </Card>
