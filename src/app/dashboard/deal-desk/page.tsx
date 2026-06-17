@@ -67,9 +67,10 @@ export default async function DealDeskPage({
             <h2 className="text-lg font-semibold text-ink">Invitation only</h2>
             <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">
               The Deal Desk is reserved for LIQWD <strong>Ultra</strong>{" "}
-              realtors — vetted agents invited to bid on developer RFPs: bulk
-              purchases, listing mandates, inventory and trouble units, and
-              full developments. We extend access by invitation.
+              realtors — vetted agents invited to respond to developer{" "}
+              <strong>deal requests</strong> (formally, Requests for Proposals,
+              or “RFPs”): bulk purchases, listing mandates, inventory and trouble
+              units, and full developments. We extend access by invitation.
             </p>
           </CardBody>
         </Card>
@@ -111,12 +112,13 @@ export default async function DealDeskPage({
 
       <section className="space-y-3">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-          Open RFPs ({rfps.length})
+          Open deal requests ({rfps.length})
         </h2>
         {rfps.length === 0 ? (
           <Card>
             <CardBody className="text-center text-sm text-slate-500">
-              No open RFPs right now. We’ll notify you when a new deal lands.
+              No open deal requests right now. We’ll notify you when a new deal
+              lands.
             </CardBody>
           </Card>
         ) : (
@@ -180,7 +182,7 @@ export default async function DealDeskPage({
                             {p.rfp.title}
                           </Link>
                         ) : (
-                          "RFP"
+                          "Deal request"
                         )}
                       </p>
                       <p className="text-xs text-slate-400">
@@ -229,7 +231,8 @@ function Header() {
         Deal Desk
       </h1>
       <p className="mt-1 text-slate-500">
-        Invitation-only developer RFPs for LIQWD Ultra realtors.
+        Invitation-only developer deal requests — Requests for Proposals (RFPs)
+        — for LIQWD Ultra realtors.
       </p>
     </div>
   );

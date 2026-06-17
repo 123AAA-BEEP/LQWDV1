@@ -18,7 +18,7 @@ import type { RfpStatus, RfpProposalStatus } from "@/lib/status";
 import { formatPriceBand } from "@/lib/types";
 import { submitRfpProposal } from "../actions";
 
-export const metadata: Metadata = { title: "RFP" };
+export const metadata: Metadata = { title: "Deal request" };
 export const dynamic = "force-dynamic";
 
 export default async function DealDeskRfpPage({
@@ -208,7 +208,7 @@ export default async function DealDeskRfpPage({
         </Card>
       ) : (
         <Notice tone="info">
-          This RFP is no longer accepting responses.
+          This deal request is no longer accepting responses.
         </Notice>
       )}
     </div>
