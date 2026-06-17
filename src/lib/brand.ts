@@ -150,11 +150,11 @@ export const DEV_BENEFITS = [
 export const DEV_DISCRETION = {
   heading: "Move units without touching your price",
   body: "Public price cuts wreck your comps, blow up appraisals, and burn the buyers who already paid. LIQWD lets you promote incentives quietly — to verified agents only, never the open market. Your headline price stays intact; the offer does the work.",
-  bullets: [
-    "No public discounts — protect your appraisals and comps.",
-    "Incentives stay inside a verified, broker-only network.",
-    "Prior purchasers never see a markdown.",
-    "Hide sensitive terms until you choose to reveal them.",
+  points: [
+    { title: "No public discounts", body: "Your headline price never moves — appraisals and comps stay protected." },
+    { title: "Broker-only network", body: "Incentives stay inside a closed circle of verified agents." },
+    { title: "Prior buyers protected", body: "Earlier purchasers never see a markdown on what they bought." },
+    { title: "Reveal on your terms", body: "Keep sensitive terms hidden until you choose to share them." },
   ],
 } as const;
 
