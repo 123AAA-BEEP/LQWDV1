@@ -63,20 +63,21 @@ export const SIGNUP_SECTION = {
 } as const;
 
 /**
- * Brokerage logo marquee on the landing page.
+ * Brokerage logo marquee ("trust carousel") on the landing page.
  * IMPORTANT: only list brokerages you have permission to display — showing a
- * logo implies a relationship. Add assets to /public/logos/<name>.svg and set
- * `src` on each entry; until then they render as neutral placeholder wordmarks.
+ * logo implies a relationship. Logo files live in /public/logos; entries
+ * without a `src` fall back to a neutral wordmark.
  */
 export const LOGO_STRIP = {
-  label: "Working across Ontario's new-home market",
+  label: "Trusted by realtors at Ontario's leading brokerages",
 } as const;
 
 export const BROKERAGES = [
-  { name: "Brokerage 01" },
-  { name: "Brokerage 02" },
-  { name: "Brokerage 03" },
-  { name: "Brokerage 04" },
-  { name: "Brokerage 05" },
-  { name: "Brokerage 06" },
+  { name: "HomeLife", src: "/logos/homelife.png" },
+  { name: "The Real Brokerage", src: "/logos/real.webp" },
+  { name: "Right at Home Realty", src: "/logos/right-at-home.webp" },
+  { name: "RE/MAX", src: "/logos/remax.png" },
+  { name: "Royal LePage", src: "/logos/royal-lepage.png" },
+  { name: "Century 21", src: "/logos/century-21.png" },
+  { name: "eXp Realty", src: "/logos/exp-realty.png" },
 ] as const;

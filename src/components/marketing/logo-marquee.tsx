@@ -56,7 +56,8 @@ function LogoTile({ logo }: { logo: BrokerageLogo }) {
       <img
         src={logo.src}
         alt={logo.name}
-        className="h-8 w-auto opacity-60 grayscale transition hover:opacity-100 hover:grayscale-0"
+        loading="lazy"
+        className="h-10 w-auto max-h-10 object-contain opacity-70 grayscale transition hover:opacity-100 hover:grayscale-0"
       />
     );
   }
