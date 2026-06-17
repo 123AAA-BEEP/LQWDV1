@@ -20,6 +20,21 @@ export const HERO = {
   secondaryCta: "Get verified",
 } as const;
 
+/**
+ * Hero visual — supplied skyline image plus a teal "glass" card rendered in
+ * code (kept on-brand vs. the green used in the showcase images). Edit the
+ * card copy freely; swap in a real figure if you want a hard number.
+ */
+export const HERO_VISUAL = {
+  src: "/hero/skyline.webp",
+  alt: "Modern Toronto waterfront condo towers at golden hour",
+  card: {
+    eyebrow: "New-home opportunities",
+    title: "Bonus commission",
+    body: "Exclusive incentives, surfaced before you pitch.",
+  },
+} as const;
+
 export const PROOF_POINTS = [
   "Free for realtors",
   "Made in Canada",
@@ -63,23 +78,40 @@ export const SIGNUP_SECTION = {
 } as const;
 
 /**
- * Social-proof strip on the realtor landing. Framed as "agents from these
- * brokerages use LIQWD" — NOT brokerage endorsement (keeps within the
- * no-implied-endorsement guardrail). Drop real logo SVGs into
- * /public/brokerages and set `logo` to render them; otherwise a styled
- * wordmark of `name` is shown.
+ * Brokerage logo marquee ("trust carousel") on the landing page.
+ * IMPORTANT: only list brokerages you have permission to display — showing a
+ * logo implies a relationship. Logo files live in /public/logos; entries
+ * without a `src` fall back to a neutral wordmark.
  */
-export interface Brokerage {
-  name: string;
-  logo: string | null;
-}
+export const LOGO_STRIP = {
+  label: "Trusted by realtors at Ontario's leading brokerages",
+} as const;
 
-export const TRUST: { heading: string; brokerages: Brokerage[] } = {
-  heading: "Trusted by agents from leading Canadian brokerages.",
-  brokerages: [
-    { name: "eXp Realty", logo: null },
-    { name: "Royal LePage", logo: null },
-    { name: "HomeLife", logo: null },
-    { name: "RE/MAX", logo: null },
-  ],
-};
+export const BROKERAGES = [
+  { name: "HomeLife", src: "/logos/homelife.png" },
+  { name: "The Real Brokerage", src: "/logos/real.webp" },
+  { name: "Right at Home Realty", src: "/logos/right-at-home.webp" },
+  { name: "RE/MAX", src: "/logos/remax.png" },
+  { name: "Royal LePage", src: "/logos/royal-lepage.png" },
+  { name: "Century 21", src: "/logos/century-21.png" },
+  { name: "eXp Realty", src: "/logos/exp-realty.png" },
+] as const;
+
+/**
+ * Marketing visuals paired one-to-one with the three editorial sections.
+ * Assets live in /public/showcase.
+ */
+export const SECTION_IMAGES = {
+  inventory: {
+    src: "/showcase/flash-sale.webp",
+    alt: "A new-home listing showing asking price and client savings in LIQWD",
+  },
+  verified: {
+    src: "/showcase/commission.webp",
+    alt: "A verified realtor reviewing her commission on a new-home sale in LIQWD",
+  },
+  why: {
+    src: "/showcase/exclusive-discount.webp",
+    alt: "An exclusive new-home discount surfaced in LIQWD",
+  },
+} as const;
