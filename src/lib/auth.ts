@@ -71,3 +71,7 @@ export function isApproved(profile: Pick<Profile, "verification_status">) {
 export function isAdmin(profile: Pick<Profile, "role">) {
   return profile.role === "admin";
 }
+
+export function isUltra(profile: Pick<Profile, "tier">) {
+  return profile.tier === "ultra";
+}

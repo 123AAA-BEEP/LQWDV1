@@ -5,6 +5,7 @@
  */
 
 export type UserRole = "admin" | "realtor" | "developer";
+export type Tier = "free" | "ultra";
 export type VerificationStatus =
   | "pending"
   | "approved"
@@ -35,6 +36,7 @@ export interface Profile {
   brokerage_name: string | null;
   reco_registration_number: string | null;
   verification_status: VerificationStatus;
+  tier: Tier;
   avatar_url: string | null;
   logo_url: string | null;
   bio_short: string | null;

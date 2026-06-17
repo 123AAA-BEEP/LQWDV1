@@ -1,12 +1,23 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { requireUserProfile, isApproved } from "@/lib/auth";
+import {
+  FileText,
+  Percent,
+  Gift,
+  LayoutGrid,
+  ListChecks,
+  ExternalLink,
+  LineChart,
+  type LucideIcon,
+} from "lucide-react";
+import { requireUserProfile, isApproved, isUltra } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardBody } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { VerificationRequired } from "@/components/dashboard/locked";
+import { UltraLock } from "@/components/dashboard/ultra";
 import { formatPriceBand } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Project detail" };
@@ -18,6 +29,7 @@ export default async function ProjectDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { profile } = await requireUserProfile();
+  const ultra = isUltra(profile);
   const { slug } = await params;
 
   if (!isApproved(profile)) {
@@ -123,7 +135,7 @@ export default async function ProjectDetailPage({
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
           {project.description_long || project.description_short ? (
-            <Section title="Overview">
+            <Section title="Overview" icon={FileText}>
               <p className="leading-relaxed text-slate-600">
                 {project.description_long ?? project.description_short}
               </p>
@@ -131,7 +143,7 @@ export default async function ProjectDetailPage({
           ) : null}
 
           {/* Broker-only: commercials */}
-          <Section title="Commission &amp; negotiability" brokerOnly>
+          <Section title="Commission &amp; negotiability" icon={Percent} brokerOnly>
             {commercials ? (
               <dl className="grid gap-3 sm:grid-cols-2">
                 {commercials.commission_summary ? (
@@ -169,7 +181,7 @@ export default async function ProjectDetailPage({
           </Section>
 
           {/* Broker-only: incentives */}
-          <Section title="Incentives" brokerOnly>
+          <Section title="Incentives" icon={Gift} brokerOnly>
             {incentives && incentives.length > 0 ? (
               <ul className="space-y-3">
                 {incentives.map((inc) => (
@@ -197,7 +209,7 @@ export default async function ProjectDetailPage({
           </Section>
 
           {/* Floorplans */}
-          <Section title="Floorplans">
+          <Section title="Floorplans" icon={LayoutGrid}>
             {floorplans && floorplans.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -237,11 +249,34 @@ export default async function ProjectDetailPage({
               <Empty>No floorplans listed.</Empty>
             )}
           </Section>
+
+          {/* Ultra-only: market intel. Locked teaser for non-Ultra members. */}
+          {!ultra ? (
+            <UltraLock
+              title="Market intel is an Ultra feature"
+              blurb="Price history, sales velocity, and comparable projects — the context that helps you advise clients with confidence."
+            >
+              <Card>
+                <CardBody>
+                  <div className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-slate-500">
+                    <LineChart className="size-4 text-slate-400" strokeWidth={1.75} aria-hidden />
+                    Market intel
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <Detail label="Price / sq ft trend" value="▁▂▃▅▆▇ +6.4%" />
+                    <Detail label="Sales velocity" value="34 units / month" />
+                    <Detail label="Absorption" value="72% in 90 days" />
+                    <Detail label="Comparable projects" value="5 nearby" />
+                  </div>
+                </CardBody>
+              </Card>
+            </UltraLock>
+          ) : null}
         </div>
 
         {/* Sidebar */}
         <div className="space-y-6">
-          <Section title="Key facts">
+          <Section title="Key facts" icon={ListChecks}>
             <dl className="space-y-2 text-sm">
               {band ? <Detail label="Pricing" value={band} /> : null}
               {project.occupancy_estimate_text ? (
@@ -259,7 +294,7 @@ export default async function ProjectDetailPage({
             </dl>
           </Section>
 
-          <Section title="Broker portals" brokerOnly>
+          <Section title="Broker portals" icon={ExternalLink} brokerOnly>
             {portals && portals.length > 0 ? (
               <ul className="space-y-2">
                 {portals.map((portal) => (
@@ -292,10 +327,12 @@ export default async function ProjectDetailPage({
 
 function Section({
   title,
+  icon: Icon,
   children,
   brokerOnly,
 }: {
   title: string;
+  icon?: LucideIcon;
   children: React.ReactNode;
   brokerOnly?: boolean;
 }) {
@@ -303,10 +340,12 @@ function Section({
     <Card>
       <CardBody>
         <div className="mb-3 flex items-center justify-between">
-          <h2
-            className="text-sm font-semibold uppercase tracking-wide text-slate-500"
-            dangerouslySetInnerHTML={{ __html: title }}
-          />
+          <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-slate-500">
+            {Icon ? (
+              <Icon className="size-4 text-slate-400" strokeWidth={1.75} aria-hidden />
+            ) : null}
+            <span dangerouslySetInnerHTML={{ __html: title }} />
+          </h2>
           {brokerOnly ? <Badge tone="warning">Broker-only</Badge> : null}
         </div>
         {children}
