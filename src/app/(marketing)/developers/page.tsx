@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ShieldCheck, Users, EyeOff, SlidersHorizontal, type LucideIcon } from "lucide-react";
 import { ButtonLink } from "@/components/ui/button";
 import { HeroVisual } from "@/components/marketing/hero-visual";
 import {
@@ -19,6 +20,9 @@ export const metadata: Metadata = {
   description:
     "Sell your pre-construction project faster — reach Ontario's verified agents and motivated buyers on LIQWD.",
 };
+
+// Distinct icon per discretion point (order matches DEV_DISCRETION.points).
+const DISCRETION_ICONS: LucideIcon[] = [ShieldCheck, Users, EyeOff, SlidersHorizontal];
 
 function CheckIcon() {
   return (
@@ -152,42 +156,46 @@ export default function DevelopersLandingPage() {
       {/* 01 — Discreet by design (the wedge) */}
       <section className="bg-white">
         <div className="mx-auto max-w-6xl px-6 py-24 sm:py-32">
-          <div className="overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 to-slate-700 px-8 py-12 text-white sm:px-12 sm:py-16">
-            <div className="grid gap-10 lg:grid-cols-2 lg:gap-16">
+          <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 px-6 py-14 shadow-2xl shadow-slate-900/40 ring-1 ring-white/10 sm:px-14 sm:py-20">
+            {/* Brand glow for depth */}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -right-28 -top-28 size-96 rounded-full bg-brand-500/20 blur-3xl"
+            />
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -bottom-32 -left-24 size-80 rounded-full bg-brand-400/10 blur-3xl"
+            />
+            <div className="relative grid gap-12 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:items-center lg:gap-16">
               <div>
-                <p className="flex items-baseline gap-3 text-xs font-medium uppercase tracking-[0.2em] text-slate-400">
-                  <span className="font-mono text-brand-400">01</span>
+                <p className="flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.2em] text-brand-300">
+                  <span className="h-px w-8 bg-brand-400/60" aria-hidden />
                   Discreet by design
                 </p>
-                <h2 className="mt-4 text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
+                <h2 className="mt-5 text-balance text-3xl font-semibold leading-[1.1] tracking-tight text-white sm:text-4xl lg:text-[2.75rem]">
                   {DEV_DISCRETION.heading}
                 </h2>
-                <p className="mt-6 text-pretty text-lg leading-relaxed text-slate-300">
+                <p className="mt-6 max-w-md text-pretty text-lg leading-relaxed text-slate-300/90">
                   {DEV_DISCRETION.body}
                 </p>
               </div>
-              <ul className="grid gap-4 self-center sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-                {DEV_DISCRETION.bullets.map((b) => (
-                  <li
-                    key={b}
-                    className="flex gap-3 rounded-xl bg-white/5 p-4 ring-1 ring-white/10"
-                  >
-                    <svg
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      className="mt-0.5 size-4 shrink-0 text-brand-400"
-                      aria-hidden
+              <div className="grid gap-px overflow-hidden rounded-2xl bg-white/10 ring-1 ring-white/10 sm:grid-cols-2">
+                {DEV_DISCRETION.points.map((pt, i) => {
+                  const Icon = DISCRETION_ICONS[i];
+                  return (
+                    <div
+                      key={pt.title}
+                      className="group bg-slate-900/80 p-6 transition-colors hover:bg-slate-800/80"
                     >
-                      <path
-                        fillRule="evenodd"
-                        d="M16.7 5.3a1 1 0 0 1 0 1.4l-7.5 7.5a1 1 0 0 1-1.4 0L3.3 9.7a1 1 0 1 1 1.4-1.4l3.3 3.3 6.8-6.8a1 1 0 0 1 1.4 0Z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    <span className="text-sm leading-relaxed text-slate-200">{b}</span>
-                  </li>
-                ))}
-              </ul>
+                      <span className="flex size-11 items-center justify-center rounded-xl bg-brand-500/15 text-brand-300 ring-1 ring-inset ring-brand-400/25 transition-colors group-hover:bg-brand-500/25">
+                        <Icon className="size-5" strokeWidth={1.75} aria-hidden />
+                      </span>
+                      <h3 className="mt-5 text-base font-semibold text-white">{pt.title}</h3>
+                      <p className="mt-1.5 text-sm leading-relaxed text-slate-400">{pt.body}</p>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
