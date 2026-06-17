@@ -99,7 +99,7 @@ export default function LandingPage() {
           aria-hidden
           className="hero-grid pointer-events-none absolute inset-0 -z-10"
         />
-        <div className="mx-auto max-w-6xl px-6 pb-20 pt-20 sm:pb-28 sm:pt-28">
+        <div className="mx-auto max-w-6xl px-6 pb-16 pt-12 sm:pb-24 sm:pt-20">
           <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
             <div>
               <p className="flex items-center gap-3 text-xs font-medium uppercase tracking-[0.2em] text-slate-500">
@@ -110,10 +110,10 @@ export default function LandingPage() {
                 {HERO.headline}
                 <span className="block text-slate-400">{HERO.subheadline}</span>
               </h1>
-              <p className="mt-6 max-w-xl text-pretty text-lg leading-relaxed text-slate-600">
+              <p className="mt-5 max-w-xl text-pretty text-lg leading-relaxed text-slate-600">
                 {HERO.body}
               </p>
-              <div className="mt-9 flex flex-wrap items-center gap-6">
+              <div className="mt-8 flex flex-wrap items-center gap-6">
                 <ButtonLink href="/signup" size="lg" className="px-8">
                   {HERO.primaryCta}
                 </ButtonLink>
