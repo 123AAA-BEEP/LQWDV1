@@ -7,6 +7,7 @@ import {
   DEV_HERO,
   DEV_PROOF_POINTS,
   DEV_BENEFITS,
+  DEV_DISCRETION,
   DEV_DEMAND,
   DEV_PROMOTE,
   DEV_SIGNUP_SECTION,
@@ -102,7 +103,10 @@ export default function DevelopersLandingPage() {
                 {DEV_HERO.headline}
                 <span className="block text-slate-400">{DEV_HERO.subheadline}</span>
               </h1>
-              <p className="mt-5 max-w-xl text-pretty text-lg leading-relaxed text-slate-600">
+              <p className="mt-5 text-balance text-xl font-medium text-brand-700">
+                {DEV_HERO.tagline}
+              </p>
+              <p className="mt-3 max-w-xl text-pretty text-lg leading-relaxed text-slate-600">
                 {DEV_HERO.body}
               </p>
               <div className="mt-8 flex flex-wrap items-center gap-6">
@@ -145,12 +149,57 @@ export default function DevelopersLandingPage() {
         </div>
       </section>
 
-      {/* 01 — What you get */}
+      {/* 01 — Discreet by design (the wedge) */}
+      <section className="bg-white">
+        <div className="mx-auto max-w-6xl px-6 py-24 sm:py-32">
+          <div className="overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 to-slate-700 px-8 py-12 text-white sm:px-12 sm:py-16">
+            <div className="grid gap-10 lg:grid-cols-2 lg:gap-16">
+              <div>
+                <p className="flex items-baseline gap-3 text-xs font-medium uppercase tracking-[0.2em] text-slate-400">
+                  <span className="font-mono text-brand-400">01</span>
+                  Discreet by design
+                </p>
+                <h2 className="mt-4 text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
+                  {DEV_DISCRETION.heading}
+                </h2>
+                <p className="mt-6 text-pretty text-lg leading-relaxed text-slate-300">
+                  {DEV_DISCRETION.body}
+                </p>
+              </div>
+              <ul className="grid gap-4 self-center sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                {DEV_DISCRETION.bullets.map((b) => (
+                  <li
+                    key={b}
+                    className="flex gap-3 rounded-xl bg-white/5 p-4 ring-1 ring-white/10"
+                  >
+                    <svg
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      className="mt-0.5 size-4 shrink-0 text-brand-400"
+                      aria-hidden
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M16.7 5.3a1 1 0 0 1 0 1.4l-7.5 7.5a1 1 0 0 1-1.4 0L3.3 9.7a1 1 0 1 1 1.4-1.4l3.3 3.3 6.8-6.8a1 1 0 0 1 1.4 0Z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    <span className="text-sm leading-relaxed text-slate-200">{b}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 02 — What you get */}
       <FeatureSection
-        index="01"
+        index="02"
         eyebrow="What you get"
         heading="One workspace to move your inventory"
         image={SECTION_IMAGES.inventory}
+        muted
       >
         <ol className="divide-y divide-slate-200">
           {DEV_BENEFITS.map((benefit, i) => (
@@ -166,14 +215,13 @@ export default function DevelopersLandingPage() {
         </ol>
       </FeatureSection>
 
-      {/* 02 — Demand-driven */}
+      {/* 03 — Demand-driven */}
       <FeatureSection
-        index="02"
+        index="03"
         eyebrow="Demand-driven"
         heading={DEV_DEMAND.heading}
         image={SECTION_IMAGES.verified}
         imageLeft
-        muted
       >
         <p className="text-pretty text-lg leading-relaxed text-slate-600">{DEV_DEMAND.body}</p>
         <ul className="mt-8 space-y-4">
@@ -186,12 +234,13 @@ export default function DevelopersLandingPage() {
         </ul>
       </FeatureSection>
 
-      {/* 03 — Promote */}
+      {/* 04 — Promote */}
       <FeatureSection
-        index="03"
+        index="04"
         eyebrow="Promote your project"
         heading={DEV_PROMOTE.heading}
         image={SECTION_IMAGES.why}
+        muted
       >
         <p className="text-pretty text-lg leading-relaxed text-slate-600">{DEV_PROMOTE.body}</p>
         <ul className="mt-8 flex flex-wrap gap-3">

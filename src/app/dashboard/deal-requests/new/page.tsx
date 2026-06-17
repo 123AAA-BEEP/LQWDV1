@@ -88,10 +88,12 @@ export default async function NewDealRequestPage({
               <option value="invited">Invite-only (we&apos;ll help you target)</option>
             </Select>
           </Field>
-          <p className="mt-3 text-sm text-slate-500">
-            Hide specific fields from realtors until you&apos;re ready to share
-            them (e.g. keep your target price private so it isn&apos;t anchored):
-          </p>
+          <div className="mt-3 rounded-lg border border-brand-200 bg-brand-50 p-3 text-sm text-brand-900">
+            <span className="font-semibold">Promote the offer, not your price.</span>{" "}
+            Your offer is shown to verified agents only — never the public — so it
+            never touches your appraisals, comps, or prior purchasers. Hide any
+            field below until you choose to reveal it:
+          </div>
           <div className="mt-2 space-y-2">
             {RFP_HIDEABLE_FIELDS.map((f) => (
               <label key={f.key} className="flex items-center gap-2 text-sm text-slate-700">

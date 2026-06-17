@@ -125,14 +125,15 @@ export const DEV_HERO = {
   headline: "Sell your project faster",
   subheadline: "to Ontario's verified agents",
   supporting: "For builders & developers",
-  body: "LIQWD puts your pre-construction inventory in front of hundreds of verified Ontario realtors and motivated buyers — and gives you the tools to move it. Post deal requests, surface against live buyer demand, and promote your project where the right agents are already looking.",
+  tagline: "Promote the offer, not the project.",
+  body: "LIQWD puts your pre-construction inventory in front of thousands of verified Ontario realtors and motivated buyers — and lets you move it without touching your public price. Promote incentives discreetly, surface against live buyer demand, and reach the agents who can sell your units.",
   primaryCta: "List your project",
   secondaryCta: "Log in",
 } as const;
 
 export const DEV_PROOF_POINTS = [
   "Reach verified Ontario agents",
-  "Made in Canada",
+  "Confidential by default",
   "Built for pre-construction",
   "Demand-driven, not a directory",
 ] as const;
@@ -144,6 +145,18 @@ export const DEV_BENEFITS = [
   "Connect directly with the agents who can move your units.",
   "Run it all from one workspace built for builders, not a generic CRM.",
 ] as const;
+
+/** The killer wedge: promote the incentive, not a public price cut. */
+export const DEV_DISCRETION = {
+  heading: "Move units without touching your price",
+  body: "Public price cuts wreck your comps, blow up appraisals, and burn the buyers who already paid. LIQWD lets you promote incentives quietly — to verified agents only, never the open market. Your headline price stays intact; the offer does the work.",
+  bullets: [
+    "No public discounts — protect your appraisals and comps.",
+    "Incentives stay inside a verified, broker-only network.",
+    "Prior purchasers never see a markdown.",
+    "Hide sensitive terms until you choose to reveal them.",
+  ],
+} as const;
 
 export const DEV_DEMAND = {
   heading: "Sell into demand, not into the void",
@@ -158,7 +171,7 @@ export const DEV_DEMAND = {
 /** The à-la-carte "promote your project" products (also shown as dashboard shells). */
 export const DEV_PROMOTE = {
   heading: "Promote your project",
-  body: "When you're ready to push, put your project in front of the whole network — agents and end-buyers — with promotion built into the platform.",
+  body: "When you're ready to push, put your offer in front of the network — built-in promotion that reaches verified agents (and, when you choose, end-buyers) without leaving a public price footprint.",
   bullets: [
     "Featured placement across browse and the homepage.",
     "eBlast to the verified realtor database.",
