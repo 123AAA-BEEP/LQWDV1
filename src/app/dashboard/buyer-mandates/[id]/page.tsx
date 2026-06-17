@@ -8,7 +8,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { Card, CardBody } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { formatPriceBand, isMandateVerified } from "@/lib/types";
+import { formatPriceBand, isMandateVerified, mandateChecklist } from "@/lib/types";
 import type { BuyerMandate } from "@/lib/types";
 import { respondToConnect } from "../connect-actions";
 
@@ -131,19 +131,31 @@ export default async function MandateDetailPage({
         <Card>
           <CardBody>
             <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
-              Verification
+              Buyer readiness
             </h2>
-            <dl className="grid gap-3 sm:grid-cols-2">
+            <ul className="space-y-2">
+              {mandateChecklist(m).map((item) => (
+                <li key={item.key} className="flex items-center gap-2 text-sm">
+                  {item.done ? (
+                    <Check className="size-4 shrink-0 text-emerald-600" aria-hidden />
+                  ) : (
+                    <X className="size-4 shrink-0 text-slate-300" aria-hidden />
+                  )}
+                  <span className={item.done ? "text-slate-700" : "text-slate-400"}>
+                    {item.label}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <dl className="mt-4 grid gap-3 border-t border-slate-100 pt-4 sm:grid-cols-2">
               <Detail label="Pre-approval" value={PREAPPROVAL_LABEL[m.pre_approval_status]} />
               <Detail label="Amount" value={m.pre_approval_amount ? formatPriceBand(m.pre_approval_amount, null) : null} />
               <Detail label="Lender" value={m.lender} />
               <Detail label="Expiry" value={m.pre_approval_expiry} />
-              <Detail label="Proof of funds" value={m.proof_of_funds ? "On file" : "No"} />
-              <Detail label="Rep agreement" value={m.rep_agreement_signed ? "Signed" : "No"} />
             </dl>
             <p className="mt-4 text-xs text-slate-400">
-              Verification is self-reported for now; document upload &amp;
-              automated checks are coming.
+              Self-reported for now; document upload &amp; automated checks are
+              coming.
             </p>
           </CardBody>
         </Card>

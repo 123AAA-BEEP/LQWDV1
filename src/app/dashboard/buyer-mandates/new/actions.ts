@@ -59,6 +59,8 @@ export async function createMandate(formData: FormData) {
     pre_approval_expiry: str(formData, "pre_approval_expiry"),
     proof_of_funds: bool(formData, "proof_of_funds"),
     rep_agreement_signed: bool(formData, "rep_agreement_signed"),
+    id_verified: bool(formData, "id_verified"),
+    deposit_ready: bool(formData, "deposit_ready"),
   });
 
   if (error) {

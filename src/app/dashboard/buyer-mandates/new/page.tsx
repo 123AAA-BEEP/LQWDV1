@@ -138,7 +138,7 @@ export default async function NewMandatePage({
           </div>
         </Section>
 
-        <Section title="Verification" hint="A verified mandate (pre-approval + funds + signed representation) earns a badge, ranks higher, and is what listing-side brokers can be pitched against.">
+        <Section title="Buyer readiness checklist" hint="Tell developers how ready this buyer is — check off what you hold for them. More signals earn a stronger badge, rank higher, and are what listing-side brokers can be pitched against. (Self-attested for now; document checks come later.)">
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Pre-approval status" htmlFor="pre_approval_status">
               <Select id="pre_approval_status" name="pre_approval_status" defaultValue="none">
@@ -157,14 +157,23 @@ export default async function NewMandatePage({
               <Input id="pre_approval_expiry" name="pre_approval_expiry" type="date" />
             </Field>
           </div>
-          <div className="mt-4 space-y-2">
-            <label className="flex items-center gap-2 text-sm text-slate-700">
-              <input type="checkbox" name="proof_of_funds" className="size-4 rounded border-slate-300" />
-              Proof of funds / deposit capacity on file
-            </label>
+          <p className="mt-5 text-sm font-medium text-slate-600">What do you have on file for this buyer?</p>
+          <div className="mt-2 space-y-2">
             <label className="flex items-center gap-2 text-sm text-slate-700">
               <input type="checkbox" name="rep_agreement_signed" className="size-4 rounded border-slate-300" />
-              Signed buyer representation agreement on file
+              Signed buyer representation agreement
+            </label>
+            <label className="flex items-center gap-2 text-sm text-slate-700">
+              <input type="checkbox" name="proof_of_funds" className="size-4 rounded border-slate-300" />
+              Proof of funds / deposit capacity
+            </label>
+            <label className="flex items-center gap-2 text-sm text-slate-700">
+              <input type="checkbox" name="id_verified" className="size-4 rounded border-slate-300" />
+              Government ID verified
+            </label>
+            <label className="flex items-center gap-2 text-sm text-slate-700">
+              <input type="checkbox" name="deposit_ready" className="size-4 rounded border-slate-300" />
+              Deposit ready to place
             </label>
           </div>
         </Section>
