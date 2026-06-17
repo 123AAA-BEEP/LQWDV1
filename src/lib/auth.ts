@@ -90,7 +90,7 @@ export function isAdmin(profile: Pick<Profile, "role">) {
   return profile.role === "admin";
 }
 
-/** Approved + ultra tier = Deal Desk (RFP) access. */
+/** Approved + ultra tier = Deal Desk (RFP) access. Invitation-only. */
 export function isUltra(
   profile: Pick<Profile, "verification_status" | "realtor_tier">,
 ) {
@@ -98,4 +98,12 @@ export function isUltra(
     profile.verification_status === "approved" &&
     profile.realtor_tier === "ultra"
   );
+}
+
+/**
+ * Paid self-serve "Pro" tier (premium tooling). DISTINCT from Ultra: Pro is
+ * purchasable, Ultra is invitation-only. Being Pro does NOT grant Deal Desk.
+ */
+export function isPro(profile: Pick<Profile, "plan">) {
+  return profile.plan === "pro";
 }

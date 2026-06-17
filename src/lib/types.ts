@@ -17,6 +17,9 @@ export type RealtorTitle =
 
 export type RealtorTier = "standard" | "ultra";
 
+/** Paid self-serve tooling tier. Distinct from the invitation-only Ultra tier. */
+export type Plan = "free" | "pro";
+
 export type SubmissionStatus =
   | "draft"
   | "pending_review"
@@ -38,6 +41,9 @@ export interface Profile {
   reco_registration_number: string | null;
   verification_status: VerificationStatus;
   realtor_tier: RealtorTier;
+  plan: Plan;
+  stripe_customer_id: string | null;
+  stripe_subscription_id: string | null;
   avatar_url: string | null;
   logo_url: string | null;
   bio_short: string | null;
