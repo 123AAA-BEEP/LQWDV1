@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic";
 interface Row {
   id: string;
   update_type: string;
-  update_payload: { details?: string } | null;
+  update_payload: { details?: string; attachments?: string[] } | null;
   status: UpdateStatus;
   admin_notes: string | null;
   created_at: string;
@@ -39,6 +39,18 @@ export default async function MyUpdatesPage({
     .order("created_at", { ascending: false });
 
   const rows = (data as unknown as Row[]) ?? [];
+
+  // Resolve signed URLs for any image attachments (private bucket).
+  const attachmentPaths = rows.flatMap((r) => r.update_payload?.attachments ?? []);
+  const signed: Record<string, string> = {};
+  if (attachmentPaths.length > 0) {
+    const { data: urls } = await supabase.storage
+      .from("project-documents")
+      .createSignedUrls(attachmentPaths, 3600);
+    (urls ?? []).forEach((u) => {
+      if (u.path && u.signedUrl) signed[u.path] = u.signedUrl;
+    });
+  }
 
   return (
     <div className="space-y-6">
@@ -102,6 +114,22 @@ export default async function MyUpdatesPage({
                   <p className="text-sm text-slate-600">
                     {r.update_payload.details}
                   </p>
+                ) : null}
+                {(r.update_payload?.attachments ?? []).length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {(r.update_payload?.attachments ?? []).map((p) =>
+                      signed[p] ? (
+                        <a key={p} href={signed[p]} target="_blank" rel="noreferrer">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={signed[p]}
+                            alt="Attachment"
+                            className="h-20 w-20 rounded-lg border border-slate-200 object-cover"
+                          />
+                        </a>
+                      ) : null,
+                    )}
+                  </div>
                 ) : null}
                 {r.admin_notes ? (
                   <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">

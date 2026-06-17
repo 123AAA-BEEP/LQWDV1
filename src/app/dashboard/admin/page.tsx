@@ -19,13 +19,16 @@ async function pendingCount(
 }
 
 export default async function AdminOverview() {
-  const [verifications, submissions, updates] = await Promise.all([
+  const [verifications, submissions, updates, proposals, rfpResponses] =
+    await Promise.all([
     pendingCount("verification_requests", ["pending"]),
     pendingCount("property_submissions", ["pending_review", "needs_changes"]),
     pendingCount("property_update_requests", [
       "pending_review",
       "needs_changes",
     ]),
+    pendingCount("project_proposals", ["submitted", "under_review"]),
+    pendingCount("deal_rfp_proposals", ["submitted"]),
   ]);
 
   const cards = [
@@ -44,10 +47,20 @@ export default async function AdminOverview() {
       count: updates,
       href: "/dashboard/admin/updates",
     },
+    {
+      label: "Proposals to review",
+      count: proposals,
+      href: "/dashboard/admin/proposals",
+    },
+    {
+      label: "RFP responses",
+      count: rfpResponses,
+      href: "/dashboard/admin/rfps",
+    },
   ];
 
   return (
-    <div className="grid gap-4 sm:grid-cols-3">
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {cards.map((c) => (
         <Link key={c.href} href={c.href}>
           <Card className="h-full transition-shadow hover:shadow-md">

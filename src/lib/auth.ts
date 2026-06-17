@@ -53,8 +53,26 @@ export async function requireUserProfile(): Promise<{
         title: validTitle,
       })
       .select("*")
-      .single();
-    profile = inserted;
+      .maybeSingle();
+
+    if (inserted) {
+      profile = inserted;
+    } else {
+      // The insert returned no row — almost always because a concurrent request
+      // (the layout and page both call this on first load) won the race and
+      // already created the profile. Re-fetch it instead of throwing a 500.
+      const { data: existing } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .maybeSingle();
+      profile = existing;
+    }
+  }
+
+  if (!profile) {
+    // Could not load or bootstrap a profile — send to login rather than crash.
+    redirect("/login");
   }
 
   return {
@@ -70,4 +88,14 @@ export function isApproved(profile: Pick<Profile, "verification_status">) {
 
 export function isAdmin(profile: Pick<Profile, "role">) {
   return profile.role === "admin";
+}
+
+/** Approved + ultra tier = Deal Desk (RFP) access. */
+export function isUltra(
+  profile: Pick<Profile, "verification_status" | "realtor_tier">,
+) {
+  return (
+    profile.verification_status === "approved" &&
+    profile.realtor_tier === "ultra"
+  );
 }

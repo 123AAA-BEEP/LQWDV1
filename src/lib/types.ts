@@ -15,6 +15,8 @@ export type RealtorTitle =
   | "broker"
   | "broker_of_record";
 
+export type RealtorTier = "standard" | "ultra";
+
 export type SubmissionStatus =
   | "draft"
   | "pending_review"
@@ -35,6 +37,7 @@ export interface Profile {
   brokerage_name: string | null;
   reco_registration_number: string | null;
   verification_status: VerificationStatus;
+  realtor_tier: RealtorTier;
   avatar_url: string | null;
   logo_url: string | null;
   bio_short: string | null;
