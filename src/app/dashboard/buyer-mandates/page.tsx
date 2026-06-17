@@ -98,15 +98,16 @@ export default async function BuyerMandatesPage({
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight text-ink">
-              Buyer mandate marketplace
+              Ready buyers
             </h1>
             <p className="mt-1 text-slate-500">
-              Active buyer mandates that may match your inventory. Verified
-              mandates are backed by pre-approval, funds, and a signed agreement.
+              Verified buyer demand from agents — match your inventory to buyers
+              who are ready now. Verified mandates are backed by pre-approval,
+              funds, and a signed agreement.
             </p>
           </div>
           <ButtonLink href="/dashboard/developer" variant="secondary" size="sm">
-            {canConnect ? "Manage access" : "Get access"}
+            {canConnect ? "Manage connections" : "Unlock connections"}
           </ButtonLink>
         </div>
 
@@ -118,8 +119,8 @@ export default async function BuyerMandatesPage({
         ) : null}
         {!canConnect ? (
           <Notice tone="warning">
-            You can browse mandates freely. To request an intro, you&apos;ll need
-            connect access — <Link href="/dashboard/developer" className="font-medium underline">get set up here</Link>.
+            You can browse buyer demand freely. To reach an agent, you&apos;ll need
+            a connection — <Link href="/dashboard/developer" className="font-medium underline">unlock here</Link>.
           </Notice>
         ) : null}
 

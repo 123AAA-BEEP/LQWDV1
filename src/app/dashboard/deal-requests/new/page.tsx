@@ -12,7 +12,7 @@ import {
 } from "@/lib/status";
 import { createRfp } from "../actions";
 
-export const metadata: Metadata = { title: "New deal request" };
+export const metadata: Metadata = { title: "Post an offer" };
 export const dynamic = "force-dynamic";
 
 export default async function NewDealRequestPage({
@@ -29,7 +29,7 @@ export default async function NewDealRequestPage({
         <Header />
         <Card>
           <CardBody className="text-center text-sm text-slate-500">
-            Deal requests are for developer accounts.
+            This is for developer accounts.
           </CardBody>
         </Card>
       </div>
@@ -40,7 +40,7 @@ export default async function NewDealRequestPage({
     <div className="space-y-6">
       <Header />
       {error ? (
-        <Notice tone="error">Couldn&apos;t save the deal request. Check the title and try again.</Notice>
+        <Notice tone="error">Couldn&apos;t save your offer. Check the title and try again.</Notice>
       ) : null}
 
       <form action={createRfp} className="space-y-6">
@@ -108,7 +108,7 @@ export default async function NewDealRequestPage({
         </label>
 
         <div className="flex items-center gap-3">
-          <SubmitButton>Create deal request</SubmitButton>
+          <SubmitButton>Post offer</SubmitButton>
           <Link href="/dashboard/deal-requests" className="text-sm text-slate-500 hover:text-slate-800">
             Cancel
           </Link>
@@ -122,14 +122,14 @@ function Header() {
   return (
     <div>
       <Link href="/dashboard/deal-requests" className="text-sm text-brand-700 hover:underline">
-        ← Deal requests
+        ← Move inventory
       </Link>
       <h1 className="mt-2 text-2xl font-semibold tracking-tight text-ink">
-        New deal request
+        Post an offer
       </h1>
       <p className="mt-1 text-slate-500">
-        Post an RFP to Ultra realtors — bulk buys, listing mandates, inventory,
-        or a full development.
+        Put your priority inventory in front of Ultra agents — bulk buys,
+        listing mandates, inventory units, or a full development.
       </p>
     </div>
   );

@@ -12,7 +12,13 @@ export function SiteHeader() {
           </span>
           <span aria-hidden className="size-1.5 rounded-full bg-brand-500" />
         </Link>
-        <nav className="flex items-center gap-3">
+        <nav className="flex items-center gap-1 sm:gap-3">
+          <Link
+            href="/developers"
+            className="hidden rounded-md px-3 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:text-ink sm:inline-block"
+          >
+            For developers
+          </Link>
           <ButtonLink href="/login" variant="ghost" size="sm">
             Log in
           </ButtonLink>

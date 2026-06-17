@@ -11,7 +11,7 @@ import { RFP_STATUS, rfpTypeLabel, dealSideLabel } from "@/lib/status";
 import type { RfpStatus } from "@/lib/status";
 import { formatPriceBand } from "@/lib/types";
 
-export const metadata: Metadata = { title: "Deal requests" };
+export const metadata: Metadata = { title: "Move inventory" };
 export const dynamic = "force-dynamic";
 
 interface RfpRow {
@@ -40,7 +40,7 @@ export default async function DealRequestsPage({
         <Header />
         <Card>
           <CardBody className="text-center text-sm text-slate-500">
-            Deal requests are for developer accounts.
+            This is for developer accounts.
           </CardBody>
         </Card>
       </div>
@@ -75,12 +75,12 @@ export default async function DealRequestsPage({
   return (
     <div className="space-y-6">
       <Header />
-      {created ? <Notice tone="success">Deal request created.</Notice> : null}
+      {created ? <Notice tone="success">Offer posted.</Notice> : null}
 
       {rfps.length === 0 ? (
         <Card>
           <CardBody className="text-center text-sm text-slate-500">
-            You haven&apos;t posted any deal requests yet.
+            You haven&apos;t posted any offers yet.
           </CardBody>
         </Card>
       ) : (
@@ -127,14 +127,15 @@ function Header() {
     <div className="flex flex-wrap items-start justify-between gap-3">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight text-ink">
-          Deal requests
+          Move inventory
         </h1>
         <p className="mt-1 text-slate-500">
-          Post RFPs to Ultra realtors and review the proposals they send back.
+          Post your priority units and incentives to Ultra agents, then review
+          the proposals they send back.
         </p>
       </div>
       <ButtonLink href="/dashboard/deal-requests/new" size="sm">
-        <Plus className="size-4" aria-hidden /> New deal request
+        <Plus className="size-4" aria-hidden /> Post an offer
       </ButtonLink>
     </div>
   );

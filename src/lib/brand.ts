@@ -115,3 +115,59 @@ export const SECTION_IMAGES = {
     alt: "An exclusive new-home discount surfaced in LIQWD",
   },
 } as const;
+
+/**
+ * Developer / builder marketing — the `/developers` landing page. Mirrors the
+ * realtor landing structure (hero → proof → editorial sections → CTA) but
+ * speaks to builders bringing pre-construction inventory to market.
+ */
+export const DEV_HERO = {
+  headline: "Sell your project faster",
+  subheadline: "to Ontario's verified agents",
+  supporting: "For builders & developers",
+  body: "LIQWD puts your pre-construction inventory in front of hundreds of verified Ontario realtors and motivated buyers — and gives you the tools to move it. Post deal requests, surface against live buyer demand, and promote your project where the right agents are already looking.",
+  primaryCta: "List your project",
+  secondaryCta: "Log in",
+} as const;
+
+export const DEV_PROOF_POINTS = [
+  "Reach verified Ontario agents",
+  "Made in Canada",
+  "Built for pre-construction",
+  "Demand-driven, not a directory",
+] as const;
+
+export const DEV_BENEFITS = [
+  "Post deal requests — bulk buys, listing mandates, inventory units, or a full development — straight to Ultra agents.",
+  "See live buyer demand: verified mandates from agents with ready, motivated buyers.",
+  "Promote your project where agents and buyers are already searching.",
+  "Connect directly with the agents who can move your units.",
+  "Run it all from one workspace built for builders, not a generic CRM.",
+] as const;
+
+export const DEV_DEMAND = {
+  heading: "Sell into demand, not into the void",
+  body: "Most portals are a directory you list into and hope. LIQWD is demand-driven: verified agents post buyer mandates describing exactly what their clients want — by city, price, and unit type — so you can match your inventory to real, ready buyers instead of broadcasting blindly.",
+  bullets: [
+    "Browse active buyer mandates that fit your project.",
+    "Post deal requests and review agent proposals in one place.",
+    "Keep sensitive terms private until you're ready to share them.",
+  ],
+} as const;
+
+/** The à-la-carte "promote your project" products (also shown as dashboard shells). */
+export const DEV_PROMOTE = {
+  heading: "Promote your project",
+  body: "When you're ready to push, put your project in front of the whole network — agents and end-buyers — with promotion built into the platform.",
+  bullets: [
+    "Featured placement across browse and the homepage.",
+    "eBlast to the verified realtor database.",
+    "eBlast to the end-buyer audience.",
+    "Performance analytics on every campaign.",
+  ],
+} as const;
+
+export const DEV_SIGNUP_SECTION = {
+  heading: "Bring your project to the network.",
+  body: "Create your developer workspace and start reaching Ontario's verified agents and buyers.",
+} as const;
