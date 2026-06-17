@@ -155,8 +155,36 @@ export interface BuyerMandate {
   pre_approval_expiry: string | null;
   proof_of_funds: boolean;
   rep_agreement_signed: boolean;
+  id_verified: boolean;
+  deposit_ready: boolean;
   created_at: string;
   updated_at: string;
+}
+
+/**
+ * The buyer-readiness checklist the agent self-attests to. Surfaced to
+ * developers so they can gauge how "ready" a buyer is at a glance. (A future
+ * run adds document upload + automated checks to back each item.)
+ */
+export interface MandateChecklistItem {
+  key: string;
+  label: string;
+  done: boolean;
+}
+export function mandateChecklist(m: {
+  rep_agreement_signed?: boolean | null;
+  pre_approval_status?: string | null;
+  proof_of_funds?: boolean | null;
+  id_verified?: boolean | null;
+  deposit_ready?: boolean | null;
+}): MandateChecklistItem[] {
+  return [
+    { key: "bra", label: "Buyer rep agreement", done: !!m.rep_agreement_signed },
+    { key: "preapproval", label: "Mortgage pre-approval", done: m.pre_approval_status === "pre_approved" },
+    { key: "funds", label: "Proof of funds", done: !!m.proof_of_funds },
+    { key: "id", label: "ID verified", done: !!m.id_verified },
+    { key: "deposit", label: "Deposit ready", done: !!m.deposit_ready },
+  ];
 }
 
 /**

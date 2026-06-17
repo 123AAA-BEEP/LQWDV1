@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Lock, Plus, ShieldCheck, Mail, Phone, Clock, X } from "lucide-react";
+import { Lock, Plus, ShieldCheck, Mail, Phone, Clock, X, Check } from "lucide-react";
 import {
   requireUserProfile,
   isApproved,
@@ -16,7 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { Notice } from "@/components/ui/notice";
 import { VerificationRequired } from "@/components/dashboard/locked";
-import { formatPriceBand, isMandateVerified } from "@/lib/types";
+import { formatPriceBand, isMandateVerified, mandateChecklist } from "@/lib/types";
 import type { BuyerMandate } from "@/lib/types";
 import { requestConnect, withdrawConnect } from "./connect-actions";
 
@@ -257,6 +257,11 @@ interface DeveloperRow {
   baths_min: number | null;
   timeline: string | null;
   must_haves: string | null;
+  pre_approval_status: string | null;
+  proof_of_funds: boolean | null;
+  rep_agreement_signed: boolean | null;
+  id_verified: boolean | null;
+  deposit_ready: boolean | null;
   verified: boolean;
   broker_id: string;
   broker_first_name: string | null;
@@ -302,6 +307,21 @@ function DeveloperMandateCard({
             <span className="font-medium text-slate-700">Must-haves:</span> {m.must_haves}
           </p>
         ) : null}
+        {(() => {
+          const done = mandateChecklist(m).filter((i) => i.done);
+          return done.length ? (
+            <div className="mt-2 flex flex-wrap gap-1">
+              {done.map((i) => (
+                <span
+                  key={i.key}
+                  className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700"
+                >
+                  <Check className="size-3" aria-hidden /> {i.label}
+                </span>
+              ))}
+            </div>
+          ) : null;
+        })()}
         <p className="mt-3 flex-1 text-xs text-slate-400">
           via {broker}
           {m.broker_brokerage ? ` · ${m.broker_brokerage}` : ""}
