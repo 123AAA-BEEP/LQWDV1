@@ -84,6 +84,98 @@ export function imageQueryForProject(p: {
     .join(" ");
 }
 
+// Aggregators / portals / social / stock — images here are third-party and
+// noisier, so they get pushed below builder-hosted results.
+const DOWNRANK_DOMAINS = [
+  "livabl.com",
+  "condos.ca",
+  "realtor.ca",
+  "zolo.ca",
+  "zillow.",
+  "redfin.",
+  "point2homes.com",
+  "buzzbuzzhome.com",
+  "newinhomes.com",
+  "blogto.com",
+  "storeys.com",
+  "pinterest.",
+  "facebook.com",
+  "instagram.com",
+  "twitter.com",
+  "x.com",
+  "youtube.com",
+  "tiktok.com",
+  "linkedin.com",
+  "reddit.com",
+  "wikipedia.org",
+  "yelp.",
+  "google.",
+  "gstatic.com",
+  "googleusercontent.com",
+];
+
+// Generic words to ignore when matching a builder/project name to a domain.
+const NAME_STOPWORDS = new Set([
+  "the", "homes", "home", "group", "inc", "ltd", "corp", "corporation",
+  "developments", "development", "builders", "builder", "condos", "condo",
+  "residences", "residence", "towns", "townhomes", "townhome", "living",
+  "by", "at", "and", "of", "preconstruction", "ontario", "communities",
+  "community", "properties", "property", "realty", "real", "estate",
+]);
+
+function hostnameOf(url: string | null): string {
+  if (!url) return "";
+  try {
+    return new URL(url).hostname.replace(/^www\./, "").toLowerCase();
+  } catch {
+    return "";
+  }
+}
+
+function nameTokens(s: string | null): string[] {
+  return (s ?? "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .split(" ")
+    .filter((t) => t.length >= 3 && !NAME_STOPWORDS.has(t));
+}
+
+/**
+ * Re-orders image candidates to prefer the builder's own domain. A candidate
+ * scores higher when its source page's hostname contains tokens from the
+ * builder or project name, and lower when it's a known aggregator/social/stock
+ * site. Original search order is the tiebreaker. No extra network calls.
+ */
+export function rankCandidates(
+  candidates: ImageCandidate[],
+  project: { project_name: string; builder_name: string | null },
+): ImageCandidate[] {
+  const tokens = [
+    ...new Set([
+      ...nameTokens(project.builder_name),
+      ...nameTokens(project.project_name),
+    ]),
+  ];
+
+  return candidates
+    .map((c, i) => {
+      const host = hostnameOf(c.sourceUrl) || hostnameOf(c.imageUrl);
+      let score = 0;
+      if (DOWNRANK_DOMAINS.some((d) => host.includes(d))) score -= 10;
+      for (const t of tokens) {
+        if (host.includes(t)) {
+          score += 4; // builder/project-named domain → very likely official
+          break;
+        }
+      }
+      if ((c.width ?? 0) >= 800) score += 1; // mild preference for larger images
+      return { c, i, score };
+    })
+    .sort((a, b) => b.score - a.score || a.i - b.i)
+    .map((s) => s.c);
+}
+
+
 export type FetchedImage =
   | { ok: true; bytes: Uint8Array; contentType: string; ext: string }
   | { ok: false; error: string };
