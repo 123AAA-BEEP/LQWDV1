@@ -4,6 +4,7 @@ import {
   Building2,
   Handshake,
   FileText,
+  ClipboardCheck,
   PlusCircle,
   UserCircle,
   ShieldCheck,
@@ -153,6 +154,19 @@ export default async function DashboardHome() {
             body="Track the counter-offers you've sent to developers and where each stands."
             href="/dashboard/proposals"
             cta="View proposals"
+            enabled={approved}
+            lockedHint="Available after verification"
+          />
+          <ActionCard
+            icon={ClipboardCheck}
+            title="Buyer Mandate"
+            body={
+              pro
+                ? "Submit a hard-to-match buyer — matching inventory surfaces to you automatically."
+                : "A Pro feature: submit a buyer mandate and let matching inventory come to you."
+            }
+            href={pro ? "/dashboard/buyer-mandates/new" : "/dashboard/upgrade"}
+            cta={pro ? "New mandate" : "Unlock with Pro"}
             enabled={approved}
             lockedHint="Available after verification"
           />
