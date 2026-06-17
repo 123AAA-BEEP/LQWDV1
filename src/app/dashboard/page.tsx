@@ -13,14 +13,24 @@ import {
   ArrowRight,
   Sparkles,
   Zap,
+  CreditCard,
+  ClipboardList,
   type LucideIcon,
 } from "lucide-react";
-import { requireUserProfile, isApproved, isPro, isUltra } from "@/lib/auth";
+import {
+  requireUserProfile,
+  isApproved,
+  isPro,
+  isUltra,
+  isDeveloper,
+  developerCanConnect,
+} from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, CardBody } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatPriceBand } from "@/lib/types";
+import type { Profile } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Dashboard" };
 export const dynamic = "force-dynamic";
@@ -45,6 +55,11 @@ export default async function DashboardHome() {
   const pro = isPro(profile);
   const ultra = isUltra(profile);
   const firstName = profile.first_name ?? "there";
+
+  // Developers get a dedicated, role-appropriate home.
+  if (isDeveloper(profile)) {
+    return <DeveloperHome profile={profile} userId={userId} firstName={firstName} />;
+  }
 
   const supabase = await createClient();
 
@@ -361,6 +376,101 @@ function ProSpotlight() {
         <ButtonLink href="/dashboard/upgrade" className="shrink-0">
           Upgrade to Pro
         </ButtonLink>
+      </div>
+    </div>
+  );
+}
+
+async function DeveloperHome({
+  profile,
+  userId,
+  firstName,
+}: {
+  profile: Profile;
+  userId: string;
+  firstName: string;
+}) {
+  const supabase = await createClient();
+  const [{ count: openMandates }, { count: myRfps }] = await Promise.all([
+    supabase
+      .from("buyer_mandates_developer_view")
+      .select("id", { count: "exact", head: true }),
+    supabase
+      .from("deal_rfps")
+      .select("id", { count: "exact", head: true })
+      .eq("created_by_user_id", userId),
+  ]);
+  const canConnect = developerCanConnect(profile);
+
+  return (
+    <div className="space-y-8">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-ink">
+            Welcome, {firstName}
+          </h1>
+          <p className="mt-1 text-slate-500">
+            Post deal requests and review buyer mandates that match your
+            inventory.
+          </p>
+        </div>
+        <ButtonLink href="/dashboard/deal-requests/new">
+          Post a deal request
+        </ButtonLink>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <Stat icon={ClipboardList} label="Open buyer mandates" value={openMandates ?? 0} />
+        <Stat icon={Handshake} label="Your deal requests" value={myRfps ?? 0} />
+        <Stat
+          icon={CreditCard}
+          label="Connect access"
+          value={profile.developer_mandate_access ? 1 : profile.mandate_connect_credits}
+        />
+      </div>
+
+      <div>
+        <h2 className="mb-3 text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
+          Quick actions
+        </h2>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <ActionCard
+            icon={Handshake}
+            title="Post a deal request"
+            body="Create an RFP — bulk buys, listing mandates, inventory, or a full development — and reach Ultra realtors."
+            href="/dashboard/deal-requests/new"
+            cta="New deal request"
+            enabled
+          />
+          <ActionCard
+            icon={FileText}
+            title="Your deal requests"
+            body="Manage your RFPs and review the proposals realtors send back."
+            href="/dashboard/deal-requests"
+            cta="View deal requests"
+            enabled
+          />
+          <ActionCard
+            icon={ClipboardCheck}
+            title="Buyer mandates"
+            body="Browse verified buyer mandates that match your inventory and connect with the broker."
+            href="/dashboard/buyer-mandates"
+            cta="Browse mandates"
+            enabled
+          />
+          <ActionCard
+            icon={CreditCard}
+            title="Access & billing"
+            body={
+              canConnect
+                ? "Manage your connect access and billing."
+                : "Set up connect access to reach out to brokers."
+            }
+            href="/dashboard/developer"
+            cta={canConnect ? "Manage access" : "Get access"}
+            enabled
+          />
+        </div>
       </div>
     </div>
   );
