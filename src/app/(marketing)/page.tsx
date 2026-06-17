@@ -1,7 +1,7 @@
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { ButtonLink } from "@/components/ui/button";
 import { LogoMarquee } from "@/components/marketing/logo-marquee";
-import { HeroShowcase } from "@/components/marketing/hero-showcase";
 import { HeroVisual } from "@/components/marketing/hero-visual";
 import {
   HERO,
@@ -12,6 +12,7 @@ import {
   SIGNUP_SECTION,
   LOGO_STRIP,
   BROKERAGES,
+  SECTION_IMAGES,
 } from "@/lib/brand";
 
 function CheckIcon() {
@@ -38,6 +39,54 @@ function SectionLabel({ index, children }: { index: string; children: string }) 
       <span className="font-mono text-brand-600">{index}</span>
       {children}
     </p>
+  );
+}
+
+/** Editorial section: one image paired with a heading + body, sides alternating. */
+function FeatureSection({
+  index,
+  eyebrow,
+  heading,
+  image,
+  imageLeft = false,
+  muted = false,
+  children,
+}: {
+  index: string;
+  eyebrow: string;
+  heading: string;
+  image: { src: string; alt: string };
+  imageLeft?: boolean;
+  muted?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <section
+      className={muted ? "border-y border-slate-200 bg-slate-50/60" : "bg-white"}
+    >
+      <div className="mx-auto max-w-6xl px-6 py-24 sm:py-32">
+        <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
+          <div>
+            <SectionLabel index={index}>{eyebrow}</SectionLabel>
+            <h2 className="mt-4 text-balance text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
+              {heading}
+            </h2>
+            <div className="mt-8">{children}</div>
+          </div>
+          <div className={imageLeft ? "lg:order-first" : undefined}>
+            <div className="overflow-hidden rounded-2xl border border-slate-200 shadow-xl shadow-slate-900/10 ring-1 ring-slate-900/5">
+              {/* eslint-disable-next-line @next/next/no-img-element -- marketing asset, CSS-sized */}
+              <img
+                src={image.src}
+                alt={image.alt}
+                loading="lazy"
+                className="block w-full"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -90,9 +139,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Showcase band — supplied marketing visuals */}
-      <HeroShowcase />
-
       {/* Brokerage logo marquee */}
       <LogoMarquee logos={BROKERAGES} label={LOGO_STRIP.label} />
 
@@ -116,86 +162,73 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Benefits — editorial numbered list */}
-      <section className="mx-auto max-w-6xl px-6 py-24 sm:py-32">
-        <div className="grid gap-12 lg:grid-cols-12 lg:gap-16">
-          <div className="lg:col-span-4">
-            <SectionLabel index="01">What you get</SectionLabel>
-            <h2 className="mt-4 text-balance text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
-              One portal for new-home inventory
-            </h2>
-          </div>
-          <ol className="divide-y divide-slate-200 lg:col-span-8">
-            {BENEFITS.map((benefit, i) => (
-              <li
-                key={benefit}
-                className="group flex gap-6 py-7 transition-colors first:pt-0 last:pb-0"
-              >
-                <span className="pt-0.5 font-mono text-sm tabular-nums text-brand-600">
-                  {String(i + 1).padStart(2, "0")}
-                </span>
-                <p className="text-pretty text-lg leading-relaxed text-slate-700 transition-colors group-hover:text-ink">
-                  {benefit}
-                </p>
-              </li>
-            ))}
-          </ol>
-        </div>
-      </section>
-
-      {/* Verification */}
-      <section className="border-y border-slate-200 bg-slate-50/60">
-        <div className="mx-auto max-w-6xl px-6 py-24 sm:py-32">
-          <div className="grid gap-12 lg:grid-cols-12 lg:gap-16">
-            <div className="lg:col-span-4">
-              <SectionLabel index="02">Verified access</SectionLabel>
-              <h2 className="mt-4 text-balance text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
-                {VERIFICATION.heading}
-              </h2>
-            </div>
-            <div className="lg:col-span-8">
-              <p className="max-w-2xl text-pretty text-lg leading-relaxed text-slate-600">
-                {VERIFICATION.body}
+      {/* 01 — What you get */}
+      <FeatureSection
+        index="01"
+        eyebrow="What you get"
+        heading="One portal for new-home inventory"
+        image={SECTION_IMAGES.inventory}
+      >
+        <ol className="divide-y divide-slate-200">
+          {BENEFITS.map((benefit, i) => (
+            <li
+              key={benefit}
+              className="group flex gap-5 py-5 transition-colors first:pt-0 last:pb-0"
+            >
+              <span className="pt-0.5 font-mono text-sm tabular-nums text-brand-600">
+                {String(i + 1).padStart(2, "0")}
+              </span>
+              <p className="text-pretty leading-relaxed text-slate-700 transition-colors group-hover:text-ink">
+                {benefit}
               </p>
-              <ul className="mt-10 space-y-5">
-                {VERIFICATION.bullets.map((b) => (
-                  <li key={b} className="flex gap-3">
-                    <CheckIcon />
-                    <span className="text-slate-700">{b}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
+            </li>
+          ))}
+        </ol>
+      </FeatureSection>
 
-      {/* Why */}
-      <section className="mx-auto max-w-6xl px-6 py-24 sm:py-32">
-        <div className="grid gap-12 lg:grid-cols-12 lg:gap-16">
-          <div className="lg:col-span-4">
-            <SectionLabel index="03">Why LIQWD</SectionLabel>
-            <h2 className="mt-4 text-balance text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
-              {WHY.heading}
-            </h2>
-          </div>
-          <div className="lg:col-span-8">
-            <p className="max-w-2xl text-pretty text-lg leading-relaxed text-slate-600">
-              {WHY.body}
-            </p>
-            <ul className="mt-10 flex flex-wrap gap-3">
-              {WHY.bullets.map((b) => (
-                <li
-                  key={b}
-                  className="rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50"
-                >
-                  {b.replace(/\.$/, "")}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </section>
+      {/* 02 — Verified access */}
+      <FeatureSection
+        index="02"
+        eyebrow="Verified access"
+        heading={VERIFICATION.heading}
+        image={SECTION_IMAGES.verified}
+        imageLeft
+        muted
+      >
+        <p className="text-pretty text-lg leading-relaxed text-slate-600">
+          {VERIFICATION.body}
+        </p>
+        <ul className="mt-8 space-y-4">
+          {VERIFICATION.bullets.map((b) => (
+            <li key={b} className="flex gap-3">
+              <CheckIcon />
+              <span className="text-slate-700">{b}</span>
+            </li>
+          ))}
+        </ul>
+      </FeatureSection>
+
+      {/* 03 — Why LIQWD */}
+      <FeatureSection
+        index="03"
+        eyebrow="Why LIQWD"
+        heading={WHY.heading}
+        image={SECTION_IMAGES.why}
+      >
+        <p className="text-pretty text-lg leading-relaxed text-slate-600">
+          {WHY.body}
+        </p>
+        <ul className="mt-8 flex flex-wrap gap-3">
+          {WHY.bullets.map((b) => (
+            <li
+              key={b}
+              className="rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50"
+            >
+              {b.replace(/\.$/, "")}
+            </li>
+          ))}
+        </ul>
+      </FeatureSection>
 
       {/* Signup CTA */}
       <section className="relative isolate overflow-hidden bg-ink">
