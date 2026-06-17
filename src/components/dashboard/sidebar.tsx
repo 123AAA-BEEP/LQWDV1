@@ -12,6 +12,7 @@ import {
   Bell,
   UserCircle,
   ShieldCheck,
+  CreditCard,
   Zap,
   Sparkles,
   type LucideIcon,
@@ -39,6 +40,15 @@ const NAV: NavItem[] = [
   { href: "/dashboard/profile", label: "Profile", icon: UserCircle },
 ];
 
+// Developers get a trimmed, role-appropriate nav.
+const DEV_NAV: NavItem[] = [
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, exact: true },
+  { href: "/dashboard/deal-requests", label: "Deal Requests", icon: Handshake },
+  { href: "/dashboard/buyer-mandates", label: "Buyer Mandates", icon: ClipboardList },
+  { href: "/dashboard/developer", label: "Access", icon: CreditCard },
+  { href: "/dashboard/profile", label: "Profile", icon: UserCircle },
+];
+
 function initials(name: string) {
   return (
     name
@@ -57,6 +67,7 @@ export function Sidebar({
   isAdmin = false,
   isPro = false,
   isUltra = false,
+  isDeveloper = false,
 }: {
   name: string;
   email: string | null;
@@ -64,11 +75,14 @@ export function Sidebar({
   isAdmin?: boolean;
   isPro?: boolean;
   isUltra?: boolean;
+  isDeveloper?: boolean;
 }) {
   const pathname = usePathname();
-  const nav: NavItem[] = isAdmin
-    ? [...NAV, { href: "/dashboard/admin", label: "Admin", icon: ShieldCheck }]
-    : NAV;
+  const nav: NavItem[] = isDeveloper
+    ? DEV_NAV
+    : isAdmin
+      ? [...NAV, { href: "/dashboard/admin", label: "Admin", icon: ShieldCheck }]
+      : NAV;
 
   return (
     <aside className="flex w-60 shrink-0 flex-col border-r border-slate-200 bg-white">
@@ -79,7 +93,15 @@ export function Sidebar({
         >
           {BRAND.name}
         </Link>
-        {isUltra ? <UltraBadge /> : isPro ? <ProBadge /> : null}
+        {isDeveloper ? (
+          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+            Developer
+          </span>
+        ) : isUltra ? (
+          <UltraBadge />
+        ) : isPro ? (
+          <ProBadge />
+        ) : null}
       </div>
 
       <nav className="flex-1 space-y-1 p-3">
@@ -117,8 +139,8 @@ export function Sidebar({
         })}
       </nav>
 
-      {/* Pro upgrade chip — only for free realtors (not Pro, not Ultra VIPs). */}
-      {!isPro && !isUltra ? (
+      {/* Pro upgrade chip — only for free realtors (not Pro/Ultra, not devs). */}
+      {!isPro && !isUltra && !isDeveloper ? (
         <div className="px-3 pb-1">
           <Link
             href="/dashboard/upgrade"

@@ -1,4 +1,10 @@
-import { requireUserProfile, isAdmin, isPro, isUltra } from "@/lib/auth";
+import {
+  requireUserProfile,
+  isAdmin,
+  isPro,
+  isUltra,
+  isDeveloper,
+} from "@/lib/auth";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { VerificationBanner } from "@/components/dashboard/verification-banner";
 import { Badge, verificationBadgeTone } from "@/components/ui/badge";
@@ -19,6 +25,7 @@ export default async function DashboardLayout({
     "Your account";
   const pro = isPro(profile);
   const ultra = isUltra(profile);
+  const developer = isDeveloper(profile);
 
   return (
     <div className="flex min-h-full">
@@ -29,20 +36,31 @@ export default async function DashboardLayout({
         isAdmin={isAdmin(profile)}
         isPro={pro}
         isUltra={ultra}
+        isDeveloper={developer}
       />
       <div className="flex min-w-0 flex-1 flex-col bg-slate-50">
-        {/* Slim context bar — plan + verification state, always visible. */}
+        {/* Slim context bar — role / plan state, always visible. */}
         <div className="flex h-16 items-center justify-end gap-2 border-b border-slate-200 bg-white px-6">
-          {ultra ? <UltraBadge /> : pro ? <ProBadge /> : (
-            <span className="text-xs font-medium text-slate-400">Free plan</span>
+          {developer ? (
+            <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">
+              Developer
+            </span>
+          ) : (
+            <>
+              {ultra ? <UltraBadge /> : pro ? <ProBadge /> : (
+                <span className="text-xs font-medium text-slate-400">Free plan</span>
+              )}
+              <Badge tone={verificationBadgeTone(profile.verification_status)}>
+                {VERIFICATION_LABELS[profile.verification_status]}
+              </Badge>
+            </>
           )}
-          <Badge tone={verificationBadgeTone(profile.verification_status)}>
-            {VERIFICATION_LABELS[profile.verification_status]}
-          </Badge>
         </div>
         <div className="flex-1">
           <div className="mx-auto max-w-5xl space-y-6 px-6 py-8">
-            <VerificationBanner status={profile.verification_status} />
+            {developer ? null : (
+              <VerificationBanner status={profile.verification_status} />
+            )}
             {children}
           </div>
         </div>
