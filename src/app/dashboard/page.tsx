@@ -141,7 +141,7 @@ export default async function DashboardHome() {
             body={
               ultra
                 ? "Respond to developer deal requests — bulk buys, listing mandates, and full developments."
-                : "Invitation-only developer deal requests for vetted LIQWD Ultra realtors. Take a look inside."
+                : "Developer deal requests — bulk buys, listing mandates, full developments. Unlock with Ultra."
             }
             href="/dashboard/deal-desk"
             cta={ultra ? "Open Deal Desk" : "See what's inside"}
