@@ -81,3 +81,27 @@ export const BROKERAGES = [
   { name: "Century 21", src: "/logos/century-21.png" },
   { name: "eXp Realty", src: "/logos/exp-realty.png" },
 ] as const;
+
+/**
+ * Showcase band directly below the hero — supplied marketing visuals that
+ * surface the savings, commission, and deal value props. Assets live in
+ * /public/showcase.
+ */
+export const SHOWCASE = {
+  label: "Built around opportunity",
+  heading: "See the savings, commissions, and deals up front.",
+  images: {
+    commission: {
+      src: "/showcase/commission.webp",
+      alt: "A realtor reviewing her commission on a new-home sale in LIQWD",
+    },
+    flashSale: {
+      src: "/showcase/flash-sale.webp",
+      alt: "A new-home listing with a flash-sale discount and client savings",
+    },
+    discount: {
+      src: "/showcase/exclusive-discount.webp",
+      alt: "An exclusive new-home discount surfaced in LIQWD",
+    },
+  },
+} as const;

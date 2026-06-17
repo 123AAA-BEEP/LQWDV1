@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ButtonLink } from "@/components/ui/button";
 import { LogoMarquee } from "@/components/marketing/logo-marquee";
-import { ProductPreview } from "@/components/marketing/product-preview";
+import { HeroShowcase } from "@/components/marketing/hero-showcase";
 import {
   HERO,
   PROOF_POINTS,
@@ -78,13 +78,11 @@ export default function LandingPage() {
               </span>
             </Link>
           </div>
-
-          {/* Product preview — swap the placeholder for a real screenshot. */}
-          <div className="mt-16 sm:mt-20">
-            <ProductPreview />
-          </div>
         </div>
       </section>
+
+      {/* Showcase band — supplied marketing visuals */}
+      <HeroShowcase />
 
       {/* Brokerage logo marquee */}
       <LogoMarquee logos={BROKERAGES} label={LOGO_STRIP.label} />
