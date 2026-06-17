@@ -4,7 +4,15 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { assertAdmin } from "@/lib/admin";
-import { RFP_TYPE_OPTIONS } from "@/lib/status";
+import { RFP_TYPE_OPTIONS, RFP_HIDEABLE_KEYS } from "@/lib/status";
+
+/** Keeps only recognized hideable field keys from a form's hidden_fields[]. */
+function parseHiddenFields(formData: FormData): string[] {
+  return formData
+    .getAll("hidden_fields")
+    .map((v) => String(v))
+    .filter((k) => RFP_HIDEABLE_KEYS.includes(k));
+}
 
 function intOrNull(v: FormDataEntryValue | null): number | null {
   const s = String(v ?? "").trim();
@@ -49,6 +57,7 @@ export async function createRfp(formData: FormData) {
       target_units: intOrNull(formData.get("target_units")),
       target_price: numOrNull(formData.get("target_price")),
       deadline_at: deadline ? new Date(deadline).toISOString() : null,
+      hidden_fields: parseHiddenFields(formData),
       status: publish ? "open" : "draft",
     })
     .select("id")
@@ -75,6 +84,22 @@ export async function updateRfpStatus(formData: FormData) {
   await supabase.from("deal_rfps").update({ status }).eq("id", rfpId);
   revalidatePath(`/dashboard/admin/rfps/${rfpId}`);
   revalidatePath("/dashboard/admin/rfps");
+}
+
+/** Updates which fields are hidden from realtors on an RFP. */
+export async function updateRfpHiddenFields(formData: FormData) {
+  const rfpId = String(formData.get("rfp_id") ?? "");
+  if (!rfpId) return;
+
+  const supabase = await createClient();
+  await assertAdmin(supabase);
+
+  await supabase
+    .from("deal_rfps")
+    .update({ hidden_fields: parseHiddenFields(formData) })
+    .eq("id", rfpId);
+
+  revalidatePath(`/dashboard/admin/rfps/${rfpId}`);
 }
 
 /** Invites an ultra realtor to a (private) RFP. */

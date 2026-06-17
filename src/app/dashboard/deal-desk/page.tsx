@@ -79,10 +79,11 @@ export default async function DealDeskPage({
   }
 
   const supabase = await createClient();
-  // RLS returns only RFPs this ultra realtor is eligible to see.
+  // Realtors read RFPs through the masked view (hidden fields are nulled and
+  // the base deal_rfps table is admin-only). The view re-applies eligibility.
   const [{ data: open }, { data: mine }] = await Promise.all([
     supabase
-      .from("deal_rfps")
+      .from("deal_rfps_realtor_view")
       .select(
         "id, title, rfp_type, deal_side, status, target_units, target_price, deadline_at",
       )
@@ -90,15 +91,38 @@ export default async function DealDeskPage({
       .order("deadline_at", { ascending: true, nullsFirst: false }),
     supabase
       .from("deal_rfp_proposals")
-      .select(
-        "id, price_offer, units, status, admin_notes, created_at, rfp:deal_rfps!rfp_id(id,title)",
-      )
+      .select("id, price_offer, units, status, admin_notes, created_at, rfp_id")
       .eq("submitted_by_user_id", userId)
       .order("created_at", { ascending: false }),
   ]);
 
   const rfps = (open as unknown as RfpRow[]) ?? [];
-  const responses = (mine as unknown as MyResponse[]) ?? [];
+  const proposalRows =
+    (mine as unknown as (Omit<MyResponse, "rfp"> & { rfp_id: string })[]) ?? [];
+
+  // Resolve RFP titles through the masked view (base table is admin-only).
+  const rfpIds = [...new Set(proposalRows.map((p) => p.rfp_id))];
+  const titleById = new Map<string, string>();
+  if (rfpIds.length > 0) {
+    const { data: titleRows } = await supabase
+      .from("deal_rfps_realtor_view")
+      .select("id, title")
+      .in("id", rfpIds);
+    for (const t of (titleRows ?? []) as { id: string; title: string }[]) {
+      titleById.set(t.id, t.title);
+    }
+  }
+  const responses: MyResponse[] = proposalRows.map((p) => ({
+    id: p.id,
+    price_offer: p.price_offer,
+    units: p.units,
+    status: p.status,
+    admin_notes: p.admin_notes,
+    created_at: p.created_at,
+    rfp: titleById.has(p.rfp_id)
+      ? { id: p.rfp_id, title: titleById.get(p.rfp_id) as string }
+      : null,
+  }));
 
   return (
     <div className="space-y-8">

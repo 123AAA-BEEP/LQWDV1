@@ -139,6 +139,22 @@ export function rfpTypeLabel(type: string): string {
   return RFP_TYPE_LABELS[type] ?? type;
 }
 
+// Fields a builder may withhold from realtors on an RFP. The hidden_fields[]
+// column stores these keys; the deal_rfps_realtor_view masks them. Title,
+// type and side are intentionally NOT hideable (they describe the deal).
+export const RFP_HIDEABLE_FIELDS: { key: string; label: string }[] = [
+  { key: "target_price", label: "Target price" },
+  { key: "target_units", label: "Target units" },
+  { key: "brief", label: "Brief / description" },
+  { key: "deadline", label: "Deadline" },
+];
+
+export const RFP_HIDEABLE_KEYS = RFP_HIDEABLE_FIELDS.map((f) => f.key);
+
+export function rfpHiddenFieldLabel(key: string): string {
+  return RFP_HIDEABLE_FIELDS.find((f) => f.key === key)?.label ?? key;
+}
+
 export function dealSideLabel(side: string): string {
   return DEAL_SIDE_LABELS[side] ?? side;
 }

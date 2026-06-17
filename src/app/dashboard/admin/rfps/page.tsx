@@ -9,6 +9,7 @@ import { SubmitButton } from "@/components/ui/submit-button";
 import {
   RFP_STATUS,
   RFP_TYPE_OPTIONS,
+  RFP_HIDEABLE_FIELDS,
   rfpTypeLabel,
   dealSideLabel,
 } from "@/lib/status";
@@ -106,6 +107,33 @@ export default async function RfpsAdminPage({
                   <Input id="deadline_at" name="deadline_at" type="date" />
                 </Field>
               </div>
+
+              <fieldset className="rounded-lg border border-slate-200 p-3">
+                <legend className="px-1 text-xs font-medium uppercase tracking-wide text-slate-500">
+                  Hide from realtors
+                </legend>
+                <p className="mb-2 text-xs text-slate-500">
+                  Withhold sensitive details (e.g. the target price, so an
+                  appraisal isn’t anchored low before closing). Hidden fields are
+                  masked everywhere realtors see this deal.
+                </p>
+                <div className="flex flex-wrap gap-x-4 gap-y-2">
+                  {RFP_HIDEABLE_FIELDS.map((f) => (
+                    <label
+                      key={f.key}
+                      className="flex items-center gap-2 text-sm text-slate-700"
+                    >
+                      <input
+                        type="checkbox"
+                        name="hidden_fields"
+                        value={f.key}
+                        className="h-4 w-4 rounded border-slate-300"
+                      />
+                      {f.label}
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
 
               <div className="flex flex-wrap items-center gap-2">
                 <SubmitButton pendingLabel="Saving…">Save as draft</SubmitButton>
