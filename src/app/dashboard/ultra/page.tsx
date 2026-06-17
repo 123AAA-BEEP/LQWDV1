@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Check, Minus, LineChart, Zap, Compass, Headphones } from "lucide-react";
 import { requireUserProfile, isUltra } from "@/lib/auth";
+import { isStripeConfigured, ultraPriceLabel } from "@/lib/stripe";
 import { Card, CardBody } from "@/components/ui/card";
 import { UltraBadge } from "@/components/dashboard/ultra";
+import { startCheckout, manageBilling } from "./actions";
 
 export const metadata: Metadata = { title: "Ultra" };
 export const dynamic = "force-dynamic";
@@ -42,12 +44,24 @@ const COMPARISON: [string, boolean, boolean][] = [
   ["Priority support", false, true],
 ];
 
-export default async function UltraPage() {
+export default async function UltraPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ upgraded?: string }>;
+}) {
   const { profile } = await requireUserProfile();
   const ultra = isUltra(profile);
+  const stripeOn = isStripeConfigured();
+  const { upgraded } = await searchParams;
 
   return (
     <div className="space-y-10">
+      {upgraded && ultra ? (
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+          You&apos;re all set — Ultra is now unlocked across LIQWD.
+        </div>
+      ) : null}
+
       {/* Hero */}
       <div className="overflow-hidden rounded-2xl border border-amber-400/30 bg-ink p-8 sm:p-10">
         <UltraBadge size="md" />
@@ -61,19 +75,49 @@ export default async function UltraPage() {
             ? "Thanks for being an Ultra member. Market intel, early access, and priority updates are unlocked across LIQWD."
             : "Your free plan stays free and fully usable. Ultra adds the intel, access, and speed that turn a busy week into a closed deal."}
         </p>
-        {!ultra ? (
-          <div className="mt-7 flex flex-wrap items-center gap-4">
-            <Link
-              href="mailto:hello@liqwd.ca?subject=LIQWD%20Ultra"
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-amber-400/50 bg-amber-400/15 px-6 text-sm font-semibold text-amber-100 transition-colors hover:bg-amber-400/25"
-            >
-              Request Ultra access
-            </Link>
-            <span className="text-sm text-slate-400">
-              Early access — pricing shared on request.
-            </span>
-          </div>
-        ) : null}
+
+        <div className="mt-7 flex flex-wrap items-center gap-4">
+          {ultra ? (
+            profile.stripe_customer_id ? (
+              <form action={manageBilling}>
+                <button
+                  type="submit"
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-slate-600 px-6 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
+                >
+                  Manage billing
+                </button>
+              </form>
+            ) : null
+          ) : stripeOn ? (
+            <>
+              <form action={startCheckout}>
+                <button
+                  type="submit"
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-amber-400/50 bg-amber-400/15 px-6 text-sm font-semibold text-amber-100 transition-colors hover:bg-amber-400/25"
+                >
+                  Upgrade to Ultra
+                </button>
+              </form>
+              <span className="text-sm text-slate-400">
+                {ultraPriceLabel
+                  ? `${ultraPriceLabel} · cancel anytime`
+                  : "Cancel anytime."}
+              </span>
+            </>
+          ) : (
+            <>
+              <Link
+                href="mailto:hello@liqwd.ca?subject=LIQWD%20Ultra"
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-amber-400/50 bg-amber-400/15 px-6 text-sm font-semibold text-amber-100 transition-colors hover:bg-amber-400/25"
+              >
+                Request Ultra access
+              </Link>
+              <span className="text-sm text-slate-400">
+                Early access — pricing shared on request.
+              </span>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Pillars */}

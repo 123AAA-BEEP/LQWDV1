@@ -37,6 +37,8 @@ export interface Profile {
   reco_registration_number: string | null;
   verification_status: VerificationStatus;
   tier: Tier;
+  stripe_customer_id: string | null;
+  stripe_subscription_id: string | null;
   avatar_url: string | null;
   logo_url: string | null;
   bio_short: string | null;

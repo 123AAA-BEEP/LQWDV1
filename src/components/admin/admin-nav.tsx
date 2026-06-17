@@ -10,6 +10,7 @@ const TABS = [
   { href: "/dashboard/admin/submissions", label: "Submissions" },
   { href: "/dashboard/admin/updates", label: "Update requests" },
   { href: "/dashboard/admin/projects", label: "Projects" },
+  { href: "/dashboard/admin/members", label: "Members" },
 ];
 
 export function AdminNav() {

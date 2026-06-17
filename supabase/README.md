@@ -30,7 +30,9 @@ Run each file as its own query, in this exact order:
 | 1 | `migrations/0001_structural.sql` | Creates all tables, check constraints, FKs, unique constraints, indexes, the shared `updated_at` trigger, and the two public-safe **definer** views: `public_projects_view` and `public_realtor_cards`. |
 | 2 | `migrations/0002_rls_policies.sql` | Adds helper functions (`is_admin`, `is_approved`, `has_project_access`, `safe_uuid`), the profile escalation-guard trigger, enables RLS on every table, sets base grants, and creates all access policies. |
 | 3 | `migrations/0003_storage.sql` | Creates the `avatars`, `logos`, `project-media`, and `project-documents` buckets and their `storage.objects` access policies. |
-| 4 | `seed.sql` *(optional)* | Inserts one brokerage, one approved realtor (+ its `auth.users` row), one published project with an active public page, public media, private rows (commercials, broker portal, incentive, floorplan, restricted document), and a sample lead — enough to smoke-test the public view and the RLS boundary. |
+| 4 | `migrations/0004_ultra_tier.sql` | Adds `profiles.tier` (`free` / `ultra`, default `free`) and extends the escalation-guard trigger so only admins/server can change `tier`. |
+| 5 | `migrations/0005_ultra_billing.sql` | Adds `profiles.stripe_customer_id` / `stripe_subscription_id` (written only by the Stripe webhook / checkout via the service-role client). |
+| 6 | `seed.sql` *(optional)* | Inserts one brokerage, one approved realtor (+ its `auth.users` row), one published project with an active public page, public media, private rows (commercials, broker portal, incentive, floorplan, restricted document), and a sample lead — enough to smoke-test the public view and the RLS boundary. |
 
 > The SQL Editor runs as a superuser, so it bypasses RLS — migrations and seed
 > data apply cleanly.
