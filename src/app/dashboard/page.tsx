@@ -317,9 +317,9 @@ function ActionCard({
 
 function ProSpotlight() {
   const perks = [
-    "Priority alerts when pricing or inventory moves",
-    "Project insights & saved searches",
-    "A branded public profile to win more leads",
+    "A branded public profile that wins you free leads",
+    "Up to 10 free project landing pages",
+    "Buyer Mandate — let matching inventory find your buyer",
   ];
   return (
     <div className="overflow-hidden rounded-xl border border-brand-200 bg-gradient-to-br from-brand-50 to-white">
