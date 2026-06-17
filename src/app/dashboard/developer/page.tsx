@@ -18,7 +18,7 @@ import {
   manageDeveloperBilling,
 } from "./actions";
 
-export const metadata: Metadata = { title: "Developer access" };
+export const metadata: Metadata = { title: "Connections" };
 export const dynamic = "force-dynamic";
 
 export default async function DeveloperAccessPage({
@@ -33,7 +33,7 @@ export default async function DeveloperAccessPage({
     return (
       <div className="space-y-6">
         <h1 className="text-2xl font-semibold tracking-tight text-ink">
-          Developer access
+          Connections
         </h1>
         <Card>
           <CardBody className="text-center text-sm text-slate-500">
@@ -54,11 +54,11 @@ export default async function DeveloperAccessPage({
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight text-ink">
-          Developer access
+          Connections
         </h1>
         <p className="mt-1 text-slate-500">
-          Browsing buyer mandates is free. Requesting an intro (a “connect”)
-          uses your access.
+          Browsing ready buyers is free. Reaching out to an agent uses a
+          connection.
         </p>
       </div>
 

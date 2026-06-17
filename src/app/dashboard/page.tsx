@@ -15,6 +15,9 @@ import {
   Zap,
   CreditCard,
   ClipboardList,
+  Megaphone,
+  Mail,
+  BarChart3,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -271,7 +274,7 @@ function Stat({
 }: {
   icon: LucideIcon;
   label: string;
-  value: number;
+  value: number | string;
 }) {
   return (
     <Card>
@@ -381,6 +384,34 @@ function ProSpotlight() {
   );
 }
 
+/** Muted, non-interactive card for features that aren't live yet. */
+function ComingSoonCard({
+  icon: Icon,
+  title,
+  body,
+}: {
+  icon: LucideIcon;
+  title: string;
+  body: string;
+}) {
+  return (
+    <Card className="border-dashed bg-slate-50/60">
+      <CardBody className="flex h-full flex-col">
+        <div className="flex items-center justify-between">
+          <span className="flex size-9 items-center justify-center rounded-lg bg-white ring-1 ring-slate-200">
+            <Icon className="size-5 text-slate-400" strokeWidth={1.75} aria-hidden />
+          </span>
+          <span className="rounded-full bg-slate-200/70 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+            Coming soon
+          </span>
+        </div>
+        <h3 className="mt-3 font-semibold text-slate-600">{title}</h3>
+        <p className="mt-1 flex-1 text-sm text-slate-400">{body}</p>
+      </CardBody>
+    </Card>
+  );
+}
+
 async function DeveloperHome({
   profile,
   userId,
@@ -404,28 +435,42 @@ async function DeveloperHome({
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-ink">
-            Welcome, {firstName}
-          </h1>
-          <p className="mt-1 text-slate-500">
-            Post deal requests and review buyer mandates that match your
-            inventory.
-          </p>
+      {/* Welcome banner */}
+      <div className="overflow-hidden rounded-2xl border border-slate-800 bg-gradient-to-br from-slate-900 to-slate-700 text-white">
+        <div className="flex flex-col gap-5 p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
+          <div className="max-w-lg">
+            <span className="inline-flex items-center rounded-full bg-white/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-200">
+              Developer workspace
+            </span>
+            <h1 className="mt-3 text-2xl font-semibold tracking-tight">
+              Welcome, {firstName}
+            </h1>
+            <p className="mt-1.5 text-sm leading-relaxed text-slate-300">
+              Push your priority inventory to agents, tap verified buyer demand,
+              and promote your projects — all from one place.
+            </p>
+          </div>
+          <ButtonLink
+            href="/dashboard/deal-requests/new"
+            variant="white"
+            className="shrink-0"
+          >
+            Post an offer
+          </ButtonLink>
         </div>
-        <ButtonLink href="/dashboard/deal-requests/new">
-          Post a deal request
-        </ButtonLink>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <Stat icon={ClipboardList} label="Open buyer mandates" value={openMandates ?? 0} />
-        <Stat icon={Handshake} label="Your deal requests" value={myRfps ?? 0} />
+        <Stat icon={ClipboardList} label="Ready buyers" value={openMandates ?? 0} />
+        <Stat icon={Handshake} label="Your offers" value={myRfps ?? 0} />
         <Stat
           icon={CreditCard}
-          label="Connect access"
-          value={profile.developer_mandate_access ? 1 : profile.mandate_connect_credits}
+          label="Connections"
+          value={
+            profile.developer_mandate_access
+              ? "Unlimited"
+              : profile.mandate_connect_credits
+          }
         />
       </div>
 
@@ -436,39 +481,92 @@ async function DeveloperHome({
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <ActionCard
             icon={Handshake}
-            title="Post a deal request"
-            body="Create an RFP — bulk buys, listing mandates, inventory, or a full development — and reach Ultra realtors."
+            title="Post an offer"
+            body="Put your priority units and limited-time incentives in front of Ultra agents — bulk, inventory, listings, or a full development."
             href="/dashboard/deal-requests/new"
-            cta="New deal request"
+            cta="Post an offer"
             enabled
           />
           <ActionCard
             icon={FileText}
-            title="Your deal requests"
-            body="Manage your RFPs and review the proposals realtors send back."
+            title="Your offers"
+            body="Track what you're moving and review the proposals agents send back."
             href="/dashboard/deal-requests"
-            cta="View deal requests"
+            cta="View offers"
             enabled
           />
           <ActionCard
             icon={ClipboardCheck}
-            title="Buyer mandates"
-            body="Browse verified buyer mandates that match your inventory and connect with the broker."
+            title="Ready buyers"
+            body="Verified buyer demand from agents — match your inventory to buyers who are ready now."
             href="/dashboard/buyer-mandates"
-            cta="Browse mandates"
+            cta="See buyer demand"
             enabled
           />
           <ActionCard
             icon={CreditCard}
-            title="Access & billing"
+            title="Connections & billing"
             body={
               canConnect
-                ? "Manage your connect access and billing."
-                : "Set up connect access to reach out to brokers."
+                ? "Manage how you reach agents, plus your billing."
+                : "Unlock the ability to reach agents holding ready buyers."
             }
             href="/dashboard/developer"
-            cta={canConnect ? "Manage access" : "Get access"}
+            cta={canConnect ? "Manage connections" : "Unlock connections"}
             enabled
+          />
+        </div>
+      </div>
+
+      {/* Promote — revenue add-ons, not live yet. */}
+      <div>
+        <div className="mb-3 flex items-center gap-2">
+          <h2 className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
+            Promote your projects
+          </h2>
+          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-400">
+            Soon
+          </span>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <ComingSoonCard
+            icon={Megaphone}
+            title="Featured listing"
+            body="Put your project at the top of browse and the homepage, with a Featured badge agents and buyers notice."
+          />
+          <ComingSoonCard
+            icon={Mail}
+            title="eBlast to agents"
+            body="Broadcast your project to the verified realtor database — targeted by city and focus."
+          />
+          <ComingSoonCard
+            icon={Mail}
+            title="eBlast to buyers"
+            body="Reach motivated end-buyers directly with a dedicated send for your project."
+          />
+        </div>
+      </div>
+
+      {/* Insights — coming soon. */}
+      <div>
+        <div className="mb-3 flex items-center gap-2">
+          <h2 className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
+            Insights
+          </h2>
+          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-400">
+            Soon
+          </span>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <ComingSoonCard
+            icon={BarChart3}
+            title="Project analytics"
+            body="Views, saves, leads, and which agents engaged — the full funnel for every project."
+          />
+          <ComingSoonCard
+            icon={TrendingUp}
+            title="Buyer demand signals"
+            body="See where verified buyer demand is concentrated by city, price, and unit type."
           />
         </div>
       </div>

@@ -18,7 +18,7 @@ import type { RfpStatus, RfpProposalStatus } from "@/lib/status";
 import { formatPriceBand } from "@/lib/types";
 import { setRfpStatus, respondToProposal } from "../actions";
 
-export const metadata: Metadata = { title: "Deal request" };
+export const metadata: Metadata = { title: "Offer" };
 export const dynamic = "force-dynamic";
 
 interface Rfp {
@@ -96,7 +96,7 @@ export default async function DealRequestDetail({
     <div className="space-y-6">
       <div>
         <Link href="/dashboard/deal-requests" className="text-sm text-brand-700 hover:underline">
-          ← Deal requests
+          ← Move inventory
         </Link>
         <div className="mt-2 flex flex-wrap items-center gap-2">
           <Badge tone={RFP_STATUS[r.status].tone}>{RFP_STATUS[r.status].label}</Badge>

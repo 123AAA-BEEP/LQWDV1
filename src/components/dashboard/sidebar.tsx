@@ -43,9 +43,9 @@ const NAV: NavItem[] = [
 // Developers get a trimmed, role-appropriate nav.
 const DEV_NAV: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, exact: true },
-  { href: "/dashboard/deal-requests", label: "Deal Requests", icon: Handshake },
-  { href: "/dashboard/buyer-mandates", label: "Buyer Mandates", icon: ClipboardList },
-  { href: "/dashboard/developer", label: "Access", icon: CreditCard },
+  { href: "/dashboard/deal-requests", label: "Move Inventory", icon: Handshake },
+  { href: "/dashboard/buyer-mandates", label: "Ready Buyers", icon: ClipboardList },
+  { href: "/dashboard/developer", label: "Connections", icon: CreditCard },
   { href: "/dashboard/profile", label: "Profile", icon: UserCircle },
 ];
 
