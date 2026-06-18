@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { ButtonLink } from "@/components/ui/button";
 import type { VerificationStatus } from "@/lib/types";
 
 const COPY: Record<
@@ -32,12 +32,9 @@ export function VerificationBanner({
   return (
     <div className={`flex flex-wrap items-center justify-between gap-3 rounded-lg border px-4 py-3 text-sm ${copy.tone}`}>
       <span>{copy.text}</span>
-      <Link
-        href="/dashboard/verify"
-        className="font-medium underline underline-offset-2"
-      >
+      <ButtonLink href="/dashboard/verify" size="sm" variant="secondary" className="shrink-0">
         {copy.cta}
-      </Link>
+      </ButtonLink>
     </div>
   );
 }
