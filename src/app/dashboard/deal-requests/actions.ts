@@ -40,6 +40,8 @@ export async function createRfp(formData: FormData) {
   const visibility =
     str(formData, "visibility") === "invited" ? "invited" : "all_ultra";
   const publish = formData.get("publish") === "on" || formData.get("publish") === "true";
+  const revealIdentity =
+    formData.get("reveal_identity") === "on" || formData.get("reveal_identity") === "true";
   const hidden = HIDEABLE.filter((f) => formData.get(`hide_${f}`) === "on");
   const deadline = str(formData, "deadline_at");
 
@@ -57,6 +59,7 @@ export async function createRfp(formData: FormData) {
       deadline_at: deadline ? new Date(deadline).toISOString() : null,
       visibility,
       hidden_fields: hidden,
+      reveal_identity: revealIdentity,
       status: publish ? "open" : "draft",
     })
     .select("id")
@@ -80,6 +83,19 @@ export async function setRfpStatus(formData: FormData) {
   const supabase = await createClient();
   // RLS: only the owning developer (or admin) may update.
   await supabase.from("deal_rfps").update({ status }).eq("id", rfpId);
+  revalidatePath(`/dashboard/deal-requests/${rfpId}`);
+}
+
+/** Owner reveals or hides their name + company to agents on their offer. */
+export async function setRfpIdentity(formData: FormData) {
+  await requireUserProfile();
+  const rfpId = str(formData, "rfp_id");
+  const reveal = formData.get("reveal") === "true";
+  if (!rfpId) return;
+
+  const supabase = await createClient();
+  // RLS: only the owning developer (or admin) may update.
+  await supabase.from("deal_rfps").update({ reveal_identity: reveal }).eq("id", rfpId);
   revalidatePath(`/dashboard/deal-requests/${rfpId}`);
 }
 

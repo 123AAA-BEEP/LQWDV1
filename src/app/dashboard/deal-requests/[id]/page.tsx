@@ -16,7 +16,7 @@ import {
 } from "@/lib/status";
 import type { RfpStatus, RfpProposalStatus } from "@/lib/status";
 import { formatPriceBand } from "@/lib/types";
-import { setRfpStatus, respondToProposal } from "../actions";
+import { setRfpStatus, setRfpIdentity, respondToProposal } from "../actions";
 
 export const metadata: Metadata = { title: "Offer" };
 export const dynamic = "force-dynamic";
@@ -33,6 +33,7 @@ interface Rfp {
   deadline_at: string | null;
   visibility: string;
   hidden_fields: string[];
+  reveal_identity: boolean;
 }
 interface Proposal {
   id: string;
@@ -58,7 +59,7 @@ export default async function DealRequestDetail({
   const { data } = await supabase
     .from("deal_rfps")
     .select(
-      "id, title, rfp_type, deal_side, status, brief, target_units, target_price, deadline_at, visibility, hidden_fields",
+      "id, title, rfp_type, deal_side, status, brief, target_units, target_price, deadline_at, visibility, hidden_fields, reveal_identity",
     )
     .eq("id", id)
     .maybeSingle();
@@ -126,6 +127,23 @@ export default async function DealRequestDetail({
               Hidden from realtors: {r.hidden_fields.join(", ")}
             </p>
           ) : null}
+
+          {/* Identity control — agents see your name only if you reveal it */}
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-slate-50 px-3 py-2">
+            <p className="text-sm text-slate-600">
+              Shown to agents as:{" "}
+              <span className="font-medium text-slate-800">
+                {r.reveal_identity ? "Your name & company" : "Confidential developer"}
+              </span>
+            </p>
+            <form action={setRfpIdentity}>
+              <input type="hidden" name="rfp_id" value={r.id} />
+              <input type="hidden" name="reveal" value={r.reveal_identity ? "false" : "true"} />
+              <Button type="submit" size="sm" variant="secondary">
+                {r.reveal_identity ? "Hide my identity" : "Reveal my identity"}
+              </Button>
+            </form>
+          </div>
 
           {/* Status controls */}
           <div className="flex flex-wrap gap-2 border-t border-slate-100 pt-4">
