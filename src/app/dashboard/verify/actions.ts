@@ -59,7 +59,7 @@ export async function verifyRecoCertificate(formData: FormData) {
 
   if (!approves) verifyRedirect("nomatch");
 
-  await admin
+  const { data: updated, error: updErr } = await admin
     .from("profiles")
     .update({
       verification_status: "approved",
@@ -68,7 +68,14 @@ export async function verifyRecoCertificate(formData: FormData) {
       reco_verified_at: new Date().toISOString(),
       reco_verification_method: "certificate",
     })
-    .eq("id", userId);
+    .eq("id", userId)
+    .select("id")
+    .maybeSingle();
+
+  // Never report success if the write didn't persist (e.g. a misconfigured
+  // SUPABASE_SERVICE_ROLE_KEY makes the admin client unprivileged and RLS
+  // silently drops the update). Surface a real error instead of a false pass.
+  if (updErr || !updated) verifyRedirect("saveerror");
 
   // Invalidate every dashboard segment so the new approved state ungates
   // Projects, the sidebar, etc. immediately (no hard refresh needed).
