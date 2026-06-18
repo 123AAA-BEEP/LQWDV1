@@ -156,46 +156,32 @@ export default function DevelopersLandingPage() {
       {/* 01 — Discreet by design (the wedge) */}
       <section className="bg-white">
         <div className="mx-auto max-w-6xl px-6 py-24 sm:py-32">
-          <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 px-6 py-14 shadow-2xl shadow-slate-900/40 ring-1 ring-white/10 sm:px-14 sm:py-20">
-            {/* Brand glow for depth */}
-            <div
-              aria-hidden
-              className="pointer-events-none absolute -right-28 -top-28 size-96 rounded-full bg-brand-500/20 blur-3xl"
-            />
-            <div
-              aria-hidden
-              className="pointer-events-none absolute -bottom-32 -left-24 size-80 rounded-full bg-brand-400/10 blur-3xl"
-            />
-            <div className="relative grid gap-12 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:items-center lg:gap-16">
-              <div>
-                <p className="flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.2em] text-brand-300">
-                  <span className="h-px w-8 bg-brand-400/60" aria-hidden />
-                  Discreet by design
-                </p>
-                <h2 className="mt-5 text-balance text-3xl font-semibold leading-[1.1] tracking-tight text-white sm:text-4xl lg:text-[2.75rem]">
-                  {DEV_DISCRETION.heading}
-                </h2>
-                <p className="mt-6 max-w-md text-pretty text-lg leading-relaxed text-slate-300/90">
-                  {DEV_DISCRETION.body}
-                </p>
-              </div>
-              <div className="grid gap-px overflow-hidden rounded-2xl bg-white/10 ring-1 ring-white/10 sm:grid-cols-2">
-                {DEV_DISCRETION.points.map((pt, i) => {
-                  const Icon = DISCRETION_ICONS[i];
-                  return (
-                    <div
-                      key={pt.title}
-                      className="group bg-slate-900/80 p-6 transition-colors hover:bg-slate-800/80"
-                    >
-                      <span className="flex size-11 items-center justify-center rounded-xl bg-brand-500/15 text-brand-300 ring-1 ring-inset ring-brand-400/25 transition-colors group-hover:bg-brand-500/25">
-                        <Icon className="size-5" strokeWidth={1.75} aria-hidden />
-                      </span>
-                      <h3 className="mt-5 text-base font-semibold text-white">{pt.title}</h3>
-                      <p className="mt-1.5 text-sm leading-relaxed text-slate-400">{pt.body}</p>
-                    </div>
-                  );
-                })}
-              </div>
+          <div className="grid gap-12 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:items-center lg:gap-16">
+            <div>
+              <SectionLabel index="01">Discreet by design</SectionLabel>
+              <h2 className="mt-4 text-balance text-3xl font-semibold leading-[1.1] tracking-tight text-ink sm:text-4xl">
+                {DEV_DISCRETION.heading}
+              </h2>
+              <p className="mt-6 max-w-md text-pretty text-lg leading-relaxed text-slate-600">
+                {DEV_DISCRETION.body}
+              </p>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {DEV_DISCRETION.points.map((pt, i) => {
+                const Icon = DISCRETION_ICONS[i];
+                return (
+                  <div
+                    key={pt.title}
+                    className="group rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
+                  >
+                    <span className="flex size-11 items-center justify-center rounded-xl bg-brand-50 text-brand-600 ring-1 ring-inset ring-brand-100 transition-colors group-hover:bg-brand-100">
+                      <Icon className="size-5" strokeWidth={1.75} aria-hidden />
+                    </span>
+                    <h3 className="mt-5 text-base font-semibold text-ink">{pt.title}</h3>
+                    <p className="mt-1.5 text-sm leading-relaxed text-slate-500">{pt.body}</p>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
