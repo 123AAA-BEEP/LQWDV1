@@ -39,6 +39,9 @@ export interface Profile {
   brokerage_id: string | null;
   brokerage_name: string | null;
   reco_registration_number: string | null;
+  reco_expiry: string | null;
+  reco_verified_at: string | null;
+  reco_verification_method: "certificate" | "manual" | null;
   verification_status: VerificationStatus;
   realtor_tier: RealtorTier;
   plan: Plan;
