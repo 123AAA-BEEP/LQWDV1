@@ -22,7 +22,7 @@ export const metadata: Metadata = {
 };
 
 // Distinct icon per discretion point (order matches DEV_DISCRETION.points).
-const DISCRETION_ICONS: LucideIcon[] = [ShieldCheck, Users, EyeOff, SlidersHorizontal];
+const DISCRETION_ICONS: LucideIcon[] = [ShieldCheck, SlidersHorizontal, EyeOff, Users];
 
 function CheckIcon() {
   return (
@@ -107,10 +107,7 @@ export default function DevelopersLandingPage() {
                 {DEV_HERO.headline}
                 <span className="block text-slate-400">{DEV_HERO.subheadline}</span>
               </h1>
-              <p className="mt-5 text-balance text-xl font-medium text-brand-700">
-                {DEV_HERO.tagline}
-              </p>
-              <p className="mt-3 max-w-xl text-pretty text-lg leading-relaxed text-slate-600">
+              <p className="mt-6 max-w-xl text-pretty text-lg leading-relaxed text-slate-600">
                 {DEV_HERO.body}
               </p>
               <div className="mt-8 flex flex-wrap items-center gap-6">

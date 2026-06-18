@@ -122,56 +122,55 @@ export const SECTION_IMAGES = {
  * speaks to builders bringing pre-construction inventory to market.
  */
 export const DEV_HERO = {
-  headline: "Sell your project faster",
-  subheadline: "to Ontario's verified agents",
+  headline: "Put your inventory in front of",
+  subheadline: "Ontario's top agents.",
   supporting: "For builders & developers",
-  tagline: "Promote the offer, not the project.",
-  body: "LIQWD puts your pre-construction inventory in front of thousands of verified Ontario realtors and motivated buyers — and lets you move it without touching your public price. Promote incentives discreetly, surface against live buyer demand, and reach the agents who can sell your units.",
+  body: "LIQWD is the private channel between builders and the top-producing realtors who control Ontario's buyers. Promote your project — or a quiet incentive — and control exactly what each agent sees.",
   primaryCta: "List your project",
   secondaryCta: "Log in",
 } as const;
 
 export const DEV_PROOF_POINTS = [
-  "Reach verified Ontario agents",
+  "Reach Ontario's top agents",
   "Confidential by default",
   "Built for pre-construction",
-  "Demand-driven, not a directory",
+  "Off-market by design",
 ] as const;
 
 export const DEV_BENEFITS = [
-  "Post deal requests — bulk buys, listing mandates, inventory units, or a full development — straight to Ultra agents.",
+  "Post deals — bulk buys, listing mandates, inventory units, or a full development — straight to top agents.",
   "See live buyer demand: verified mandates from agents with ready, motivated buyers.",
-  "Promote your project where agents and buyers are already searching.",
+  "Promote your project, or a single offer, to the agents already working your market.",
   "Connect directly with the agents who can move your units.",
-  "Run it all from one workspace built for builders, not a generic CRM.",
+  "Run it all from one workspace built for builders.",
 ] as const;
 
-/** The killer wedge: promote the incentive, not a public price cut. */
+/** The killer wedge: reach the right agents without public exposure. */
 export const DEV_DISCRETION = {
-  heading: "Move units without touching your price",
-  body: "Public price cuts wreck your comps, blow up appraisals, and burn the buyers who already paid. LIQWD lets you promote incentives quietly — to verified agents only, never the open market. Your headline price stays intact; the offer does the work.",
+  heading: "All the reach. None of the exposure.",
+  body: "Sometimes the deal needs an incentive — or a price move. In public, that can drag your comps, complicate appraisals, and unsettle buyers who already closed. LIQWD keeps it off the open market and puts you in control: toggle exactly what each agent sees — your name, your project, your price, your terms — and reveal the rest only when you choose.",
   points: [
-    { title: "No public discounts", body: "Your headline price never moves — appraisals and comps stay protected." },
-    { title: "Broker-only network", body: "Incentives stay inside a closed circle of verified agents." },
-    { title: "Prior buyers protected", body: "Earlier purchasers never see a markdown on what they bought." },
-    { title: "Reveal on your terms", body: "Keep sensitive terms hidden until you choose to share them." },
+    { title: "Protect your price integrity", body: "Incentives move privately, so public comps and appraisals hold." },
+    { title: "Control what's shown", body: "Toggle your name, project, price, and terms on or off for each audience." },
+    { title: "Off the open market", body: "Your offer reaches verified agents only — never the public web." },
+    { title: "Respect prior buyers", body: "Earlier purchasers never see a public markdown." },
   ],
 } as const;
 
 export const DEV_DEMAND = {
-  heading: "Sell into demand, not into the void",
-  body: "Most portals are a directory you list into and hope. LIQWD is demand-driven: verified agents post buyer mandates describing exactly what their clients want — by city, price, and unit type — so you can match your inventory to real, ready buyers instead of broadcasting blindly.",
+  heading: "Match your inventory to real buyers",
+  body: "Verified agents post buyer mandates describing exactly what their clients want — by city, price, and unit type. See that live demand and match your inventory to buyers who are ready now, instead of guessing.",
   bullets: [
     "Browse active buyer mandates that fit your project.",
-    "Post deal requests and review agent proposals in one place.",
+    "Post deals and review agent proposals in one place.",
     "Keep sensitive terms private until you're ready to share them.",
   ],
 } as const;
 
 /** The à-la-carte "promote your project" products (also shown as dashboard shells). */
 export const DEV_PROMOTE = {
-  heading: "Promote your project",
-  body: "When you're ready to push, put your offer in front of the network — built-in promotion that reaches verified agents (and, when you choose, end-buyers) without leaving a public price footprint.",
+  heading: "Promote your project, or your offer",
+  body: "When you're ready to push, put it in front of the network — built-in promotion that reaches verified agents, and end-buyers when you choose, while you stay in control of what's public.",
   bullets: [
     "Featured placement across browse and the homepage.",
     "eBlast to the verified realtor database.",
@@ -182,5 +181,5 @@ export const DEV_PROMOTE = {
 
 export const DEV_SIGNUP_SECTION = {
   heading: "Bring your project to the network.",
-  body: "Create your developer workspace and start reaching Ontario's verified agents and buyers.",
+  body: "Create your developer workspace and start reaching Ontario's top agents and buyers.",
 } as const;
