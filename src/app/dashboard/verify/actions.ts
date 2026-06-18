@@ -48,7 +48,7 @@ export async function verifyRecoCertificate(formData: FormData) {
     profile_id: userId,
     method: "certificate",
     matched: approves,
-    extracted_name: ex.full_name || null,
+    extracted_name: [ex.full_name, ex.legal_name].filter(Boolean).join(" / ") || null,
     extracted_reco_number: ex.reco_registration_number || null,
     extracted_status: ex.status,
     extracted_expiry: ex.expiry_date,
