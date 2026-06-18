@@ -10,7 +10,7 @@ import "server-only";
  * docs/auth-emails/README.md for the Resend/DNS setup.
  */
 
-const FROM = process.env.EMAIL_FROM ?? "LIQWD <no-reply@liqwd.ca>";
+const FROM = process.env.EMAIL_FROM ?? "LIQWD <no-reply@mail.liqwd.ca>";
 
 /** True once Resend is configured. Use to gate UI like "email reminders on". */
 export function isEmailConfigured(): boolean {

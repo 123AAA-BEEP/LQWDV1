@@ -45,7 +45,7 @@ export async function verifyRecoCertificate(formData: FormData) {
   const admin = createAdminClient();
 
   // Audit every attempt (no document retained) for admin spot-checks.
-  const { error: auditErr } = await admin.from("reco_verification_audits").insert({
+  await admin.from("reco_verification_audits").insert({
     profile_id: userId,
     method: "certificate",
     matched: approves,
@@ -72,18 +72,8 @@ export async function verifyRecoCertificate(formData: FormData) {
     .select("id")
     .maybeSingle();
 
-  // Never report success if the write didn't persist. Surface a concise reason
-  // (TEMP DIAGNOSTIC) so a misconfigured service-role key is unambiguous:
-  //   - updErr present  -> invalid/expired key (PostgREST 401/JWT error)
-  //   - 0 rows, no err  -> client is acting as anon (RLS dropped the write)
-  if (updErr || !updated) {
-    const reason = updErr
-      ? `update: ${updErr.code ?? ""} ${updErr.message ?? ""}`.trim()
-      : auditErr
-        ? `audit: ${auditErr.code ?? ""} ${auditErr.message ?? ""}`.trim()
-        : "update affected 0 rows (RLS) — admin client is not service_role";
-    redirect("/dashboard/verify?reco=saveerror&why=" + encodeURIComponent(reason.slice(0, 160)));
-  }
+  // Never report success if the write didn't persist.
+  if (updErr || !updated) verifyRedirect("saveerror");
 
   // Invalidate every dashboard segment so the new approved state ungates
   // Projects, the sidebar, etc. immediately (no hard refresh needed).
