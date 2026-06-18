@@ -26,9 +26,9 @@ const RECO_NOTICE: Record<string, { tone: "success" | "warning" | "error" | "inf
 export default async function VerifyPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; message?: string; reco?: string }>;
+  searchParams: Promise<{ error?: string; message?: string; reco?: string; why?: string }>;
 }) {
-  const { error, message, reco } = await searchParams;
+  const { error, message, reco, why } = await searchParams;
   const { profile } = await requireUserProfile();
   const status = profile.verification_status;
   const recoNotice = reco ? RECO_NOTICE[reco] : undefined;
@@ -60,6 +60,11 @@ export default async function VerifyPage({
         </Notice>
       ) : null}
       {recoNotice ? <Notice tone={recoNotice.tone}>{recoNotice.msg}</Notice> : null}
+      {reco === "saveerror" && why ? (
+        <p className="rounded-lg bg-slate-100 px-3 py-2 font-mono text-xs text-slate-600">
+          diagnostic: {why}
+        </p>
+      ) : null}
       {error ? <Notice tone="error">{error}</Notice> : null}
 
       {status !== "approved" && status !== "suspended" ? (
