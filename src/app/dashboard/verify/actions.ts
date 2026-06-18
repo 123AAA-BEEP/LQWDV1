@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireUserProfile } from "@/lib/auth";
@@ -68,6 +69,10 @@ export async function verifyRecoCertificate(formData: FormData) {
       reco_verification_method: "certificate",
     })
     .eq("id", userId);
+
+  // Invalidate every dashboard segment so the new approved state ungates
+  // Projects, the sidebar, etc. immediately (no hard refresh needed).
+  revalidatePath("/dashboard", "layout");
 
   verifyRedirect("approved");
 }
