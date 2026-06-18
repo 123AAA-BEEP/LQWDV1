@@ -89,6 +89,17 @@ export default async function DealDeskRfpPage({
             <p className="text-slate-500">
               {rfpTypeLabel(rfp.rfp_type)} · {dealSideLabel(rfp.deal_side)}
             </p>
+            {rfp.developer_name ? (
+              <p className="mt-1 text-sm text-slate-500">
+                Posted by{" "}
+                <span className="font-medium text-slate-700">{rfp.developer_name}</span>
+                {rfp.developer_company ? ` · ${rfp.developer_company}` : ""}
+              </p>
+            ) : (
+              <p className="mt-1 text-xs font-medium uppercase tracking-wide text-slate-400">
+                Confidential developer
+              </p>
+            )}
           </div>
           <Badge tone={RFP_STATUS[status].tone}>{RFP_STATUS[status].label}</Badge>
         </div>

@@ -89,10 +89,10 @@ export default async function NewDealRequestPage({
             </Select>
           </Field>
           <div className="mt-3 rounded-lg border border-brand-200 bg-brand-50 p-3 text-sm text-brand-900">
-            <span className="font-semibold">Promote the offer, not your price.</span>{" "}
+            <span className="font-semibold">All the reach. None of the exposure.</span>{" "}
             Your offer is shown to verified agents only — never the public — so it
-            never touches your appraisals, comps, or prior purchasers. Hide any
-            field below until you choose to reveal it:
+            never touches your appraisals, comps, or prior purchasers. You control
+            exactly what each agent sees:
           </div>
           <div className="mt-2 space-y-2">
             {RFP_HIDEABLE_FIELDS.map((f) => (
@@ -101,6 +101,18 @@ export default async function NewDealRequestPage({
                 Hide {f.label.toLowerCase()}
               </label>
             ))}
+          </div>
+          <div className="mt-4 border-t border-slate-100 pt-4">
+            <label className="flex items-start gap-2 text-sm text-slate-700">
+              <input type="checkbox" name="reveal_identity" className="mt-0.5 size-4 rounded border-slate-300" />
+              <span>
+                <span className="font-medium">Show my name &amp; company to agents</span>
+                <span className="block text-xs text-slate-400">
+                  Off by default — your offer stays anonymous (&ldquo;Confidential
+                  developer&rdquo;). Turn on if you want the credibility of your name attached.
+                </span>
+              </span>
+            </label>
           </div>
         </Section>
 
