@@ -73,7 +73,7 @@ function FeatureSection({
         <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
           <div>
             <SectionLabel index={index}>{eyebrow}</SectionLabel>
-            <h2 className="mt-4 text-balance text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
+            <h2 className="mt-4 text-balance font-display text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
               {heading}
             </h2>
             <div className="mt-8">{children}</div>
@@ -103,7 +103,7 @@ export default function DevelopersLandingPage() {
                 <span aria-hidden className="h-px w-8 bg-brand-500" />
                 {DEV_HERO.supporting}
               </p>
-              <h1 className="mt-6 text-balance text-4xl font-semibold leading-[1.05] tracking-tight text-ink sm:text-5xl lg:text-6xl">
+              <h1 className="mt-6 text-balance font-display text-4xl font-semibold leading-[1.05] tracking-tight text-ink sm:text-5xl lg:text-6xl">
                 {DEV_HERO.headline}
                 <span className="block text-slate-400">{DEV_HERO.subheadline}</span>
               </h1>
@@ -156,7 +156,7 @@ export default function DevelopersLandingPage() {
           <div className="grid gap-12 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:items-center lg:gap-16">
             <div>
               <SectionLabel index="01">Discreet by design</SectionLabel>
-              <h2 className="mt-4 text-balance text-3xl font-semibold leading-[1.1] tracking-tight text-ink sm:text-4xl">
+              <h2 className="mt-4 text-balance font-display text-3xl font-semibold leading-[1.1] tracking-tight text-ink sm:text-4xl">
                 {DEV_DISCRETION.heading}
               </h2>
               <p className="mt-6 max-w-md text-pretty text-lg leading-relaxed text-slate-600">
@@ -253,7 +253,7 @@ export default function DevelopersLandingPage() {
           <p className="text-xs font-medium uppercase tracking-[0.2em] text-brand-400">
             For builders &amp; developers
           </p>
-          <h2 className="mx-auto mt-6 max-w-2xl text-balance text-4xl font-semibold tracking-tight text-white sm:text-5xl">
+          <h2 className="mx-auto mt-6 max-w-2xl text-balance font-display text-4xl font-semibold tracking-tight text-white sm:text-5xl">
             {DEV_SIGNUP_SECTION.heading}
           </h2>
           <p className="mx-auto mt-6 max-w-xl text-pretty text-lg leading-relaxed text-slate-400">

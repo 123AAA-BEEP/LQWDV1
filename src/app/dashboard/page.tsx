@@ -116,7 +116,7 @@ export default async function DashboardHome() {
     <div className="space-y-8">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-ink">
+          <h1 className="font-display text-2xl font-semibold tracking-tight text-ink">
             Welcome, {firstName}
           </h1>
           <p className="mt-1 text-slate-500">
@@ -442,7 +442,7 @@ async function DeveloperHome({
             <span className="inline-flex items-center rounded-full bg-white/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-200">
               Developer workspace
             </span>
-            <h1 className="mt-3 text-2xl font-semibold tracking-tight">
+            <h1 className="mt-3 font-display text-2xl font-semibold tracking-tight">
               Welcome, {firstName}
             </h1>
             <p className="mt-1.5 text-sm leading-relaxed text-slate-300">

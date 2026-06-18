@@ -20,6 +20,12 @@
   --color-ink: #0b1220;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  /* Display face for large headings — characterful, paired with Geist body. */
+  --font-display: var(--font-bricolage), var(--font-geist-sans), ui-sans-serif, sans-serif;
+
+  /* Soft, layered elevation scale (low-opacity, premium — not hard drop shadows). */
+  --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04), 0 4px 12px rgba(15, 23, 42, 0.05);
+  --shadow-pop: 0 4px 16px rgba(15, 23, 42, 0.08), 0 12px 32px rgba(15, 23, 42, 0.10);
 }
 
 html {
@@ -65,6 +71,16 @@ body {
     rgba(20, 184, 166, 0.18),
     transparent 70%
   );
+}
+
+/* Dashboard content surface — warms up the flat slate field with a faint
+   top wash + a barely-there dotted grid, so the app reads intentional. */
+.app-surface {
+  background-color: #f8fafc; /* slate-50 */
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(15, 23, 42, 0.035) 1px, transparent 0),
+    linear-gradient(to bottom, rgba(20, 184, 166, 0.05), transparent 320px);
+  background-size: 26px 26px, 100% 100%;
 }
 
 /* Continuous logo marquee — see components/marketing/logo-marquee.tsx. */

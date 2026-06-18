@@ -12,16 +12,16 @@ type Variant =
 type Size = "sm" | "md" | "lg";
 
 const base =
-  "inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:pointer-events-none whitespace-nowrap";
+  "inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all duration-150 active:translate-y-px disabled:opacity-50 disabled:pointer-events-none disabled:active:translate-y-0 whitespace-nowrap";
 
 const variants: Record<Variant, string> = {
-  primary: "bg-ink text-white hover:bg-slate-800",
+  primary: "bg-ink text-white shadow-sm hover:bg-slate-800 hover:shadow-md",
   secondary:
-    "border border-slate-300 bg-white text-slate-900 hover:bg-slate-50",
+    "border border-slate-300 bg-white text-slate-900 shadow-sm hover:bg-slate-50 hover:border-slate-400",
   ghost: "text-slate-700 hover:bg-slate-100",
-  danger: "bg-red-600 text-white hover:bg-red-700",
+  danger: "bg-red-600 text-white shadow-sm hover:bg-red-700 hover:shadow-md",
   // For use on dark backgrounds (e.g. the ink CTA panel).
-  white: "bg-white text-ink hover:bg-slate-100",
+  white: "bg-white text-ink shadow-sm hover:bg-slate-100",
   outlineLight: "border border-slate-700 text-white hover:bg-slate-800",
 };
 

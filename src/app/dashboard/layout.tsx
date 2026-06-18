@@ -39,7 +39,7 @@ export default async function DashboardLayout({
         isUltra={ultra}
         isDeveloper={developer}
       />
-      <div className="flex min-w-0 flex-1 flex-col bg-slate-50">
+      <div className="app-surface flex min-w-0 flex-1 flex-col">
         {/* Slim context bar — role / plan state, always visible. */}
         <div className="flex h-16 items-center justify-end gap-2 border-b border-slate-200 bg-white px-6">
           {developer ? (

@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { Plus, Handshake } from "lucide-react";
 import { requireUserProfile, isDeveloper, isAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardBody } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Notice } from "@/components/ui/notice";
 import { RFP_STATUS, rfpTypeLabel, dealSideLabel } from "@/lib/status";
 import type { RfpStatus } from "@/lib/status";
@@ -79,9 +80,13 @@ export default async function DealRequestsPage({
 
       {rfps.length === 0 ? (
         <Card>
-          <CardBody className="text-center text-sm text-slate-500">
-            You haven&apos;t posted any offers yet.
-          </CardBody>
+          <EmptyState
+            icon={Handshake}
+            title="No offers yet"
+            description="Post your priority units and incentives to reach Ontario's top agents."
+            actionHref="/dashboard/deal-requests/new"
+            actionLabel="Post an offer"
+          />
         </Card>
       ) : (
         <div className="space-y-2">
