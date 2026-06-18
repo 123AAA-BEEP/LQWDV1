@@ -24,8 +24,14 @@ and the eBlast products — one provider, three uses.
 3. In Supabase → **Project Settings → Authentication → SMTP Settings** → enable
    custom SMTP and enter:
    - **Host / Port / Username / Password** — from the provider
-   - **Sender email**: `no-reply@liqwd.ca` (or `hello@liqwd.ca`)
+   - **Sender email**: an address **on the exact verified domain**, e.g.
+     `no-reply@mail.liqwd.ca` (if you verified `mail.liqwd.ca`).
    - **Sender name**: `LIQWD`
+
+   > ⚠️ The sender's domain **must match a verified Resend domain**. Sending from
+   > `no-reply@liqwd.ca` while only `mail.liqwd.ca` is verified is rejected with
+   > "Error sending confirmation email." Either verify the bare `liqwd.ca` too,
+   > or send from `@mail.liqwd.ca`.
 4. Save and send yourself a test (trigger a password reset).
 
 ## 2. Templates
