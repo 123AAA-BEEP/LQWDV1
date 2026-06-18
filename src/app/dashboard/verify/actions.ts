@@ -2,6 +2,75 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { requireUserProfile } from "@/lib/auth";
+import {
+  extractRecoCertificate,
+  recoCertificateApproves,
+  type RecoExtract,
+} from "@/lib/reco";
+
+const ACCEPTED = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+const MAX_BYTES = 4_000_000; // stay under Vercel's server-action body limit
+
+function verifyRedirect(code: string): never {
+  redirect("/dashboard/verify?reco=" + code);
+}
+
+/**
+ * Instant verification: parse an uploaded RECO certificate and, on a confident
+ * match, auto-approve the realtor. The file is read in memory and never stored
+ * (verify-and-purge); we persist only the extracted expiry + an audit row.
+ */
+export async function verifyRecoCertificate(formData: FormData) {
+  const { profile, userId } = await requireUserProfile();
+  if (profile.verification_status === "approved") verifyRedirect("already");
+
+  const file = formData.get("certificate");
+  if (!(file instanceof File) || file.size === 0) verifyRedirect("nofile");
+  if (!ACCEPTED.includes(file.type)) verifyRedirect("badtype");
+  if (file.size > MAX_BYTES) verifyRedirect("toobig");
+
+  const base64 = Buffer.from(await file.arrayBuffer()).toString("base64");
+  let ex: RecoExtract | null = null;
+  try {
+    ex = await extractRecoCertificate(base64, file.type);
+  } catch {
+    ex = null;
+  }
+  if (!ex) verifyRedirect("unavailable");
+
+  const approves = recoCertificateApproves(ex, profile);
+  const admin = createAdminClient();
+
+  // Audit every attempt (no document retained) for admin spot-checks.
+  await admin.from("reco_verification_audits").insert({
+    profile_id: userId,
+    method: "certificate",
+    matched: approves,
+    extracted_name: ex.full_name || null,
+    extracted_reco_number: ex.reco_registration_number || null,
+    extracted_status: ex.status,
+    extracted_expiry: ex.expiry_date,
+    profile_name: [profile.first_name, profile.last_name].filter(Boolean).join(" ") || null,
+    profile_reco: profile.reco_registration_number,
+  });
+
+  if (!approves) verifyRedirect("nomatch");
+
+  await admin
+    .from("profiles")
+    .update({
+      verification_status: "approved",
+      reco_registration_number: ex.reco_registration_number,
+      reco_expiry: ex.expiry_date,
+      reco_verified_at: new Date().toISOString(),
+      reco_verification_method: "certificate",
+    })
+    .eq("id", userId);
+
+  verifyRedirect("approved");
+}
 
 /**
  * Submits a RECO verification request. RLS permits insert where
