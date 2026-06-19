@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { Profile } from "@/lib/types";
@@ -6,8 +7,13 @@ import type { Profile } from "@/lib/types";
  * Returns the current user + their profile, bootstrapping a profile row on
  * first access. The profile insert is permitted by RLS (id = auth.uid()).
  * Redirects to /login when there is no session.
+ *
+ * Wrapped in React `cache()` so the dashboard layout and the page it renders
+ * (both call this on the same request) share a single `getUser()` round-trip
+ * and a single profiles query, instead of doing the auth + DB work twice. As
+ * a bonus this removes the layout/page race on the first-load profile insert.
  */
-export async function requireUserProfile(): Promise<{
+export const requireUserProfile = cache(async function requireUserProfile(): Promise<{
   userId: string;
   email: string | null;
   profile: Profile;
@@ -62,7 +68,7 @@ export async function requireUserProfile(): Promise<{
     email: user.email ?? null,
     profile: profile as Profile,
   };
-}
+});
 
 export function isApproved(profile: Pick<Profile, "verification_status">) {
   return profile.verification_status === "approved";
