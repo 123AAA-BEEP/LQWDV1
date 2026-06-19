@@ -231,3 +231,27 @@ export const MEDIA_CANDIDATE_STATUS: Record<
   approved: { label: "Approved", tone: "success" },
   rejected: { label: "Rejected", tone: "danger" },
 };
+
+export type RentalReferralStatus =
+  | "new"
+  | "received"
+  | "in_progress"
+  | "client_not_submitting"
+  | "client_ineligible"
+  | "accepted"
+  | "declined"
+  | "withdrawn";
+
+export const RENTAL_REFERRAL_STATUS: Record<
+  RentalReferralStatus,
+  { label: string; tone: Tone }
+> = {
+  new: { label: "Submitted", tone: "brand" },
+  received: { label: "Received", tone: "brand" },
+  in_progress: { label: "In progress", tone: "warning" },
+  client_not_submitting: { label: "Client didn't proceed", tone: "neutral" },
+  client_ineligible: { label: "Client ineligible", tone: "danger" },
+  accepted: { label: "Accepted", tone: "success" },
+  declined: { label: "Declined", tone: "danger" },
+  withdrawn: { label: "Withdrawn", tone: "neutral" },
+};
