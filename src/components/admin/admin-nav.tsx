@@ -9,9 +9,14 @@ const TABS = [
   { href: "/dashboard/admin/verifications", label: "Verifications" },
   { href: "/dashboard/admin/submissions", label: "Submissions" },
   { href: "/dashboard/admin/updates", label: "Update requests" },
+  { href: "/dashboard/admin/proposals", label: "Proposals" },
+  { href: "/dashboard/admin/rfps", label: "RFPs" },
+  { href: "/dashboard/admin/realtors", label: "Realtors" },
   { href: "/dashboard/admin/media-candidates", label: "Media" },
   { href: "/dashboard/admin/suggestions", label: "Suggestions" },
   { href: "/dashboard/admin/projects", label: "Projects" },
+  { href: "/dashboard/admin/rewards", label: "Rewards" },
+  { href: "/dashboard/admin/settings", label: "Settings" },
 ];
 
 export function AdminNav() {

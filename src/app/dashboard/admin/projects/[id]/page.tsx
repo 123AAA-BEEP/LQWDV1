@@ -11,14 +11,19 @@ import { RECORD_STATUS, RECORD_STATUS_OPTIONS } from "@/lib/status";
 import type { RecordStatus } from "@/lib/status";
 import {
   updateProject,
+  saveCommercials,
   savePublicPage,
   publishProject,
   unpublishProject,
 } from "./actions";
 import { ProjectUploads } from "./uploads";
+import { AgentSelect } from "./agent-select";
+import { SeoFields } from "./seo-fields";
 
 export const metadata: Metadata = { title: "Edit project" };
 export const dynamic = "force-dynamic";
+// Headroom for inline SEO generation on publish.
+export const maxDuration = 60;
 
 const UPLOAD_MESSAGES: Record<string, string> = {
   "media-added": "Image uploaded.",
@@ -49,6 +54,50 @@ export default async function AdminProjectEditor({
     .select("*")
     .eq("project_id", id)
     .maybeSingle();
+
+  // Broker-only commercial terms (admin-writable).
+  const { data: commercials } = await supabase
+    .from("project_private_commercials")
+    .select("*")
+    .eq("project_id", id)
+    .maybeSingle();
+  const tri = (v: boolean | null | undefined) =>
+    v === true ? "true" : v === false ? "false" : "";
+
+  // All realtors are assignable; the editor flags any who aren't approved +
+  // public-profile-enabled (their card won't render on the public page).
+  const { data: realtors } = await supabase
+    .from("profiles")
+    .select(
+      "id, first_name, last_name, brokerage_name, verification_status, is_public_profile_enabled",
+    )
+    .eq("role", "realtor")
+    .order("last_name", { ascending: true });
+  const agentOptions = (
+    (realtors ?? []) as {
+      id: string;
+      first_name: string | null;
+      last_name: string | null;
+      brokerage_name: string | null;
+      verification_status: string;
+      is_public_profile_enabled: boolean;
+    }[]
+  ).map((r) => {
+    const name =
+      [r.first_name, r.last_name].filter(Boolean).join(" ") || "Unnamed agent";
+    const eligible =
+      r.verification_status === "approved" && r.is_public_profile_enabled;
+    const suffix = eligible
+      ? ""
+      : r.verification_status !== "approved"
+        ? ` (${r.verification_status})`
+        : " (profile not public)";
+    return {
+      id: r.id,
+      label: `${name}${r.brokerage_name ? ` — ${r.brokerage_name}` : ""}${suffix}`,
+      eligible,
+    };
+  });
 
   // Upload-managed assets.
   const [{ data: media }, { data: floorplans }, { data: documents }] =
@@ -292,6 +341,100 @@ export default async function AdminProjectEditor({
         </CardBody>
       </Card>
 
+      {/* Broker-only commission & negotiability */}
+      <Card>
+        <CardBody>
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold text-ink">Commission &amp; negotiability</h3>
+            <Badge tone="warning">Broker-only</Badge>
+          </div>
+          <p className="mt-1 text-sm text-slate-500">
+            Private commercial terms. Visible to approved brokers; never shown on
+            the public page.
+          </p>
+          <form action={saveCommercials} className="mt-4 space-y-4">
+            <input type="hidden" name="project_id" value={id} />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Commission summary" htmlFor="commission_summary">
+                <Input
+                  id="commission_summary"
+                  name="commission_summary"
+                  defaultValue={commercials?.commission_summary ?? ""}
+                />
+              </Field>
+              <Field label="Commission %" htmlFor="commission_percent">
+                <Input
+                  id="commission_percent"
+                  name="commission_percent"
+                  type="number"
+                  step="0.01"
+                  defaultValue={commercials?.commission_percent ?? ""}
+                />
+              </Field>
+              <Field label="Commission negotiable" htmlFor="commission_is_negotiable">
+                <Select
+                  id="commission_is_negotiable"
+                  name="commission_is_negotiable"
+                  defaultValue={tri(commercials?.commission_is_negotiable)}
+                >
+                  <option value="">Unknown</option>
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
+                </Select>
+              </Field>
+              <Field label="Price negotiable" htmlFor="price_is_negotiable">
+                <Select
+                  id="price_is_negotiable"
+                  name="price_is_negotiable"
+                  defaultValue={tri(commercials?.price_is_negotiable)}
+                >
+                  <option value="">Unknown</option>
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
+                </Select>
+              </Field>
+              <Field
+                label="Incentives negotiable"
+                htmlFor="incentives_are_negotiable"
+              >
+                <Select
+                  id="incentives_are_negotiable"
+                  name="incentives_are_negotiable"
+                  defaultValue={tri(commercials?.incentives_are_negotiable)}
+                >
+                  <option value="">Unknown</option>
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
+                </Select>
+              </Field>
+            </div>
+            <Field
+              label="Commission notes"
+              htmlFor="negotiability_notes"
+              hint="Shown to brokers in the Commission & negotiability panel."
+            >
+              <Textarea
+                id="negotiability_notes"
+                name="negotiability_notes"
+                defaultValue={commercials?.negotiability_notes ?? ""}
+              />
+            </Field>
+            <Field
+              label="Private incentive notes"
+              htmlFor="private_incentive_notes"
+              hint="Short-term / broker-only incentive details."
+            >
+              <Textarea
+                id="private_incentive_notes"
+                name="private_incentive_notes"
+                defaultValue={commercials?.private_incentive_notes ?? ""}
+              />
+            </Field>
+            <Button type="submit">Save commission details</Button>
+          </form>
+        </CardBody>
+      </Card>
+
       {/* Public, SEO-safe page fields */}
       <Card>
         <CardBody>
@@ -302,6 +445,16 @@ export default async function AdminProjectEditor({
           </p>
           <form action={savePublicPage} className="mt-4 space-y-4">
             <input type="hidden" name="project_id" value={id} />
+            <Field
+              label="Assigned agent"
+              htmlFor="assigned_realtor_profile_id"
+              hint="Realtor shown as the contact card on the public page. Lists all agents; only approved + public-profile-enabled agents render publicly."
+            >
+              <AgentSelect
+                agents={agentOptions}
+                defaultValue={page?.assigned_realtor_profile_id ?? ""}
+              />
+            </Field>
             <Field
               label="Slug"
               htmlFor="slug"
@@ -314,38 +467,15 @@ export default async function AdminProjectEditor({
                 required
               />
             </Field>
-            <Field label="SEO title" htmlFor="seo_title">
-              <Input
-                id="seo_title"
-                name="seo_title"
-                defaultValue={page?.seo_title ?? ""}
-              />
-            </Field>
-            <Field label="Meta description" htmlFor="seo_meta_description">
-              <Textarea
-                id="seo_meta_description"
-                name="seo_meta_description"
-                defaultValue={page?.seo_meta_description ?? ""}
-              />
-            </Field>
-            <Field label="Page summary" htmlFor="page_summary">
-              <Textarea
-                id="page_summary"
-                name="page_summary"
-                defaultValue={page?.page_summary ?? ""}
-              />
-            </Field>
-            <Field
-              label="Public description"
-              htmlFor="page_description"
-              hint="Approved, public-safe copy shown on the public page."
-            >
-              <Textarea
-                id="page_description"
-                name="page_description"
-                defaultValue={page?.page_description ?? ""}
-              />
-            </Field>
+            <SeoFields
+              projectId={id}
+              defaults={{
+                seo_title: page?.seo_title ?? "",
+                seo_meta_description: page?.seo_meta_description ?? "",
+                page_summary: page?.page_summary ?? "",
+                page_description: page?.page_description ?? "",
+              }}
+            />
             <label className="flex items-center gap-3 text-sm text-slate-600">
               <input
                 type="checkbox"

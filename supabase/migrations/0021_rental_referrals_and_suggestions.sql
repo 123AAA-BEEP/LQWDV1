@@ -1,5 +1,5 @@
 -- =============================================================================
--- LIQWD — Migration 0004: Rental dimension, PBR referral terms & suggestions
+-- LIQWD — Migration 0021: Rental dimension, PBR referral terms & suggestions
 -- -----------------------------------------------------------------------------
 -- WHAT THIS DOES (structural)
 --   - projects.listing_type + projects.price_period (sale vs lease pricing)
@@ -16,13 +16,11 @@
 --   duplicating it. See docs/worksheets-and-referrals-design.md.
 --
 -- EXECUTION ORDER
---   1) 0001_structural.sql  2) 0002_rls_policies.sql  3) 0003_storage.sql
---   4) 0004_rental_referrals_and_suggestions.sql       <-- this file
---   5) 0005_rental_referrals_and_suggestions_rls.sql
---   6) seed.sql (optional)
+--   Runs after the existing baseline 0001–0020. This is 0021; its RLS is 0022.
+--   Already applied to the live DB as `pbr_rental_referrals_and_suggestions`.
 --
 -- PREREQUISITES
---   0001 applied (projects, profiles, set_updated_at).
+--   0001–0020 applied (projects, profiles, set_updated_at + helpers).
 --
 -- SAFE TO RE-RUN?
 --   Yes. add column if not exists, drop-then-add named constraints,

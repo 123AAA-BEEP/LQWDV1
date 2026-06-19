@@ -1,18 +1,19 @@
 -- =============================================================================
--- LIQWD — Migration 0005: RLS for rental referral terms + suggestions
+-- LIQWD — Migration 0022: RLS for rental referral terms + suggestions
 -- -----------------------------------------------------------------------------
 -- WHAT THIS DOES
---   Enables RLS and sets policies for the tables added in 0004:
+--   Enables RLS and sets policies for the tables added in 0021:
 --     - project_rental_referral_terms: approved realtors read; admin + the
 --       granted developer write their own project's terms.
 --     - platform_suggestions: submitter + admin (mirrors property_update_requests).
 --   Grants include service_role (matches this project's grant convention).
 --
 -- EXECUTION ORDER
---   ... 0004_rental_referrals_and_suggestions.sql, then this file.
+--   Runs after 0021_rental_referrals_and_suggestions.sql (this is 0022).
+--   Already applied to the live DB as `pbr_rental_referrals_and_suggestions_rls`.
 --
 -- PREREQUISITES
---   0002 helpers (is_admin, is_approved, has_project_access) and 0004 tables.
+--   0002 helpers (is_admin, is_approved, has_project_access) and the 0021 tables.
 --
 -- SAFE TO RE-RUN?
 --   Yes. RLS enable is idempotent; policies are dropped (IF EXISTS) then created.

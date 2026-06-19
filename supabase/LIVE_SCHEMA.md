@@ -38,9 +38,10 @@
 | *(this session)* | pbr_rental_referrals_and_suggestions |
 | *(this session)* | pbr_rental_referrals_and_suggestions_rls |
 
-> The repo's `0001`–`0003` correspond to the original structural/RLS/storage
-> baseline; the repo's `0004`/`0005` mirror the two PBR/suggestions migrations
-> applied this session. Everything else above lives only in the live DB.
+> The repo now carries migrations `0001`–`0022`, including the PBR/suggestions
+> work (`0021`/`0022`). Some live-only changes applied directly to Supabase may
+> still not be reproduced as files here — this index and the generated
+> `database.types.ts` remain the source of truth.
 
 ## Tables by feature area
 

@@ -1,13 +1,18 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { Card, CardBody } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { RECORD_STATUS } from "@/lib/status";
+import { Input } from "@/components/ui/field";
+import { Button, ButtonLink } from "@/components/ui/button";
 import type { RecordStatus } from "@/lib/status";
+import { ProjectsAdmin } from "./projects-admin";
 
 export const metadata: Metadata = { title: "Manage projects" };
 export const dynamic = "force-dynamic";
+// Headroom for inline SEO generation on (bulk) publish.
+export const maxDuration = 60;
+
+const PAGE_SIZE = 100;
+const SELECT =
+  "id, slug, project_name, city, record_status, public_page_enabled, updated_at, public_project_pages(is_active)";
 
 interface Row {
   id: string;
@@ -20,65 +25,94 @@ interface Row {
   public_project_pages: { is_active: boolean }[] | null;
 }
 
-export default async function AdminProjects() {
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("projects")
-    .select(
-      "id, slug, project_name, city, record_status, public_page_enabled, updated_at, public_project_pages(is_active)",
-    )
-    .order("updated_at", { ascending: false })
-    .limit(100);
+export default async function AdminProjects({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; limit?: string }>;
+}) {
+  const { q: rawQ, limit: rawLimit } = await searchParams;
+  const q = (rawQ ?? "").trim();
+  const limit = Math.min(
+    5000,
+    Math.max(PAGE_SIZE, Number(rawLimit) || PAGE_SIZE),
+  );
+  const filter = q
+    ? `project_name.ilike.%${q}%,city.ilike.%${q}%,slug.ilike.%${q}%,builder_name.ilike.%${q}%`
+    : null;
 
-  const rows = (data as unknown as Row[]) ?? [];
+  const supabase = await createClient();
+
+  let req = supabase
+    .from("projects")
+    .select(SELECT)
+    .order("updated_at", { ascending: false })
+    .limit(limit + 1); // +1 to detect whether more rows exist
+  if (filter) req = req.or(filter);
+
+  let countReq = supabase
+    .from("projects")
+    .select("id", { count: "exact", head: true });
+  if (filter) countReq = countReq.or(filter);
+
+  const [{ data }, { count }] = await Promise.all([req, countReq]);
+
+  const all = (data as unknown as Row[]) ?? [];
+  const hasMore = all.length > limit;
+  const rows = hasMore ? all.slice(0, limit) : all;
+  const total = count ?? rows.length;
+
+  const adminRows = rows.map((p) => ({
+    id: p.id,
+    slug: p.slug,
+    project_name: p.project_name,
+    city: p.city,
+    record_status: p.record_status,
+    live:
+      p.public_page_enabled &&
+      p.record_status === "published" &&
+      (p.public_project_pages?.[0]?.is_active ?? false),
+  }));
+
+  const moreParams = new URLSearchParams();
+  if (q) moreParams.set("q", q);
+  moreParams.set("limit", String(limit + PAGE_SIZE));
 
   return (
     <div className="space-y-4">
-      {rows.length === 0 ? (
-        <Card>
-          <CardBody className="text-center text-sm text-slate-500">
-            No projects yet. Approve a submission to create the first canonical
-            project.
-          </CardBody>
-        </Card>
-      ) : (
-        <Card>
-          <CardBody className="divide-y divide-slate-100 p-0">
-            {rows.map((p) => {
-              const live =
-                p.public_page_enabled &&
-                p.record_status === "published" &&
-                (p.public_project_pages?.[0]?.is_active ?? false);
-              return (
-                <Link
-                  key={p.id}
-                  href={`/dashboard/admin/projects/${p.id}`}
-                  className="flex items-center justify-between gap-4 px-5 py-4 hover:bg-slate-50"
-                >
-                  <div className="min-w-0">
-                    <p className="truncate font-medium text-slate-800">
-                      {p.project_name}
-                    </p>
-                    <p className="truncate text-xs text-slate-400">
-                      {p.city ?? "—"} · /{p.slug}
-                    </p>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-2">
-                    {live ? (
-                      <Badge tone="success">Live</Badge>
-                    ) : (
-                      <Badge tone="neutral">Not public</Badge>
-                    )}
-                    <Badge tone={RECORD_STATUS[p.record_status].tone}>
-                      {RECORD_STATUS[p.record_status].label}
-                    </Badge>
-                  </div>
-                </Link>
-              );
-            })}
-          </CardBody>
-        </Card>
-      )}
+      <form method="get" className="flex gap-2">
+        <Input
+          name="q"
+          placeholder="Search by project, city, builder, or slug…"
+          defaultValue={q}
+          className="flex-1"
+        />
+        <Button type="submit" variant="secondary">
+          Search
+        </Button>
+        {q ? (
+          <ButtonLink href="/dashboard/admin/projects" variant="secondary">
+            Clear
+          </ButtonLink>
+        ) : null}
+      </form>
+
+      <p className="text-xs text-slate-500">
+        Showing {rows.length} of {total} project{total === 1 ? "" : "s"}
+        {q ? ` matching “${q}”` : ""}.
+      </p>
+
+      <ProjectsAdmin rows={adminRows} searching={Boolean(q)} />
+
+      {hasMore ? (
+        <div className="flex justify-center pt-2">
+          <ButtonLink
+            href={`?${moreParams.toString()}`}
+            variant="secondary"
+          >
+            Load more
+          </ButtonLink>
+        </div>
+      ) : null}
     </div>
   );
 }

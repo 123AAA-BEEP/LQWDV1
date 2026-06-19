@@ -11,9 +11,10 @@ export const metadata: Metadata = { title: "Sign up" };
 export default async function SignupPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; ref?: string }>;
 }) {
-  const { error } = await searchParams;
+  const { error, ref } = await searchParams;
+  const referralCode = (ref ?? "").trim().toUpperCase();
 
   return (
     <div>
@@ -24,6 +25,12 @@ export default async function SignupPage({
         Free for verified realtors. RECO verification is reviewed after signup.
       </p>
 
+      {referralCode ? (
+        <Notice tone="success" className="mt-6">
+          You were invited by a colleague. Sign up and you both earn rewards.
+        </Notice>
+      ) : null}
+
       {error ? (
         <Notice tone="error" className="mt-6">
           {error}
@@ -31,6 +38,9 @@ export default async function SignupPage({
       ) : null}
 
       <form action={signUp} className="mt-6 space-y-4">
+        {referralCode ? (
+          <input type="hidden" name="ref" value={referralCode} />
+        ) : null}
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="First name" htmlFor="first_name">
             <Input
