@@ -1,5 +1,14 @@
 # LIQWD — Supabase Backend
 
+> ⚠️ **The live DB is ahead of this folder.** These migrations (`0001`–`0005`)
+> are a partial/local-dev baseline; the production project `LIQWD DB V1` has many
+> additional features applied directly (opportunities, deal RFPs, buyer mandates,
+> referrals/rewards, pro/ultra billing, …). For the **full live schema** see
+> [`LIVE_SCHEMA.md`](./LIVE_SCHEMA.md) (human index) and
+> [`../src/lib/database.types.ts`](../src/lib/database.types.ts) (generated,
+> authoritative table/column types). Regenerate types via the Supabase MCP
+> `generate_typescript_types` or `supabase gen types typescript`.
+
 Backend source of truth: `liqwd_supabase_schema_prompt_v2.md`.
 
 This folder contains the database schema, row-level security (RLS), storage
