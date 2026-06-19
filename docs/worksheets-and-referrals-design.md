@@ -20,7 +20,25 @@ From review:
   outcomes (client didn't submit / not eligible / accepted). On **accepted**
   (green check), the agent's brokerage invoices the PBR operator off-platform.
   We only track `payout_status` for reporting.
-- **Next step: iterate on this doc — do NOT write migrations yet.**
+- **Rent pricing: monthly.** For `for_rent` projects, price is monthly. We add
+  an explicit `price_period` (`total` | `monthly`) so the same price columns are
+  unambiguous across sale and lease, and the feed/worksheet budget matching read
+  the period correctly.
+- **Re-submission: allowed.** A worksheet can be re-submitted to a project after
+  a terminal outcome (`declined` / `client_not_submitting` / `client_ineligible`
+  / `withdrawn`). A partial unique index blocks only duplicate *open*
+  submissions. Pairs with a **"Find a new project"** prompt that surfaces
+  **nearby + featured** projects to re-aim the same worksheet — which finally
+  gives the currently-unused `projects.is_featured` flag a real job.
+- **Auto-lead: yes (LIQWD's call, since you had no strong preference).** Every
+  submission also creates a linked `project_leads` row
+  (`lead_source = 'worksheet'`) so all inbound demand lands in one funnel and
+  reuses the existing lead routing + dashboards. The rich record stays on
+  `worksheet_submissions` (linked via `lead_id`); the lead row is the
+  lightweight funnel/notification entry. Reversible if it proves noisy.
+- **Next step:** all open questions are now resolved. Design is complete pending
+  your read — **say go and I'll write migrations `0004`/`0005` + TS types as
+  review-ready SQL** (not applied to the live Supabase without your approval).
 
 ## 1. The thesis
 
@@ -79,10 +97,19 @@ alter table public.projects add constraint projects_listing_type_chk
   check (listing_type in ('for_sale', 'for_rent', 'mixed_use'));
 
 create index if not exists idx_projects_listing_type on public.projects (listing_type);
+
+-- Rent pricing: monthly. price_from_public/price_to_public are reused, with
+-- price_period disambiguating sale total vs monthly rent.
+alter table public.projects
+  add column if not exists price_period text not null default 'total';
+alter table public.projects drop constraint if exists projects_price_period_chk;
+alter table public.projects add constraint projects_price_period_chk
+  check (price_period in ('total', 'monthly'));
 ```
 
-Note: rent pricing reuse (`price_from_public`/`price_to_public` read as monthly
-for `for_rent`) is a rental-layer decision — see Open Question Q2.
+For `for_rent` projects, set `price_period = 'monthly'`; `price_from_public` /
+`price_to_public` then read as the monthly rent band. The feed and worksheet
+rent-budget matching key off `price_period`.
 
 ### 3.2 `worksheets` — reusable client profile (agent-owned)
 
@@ -179,13 +206,18 @@ create table if not exists public.worksheet_submissions (
        'declined',              -- operator declined
        'withdrawn')),           -- agent pulled it
   constraint worksheet_submissions_payout_chk
-    check (payout_status in ('none','eligible','invoiced','paid','void')),
-  constraint worksheet_submissions_unique unique (worksheet_id, project_id)
+    check (payout_status in ('none','eligible','invoiced','paid','void'))
 );
 create index if not exists idx_ws_subs_worksheet on public.worksheet_submissions (worksheet_id);
 create index if not exists idx_ws_subs_project   on public.worksheet_submissions (project_id);
 create index if not exists idx_ws_subs_owner     on public.worksheet_submissions (submitted_by_profile_id);
 create index if not exists idx_ws_subs_status    on public.worksheet_submissions (status);
+
+-- Re-submission allowed after a terminal outcome; block only duplicate OPEN
+-- submissions to the same project (one live attempt per worksheet+project).
+create unique index if not exists uq_ws_subs_open
+  on public.worksheet_submissions (worksheet_id, project_id)
+  where status in ('submitted','received','in_progress');
 ```
 
 ### 3.4 `project_referral_terms` — accepted parameters + fee (1:1, mirrors `project_private_commercials`)
@@ -275,6 +307,25 @@ where p.listing_type in ('for_rent','mixed_use')
   and t.is_active = true;
 ```
 
+### 3.6 `project_leads.lead_source` (auto-lead discriminator)
+
+Every submission also creates a linked `project_leads` row so all inbound demand
+lands in one funnel. A discriminator keeps the worksheet pipeline distinct from
+public form captures in dashboards/reporting.
+
+```sql
+alter table public.project_leads
+  add column if not exists lead_source text not null default 'public_form';
+alter table public.project_leads drop constraint if exists project_leads_source_chk;
+alter table public.project_leads add constraint project_leads_source_chk
+  check (lead_source in ('public_form', 'worksheet'));
+```
+
+On submit (server action / trigger): insert a `project_leads` row with
+`lead_source = 'worksheet'`, `is_realtor = true`, name/email from the worksheet,
+then set `worksheet_submissions.lead_id` to it. The submission stays the rich
+source of truth; the lead row is the funnel/notification entry.
+
 ## 4. Reuse of existing tables (no new copies)
 
 | Need | Reuses |
@@ -314,12 +365,21 @@ where p.listing_type in ('for_rent','mixed_use')
 - `dashboard/worksheets/` — agent's library (list, create, edit, archive).
 - `dashboard/worksheets/[id]/submit/` — pick project(s) + floorplan; live
   validation against `project_referral_terms`; one-click multi-submit.
-- `dashboard/submissions/` — track statuses across all submissions.
+- `dashboard/submissions/` — track statuses across all submissions. When a
+  submission hits a non-accepted terminal state, surface a **"Find a new
+  project"** CTA (re-submission is allowed).
+- **"Find a new project"** recommender — given a worksheet, suggest **nearby**
+  projects (same city/neighbourhood, or a lat/long radius off `projects`) plus
+  **featured** ones (`is_featured = true`), filtered to the worksheet's
+  `listing_type` and budget. One-click re-submit the same worksheet. (This is
+  where `is_featured` becomes a paid placement lever for advertisers.)
 - `dashboard/referrals/` — the `referral_opportunities_view` feed (who's paying).
 - Developer side (`dashboard/developer/inbox/`) — incoming submissions for their
-  granted projects; accept / waitlist / decline / mark leased.
+  granted projects; drive status: received → in_progress → accepted, or
+  client_not_submitting / client_ineligible / declined. Only visible/editable
+  when `service_mode = 'self_serve'`; otherwise LIQWD admin works it.
 - Admin — manage `project_referral_terms` inside the existing project editor;
-  oversee submissions; payout status.
+  work full-service inboxes; oversee submissions + payout status.
 
 ## 7. TS types to add (`src/lib/types.ts`)
 
@@ -330,24 +390,31 @@ minimal interfaces.
 
 ## 8. Migration plan (matches `supabase/migrations` numbering)
 
-- `0004_worksheets.sql` — structural: `listing_type`, the three tables, indexes,
-  `updated_at` triggers, validation helper, `referral_opportunities_view`.
-- `0005_worksheets_rls.sql` — enable RLS, grants, policies per §5.
-- Update `supabase/README.md` run order + `seed.sql` smoke fixtures.
+- `0004_worksheets.sql` — structural: `projects.listing_type` + `price_period`,
+  `project_leads.lead_source`, the three new tables (`worksheets`,
+  `worksheet_submissions`, `project_referral_terms`) + `platform_suggestions`
+  (§11), indexes incl. the `uq_ws_subs_open` partial unique index,
+  `updated_at` triggers, the `worksheet_matches_referral_terms()` helper, and
+  `referral_opportunities_view`.
+- `0005_worksheets_rls.sql` — enable RLS on the new tables, grants, policies per
+  §5 + §11.2.
+- Update `supabase/README.md` run order, the `updated_at`/RLS table arrays, and
+  `seed.sql` smoke fixtures.
 
-## 9. Open questions
+## 9. Open questions — all resolved
 
-Resolved (see §0): ~~Q1 PII~~ → full contact on submission. ~~Q3 service mode~~
-→ both, via `service_mode`. ~~Q6 payouts~~ → status-based, off-platform invoicing.
+All decisions are now locked (see §0):
 
-Still open — need your call:
-- **Q2 — Rent pricing model.** Reuse `price_from_public/to` as monthly for
-  `for_rent`, or add an explicit `price_period`? (Affects the feed + worksheet
-  budget matching.)
-- **Q4 — Resubmission.** One submission per (worksheet, project) — or allow a
-  re-submit after a decline / `client_not_submitting`?
-- **Q5 — Auto-lead.** Create a `project_leads` row automatically on every
-  submission (unifies reporting), or only link when one already exists?
+- ~~**Q1** — Client PII to developers~~ → full contact on submission.
+- ~~**Q2** — Rent pricing model~~ → monthly, via `price_period`.
+- ~~**Q3** — Developer self-serve~~ → both, via `service_mode`.
+- ~~**Q4** — Resubmission~~ → allowed after a terminal outcome (partial unique
+  index on open submissions), with a "Find a new project" recommender.
+- ~~**Q5** — Auto-lead~~ → yes, linked `project_leads` row with
+  `lead_source = 'worksheet'`.
+- ~~**Q6** — Payout depth~~ → status-based, off-platform invoicing on accepted.
+
+Design is ready to turn into migrations `0004`/`0005` on your go-ahead.
 
 ## 10. Why this order
 
