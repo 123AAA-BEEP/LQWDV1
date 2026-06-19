@@ -25,6 +25,7 @@ export default async function AdminOverview() {
     updates,
     proposals,
     rfpResponses,
+    rentalReferrals,
     mediaCandidates,
     suggestions,
   ] = await Promise.all([
@@ -33,6 +34,7 @@ export default async function AdminOverview() {
     pendingCount("property_update_requests", ["pending_review", "needs_changes"]),
     pendingCount("project_proposals", ["submitted", "under_review"]),
     pendingCount("deal_rfp_proposals", ["submitted"]),
+    pendingCount("rental_referrals", ["new", "received", "in_progress"]),
     pendingCount("project_media_candidates", ["pending"]),
     pendingCount("platform_suggestions", ["new"]),
   ]);
@@ -62,6 +64,11 @@ export default async function AdminOverview() {
       label: "RFP responses",
       count: rfpResponses,
       href: "/dashboard/admin/rfps",
+    },
+    {
+      label: "Rental referrals",
+      count: rentalReferrals,
+      href: "/dashboard/admin/referrals",
     },
     {
       label: "Media candidates",

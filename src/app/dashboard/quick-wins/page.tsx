@@ -12,6 +12,8 @@ import { createClient } from "@/lib/supabase/server";
 import { Card, CardBody } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
+import { Notice } from "@/components/ui/notice";
+import { RENTAL_REFERRAL_STATUS, type RentalReferralStatus } from "@/lib/status";
 
 export const metadata: Metadata = { title: "Quick Wins" };
 export const dynamic = "force-dynamic";
@@ -35,6 +37,15 @@ interface Proj {
   hero_image_url: string | null;
   price_from_public: number | null;
   price_to_public: number | null;
+}
+interface ReferralRow {
+  id: string;
+  project_id: string;
+  client_first_name: string | null;
+  client_last_name: string | null;
+  status: RentalReferralStatus;
+  created_at: string;
+  project_name?: string;
 }
 
 const cad = (n: number) =>
@@ -74,11 +85,17 @@ const CREDIT_LABEL: Record<string, string> = {
   unknown: "Any",
 };
 
-export default async function QuickWins() {
-  const { profile } = await requireUserProfile();
+export default async function QuickWins({
+  searchParams,
+}: {
+  searchParams: Promise<{ referred?: string }>;
+}) {
+  const { referred } = await searchParams;
+  const { userId, profile } = await requireUserProfile();
   const approved = isApproved(profile);
 
   let cards: { terms: Terms; proj: Proj }[] = [];
+  let myReferrals: ReferralRow[] = [];
   if (approved) {
     const supabase = await createClient();
     const { data: terms } = await supabase
@@ -106,6 +123,33 @@ export default async function QuickWins() {
       cards = termRows
         .map((t) => ({ terms: t, proj: byId.get(t.project_id) }))
         .filter((c): c is { terms: Terms; proj: Proj } => !!c.proj);
+    }
+
+    // The agent's own referrals + the names of the projects they point at.
+    const { data: refs } = await supabase
+      .from("rental_referrals")
+      .select(
+        "id, project_id, client_first_name, client_last_name, status, created_at",
+      )
+      .eq("referred_by_profile_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(25);
+    const refRows = (refs as ReferralRow[] | null) ?? [];
+    if (refRows.length) {
+      const refIds = Array.from(new Set(refRows.map((r) => r.project_id)));
+      const { data: refProjs } = await supabase
+        .from("broker_projects_view")
+        .select("id, project_name")
+        .in("id", refIds);
+      const nameById = new Map(
+        ((refProjs as { id: string; project_name: string }[] | null) ?? []).map(
+          (p) => [p.id, p.project_name],
+        ),
+      );
+      myReferrals = refRows.map((r) => ({
+        ...r,
+        project_name: nameById.get(r.project_id) ?? "Project",
+      }));
     }
   }
 
@@ -142,6 +186,13 @@ export default async function QuickWins() {
           </div>
         </div>
       </div>
+
+      {referred ? (
+        <Notice tone="success">
+          Referral sent — the building&rsquo;s leasing team will reach out to your
+          client. Track its status below.
+        </Notice>
+      ) : null}
 
       {!approved ? (
         <Card>
@@ -253,8 +304,11 @@ export default async function QuickWins() {
                     ) : null}
 
                     <div className="mt-4 flex-1" />
-                    <ButtonLink href={`/dashboard/projects/${proj.slug}`} size="sm">
-                      View &amp; refer →
+                    <ButtonLink
+                      href={`/dashboard/quick-wins/${proj.id}`}
+                      size="sm"
+                    >
+                      Refer a buyer →
                     </ButtonLink>
                   </CardBody>
                 </Card>
@@ -263,6 +317,42 @@ export default async function QuickWins() {
           </div>
         </div>
       )}
+
+      {approved && myReferrals.length > 0 ? (
+        <div>
+          <h2 className="mb-3 text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
+            Your referrals
+          </h2>
+          <Card>
+            <CardBody className="divide-y divide-slate-100 p-0">
+              {myReferrals.map((r) => (
+                <div
+                  key={r.id}
+                  className="flex items-center justify-between gap-3 px-5 py-3"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-slate-800">
+                      {[r.client_first_name, r.client_last_name]
+                        .filter(Boolean)
+                        .join(" ") || "Client"}
+                      <span className="font-normal text-slate-400">
+                        {" "}
+                        · {r.project_name}
+                      </span>
+                    </p>
+                    <p className="text-xs text-slate-400">
+                      {new Date(r.created_at).toLocaleDateString("en-CA")}
+                    </p>
+                  </div>
+                  <Badge tone={RENTAL_REFERRAL_STATUS[r.status].tone}>
+                    {RENTAL_REFERRAL_STATUS[r.status].label}
+                  </Badge>
+                </div>
+              ))}
+            </CardBody>
+          </Card>
+        </div>
+      ) : null}
     </div>
   );
 }
