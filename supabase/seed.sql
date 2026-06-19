@@ -33,8 +33,6 @@
 --   public page   : 44444444-4444-4444-4444-444444444444
 --   media         : 55555555-5555-5555-5555-555555555555
 --   rental project: 66666666-6666-6666-6666-666666666666
---   worksheet     : 88888888-8888-8888-8888-888888888888
---   submission    : 99999999-9999-9999-9999-999999999999
 --   suggestion    : aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
 -- =============================================================================
 
@@ -239,7 +237,8 @@ where not exists (
     and lead_email = 'sam.buyer@example.com'
 );
 
--- 8. Purpose-built rental + worksheet fixtures (migrations 0004/0005) ---------
+-- 8. Rental + PBR referral + suggestion fixtures (migrations 0004/0005) -------
+-- NOTE: no worksheet fixture — the platform uses buyer_mandates for that concept.
 -- 8a. A published FOR-RENT project (monthly pricing) that accepts referrals.
 insert into public.projects (
   id, slug, project_name, headline, description_short,
@@ -271,7 +270,7 @@ values (
 on conflict (id) do nothing;
 
 -- 8b. Referral terms (1:1 with the rental project) — self-serve, 1 month rent.
-insert into public.project_referral_terms (
+insert into public.project_rental_referral_terms (
   project_id, accepts_referrals,
   referral_fee_type, referral_fee_value, referral_fee_notes, payout_terms,
   min_lease_term_months, min_household_income, min_credit_band, pets_allowed,
@@ -285,47 +284,11 @@ select
   12, 60000, 'good', true,
   'self_serve', true
 where not exists (
-  select 1 from public.project_referral_terms
+  select 1 from public.project_rental_referral_terms
   where project_id = '66666666-6666-6666-6666-666666666666'
 );
 
--- 8c. A reusable rental worksheet owned by the seed realtor (meets the terms).
-insert into public.worksheets (
-  id, owner_profile_id, worksheet_type, label,
-  client_first_name, client_last_name, client_email, client_phone,
-  desired_beds_min, desired_beds_max, parking_required, desired_move_in_date,
-  rent_budget_min, rent_budget_max, annual_household_income, credit_band,
-  lease_term_months, num_occupants, has_pets, status
-)
-values (
-  '88888888-8888-8888-8888-888888888888',
-  '11111111-1111-1111-1111-111111111111', 'rental', 'Taylor R. — 2BR midtown',
-  'Taylor', 'Rivera', 'taylor.rivera@example.com', '+1-416-555-0123',
-  2, 2, true, '2026-08-01',
-  3000, 4200, 95000, 'excellent',
-  12, 2, false, 'active'
-)
-on conflict (id) do nothing;
-
--- 8d. A submission of that worksheet to the rental project (referral, matched).
---     snapshot carries the client contact (full contact on submission).
-insert into public.worksheet_submissions (
-  id, worksheet_id, project_id, submitted_by_profile_id, submitting_brokerage_id,
-  submission_kind, snapshot, matched_terms, referral_fee_quoted, status
-)
-values (
-  '99999999-9999-9999-9999-999999999999',
-  '88888888-8888-8888-8888-888888888888',
-  '66666666-6666-6666-6666-666666666666',
-  '11111111-1111-1111-1111-111111111111',
-  '22222222-2222-2222-2222-222222222222',
-  'rental_referral',
-  '{"client_first_name":"Taylor","client_last_name":"Rivera","client_email":"taylor.rivera@example.com","client_phone":"+1-416-555-0123"}'::jsonb,
-  true, '1 month rent', 'submitted'
-)
-on conflict (id) do nothing;
-
--- 8e. A platform suggestion ("Got an idea?") from the seed realtor.
+-- 8c. A platform suggestion ("Got an idea?") from the seed realtor.
 insert into public.platform_suggestions (
   id, submitted_by_profile_id, category, title, body,
   open_to_collaborate, contact_ok, status
@@ -363,11 +326,7 @@ on conflict (id) do nothing;
 --      reset role;
 --      reset request.jwt.claims;
 --
--- C) Worksheets / referrals:
---      -- the worksheet meets the rental project's accepted parameters:
---      select public.worksheet_matches_referral_terms(
---        '88888888-8888-8888-8888-888888888888',
---        '66666666-6666-6666-6666-666666666666');           -- expect true
+-- C) PBR referral feed:
 --      -- the rental project shows up in the broker-only referral feed:
 --      select project_name, referral_fee_type, referral_fee_value
 --        from public.referral_opportunities_view;            -- expect The Maple Rental Residences

@@ -1,6 +1,25 @@
 # Worksheets & PBR Referrals — Design Doc (v0, for review)
 
-Status: **DRAFT — pressure-test before building.** No migrations applied yet.
+Status: **PARTIALLY IMPLEMENTED.** See the reconciliation note below.
+
+## Reconciliation with production (2026-06-19)
+
+On applying this, we found the **live DB had diverged from this repo** and already
+contained overlapping features:
+
+- `buyer_mandates` + `mandate_connect_requests` already cover the reusable
+  buyer-profile ("worksheet") + developer-connect concept. We therefore did
+  **not** build `worksheets` / `worksheet_submissions` — those sections below are
+  superseded by the existing `buyer_mandates`.
+- A member-growth `referrals` + `rewards_ledger` already exists (refer-a-friend →
+  reward days), which is a *different* concept from PBR landlord referrals — so the
+  PBR table was named `project_rental_referral_terms` to avoid confusion.
+
+**Applied to the live DB** (repo migrations `0004`/`0005`, also pushed via the
+Supabase MCP): `projects.listing_type` + `price_period`,
+`project_rental_referral_terms`, `platform_suggestions`, and the broker-only
+SECURITY INVOKER `referral_opportunities_view`. The worksheet-specific sections
+below are retained for design context but are **not** implemented.
 
 ## 0. Decisions locked (v0.1)
 
