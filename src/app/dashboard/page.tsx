@@ -38,6 +38,7 @@ import { formatPriceBand } from "@/lib/types";
 import type { Profile } from "@/lib/types";
 import { cn } from "@/lib/cn";
 import type { ReactNode } from "react";
+import { SECTION_ACCENT, type SectionAccent } from "@/lib/section-accents";
 
 export const metadata: Metadata = { title: "Dashboard" };
 export const dynamic = "force-dynamic";
@@ -143,7 +144,7 @@ export default async function DashboardHome() {
         </div>
       ) : null}
 
-      <HomeSection label="Earn" accent>
+      <HomeSection label="Earn" accent="emerald" zone>
         <ActionCard
           icon={Coins}
           title="Quick Wins"
@@ -185,7 +186,7 @@ export default async function DashboardHome() {
         />
       </HomeSection>
 
-      <HomeSection label="Explore">
+      <HomeSection label="Explore" accent="sky">
         <ActionCard
           icon={Building2}
           title="Browse projects"
@@ -210,7 +211,7 @@ export default async function DashboardHome() {
         />
       </HomeSection>
 
-      <HomeSection label="Account">
+      <HomeSection label="Account" accent="slate">
         <ActionCard
           icon={PlusCircle}
           title="Submit a project"
@@ -374,32 +375,32 @@ function ActionCard({
  *  zone. */
 function HomeSection({
   label,
-  accent = false,
+  accent,
+  zone = false,
   children,
 }: {
   label: string;
-  accent?: boolean;
+  accent?: SectionAccent;
+  zone?: boolean;
   children: ReactNode;
 }) {
+  const a = accent ? SECTION_ACCENT[accent] : null;
   return (
     <div
       className={
-        accent
-          ? "rounded-2xl bg-emerald-50/40 p-4 ring-1 ring-emerald-100 sm:p-5"
+        zone && a
+          ? cn("rounded-2xl p-4 ring-1 ring-inset sm:p-5", a.zone)
           : undefined
       }
     >
       <h2
         className={cn(
           "mb-3 flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em]",
-          accent ? "text-emerald-700" : "text-slate-400",
+          a ? a.header : "text-slate-400",
         )}
       >
         <span
-          className={cn(
-            "size-1.5 rounded-full",
-            accent ? "bg-emerald-500" : "bg-slate-300",
-          )}
+          className={cn("size-1.5 rounded-full", a ? a.dotBg : "bg-slate-300")}
           aria-hidden
         />
         {label}
@@ -536,102 +537,77 @@ async function DeveloperHome({
         />
       </div>
 
-      <div>
-        <h2 className="mb-3 text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
-          Quick actions
-        </h2>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <ActionCard
-            icon={Handshake}
-            title="Post an offer"
-            body="Put your priority units and limited-time incentives in front of Ultra agents — bulk, inventory, listings, or a full development."
-            href="/dashboard/deal-requests/new"
-            cta="Post an offer"
-            enabled
-          />
-          <ActionCard
-            icon={FileText}
-            title="Your offers"
-            body="Track what you're moving and review the proposals agents send back."
-            href="/dashboard/deal-requests"
-            cta="View offers"
-            enabled
-          />
-          <ActionCard
-            icon={ClipboardCheck}
-            title="Ready buyers"
-            body="Verified buyer demand from agents — match your inventory to buyers who are ready now."
-            href="/dashboard/buyer-mandates"
-            cta="See buyer demand"
-            enabled
-          />
-          <ActionCard
-            icon={CreditCard}
-            title="Connections & billing"
-            body={
-              canConnect
-                ? "Manage how you reach agents, plus your billing."
-                : "Unlock the ability to reach agents holding ready buyers."
-            }
-            href="/dashboard/developer"
-            cta={canConnect ? "Manage connections" : "Unlock connections"}
-            enabled
-          />
-        </div>
-      </div>
+      <HomeSection label="Sell / Lease now" accent="emerald">
+        <ActionCard
+          icon={Handshake}
+          title="Post an offer"
+          body="Put your priority units and limited-time incentives in front of Ultra agents — bulk, inventory, listings, or a full development."
+          href="/dashboard/deal-requests/new"
+          cta="Post an offer"
+          enabled
+        />
+        <ActionCard
+          icon={FileText}
+          title="Your offers"
+          body="Track what you're moving and review the proposals agents send back."
+          href="/dashboard/deal-requests"
+          cta="View offers"
+          enabled
+        />
+        <ActionCard
+          icon={ClipboardCheck}
+          title="Ready buyers"
+          body="Verified buyer demand from agents — match your inventory to buyers who are ready now."
+          href="/dashboard/buyer-mandates"
+          cta="See buyer demand"
+          enabled
+        />
+        <ActionCard
+          icon={CreditCard}
+          title="Connections & billing"
+          body={
+            canConnect
+              ? "Manage how you reach agents, plus your billing."
+              : "Unlock the ability to reach agents holding ready buyers."
+          }
+          href="/dashboard/developer"
+          cta={canConnect ? "Manage connections" : "Unlock connections"}
+          enabled
+        />
+      </HomeSection>
 
-      {/* Promote — revenue add-ons, not live yet. */}
-      <div>
-        <div className="mb-3 flex items-center gap-2">
-          <h2 className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
-            Promote your projects
-          </h2>
-          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-400">
-            Soon
-          </span>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <ComingSoonCard
-            icon={Megaphone}
-            title="Featured listing"
-            body="Put your project at the top of browse and the homepage, with a Featured badge agents and buyers notice."
-          />
-          <ComingSoonCard
-            icon={Mail}
-            title="eBlast to agents"
-            body="Broadcast your project to the verified realtor database — targeted by city and focus."
-          />
-          <ComingSoonCard
-            icon={Mail}
-            title="eBlast to buyers"
-            body="Reach motivated end-buyers directly with a dedicated send for your project."
-          />
-        </div>
-      </div>
+      {/* Promote — the operator ad-revenue zone (elevated). */}
+      <HomeSection label="Promote now" accent="amber" zone>
+        <ComingSoonCard
+          icon={Megaphone}
+          title="Featured listing"
+          body="Put your project at the top of browse and the homepage, with a Featured badge agents and buyers notice."
+        />
+        <ComingSoonCard
+          icon={Mail}
+          title="eBlast to agents"
+          body="Broadcast your project to the verified realtor database — targeted by city and focus."
+        />
+        <ComingSoonCard
+          icon={Mail}
+          title="eBlast to buyers"
+          body="Reach motivated end-buyers directly with a dedicated send for your project."
+        />
+      </HomeSection>
 
-      {/* Insights — coming soon. */}
-      <div>
-        <div className="mb-3 flex items-center gap-2">
-          <h2 className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
-            Insights
-          </h2>
-          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-400">
-            Soon
-          </span>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <ComingSoonCard
-            icon={BarChart3}
-            title="Project analytics"
-            body="Views, saves, leads, and which agents engaged — the full funnel for every project."
-          />
-          <ComingSoonCard
-            icon={TrendingUp}
-            title="Buyer demand signals"
-            body="See where verified buyer demand is concentrated by city, price, and unit type."
-          />
-        </div>
-      </div>
+      {/* Research — insights, coming soon. */}
+      <HomeSection label="Research" accent="sky">
+        <ComingSoonCard
+          icon={BarChart3}
+          title="Project analytics"
+          body="Views, saves, leads, and which agents engaged — the full funnel for every project."
+        />
+        <ComingSoonCard
+          icon={TrendingUp}
+          title="Buyer demand signals"
+          body="See where verified buyer demand is concentrated by city, price, and unit type."
+        />
+      </HomeSection>
     </div>
   );
 }
