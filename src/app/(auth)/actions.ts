@@ -34,6 +34,7 @@ export async function signUp(formData: FormData) {
   const brokerageName = String(formData.get("brokerage_name") ?? "").trim();
   const reco = String(formData.get("reco_registration_number") ?? "").trim();
   const title = String(formData.get("title") ?? "").trim();
+  const referralCode = String(formData.get("ref") ?? "").trim().toUpperCase();
   const origin = await originUrl();
 
   const fail = (msg: string) =>
@@ -64,6 +65,8 @@ export async function signUp(formData: FormData) {
         brokerage_name: brokerageName,
         reco_registration_number: reco,
         title,
+        // Referrer's code, carried until the profile is created on first load.
+        referral_code_used: referralCode || null,
       },
     },
   });

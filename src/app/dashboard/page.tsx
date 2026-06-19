@@ -18,6 +18,7 @@ import {
   Megaphone,
   Mail,
   BarChart3,
+  Gift,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -194,6 +195,14 @@ export default async function DashboardHome() {
             body="Add a new project for admin review."
             href="/dashboard/submit"
             cta="Submit project"
+            enabled
+          />
+          <ActionCard
+            icon={Gift}
+            title="Refer & earn"
+            body="Invite a realtor — you both get a free month of Pro when they join."
+            href="/dashboard/refer"
+            cta="Get your invite link"
             enabled
           />
           <ActionCard

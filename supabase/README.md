@@ -38,7 +38,10 @@ Run each file as its own query, in this exact order:
 | 5 | `migrations/0005_seo_prompt_settings.sql` | SEO prompt settings. |
 | 6 | `migrations/0006_deal_proposals.sql` | Creates `project_proposals` (realtor-initiated worksheet/freeform counter-offers), its indexes, `updated_at` trigger, RLS policies, and grants. See `docs/monetization-deal-desk.md`. |
 | 7 | `migrations/0007_deal_rfps.sql` | Adds `profiles.realtor_tier` (admin-controlled ultra gate), `deal_rfps` / `deal_rfp_invitations` / `deal_rfp_proposals`, the `is_ultra` / `is_invited_to_rfp` / `can_respond_to_rfp` helpers, and confidential RLS. See `docs/monetization-deal-desk.md`. |
-| 8 | `seed.sql` *(optional)* | Inserts one brokerage, one approved realtor (+ its `auth.users` row), one published project with an active public page, public media, private rows (commercials, broker portal, incentive, floorplan, restricted document), and a sample lead — enough to smoke-test the public view and the RLS boundary. |
+| … | `migrations/0008_*` … `0018_*` | Deal-desk field hiding, pro plan, buyer mandates + marketplace, mandate connect, ultra paid tier, developer RFPs, mandate checklist, RECO certificate verification, RFP identity reveal, service-role grants. |
+| 19 | `migrations/0019_referrals_rewards.sql` | Growth/data-quality reward system: `referral_code` / `referred_by_profile_id` / `pro_until` on `profiles`, `assigned_realtor_until` on `public_project_pages`, the `referrals` and `rewards_ledger` tables (idempotent grants), the `gen_referral_code()` helper, and their RLS. |
+| 20 | `migrations/0020_pro_until_entitlement.sql` | Extends `is_pro()` so reward time (`pro_until`) unlocks Pro alongside the paid `plan`, and adds `pro_until` to the self-escalation guard so realtors can't self-grant it. |
+| 21 | `seed.sql` *(optional)* | Inserts one brokerage, one approved realtor (+ its `auth.users` row), one published project with an active public page, public media, private rows (commercials, broker portal, incentive, floorplan, restricted document), and a sample lead — enough to smoke-test the public view and the RLS boundary. |
 
 > The SQL Editor runs as a superuser, so it bypasses RLS — migrations and seed
 > data apply cleanly.
