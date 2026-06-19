@@ -192,3 +192,42 @@ export const UPDATE_TYPE_OPTIONS = Object.keys(UPDATE_TYPE_LABELS);
 export function updateTypeLabel(type: string): string {
   return UPDATE_TYPE_LABELS[type] ?? type;
 }
+
+export type SuggestionStatus =
+  | "new"
+  | "under_review"
+  | "planned"
+  | "in_progress"
+  | "shipped"
+  | "declined";
+
+export const SUGGESTION_STATUS: Record<
+  SuggestionStatus,
+  { label: string; tone: Tone }
+> = {
+  new: { label: "New", tone: "brand" },
+  under_review: { label: "Under review", tone: "warning" },
+  planned: { label: "Planned", tone: "brand" },
+  in_progress: { label: "In progress", tone: "warning" },
+  shipped: { label: "Shipped", tone: "success" },
+  declined: { label: "Declined", tone: "danger" },
+};
+
+export const SUGGESTION_CATEGORY_LABELS: Record<string, string> = {
+  idea: "Idea",
+  feature_request: "Feature request",
+  complaint: "Complaint",
+  business_opportunity: "Business opportunity",
+  other: "Other",
+};
+
+export type MediaCandidateStatus = "pending" | "approved" | "rejected";
+
+export const MEDIA_CANDIDATE_STATUS: Record<
+  MediaCandidateStatus,
+  { label: string; tone: Tone }
+> = {
+  pending: { label: "Pending", tone: "warning" },
+  approved: { label: "Approved", tone: "success" },
+  rejected: { label: "Rejected", tone: "danger" },
+};

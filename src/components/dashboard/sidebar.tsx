@@ -87,7 +87,7 @@ export function Sidebar({
       : NAV;
 
   return (
-    <aside className="flex w-60 shrink-0 flex-col border-r border-slate-200 bg-white">
+    <aside className="sticky top-0 flex h-dvh w-60 shrink-0 flex-col self-start border-r border-slate-200 bg-white">
       <div className="flex h-16 items-center justify-between border-b border-slate-200 px-5">
         <Link
           href="/dashboard"
@@ -106,7 +106,7 @@ export function Sidebar({
         ) : null}
       </div>
 
-      <nav className="flex-1 space-y-1 p-3">
+      <nav className="flex-1 space-y-1 overflow-y-auto p-3">
         {nav.map((item) => {
           const active = item.exact
             ? pathname === item.href

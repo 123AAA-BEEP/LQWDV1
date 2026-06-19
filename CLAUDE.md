@@ -10,6 +10,19 @@ Storage, RLS).
 - DB migrations live in `supabase/migrations/` and are **run manually in the Supabase SQL editor**
   (or applied via MCP). Data-import artifacts live in `supabase/imports/`.
 
+## Branch hygiene (READ FIRST — always build on the latest)
+Always work **on top of the latest `main`, never beside it.** Branches drift fast
+(multiple agents merge PRs daily), so a branch from earlier today can be dozens of
+commits behind.
+- **Before any work**, sync: `git fetch origin main && git merge origin/main` (resolve
+  conflicts, then build). A SessionStart hook (`.claude/hooks/sync-latest.sh`) does this
+  automatically and warns loudly if it can't merge cleanly — resolve that before coding.
+- **Never** create a second, parallel version of something already on `main` — extend it.
+- Migration files are **sequentially numbered**: continue from the highest number in
+  `supabase/migrations/`; never reuse one.
+- The live schema can be ahead of the repo — `src/lib/database.types.ts` and
+  `supabase/LIVE_SCHEMA.md` are the source of truth for table shapes.
+
 ## The core invariant: public / private / provenance
 Three audiences, enforced by RLS + views:
 - **Public** reads `public_projects_view` (definer view): only `record_status='published'`
@@ -40,7 +53,9 @@ Commission/commercials: `project_private_commercials` (broker-read, admin-write)
 - Requires `ANTHROPIC_API_KEY` in Vercel env. Uses `@anthropic-ai/sdk`.
 
 ## Admin console (`/dashboard/admin`)
-Tabs: Overview, Verifications, Submissions, Update requests, Projects, Settings.
+Tabs: Overview, Verifications, Submissions, Update requests, Proposals, RFPs, Realtors,
+Media (candidate images), Suggestions ("Got an idea?"), Projects, Rewards, Settings.
+Overview shows live pending counts per queue.
 - Projects tab: searchable + load-more; checkbox bulk actions (Approve/Draft/Archive, Publish/Unpublish).
 - Project editor: canonical fields, broker-only Commission & negotiability, Public page content
   (assigned agent dropdown — lists ALL realtors, warns if not public; SEO fields + Generate button), uploads.

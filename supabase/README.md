@@ -1,5 +1,14 @@
 # LIQWD — Supabase Backend
 
+> ⚠️ **The live DB may be ahead of this folder.** These migrations
+> (`0001`–`0022`) track the schema, but some live changes are applied directly to
+> the production project `LIQWD DB V1` and may not all be reproduced as files
+> here. For the **full live schema** see
+> [`LIVE_SCHEMA.md`](./LIVE_SCHEMA.md) (human index) and
+> [`../src/lib/database.types.ts`](../src/lib/database.types.ts) (generated,
+> authoritative table/column types). Regenerate types via the Supabase MCP
+> `generate_typescript_types` or `supabase gen types typescript`.
+
 Backend source of truth: `liqwd_supabase_schema_prompt_v2.md`.
 
 This folder contains the database schema, row-level security (RLS), storage
@@ -41,7 +50,9 @@ Run each file as its own query, in this exact order:
 | … | `migrations/0008_*` … `0018_*` | Deal-desk field hiding, pro plan, buyer mandates + marketplace, mandate connect, ultra paid tier, developer RFPs, mandate checklist, RECO certificate verification, RFP identity reveal, service-role grants. |
 | 19 | `migrations/0019_referrals_rewards.sql` | Growth/data-quality reward system: `referral_code` / `referred_by_profile_id` / `pro_until` on `profiles`, `assigned_realtor_until` on `public_project_pages`, the `referrals` and `rewards_ledger` tables (idempotent grants), the `gen_referral_code()` helper, and their RLS. |
 | 20 | `migrations/0020_pro_until_entitlement.sql` | Extends `is_pro()` so reward time (`pro_until`) unlocks Pro alongside the paid `plan`, and adds `pro_until` to the self-escalation guard so realtors can't self-grant it. |
-| 21 | `seed.sql` *(optional)* | Inserts one brokerage, one approved realtor (+ its `auth.users` row), one published project with an active public page, public media, private rows (commercials, broker portal, incentive, floorplan, restricted document), and a sample lead — enough to smoke-test the public view and the RLS boundary. |
+| 21 | `migrations/0021_rental_referrals_and_suggestions.sql` | Adds `projects.listing_type` + `price_period`, the `project_rental_referral_terms` (PBR referral params + fee) and `platform_suggestions` tables, and the broker-only **security-invoker** `referral_opportunities_view`. No `worksheets` table — `buyer_mandates` already covers that concept. |
+| 22 | `migrations/0022_rental_referrals_and_suggestions_rls.sql` | Enables RLS on the two new tables, sets grants (incl. `service_role`), and creates their policies (referral terms: approved-realtor read, admin + granted-developer write; suggestions: submitter + admin). |
+| 23 | `seed.sql` *(optional)* | Inserts the base smoke-test fixtures (brokerage, approved realtor + `auth.users` row, a published project with public page/media, private rows, a sample lead) plus a published **for-rent** project with referral terms and a suggestion — enough to smoke-test the public view, the referral feed, and the RLS boundary. |
 
 > The SQL Editor runs as a superuser, so it bypasses RLS — migrations and seed
 > data apply cleanly.
@@ -59,7 +70,11 @@ Run each file as its own query, in this exact order:
   through `broker_projects_view`, which omits these columns.
 - Broker-only data requires an **approved** realtor.
 - Developer document access is **grant-based and uploader-scoped**.
-- Review queues and `audit_logs` are **admin-only**.
+- `project_rental_referral_terms` is broker-readable (approved realtors) and
+  writable by admins + the granted developer. `referral_opportunities_view` is
+  **security invoker** (broker-only) — it respects the caller's RLS, unlike the
+  public definer views, so it won't trip the linter's "security definer view" notice.
+- Review queues, `platform_suggestions` review, and `audit_logs` are **admin-only**.
 
 ---
 

@@ -19,16 +19,22 @@ async function pendingCount(
 }
 
 export default async function AdminOverview() {
-  const [verifications, submissions, updates, proposals, rfpResponses] =
-    await Promise.all([
+  const [
+    verifications,
+    submissions,
+    updates,
+    proposals,
+    rfpResponses,
+    mediaCandidates,
+    suggestions,
+  ] = await Promise.all([
     pendingCount("verification_requests", ["pending"]),
     pendingCount("property_submissions", ["pending_review", "needs_changes"]),
-    pendingCount("property_update_requests", [
-      "pending_review",
-      "needs_changes",
-    ]),
+    pendingCount("property_update_requests", ["pending_review", "needs_changes"]),
     pendingCount("project_proposals", ["submitted", "under_review"]),
     pendingCount("deal_rfp_proposals", ["submitted"]),
+    pendingCount("project_media_candidates", ["pending"]),
+    pendingCount("platform_suggestions", ["new"]),
   ]);
 
   const cards = [
@@ -56,6 +62,16 @@ export default async function AdminOverview() {
       label: "RFP responses",
       count: rfpResponses,
       href: "/dashboard/admin/rfps",
+    },
+    {
+      label: "Media candidates",
+      count: mediaCandidates,
+      href: "/dashboard/admin/media-candidates",
+    },
+    {
+      label: "New suggestions",
+      count: suggestions,
+      href: "/dashboard/admin/suggestions",
     },
   ];
 
