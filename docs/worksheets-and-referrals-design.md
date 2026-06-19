@@ -2,6 +2,26 @@
 
 Status: **DRAFT — pressure-test before building.** No migrations applied yet.
 
+## 0. Decisions locked (v0.1)
+
+From review:
+- **Client PII → developers: full contact on submission.** The operator's
+  leasing team sees the client's name/email/phone immediately — this is a
+  referral hand-off, so speed wins. The submission still snapshots who/when for
+  attribution. (Revisit if agents push back on losing relationship control.)
+- **Service mode: support BOTH.** Default is **developer self-serve** (granted
+  operator accounts set their own referral terms and work their inbox). When we
+  sell a **full-service** engagement, LIQWD admin does that work instead. Driven
+  by a `service_mode` flag per project/operator so we can flip per deal while we
+  learn where the market lands — the goal is SaaS self-serve, but we won't know
+  until we test live.
+- **Payouts: status-based, no on-platform billing.** The PBR leasing team drives
+  the status so the agent always sees live progress, including client-side
+  outcomes (client didn't submit / not eligible / accepted). On **accepted**
+  (green check), the agent's brokerage invoices the PBR operator off-platform.
+  We only track `payout_status` for reporting.
+- **Next step: iterate on this doc — do NOT write migrations yet.**
+
 ## 1. The thesis
 
 A **worksheet** is the structured pre-offer an agent submits on a client's
@@ -150,8 +170,14 @@ create table if not exists public.worksheet_submissions (
     check (submission_kind in ('purchase_worksheet','rental_referral')),
   constraint worksheet_submissions_status_chk
     check (status in
-      ('submitted','received','under_review','allocated','leased',
-       'waitlisted','declined','withdrawn')),
+      ('submitted',             -- agent sent it
+       'received',              -- operator's leasing team has it
+       'in_progress',           -- being worked
+       'client_not_submitting', -- client chose not to proceed
+       'client_ineligible',     -- client did not meet criteria
+       'accepted',              -- accepted / leased (green check) -> agent's office invoices PBR
+       'declined',              -- operator declined
+       'withdrawn')),           -- agent pulled it
   constraint worksheet_submissions_payout_chk
     check (payout_status in ('none','eligible','invoiced','paid','void')),
   constraint worksheet_submissions_unique unique (worksheet_id, project_id)
@@ -184,10 +210,14 @@ create table if not exists public.project_referral_terms (
   required_fields       text[],               -- worksheet fields that must be present
   -- routing to the operator's in-house leasing contact
   routes_to_profile_id  uuid references public.profiles (id) on delete set null,
+  -- who works this project's inbox: granted developer vs LIQWD admin
+  service_mode          text not null default 'self_serve', -- self_serve|full_service
   is_active             boolean not null default true,
   created_at            timestamptz not null default now(),
   updated_at            timestamptz not null default now(),
   constraint project_referral_terms_project_unique unique (project_id),
+  constraint project_referral_terms_service_mode_chk
+    check (service_mode in ('self_serve','full_service')),
   constraint project_referral_terms_fee_type_chk
     check (referral_fee_type is null or referral_fee_type in
       ('months_rent','percent_first_year','flat')),
@@ -268,11 +298,15 @@ where p.listing_type in ('for_rent','mixed_use')
     (their inbox).
   - `insert`: approved realtor, `with check` they own the worksheet and
     `submitted_by_profile_id = auth.uid()`.
-  - `update`: admin; developer (status transitions on their project, via grant);
-    owner (only `withdrawn`). Enforce allowed transitions in app/server action.
+  - `update`: **status is driven by whoever owns that project's inbox.** If
+    `service_mode = 'self_serve'`, the granted developer
+    (`has_project_access(project_id,'developer_restricted')`); if `full_service`,
+    LIQWD admin. Admin can always act (override). The owning agent may only set
+    `withdrawn`. Allowed transitions enforced in the server action.
   - `delete`: admin only.
 - **`project_referral_terms`** — `select` for `is_admin() or is_approved()`
-  (agents need to see terms); write admin-only in v1.
+  (agents need to see terms). `write`: admin always; the granted developer when
+  `service_mode = 'self_serve'` (so operators self-manage their own terms).
 - Grant `select on public.referral_opportunities_view to authenticated`.
 
 ## 6. App surfaces (Next.js App Router)
@@ -301,24 +335,19 @@ minimal interfaces.
 - `0005_worksheets_rls.sql` — enable RLS, grants, policies per §5.
 - Update `supabase/README.md` run order + `seed.sql` smoke fixtures.
 
-## 9. Open questions to pressure-test (need your call)
+## 9. Open questions
 
-- **Q1 — Client PII to developers.** On a rental referral, does the operator's
-  leasing team see full client contact at submission, or a masked profile until
-  they accept? (Privacy vs. friction. Recommend: masked until accepted, then
-  reveal — and log the reveal.)
+Resolved (see §0): ~~Q1 PII~~ → full contact on submission. ~~Q3 service mode~~
+→ both, via `service_mode`. ~~Q6 payouts~~ → status-based, off-platform invoicing.
+
+Still open — need your call:
 - **Q2 — Rent pricing model.** Reuse `price_from_public/to` as monthly for
   `for_rent`, or add an explicit `price_period`? (Affects the feed + worksheet
   budget matching.)
-- **Q3 — Developer self-serve.** v1 admin-manages `project_referral_terms` and
-  status transitions, or do we let granted developers edit their own terms /
-  work their inbox now?
 - **Q4 — Resubmission.** One submission per (worksheet, project) — or allow a
-  re-submit after a decline?
+  re-submit after a decline / `client_not_submitting`?
 - **Q5 — Auto-lead.** Create a `project_leads` row automatically on every
   submission (unifies reporting), or only link when one already exists?
-- **Q6 — Payout depth in v1.** Stub `payout_status` only (recommended), or build
-  the brokerage-to-brokerage payout ledger now?
 
 ## 10. Why this order
 
@@ -327,3 +356,63 @@ useful on its own (agent CRM + allocation tool) and is exactly the artifact we
 can walk into a PBR operator with ("agents are already routing matched, qualified
 referrals — here's the dashboard, pay per signed lease"). Payments/billing come
 once we see real submission volume.
+
+## 11. Related feature: Realtor Suggestions ("Got an idea?")
+
+A realtor-facing inbox to the platform: feature requests, gripes, business
+opportunities, partnership ideas. The angle is collaborative — *if a realtor's
+idea helps the platform and the realtor at the same time, we just build it.* It
+also closes the loop: realtors watch their idea move from `new` → `shipped`, so
+they feel like partners, not users. Reuses the exact pattern of
+`property_submissions` / `property_update_requests` (queue + admin review).
+
+### 11.1 `platform_suggestions`
+
+```sql
+create table if not exists public.platform_suggestions (
+  id                      uuid primary key default gen_random_uuid(),
+  submitted_by_profile_id uuid not null references public.profiles (id) on delete cascade,
+  category                text not null default 'idea',
+  title                   text not null,
+  body                    text,
+  -- the "let's build it together" angle
+  open_to_collaborate     boolean not null default false,  -- realtor wants to help shape/test it
+  contact_ok              boolean not null default true,    -- ok for us to reach out
+  -- review + closing the loop
+  status                  text not null default 'new',
+  public_response         text,                 -- shown back to the submitter
+  admin_notes             text,                 -- internal only
+  reviewed_by_user_id     uuid references public.profiles (id) on delete set null,
+  reviewed_at             timestamptz,
+  created_at              timestamptz not null default now(),
+  updated_at              timestamptz not null default now(),
+  constraint platform_suggestions_category_chk
+    check (category in
+      ('idea','feature_request','complaint','business_opportunity','other')),
+  constraint platform_suggestions_status_chk
+    check (status in
+      ('new','under_review','planned','in_progress','shipped','declined'))
+);
+create index if not exists idx_platform_suggestions_submitter on public.platform_suggestions (submitted_by_profile_id);
+create index if not exists idx_platform_suggestions_status    on public.platform_suggestions (status);
+```
+
+### 11.2 RLS (mirrors `property_update_requests`)
+
+- `select`: `submitted_by_profile_id = auth.uid() or is_admin()`.
+- `insert`: approved realtor, `with check (submitted_by_profile_id = auth.uid())`.
+- `update`: admin (status/response/notes); submitter may edit own while
+  `status = 'new'`.
+- `delete`: admin only. Add to the `updated_at` trigger list + RLS enable list.
+
+### 11.3 Surfaces
+
+- Sidebar nav item: **"Got an idea?"** (or "Suggest a feature").
+- `dashboard/ideas/` — submit form + the realtor's own list with live status.
+- Admin queue alongside the existing review queues
+  (`dashboard/admin/suggestions/`), with a count on the admin overview.
+
+### 11.4 Future (not v1)
+
+Public roadmap + upvoting (Canny-style) so realtors see and vote on each other's
+ideas; a "we built your idea" recognition/credit to deepen the relationship.
