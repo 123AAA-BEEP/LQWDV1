@@ -43,6 +43,8 @@ export async function updateProject(formData: FormData) {
       description_long: str(formData.get("description_long")),
       sales_status: str(formData.get("sales_status")),
       construction_status: str(formData.get("construction_status")),
+      listing_type: str(formData.get("listing_type")) ?? "for_sale",
+      price_period: str(formData.get("price_period")) ?? "total",
       occupancy_estimate_text: str(formData.get("occupancy_estimate_text")),
       price_from_public: num(formData.get("price_from_public")),
       price_to_public: num(formData.get("price_to_public")),
@@ -190,4 +192,40 @@ export async function unpublishProject(formData: FormData) {
 
   revalidatePath(`/dashboard/admin/projects/${projectId}`);
   revalidatePath("/dashboard/admin/projects");
+}
+
+/**
+ * Upserts a project's purpose-built-rental (PBR) referral terms (admin-only).
+ * Approved realtors read these via RLS; published rental projects that accept
+ * referrals surface in the broker-only referral_opportunities_view feed.
+ */
+export async function saveRentalReferralTerms(formData: FormData) {
+  const projectId = String(formData.get("project_id") ?? "");
+  if (!projectId) return;
+
+  const supabase = await createClient();
+  await assertAdmin(supabase);
+
+  await supabase.from("project_rental_referral_terms").upsert(
+    {
+      project_id: projectId,
+      accepts_referrals: formData.get("accepts_referrals") === "on",
+      referral_fee_type: str(formData.get("referral_fee_type")),
+      referral_fee_value: num(formData.get("referral_fee_value")),
+      referral_fee_notes: str(formData.get("referral_fee_notes")),
+      payout_terms: str(formData.get("payout_terms")),
+      min_lease_term_months: num(formData.get("min_lease_term_months")),
+      min_household_income: num(formData.get("min_household_income")),
+      min_credit_band: str(formData.get("min_credit_band")),
+      pets_allowed: bool(formData.get("pets_allowed")),
+      earliest_move_in: str(formData.get("earliest_move_in")),
+      latest_move_in: str(formData.get("latest_move_in")),
+      service_mode: str(formData.get("service_mode")) ?? "self_serve",
+      is_active: formData.get("is_active") === "on",
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "project_id" },
+  );
+
+  revalidatePath(`/dashboard/admin/projects/${projectId}`);
 }

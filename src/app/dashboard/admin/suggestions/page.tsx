@@ -2,11 +2,14 @@ import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardBody } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Field, Select, Textarea } from "@/components/ui/field";
 import {
   SUGGESTION_STATUS,
   SUGGESTION_CATEGORY_LABELS,
   type SuggestionStatus,
 } from "@/lib/status";
+import { setSuggestionStatus } from "./actions";
 
 export const metadata: Metadata = { title: "Suggestions" };
 export const dynamic = "force-dynamic";
@@ -20,6 +23,7 @@ interface Row {
   open_to_collaborate: boolean;
   contact_ok: boolean;
   public_response: string | null;
+  admin_notes: string | null;
   created_at: string;
   submitter: {
     first_name: string | null;
@@ -30,6 +34,7 @@ interface Row {
 
 const OPEN_STATUSES = ["new", "under_review", "planned", "in_progress"];
 const DECIDED_STATUSES = ["shipped", "declined"];
+const STATUS_OPTIONS = Object.keys(SUGGESTION_STATUS) as SuggestionStatus[];
 
 function submitterName(r: Row): string {
   return (
@@ -44,7 +49,7 @@ function submitterName(r: Row): string {
 export default async function SuggestionsQueue() {
   const supabase = await createClient();
   const select =
-    "id, category, title, body, status, open_to_collaborate, contact_ok, public_response, created_at, submitter:profiles!submitted_by_profile_id(first_name,last_name,email)";
+    "id, category, title, body, status, open_to_collaborate, contact_ok, public_response, admin_notes, created_at, submitter:profiles!submitted_by_profile_id(first_name,last_name,email)";
 
   const [{ data: open }, { data: decided }] = await Promise.all([
     supabase
@@ -107,6 +112,54 @@ export default async function SuggestionsQueue() {
                     {r.contact_ok ? "OK to contact" : "No contact"}
                   </Badge>
                 </div>
+
+                <form
+                  action={setSuggestionStatus}
+                  className="space-y-3 border-t border-slate-100 pt-3"
+                >
+                  <input type="hidden" name="suggestion_id" value={r.id} />
+                  <div className="grid gap-3 sm:grid-cols-[12rem_1fr]">
+                    <Field label="Status" htmlFor={`status-${r.id}`}>
+                      <Select
+                        id={`status-${r.id}`}
+                        name="status"
+                        defaultValue={r.status}
+                      >
+                        {STATUS_OPTIONS.map((s) => (
+                          <option key={s} value={s}>
+                            {SUGGESTION_STATUS[s].label}
+                          </option>
+                        ))}
+                      </Select>
+                    </Field>
+                    <Field
+                      label="Public response"
+                      htmlFor={`response-${r.id}`}
+                      hint="Shown back to the realtor who submitted this."
+                    >
+                      <Textarea
+                        id={`response-${r.id}`}
+                        name="public_response"
+                        defaultValue={r.public_response ?? ""}
+                        placeholder="Optional reply to the submitter…"
+                      />
+                    </Field>
+                  </div>
+                  <Field
+                    label="Internal notes"
+                    htmlFor={`notes-${r.id}`}
+                    hint="Admin-only; not shown to the realtor."
+                  >
+                    <Textarea
+                      id={`notes-${r.id}`}
+                      name="admin_notes"
+                      defaultValue={r.admin_notes ?? ""}
+                    />
+                  </Field>
+                  <Button type="submit" size="sm">
+                    Save
+                  </Button>
+                </form>
               </CardBody>
             </Card>
           ))
