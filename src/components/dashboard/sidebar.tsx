@@ -21,6 +21,7 @@ import {
   Zap,
   Sparkles,
   Gift,
+  Inbox,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
@@ -92,6 +93,7 @@ const DEVELOPER_SECTIONS: NavSection[] = [
     items: [
       { href: "/dashboard/deal-requests", label: "Move Inventory", icon: Handshake },
       { href: "/dashboard/buyer-mandates", label: "Ready Buyers", icon: ClipboardList },
+      { href: "/dashboard/referrals", label: "Rental referrals", icon: Inbox },
       { href: "/dashboard/developer", label: "Connections", icon: CreditCard },
     ],
   },
@@ -218,12 +220,12 @@ export function Sidebar({
       className={cn(
         "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
         homeActive
-          ? "bg-brand-50 text-brand-800"
+          ? "bg-slate-100 text-slate-900"
           : "text-slate-600 hover:bg-slate-50 hover:text-slate-900",
       )}
     >
       <LayoutDashboard
-        className={cn("size-4 shrink-0", homeActive ? "text-brand-600" : "text-slate-400")}
+        className={cn("size-4 shrink-0", homeActive ? "text-slate-600" : "text-slate-400")}
         strokeWidth={1.75}
         aria-hidden
       />
