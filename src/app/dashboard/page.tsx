@@ -19,6 +19,7 @@ import {
   Mail,
   BarChart3,
   Gift,
+  Coins,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -35,6 +36,8 @@ import { Card, CardBody } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatPriceBand } from "@/lib/types";
 import type { Profile } from "@/lib/types";
+import { cn } from "@/lib/cn";
+import type { ReactNode } from "react";
 
 export const metadata: Metadata = { title: "Dashboard" };
 export const dynamic = "force-dynamic";
@@ -140,85 +143,95 @@ export default async function DashboardHome() {
         </div>
       ) : null}
 
-      <div>
-        <h2 className="mb-3 text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
-          Quick actions
-        </h2>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <ActionCard
-            icon={Building2}
-            title="Browse projects"
-            body="Search active new-home projects across Ontario."
-            href="/dashboard/projects"
-            cta="View projects"
-            enabled={approved}
-            lockedHint="Available after verification"
-          />
-          <ActionCard
-            icon={Handshake}
-            title="Deal Desk"
-            body={
-              ultra
-                ? "Respond to developer deal requests — bulk buys, listing mandates, and full developments."
-                : "Developer deal requests — bulk buys, listing mandates, full developments. Unlock with Ultra."
-            }
-            href="/dashboard/deal-desk"
-            cta={ultra ? "Open Deal Desk" : "See what's inside"}
-            enabled
-            ultra={!ultra}
-          />
-          <ActionCard
-            icon={FileText}
-            title="My proposals"
-            body="Track the counter-offers you've sent to developers and where each stands."
-            href="/dashboard/proposals"
-            cta="View proposals"
-            enabled={approved}
-            lockedHint="Available after verification"
-          />
-          <ActionCard
-            icon={ClipboardCheck}
-            title="Buyer Mandate"
-            body={
-              pro
-                ? "Submit a hard-to-match buyer — matching inventory surfaces to you automatically."
-                : "A Pro feature: submit a buyer mandate and let matching inventory come to you."
-            }
-            href={pro ? "/dashboard/buyer-mandates/new" : "/dashboard/upgrade"}
-            cta={pro ? "New mandate" : "Unlock with Pro"}
-            enabled={approved}
-            lockedHint="Available after verification"
-          />
-          <ActionCard
-            icon={PlusCircle}
-            title="Submit a project"
-            body="Add a new project for admin review."
-            href="/dashboard/submit"
-            cta="Submit project"
-            enabled
-          />
-          <ActionCard
-            icon={Gift}
-            title="Refer & earn"
-            body="Invite a realtor — you both get a free month of Pro when they join."
-            href="/dashboard/refer"
-            cta="Get your invite link"
-            enabled
-          />
-          <ActionCard
-            icon={approved ? UserCircle : ShieldCheck}
-            title={approved ? "Your profile" : "Get verified"}
-            body={
-              approved
-                ? "Update your details and brokerage info."
-                : "Submit your RECO registration details to verify."
-            }
-            href={approved ? "/dashboard/profile" : "/dashboard/verify"}
-            cta={approved ? "Edit profile" : "Start verification"}
-            enabled
-          />
-        </div>
-      </div>
+      <HomeSection label="Earn" accent>
+        <ActionCard
+          icon={Coins}
+          title="Quick Wins"
+          body="Get paid to refer renters to purpose-built rentals — the building's team handles the rest."
+          href="/dashboard/quick-wins"
+          cta="See who's paying"
+          enabled={approved}
+          lockedHint="Available after verification"
+        />
+        <ActionCard
+          icon={Handshake}
+          title="Deal Desk"
+          body={
+            ultra
+              ? "Respond to developer deal requests — bulk buys, listing mandates, and full developments."
+              : "Developer deal requests — bulk buys, listing mandates, full developments. Unlock with Ultra."
+          }
+          href="/dashboard/deal-desk"
+          cta={ultra ? "Open Deal Desk" : "See what's inside"}
+          enabled
+          ultra={!ultra}
+        />
+        <ActionCard
+          icon={FileText}
+          title="My proposals"
+          body="Track the counter-offers you've sent to developers and where each stands."
+          href="/dashboard/proposals"
+          cta="View proposals"
+          enabled={approved}
+          lockedHint="Available after verification"
+        />
+        <ActionCard
+          icon={Gift}
+          title="Refer & earn"
+          body="Invite a realtor — you both get a free month of Pro when they join."
+          href="/dashboard/refer"
+          cta="Get your invite link"
+          enabled
+        />
+      </HomeSection>
+
+      <HomeSection label="Explore">
+        <ActionCard
+          icon={Building2}
+          title="Browse projects"
+          body="Search active new-home projects across Ontario."
+          href="/dashboard/projects"
+          cta="View projects"
+          enabled={approved}
+          lockedHint="Available after verification"
+        />
+        <ActionCard
+          icon={ClipboardCheck}
+          title="Buyer Mandate"
+          body={
+            pro
+              ? "Submit a hard-to-match buyer — matching inventory surfaces to you automatically."
+              : "A Pro feature: submit a buyer mandate and let matching inventory come to you."
+          }
+          href={pro ? "/dashboard/buyer-mandates/new" : "/dashboard/upgrade"}
+          cta={pro ? "New mandate" : "Unlock with Pro"}
+          enabled={approved}
+          lockedHint="Available after verification"
+        />
+      </HomeSection>
+
+      <HomeSection label="Account">
+        <ActionCard
+          icon={PlusCircle}
+          title="Submit a project"
+          body="Add a new project for admin review."
+          href="/dashboard/submit"
+          cta="Submit project"
+          enabled
+        />
+        <ActionCard
+          icon={approved ? UserCircle : ShieldCheck}
+          title={approved ? "Your profile" : "Get verified"}
+          body={
+            approved
+              ? "Update your details and brokerage info."
+              : "Submit your RECO registration details to verify."
+          }
+          href={approved ? "/dashboard/profile" : "/dashboard/verify"}
+          cta={approved ? "Edit profile" : "Start verification"}
+          enabled
+        />
+      </HomeSection>
 
       {approved && recent.length > 0 ? (
         <div>
@@ -353,6 +366,46 @@ function ActionCard({
         </div>
       </CardBody>
     </Card>
+  );
+}
+
+/** A labelled group of action cards on the home — mirrors the sidebar's
+ *  Earn / Explore / Account intent buckets. `accent` is the money-green "Earn"
+ *  zone. */
+function HomeSection({
+  label,
+  accent = false,
+  children,
+}: {
+  label: string;
+  accent?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      className={
+        accent
+          ? "rounded-2xl bg-emerald-50/40 p-4 ring-1 ring-emerald-100 sm:p-5"
+          : undefined
+      }
+    >
+      <h2
+        className={cn(
+          "mb-3 flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em]",
+          accent ? "text-emerald-700" : "text-slate-400",
+        )}
+      >
+        <span
+          className={cn(
+            "size-1.5 rounded-full",
+            accent ? "bg-emerald-500" : "bg-slate-300",
+          )}
+          aria-hidden
+        />
+        {label}
+      </h2>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{children}</div>
+    </div>
   );
 }
 
