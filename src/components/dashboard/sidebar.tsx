@@ -13,6 +13,7 @@ import {
   UserCircle,
   ShieldCheck,
   CreditCard,
+  Coins,
   Zap,
   Sparkles,
   Gift,
@@ -30,19 +31,33 @@ type NavItem = {
   ultra?: boolean;
 };
 
-const NAV: NavItem[] = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, exact: true },
-  { href: "/dashboard/projects", label: "Projects", icon: Building2 },
-  { href: "/dashboard/submit", label: "Submit project", icon: PlusCircle },
-  { href: "/dashboard/proposals", label: "My proposals", icon: FileText },
-  { href: "/dashboard/buyer-mandates", label: "Buyer Mandates", icon: ClipboardList },
+type Accent = "earn" | "explore" | "account";
+
+const HOME: NavItem = {
+  href: "/dashboard",
+  label: "Dashboard",
+  icon: LayoutDashboard,
+  exact: true,
+};
+
+// Realtor nav, grouped by intent: make money, do research, manage your account.
+const EARN: NavItem[] = [
+  { href: "/dashboard/quick-wins", label: "Quick Wins", icon: Coins },
   { href: "/dashboard/deal-desk", label: "Deal Desk", icon: Handshake, ultra: true },
-  { href: "/dashboard/updates", label: "My updates", icon: Bell },
+  { href: "/dashboard/proposals", label: "My proposals", icon: FileText },
   { href: "/dashboard/refer", label: "Refer & earn", icon: Gift },
+];
+const EXPLORE: NavItem[] = [
+  { href: "/dashboard/projects", label: "Projects", icon: Building2 },
+  { href: "/dashboard/buyer-mandates", label: "Buyer Mandates", icon: ClipboardList },
+];
+const ACCOUNT: NavItem[] = [
+  { href: "/dashboard/submit", label: "Submit project", icon: PlusCircle },
+  { href: "/dashboard/updates", label: "My updates", icon: Bell },
   { href: "/dashboard/profile", label: "Profile", icon: UserCircle },
 ];
 
-// Developers get a trimmed, role-appropriate nav.
+// Developers get a trimmed, role-appropriate nav (flat — no earn/explore split).
 const DEV_NAV: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { href: "/dashboard/deal-requests", label: "Move Inventory", icon: Handshake },
@@ -50,6 +65,12 @@ const DEV_NAV: NavItem[] = [
   { href: "/dashboard/developer", label: "Connections", icon: CreditCard },
   { href: "/dashboard/profile", label: "Profile", icon: UserCircle },
 ];
+
+const DOT: Record<Accent, string> = {
+  earn: "bg-emerald-500",
+  explore: "bg-brand-500",
+  account: "bg-slate-300",
+};
 
 function initials(name: string) {
   return (
@@ -80,11 +101,57 @@ export function Sidebar({
   isDeveloper?: boolean;
 }) {
   const pathname = usePathname();
-  const nav: NavItem[] = isDeveloper
-    ? DEV_NAV
-    : isAdmin
-      ? [...NAV, { href: "/dashboard/admin", label: "Admin", icon: ShieldCheck }]
-      : NAV;
+
+  const renderItem = (item: NavItem, accent: Accent = "explore") => {
+    const active = item.exact
+      ? pathname === item.href
+      : pathname.startsWith(item.href);
+    const Icon = item.icon;
+    const activeCls =
+      accent === "earn"
+        ? "bg-emerald-100 text-emerald-900"
+        : "bg-brand-50 text-brand-800";
+    const iconActive = accent === "earn" ? "text-emerald-600" : "text-brand-600";
+    return (
+      <Link
+        key={item.href}
+        href={item.href}
+        className={cn(
+          "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+          active
+            ? activeCls
+            : "text-slate-600 hover:bg-slate-50 hover:text-slate-900",
+        )}
+      >
+        <Icon
+          className={cn("size-4 shrink-0", active ? iconActive : "text-slate-400")}
+          strokeWidth={1.75}
+          aria-hidden
+        />
+        <span className="flex-1">{item.label}</span>
+        {/* Deal Desk carries the Ultra mark — a visible aspirational cue. */}
+        {item.ultra && !isUltra ? (
+          <Sparkles className="size-3.5 text-amber-400" aria-hidden />
+        ) : null}
+      </Link>
+    );
+  };
+
+  const groupHeader = (label: string, accent: Accent) => (
+    <p
+      className={cn(
+        "flex items-center gap-1.5 px-3 pb-1 pt-1 text-[10px] font-semibold uppercase tracking-[0.14em]",
+        accent === "earn" ? "text-emerald-700" : "text-slate-400",
+      )}
+    >
+      <span className={cn("size-1.5 rounded-full", DOT[accent])} aria-hidden />
+      {label}
+    </p>
+  );
+
+  const accountItems = isAdmin
+    ? [...ACCOUNT, { href: "/dashboard/admin", label: "Admin", icon: ShieldCheck }]
+    : ACCOUNT;
 
   return (
     <aside className="sticky top-0 flex h-dvh w-60 shrink-0 flex-col self-start border-r border-slate-200 bg-white">
@@ -106,40 +173,31 @@ export function Sidebar({
         ) : null}
       </div>
 
-      <nav className="flex-1 space-y-1 overflow-y-auto p-3">
-        {nav.map((item) => {
-          const active = item.exact
-            ? pathname === item.href
-            : pathname.startsWith(item.href);
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                active
-                  ? "bg-brand-50 text-brand-800"
-                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900",
-              )}
-            >
-              <Icon
-                className={cn(
-                  "size-4 shrink-0",
-                  active ? "text-brand-600" : "text-slate-400",
-                )}
-                strokeWidth={1.75}
-                aria-hidden
-              />
-              <span className="flex-1">{item.label}</span>
-              {/* Deal Desk carries the Ultra mark — a visible aspirational cue. */}
-              {item.ultra && !isUltra ? (
-                <Sparkles className="size-3.5 text-amber-400" aria-hidden />
-              ) : null}
-            </Link>
-          );
-        })}
-      </nav>
+      {isDeveloper ? (
+        <nav className="flex-1 space-y-1 overflow-y-auto p-3">
+          {DEV_NAV.map((item) => renderItem(item))}
+        </nav>
+      ) : (
+        <nav className="flex-1 space-y-4 overflow-y-auto p-3">
+          <div className="space-y-1">{renderItem(HOME)}</div>
+
+          {/* Earn — the money zone, visually elevated to match the brand promise. */}
+          <div className="space-y-1 rounded-xl bg-emerald-50/50 p-1.5 ring-1 ring-emerald-100">
+            {groupHeader("Earn", "earn")}
+            {EARN.map((item) => renderItem(item, "earn"))}
+          </div>
+
+          <div className="space-y-1">
+            {groupHeader("Explore", "explore")}
+            {EXPLORE.map((item) => renderItem(item, "explore"))}
+          </div>
+
+          <div className="space-y-1">
+            {groupHeader("Account", "account")}
+            {accountItems.map((item) => renderItem(item, "account"))}
+          </div>
+        </nav>
+      )}
 
       {/* Pro upgrade chip — only for free realtors (not Pro/Ultra, not devs). */}
       {!isPro && !isUltra && !isDeveloper ? (
