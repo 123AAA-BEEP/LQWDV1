@@ -15,6 +15,7 @@ import {
   savePublicPage,
   publishProject,
   unpublishProject,
+  saveRentalReferralTerms,
 } from "./actions";
 import { ProjectUploads } from "./uploads";
 import { AgentSelect } from "./agent-select";
@@ -63,6 +64,13 @@ export default async function AdminProjectEditor({
     .maybeSingle();
   const tri = (v: boolean | null | undefined) =>
     v === true ? "true" : v === false ? "false" : "";
+
+  // PBR rental referral terms (admin-writable; broker-readable).
+  const { data: referral } = await supabase
+    .from("project_rental_referral_terms")
+    .select("*")
+    .eq("project_id", id)
+    .maybeSingle();
 
   // All realtors are assignable; the editor flags any who aren't approved +
   // public-profile-enabled (their card won't render on the public page).
@@ -281,6 +289,31 @@ export default async function AdminProjectEditor({
                   ))}
                 </Select>
               </Field>
+              <Field label="Listing type" htmlFor="listing_type">
+                <Select
+                  id="listing_type"
+                  name="listing_type"
+                  defaultValue={project.listing_type ?? "for_sale"}
+                >
+                  <option value="for_sale">For sale</option>
+                  <option value="for_rent">For rent</option>
+                  <option value="mixed_use">Mixed use</option>
+                </Select>
+              </Field>
+              <Field
+                label="Price period"
+                htmlFor="price_period"
+                hint="Use “Monthly” for rentals; price from/to are read as monthly rent."
+              >
+                <Select
+                  id="price_period"
+                  name="price_period"
+                  defaultValue={project.price_period ?? "total"}
+                >
+                  <option value="total">Total (sale)</option>
+                  <option value="monthly">Monthly (rent)</option>
+                </Select>
+              </Field>
               <Field label="Price from (public)" htmlFor="price_from_public">
                 <Input
                   id="price_from_public"
@@ -431,6 +464,161 @@ export default async function AdminProjectEditor({
               />
             </Field>
             <Button type="submit">Save commission details</Button>
+          </form>
+        </CardBody>
+      </Card>
+
+      {/* Rental referral terms (PBR) */}
+      <Card>
+        <CardBody>
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold text-ink">Rental referral terms (PBR)</h3>
+            <Badge tone="brand">Rental</Badge>
+          </div>
+          <p className="mt-1 text-sm text-slate-500">
+            For purpose-built-rental projects. When enabled and the project is
+            published with listing type “for rent”, it appears in the broker-only
+            referral feed.
+          </p>
+          <form action={saveRentalReferralTerms} className="mt-4 space-y-4">
+            <input type="hidden" name="project_id" value={id} />
+            <div className="flex flex-wrap gap-6">
+              <label className="flex items-center gap-2 text-sm text-slate-600">
+                <input
+                  type="checkbox"
+                  name="accepts_referrals"
+                  defaultChecked={referral?.accepts_referrals ?? false}
+                  className="size-4"
+                />
+                Accepts referrals
+              </label>
+              <label className="flex items-center gap-2 text-sm text-slate-600">
+                <input
+                  type="checkbox"
+                  name="is_active"
+                  defaultChecked={referral?.is_active ?? true}
+                  className="size-4"
+                />
+                Active
+              </label>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field
+                label="Service mode"
+                htmlFor="service_mode"
+                hint="Who works the referral inbox."
+              >
+                <Select
+                  id="service_mode"
+                  name="service_mode"
+                  defaultValue={referral?.service_mode ?? "self_serve"}
+                >
+                  <option value="self_serve">Self-serve (operator)</option>
+                  <option value="full_service">Full-service (LIQWD)</option>
+                </Select>
+              </Field>
+              <Field label="Fee type" htmlFor="referral_fee_type">
+                <Select
+                  id="referral_fee_type"
+                  name="referral_fee_type"
+                  defaultValue={referral?.referral_fee_type ?? ""}
+                >
+                  <option value="">—</option>
+                  <option value="months_rent">Months of rent</option>
+                  <option value="percent_first_year">% of first year</option>
+                  <option value="flat">Flat fee</option>
+                </Select>
+              </Field>
+              <Field
+                label="Fee value"
+                htmlFor="referral_fee_value"
+                hint="e.g. 1 (month), 50 (%), 750 (flat $)."
+              >
+                <Input
+                  id="referral_fee_value"
+                  name="referral_fee_value"
+                  type="number"
+                  step="0.01"
+                  defaultValue={referral?.referral_fee_value ?? ""}
+                />
+              </Field>
+              <Field label="Min lease (months)" htmlFor="min_lease_term_months">
+                <Input
+                  id="min_lease_term_months"
+                  name="min_lease_term_months"
+                  type="number"
+                  defaultValue={referral?.min_lease_term_months ?? ""}
+                />
+              </Field>
+              <Field label="Min household income" htmlFor="min_household_income">
+                <Input
+                  id="min_household_income"
+                  name="min_household_income"
+                  type="number"
+                  defaultValue={referral?.min_household_income ?? ""}
+                />
+              </Field>
+              <Field label="Min credit band" htmlFor="min_credit_band">
+                <Select
+                  id="min_credit_band"
+                  name="min_credit_band"
+                  defaultValue={referral?.min_credit_band ?? ""}
+                >
+                  <option value="">—</option>
+                  <option value="excellent">Excellent</option>
+                  <option value="good">Good</option>
+                  <option value="fair">Fair</option>
+                  <option value="poor">Poor</option>
+                  <option value="unknown">Unknown</option>
+                </Select>
+              </Field>
+              <Field label="Pets allowed" htmlFor="pets_allowed">
+                <Select
+                  id="pets_allowed"
+                  name="pets_allowed"
+                  defaultValue={tri(referral?.pets_allowed)}
+                >
+                  <option value="">Unknown</option>
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
+                </Select>
+              </Field>
+              <Field label="Earliest move-in" htmlFor="earliest_move_in">
+                <Input
+                  id="earliest_move_in"
+                  name="earliest_move_in"
+                  type="date"
+                  defaultValue={referral?.earliest_move_in ?? ""}
+                />
+              </Field>
+              <Field label="Latest move-in" htmlFor="latest_move_in">
+                <Input
+                  id="latest_move_in"
+                  name="latest_move_in"
+                  type="date"
+                  defaultValue={referral?.latest_move_in ?? ""}
+                />
+              </Field>
+            </div>
+            <Field label="Fee notes (broker-visible)" htmlFor="referral_fee_notes">
+              <Textarea
+                id="referral_fee_notes"
+                name="referral_fee_notes"
+                defaultValue={referral?.referral_fee_notes ?? ""}
+              />
+            </Field>
+            <Field
+              label="Payout terms"
+              htmlFor="payout_terms"
+              hint="e.g. invoiced 30 days after lease commencement, brokerage-to-brokerage."
+            >
+              <Textarea
+                id="payout_terms"
+                name="payout_terms"
+                defaultValue={referral?.payout_terms ?? ""}
+              />
+            </Field>
+            <Button type="submit">Save referral terms</Button>
           </form>
         </CardBody>
       </Card>
