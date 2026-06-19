@@ -15,6 +15,7 @@ import {
   CreditCard,
   Zap,
   Sparkles,
+  Gift,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
@@ -37,6 +38,7 @@ const NAV: NavItem[] = [
   { href: "/dashboard/buyer-mandates", label: "Buyer Mandates", icon: ClipboardList },
   { href: "/dashboard/deal-desk", label: "Deal Desk", icon: Handshake, ultra: true },
   { href: "/dashboard/updates", label: "My updates", icon: Bell },
+  { href: "/dashboard/refer", label: "Refer & earn", icon: Gift },
   { href: "/dashboard/profile", label: "Profile", icon: UserCircle },
 ];
 

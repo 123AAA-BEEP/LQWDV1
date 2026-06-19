@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { assertAdmin } from "@/lib/admin";
+import { awardReferralVerificationBonus } from "@/lib/rewards";
 
 type Decision = "approved" | "rejected" | "suspended";
 
@@ -38,6 +39,12 @@ export async function decideVerification(formData: FormData) {
     .from("profiles")
     .update({ verification_status: decision })
     .eq("id", profileId);
+
+  // If this agent was referred, pay the referral verification bonus to both
+  // parties (idempotent; no-op if they weren't referred).
+  if (decision === "approved") {
+    await awardReferralVerificationBonus(profileId);
+  }
 
   revalidatePath("/dashboard/admin/verifications");
   revalidatePath("/dashboard/admin");

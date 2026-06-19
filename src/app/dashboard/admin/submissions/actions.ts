@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { assertAdmin } from "@/lib/admin";
 import { slugify } from "@/lib/slug";
+import { rewardSubmissionApproved } from "@/lib/rewards";
 
 /**
  * Approves a submission: creates a DRAFT canonical project from the submitted
@@ -19,7 +20,9 @@ export async function approveSubmission(formData: FormData) {
 
   const { data: submission } = await supabase
     .from("property_submissions")
-    .select("id, project_name, builder_name, city, address_text, project_id")
+    .select(
+      "id, project_name, builder_name, city, address_text, project_id, submitted_by_user_id",
+    )
     .eq("id", submissionId)
     .maybeSingle();
   if (!submission) return;
@@ -52,6 +55,14 @@ export async function approveSubmission(formData: FormData) {
       reviewed_at: new Date().toISOString(),
     })
     .eq("id", submissionId);
+
+  // Reward the contributor (Pro days + lead stewardship once the project has an
+  // active public page). Idempotent per submission.
+  await rewardSubmissionApproved(
+    submission.submitted_by_user_id as string,
+    submission.id as string,
+    projectId,
+  );
 
   revalidatePath("/dashboard/admin/submissions");
   revalidatePath("/dashboard/admin");

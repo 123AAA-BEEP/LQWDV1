@@ -54,9 +54,55 @@ export interface Profile {
   bio_short: string | null;
   service_area: string | null;
   is_public_profile_enabled: boolean;
+  referral_code: string | null;
+  referred_by_profile_id: string | null;
+  pro_until: string | null;
   created_at: string;
   updated_at: string;
 }
+
+/** True when a profile holds active reward-granted Pro time. */
+export function hasActivePro(profile: Pick<Profile, "pro_until">): boolean {
+  return !!profile.pro_until && new Date(profile.pro_until).getTime() > Date.now();
+}
+
+export type ReferralStatus = "pending" | "qualified" | "void";
+
+export interface Referral {
+  id: string;
+  referrer_profile_id: string;
+  referred_profile_id: string;
+  status: ReferralStatus;
+  qualified_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type RewardReason =
+  | "referral_referrer"
+  | "referral_referred"
+  | "submission_approved"
+  | "update_approved"
+  | "manual";
+
+export interface RewardLedgerEntry {
+  id: string;
+  profile_id: string;
+  reason: RewardReason;
+  days_granted: number;
+  source_type: string | null;
+  source_id: string | null;
+  metadata: Record<string, unknown>;
+  created_at: string;
+}
+
+export const REWARD_REASON_LABELS: Record<RewardReason, string> = {
+  referral_referrer: "Referral — invited a colleague",
+  referral_referred: "Referral — joined via invite",
+  submission_approved: "Approved project submission",
+  update_approved: "Approved project update",
+  manual: "Manual adjustment",
+};
 
 export interface ProjectListItem {
   id: string;

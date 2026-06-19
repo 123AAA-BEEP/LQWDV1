@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { linkReferralOnSignup } from "@/lib/rewards";
 import type { Profile } from "@/lib/types";
 
 /**
@@ -57,6 +58,10 @@ export async function requireUserProfile(): Promise<{
 
     if (inserted) {
       profile = inserted;
+      // First profile load == the invited agent has a session (i.e. confirmed
+      // their account). Link the referral and pay the signup reward to both
+      // parties. Server-side, idempotent, and safe when no code was used.
+      await linkReferralOnSignup(inserted.id, str("referral_code_used"));
     } else {
       // The insert returned no row — almost always because a concurrent request
       // (the layout and page both call this on first load) won the race and
