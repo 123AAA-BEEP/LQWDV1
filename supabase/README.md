@@ -30,7 +30,9 @@ Run each file as its own query, in this exact order:
 | 1 | `migrations/0001_structural.sql` | Creates all tables, check constraints, FKs, unique constraints, indexes, the shared `updated_at` trigger, and the two public-safe **definer** views: `public_projects_view` and `public_realtor_cards`. |
 | 2 | `migrations/0002_rls_policies.sql` | Adds helper functions (`is_admin`, `is_approved`, `has_project_access`, `safe_uuid`), the profile escalation-guard trigger, enables RLS on every table, sets base grants, and creates all access policies. |
 | 3 | `migrations/0003_storage.sql` | Creates the `avatars`, `logos`, `project-media`, and `project-documents` buckets and their `storage.objects` access policies. |
-| 4 | `seed.sql` *(optional)* | Inserts one brokerage, one approved realtor (+ its `auth.users` row), one published project with an active public page, public media, private rows (commercials, broker portal, incentive, floorplan, restricted document), and a sample lead — enough to smoke-test the public view and the RLS boundary. |
+| 4 | `migrations/0004_worksheets.sql` | Adds `projects.listing_type` + `price_period`, `project_leads.lead_source`, the `worksheets` / `worksheet_submissions` / `project_referral_terms` / `platform_suggestions` tables, the `credit_band_rank` + `worksheet_matches_referral_terms` helpers, and the broker-only **security-invoker** `referral_opportunities_view`. |
+| 5 | `migrations/0005_worksheets_rls.sql` | Enables RLS on the four new tables, sets grants, and creates their access policies (worksheets owner-only; submissions for agent/admin/granted developer; referral terms admin + developer self-serve; suggestions submitter + admin). |
+| 6 | `seed.sql` *(optional)* | Inserts one brokerage, one approved realtor (+ its `auth.users` row), one published project with an active public page, public media, private rows (commercials, broker portal, incentive, floorplan, restricted document), and a sample lead; plus a published **for-rent** project with referral terms, a worksheet, a submission, and a suggestion — enough to smoke-test the public view, the referral feed, and the RLS boundary. |
 
 > The SQL Editor runs as a superuser, so it bypasses RLS — migrations and seed
 > data apply cleanly.
@@ -44,7 +46,12 @@ Run each file as its own query, in this exact order:
   internal notes, import/source metadata) are never public.
 - Broker-only data requires an **approved** realtor.
 - Developer document access is **grant-based and uploader-scoped**.
-- Review queues and `audit_logs` are **admin-only**.
+- Worksheets (client PII) are **owner-private**; a referral's client contact
+  travels in `worksheet_submissions.snapshot`, which a granted developer can read
+  for their own project's inbox. `referral_opportunities_view` is **security
+  invoker** (broker-only) — it respects the caller's RLS, unlike the public
+  definer views, so it won't trip the linter's "security definer view" notice.
+- Review queues, `platform_suggestions` review, and `audit_logs` are **admin-only**.
 
 ---
 
