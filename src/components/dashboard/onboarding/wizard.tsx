@@ -25,7 +25,6 @@ import {
   ArrowRight,
   ArrowLeft,
   Clock,
-  Sparkles,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
@@ -267,17 +266,16 @@ export function OnboardingWizard() {
               others.
             </p>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            {PATHS.map((p) => (
-              <PickerTile
-                key={p.id}
-                path={p}
-                onSelect={() =>
-                  setView({ kind: "path", pathId: p.id, slide: 0 })
-                }
-              />
-            ))}
-          </div>
+          <PickerGroup
+            label="Earn today"
+            paths={PATHS.filter((p) => p.status === "now")}
+            onSelect={(id) => setView({ kind: "path", pathId: id, slide: 0 })}
+          />
+          <PickerGroup
+            label="Coming soon"
+            paths={PATHS.filter((p) => p.status === "soon")}
+            onSelect={(id) => setView({ kind: "path", pathId: id, slide: 0 })}
+          />
           {/* Supporting value — a tool, not a hard $ promise. */}
           <div className="rounded-xl border border-sky-200 bg-sky-50/50 p-4 sm:flex sm:items-center sm:justify-between sm:gap-4">
             <div className="flex items-start gap-3">
@@ -433,6 +431,30 @@ function Shell({
   );
 }
 
+function PickerGroup({
+  label,
+  paths,
+  onSelect,
+}: {
+  label: string;
+  paths: EarnPath[];
+  onSelect: (id: string) => void;
+}) {
+  if (paths.length === 0) return null;
+  return (
+    <div className="space-y-3">
+      <h2 className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+        {label}
+      </h2>
+      <div className="grid gap-4 sm:grid-cols-2">
+        {paths.map((p) => (
+          <PickerTile key={p.id} path={p} onSelect={() => onSelect(p.id)} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function PickerTile({
   path,
   onSelect,
@@ -446,30 +468,16 @@ function PickerTile({
     <button
       type="button"
       onClick={onSelect}
-      className={cn(
-        "group flex h-full flex-col items-start gap-3 rounded-xl border bg-white p-5 text-left transition-shadow hover:shadow-md",
-        path.status === "soon" ? "border-slate-200" : "border-slate-200",
-      )}
+      className="group flex h-full flex-col items-start gap-3 rounded-xl border border-slate-200 bg-white p-5 text-left transition-shadow hover:shadow-md"
     >
-      <div className="flex w-full items-center justify-between">
-        <span
-          className={cn(
-            "flex size-10 items-center justify-center rounded-lg",
-            a.chip,
-          )}
-        >
-          <Icon className="size-5" strokeWidth={1.75} aria-hidden />
-        </span>
-        {path.status === "now" ? (
-          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-700">
-            <Sparkles className="size-3" aria-hidden /> Now
-          </span>
-        ) : (
-          <span className="inline-flex items-center gap-1 rounded-full bg-slate-200/80 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">
-            <Clock className="size-3" aria-hidden /> Coming soon
-          </span>
+      <span
+        className={cn(
+          "flex size-10 items-center justify-center rounded-lg",
+          a.chip,
         )}
-      </div>
+      >
+        <Icon className="size-5" strokeWidth={1.75} aria-hidden />
+      </span>
       <div className="flex-1">
         <p className="font-semibold text-ink">{path.tile}</p>
         <p className="mt-0.5 text-sm text-slate-500">{path.tagline}</p>
