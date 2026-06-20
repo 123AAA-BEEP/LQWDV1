@@ -3,10 +3,14 @@
 > **Status: SHIPPED.** Built as a self-contained wizard at `/dashboard/start`
 > (`src/components/dashboard/onboarding/wizard.tsx`), entered from a dismissible
 > "Get started" banner on the realtor home + an Account → Get started sidebar
-> link. NOW paths are live; the rental path dead-ends at the "Coming soon" gate
-> until a PBR partner exists. The three developer-dependent paths (Deal Desk /
-> Buyer Matching / Negotiate Terms) were **left out of the tour** to keep it
-> lean ("ship what we can") — they remain discoverable in the Earn zone.
+> link.
+>
+> **Live (NOW) tour paths:** free leads · more lead pages (Pro) · refer an agent
+> · **match a tough buyer** (Buyer Matching → `/dashboard/buyer-mandates`) ·
+> **negotiate better terms** (→ `/dashboard/proposals`).
+> **Gated (Coming soon, content-complete, no CTA):** earn from rentals (needs a
+> PBR partner) · **Developer Deals** (Deal Desk — opens when developer deal flow
+> is live).
 
 **Style:** TurboTax — *one concept per slide*, plain language for a wide literacy
 range, and **lead with the money**, not the concept. Show the outcome first, then
