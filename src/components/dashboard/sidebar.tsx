@@ -23,6 +23,7 @@ import {
   Sparkles,
   Gift,
   Inbox,
+  Rocket,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
@@ -83,6 +84,7 @@ const REALTOR_SECTIONS: NavSection[] = [
     description: "Profile, submissions & updates",
     icon: Settings2,
     items: [
+      { href: "/dashboard/start", label: "Get started", icon: Rocket },
       { href: "/dashboard/submit", label: "Submit project", icon: PlusCircle },
       { href: "/dashboard/updates", label: "Update Requests", icon: Bell },
       { href: "/dashboard/profile", label: "Profile", icon: UserCircle },
