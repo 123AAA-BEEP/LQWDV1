@@ -18,6 +18,7 @@ import {
   Settings2,
   Megaphone,
   BarChart3,
+  DoorOpen,
   Zap,
   Sparkles,
   Gift,
@@ -62,7 +63,7 @@ const REALTOR_SECTIONS: NavSection[] = [
       { href: "/dashboard/quick-wins", label: "Quick Wins", icon: Coins },
       { href: "/dashboard/deal-desk", label: "Developer Deals", icon: Handshake, ultra: true },
       { href: "/dashboard/buyer-mandates", label: "Buyer Matching", icon: ClipboardList },
-      { href: "/dashboard/proposals", label: "Your Offers", icon: FileText },
+      { href: "/dashboard/proposals", label: "Negotiate Terms", icon: FileText },
       { href: "/dashboard/refer", label: "Refer & earn", icon: Gift },
     ],
   },
@@ -73,6 +74,7 @@ const REALTOR_SECTIONS: NavSection[] = [
     icon: Compass,
     items: [
       { href: "/dashboard/projects", label: "Projects", icon: Building2 },
+      { href: "/dashboard/broker-portals", label: "Broker Portals", icon: DoorOpen },
     ],
   },
   {
