@@ -12,6 +12,28 @@ Agreed-but-deferred items. Flag here, build later. (Most recent on top.)
 - **Color-coded intent zones** (sidebar + home) with descriptors; realtor +
   developer reorg; de-jargoned nav copy.
 
+## Onboarding & education (saved concept — to discuss)
+Make the earning model **dummy-proof** with a guided walkthrough, not just labels.
+Format options (likely a mix): an **interactive first-run product tour** (tooltips
+that walk the Earn / Explore / Account zones), a short **explainer per section**,
+and/or a one-screen **"How you get paid on LIQWD" infographic**. A first-run
+**checklist** ("complete your profile → submit/claim a project → get leads") could
+anchor it.
+
+The core "how you make money" messages it should teach:
+- **Contribute → free leads.** Submit a project *or* an update on any project and
+  leads route to you for free (lead stewardship — you become the assigned realtor
+  on its public page).
+- **Go Pro → more lead pages.** The paid tier unlocks up to ~10 project
+  lead/landing pages.
+- **Quick Wins** — get paid to refer renters (PBR referral income).
+- **Negotiate Terms · Developer Deals · Buyer Matching · Refer & earn** — the
+  other earn paths, one line each.
+
+Recommendation (for the follow-up chat): an **interactive per-zone tour** + a
+single **"How you get paid" map** beats one long video — cheaper, skimmable, and
+it lives where the action is. Build on from there.
+
 ## Realtor experience
 - **Portal impressions** — accurate counts need a client-side beacon
   (server-render counts over-count via prefetch). Clicks are already tracked.
