@@ -144,7 +144,12 @@ export default async function DashboardHome() {
         </div>
       ) : null}
 
-      <HomeSection label="Earn" accent="emerald" zone>
+      <HomeSection
+        label="Earn"
+        accent="emerald"
+        zone
+        description="Commissions, referrals & rewards"
+      >
         <ActionCard
           icon={Coins}
           title="Quick Wins"
@@ -156,7 +161,7 @@ export default async function DashboardHome() {
         />
         <ActionCard
           icon={Handshake}
-          title="Deal Desk"
+          title="Developer Deals"
           body={
             ultra
               ? "Respond to developer deal requests — bulk buys, listing mandates, and full developments."
@@ -169,7 +174,7 @@ export default async function DashboardHome() {
         />
         <ActionCard
           icon={ClipboardCheck}
-          title="Buyer Mandate"
+          title="Buyer Matching"
           body={
             pro
               ? "Submit a hard-to-match buyer — matching inventory surfaces to you automatically."
@@ -182,7 +187,7 @@ export default async function DashboardHome() {
         />
         <ActionCard
           icon={FileText}
-          title="My proposals"
+          title="Your Offers"
           body="Track the counter-offers you've sent to developers and where each stands."
           href="/dashboard/proposals"
           cta="View proposals"
@@ -199,7 +204,11 @@ export default async function DashboardHome() {
         />
       </HomeSection>
 
-      <HomeSection label="Explore" accent="sky">
+      <HomeSection
+        label="New Homes"
+        accent="sky"
+        description="Browse projects & broker portals"
+      >
         <ActionCard
           icon={Building2}
           title="Browse projects"
@@ -211,7 +220,11 @@ export default async function DashboardHome() {
         />
       </HomeSection>
 
-      <HomeSection label="Account" accent="slate">
+      <HomeSection
+        label="Account"
+        accent="slate"
+        description="Profile, submissions & updates"
+      >
         <ActionCard
           icon={PlusCircle}
           title="Submit a project"
@@ -377,11 +390,13 @@ function HomeSection({
   label,
   accent,
   zone = false,
+  description,
   children,
 }: {
   label: string;
   accent?: SectionAccent;
   zone?: boolean;
+  description?: string;
   children: ReactNode;
 }) {
   const a = accent ? SECTION_ACCENT[accent] : null;
@@ -393,18 +408,23 @@ function HomeSection({
           : undefined
       }
     >
-      <h2
-        className={cn(
-          "mb-3 flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em]",
-          a ? a.header : "text-slate-400",
-        )}
-      >
-        <span
-          className={cn("size-1.5 rounded-full", a ? a.dotBg : "bg-slate-300")}
-          aria-hidden
-        />
-        {label}
-      </h2>
+      <div className="mb-3">
+        <h2
+          className={cn(
+            "flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em]",
+            a ? a.header : "text-slate-400",
+          )}
+        >
+          <span
+            className={cn("size-1.5 rounded-full", a ? a.dotBg : "bg-slate-300")}
+            aria-hidden
+          />
+          {label}
+        </h2>
+        {description ? (
+          <p className="mt-1 text-xs text-slate-400">{description}</p>
+        ) : null}
+      </div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{children}</div>
     </div>
   );
@@ -537,7 +557,11 @@ async function DeveloperHome({
         />
       </div>
 
-      <HomeSection label="Sell / Lease now" accent="emerald">
+      <HomeSection
+        label="Sell / Lease now"
+        accent="emerald"
+        description="Move inventory — agents & renters"
+      >
         <ActionCard
           icon={Handshake}
           title="Post an offer"
@@ -577,7 +601,12 @@ async function DeveloperHome({
       </HomeSection>
 
       {/* Promote — the operator ad-revenue zone (elevated). */}
-      <HomeSection label="Promote now" accent="amber" zone>
+      <HomeSection
+        label="Promote now"
+        accent="amber"
+        zone
+        description="Get in front of buyers & agents"
+      >
         <ComingSoonCard
           icon={Megaphone}
           title="Featured listing"
@@ -596,7 +625,11 @@ async function DeveloperHome({
       </HomeSection>
 
       {/* Research — insights, coming soon. */}
-      <HomeSection label="Research" accent="sky">
+      <HomeSection
+        label="Research"
+        accent="sky"
+        description="Demand & performance insights"
+      >
         <ComingSoonCard
           icon={BarChart3}
           title="Project analytics"

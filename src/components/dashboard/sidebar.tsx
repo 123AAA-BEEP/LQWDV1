@@ -39,6 +39,7 @@ type NavItem = {
 type NavSection = {
   accent: SectionAccent;
   label: string;
+  description?: string;
   icon: LucideIcon;
   items: NavItem[];
 };
@@ -55,18 +56,20 @@ const REALTOR_SECTIONS: NavSection[] = [
   {
     accent: "emerald",
     label: "Earn",
+    description: "Commissions, referrals & rewards",
     icon: Coins,
     items: [
       { href: "/dashboard/quick-wins", label: "Quick Wins", icon: Coins },
-      { href: "/dashboard/deal-desk", label: "Deal Desk", icon: Handshake, ultra: true },
-      { href: "/dashboard/buyer-mandates", label: "Buyer Mandates", icon: ClipboardList },
-      { href: "/dashboard/proposals", label: "My proposals", icon: FileText },
+      { href: "/dashboard/deal-desk", label: "Developer Deals", icon: Handshake, ultra: true },
+      { href: "/dashboard/buyer-mandates", label: "Buyer Matching", icon: ClipboardList },
+      { href: "/dashboard/proposals", label: "Your Offers", icon: FileText },
       { href: "/dashboard/refer", label: "Refer & earn", icon: Gift },
     ],
   },
   {
     accent: "sky",
-    label: "Explore",
+    label: "New Homes",
+    description: "Browse projects & broker portals",
     icon: Compass,
     items: [
       { href: "/dashboard/projects", label: "Projects", icon: Building2 },
@@ -75,10 +78,11 @@ const REALTOR_SECTIONS: NavSection[] = [
   {
     accent: "slate",
     label: "Account",
+    description: "Profile, submissions & updates",
     icon: Settings2,
     items: [
       { href: "/dashboard/submit", label: "Submit project", icon: PlusCircle },
-      { href: "/dashboard/updates", label: "My updates", icon: Bell },
+      { href: "/dashboard/updates", label: "Update Requests", icon: Bell },
       { href: "/dashboard/profile", label: "Profile", icon: UserCircle },
     ],
   },
@@ -89,6 +93,7 @@ const DEVELOPER_SECTIONS: NavSection[] = [
   {
     accent: "emerald",
     label: "Sell / Lease now",
+    description: "Move inventory — agents & renters",
     icon: Handshake,
     items: [
       { href: "/dashboard/deal-requests", label: "Move Inventory", icon: Handshake },
@@ -100,6 +105,7 @@ const DEVELOPER_SECTIONS: NavSection[] = [
   {
     accent: "amber",
     label: "Promote now",
+    description: "Get in front of buyers & agents",
     icon: Megaphone,
     items: [
       { href: "/dashboard/promote", label: "Featured & eBlasts", icon: Megaphone },
@@ -108,6 +114,7 @@ const DEVELOPER_SECTIONS: NavSection[] = [
   {
     accent: "sky",
     label: "Research",
+    description: "Demand & performance insights",
     icon: BarChart3,
     items: [
       { href: "/dashboard/research", label: "Analytics & demand", icon: BarChart3 },
@@ -116,6 +123,7 @@ const DEVELOPER_SECTIONS: NavSection[] = [
   {
     accent: "slate",
     label: "Account",
+    description: "Profile & billing",
     icon: Settings2,
     items: [{ href: "/dashboard/profile", label: "Profile", icon: UserCircle }],
   },
@@ -189,22 +197,29 @@ export function Sidebar({
         key={section.label}
         className={cn("space-y-0.5 rounded-xl p-1.5 ring-1 ring-inset", a.zone)}
       >
-        <div className="flex items-center gap-2 px-2 pb-1 pt-0.5">
+        <div className="flex items-start gap-2 px-2 pb-1.5 pt-0.5">
           <span
             className={cn(
-              "flex size-5 items-center justify-center rounded-md",
+              "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-md",
               a.chip,
             )}
           >
             <SecIcon className="size-3" strokeWidth={2} aria-hidden />
           </span>
-          <span
-            className={cn(
-              "text-[11px] font-semibold uppercase tracking-[0.12em]",
-              a.header,
-            )}
-          >
-            {section.label}
+          <span className="min-w-0">
+            <span
+              className={cn(
+                "block text-[11px] font-semibold uppercase tracking-[0.12em]",
+                a.header,
+              )}
+            >
+              {section.label}
+            </span>
+            {section.description ? (
+              <span className="mt-0.5 block text-[10px] leading-tight text-slate-400">
+                {section.description}
+              </span>
+            ) : null}
           </span>
         </div>
         {section.items.map((item) => renderItem(item, section.accent))}
