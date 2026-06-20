@@ -59,6 +59,7 @@ const REALTOR_SECTIONS: NavSection[] = [
     items: [
       { href: "/dashboard/quick-wins", label: "Quick Wins", icon: Coins },
       { href: "/dashboard/deal-desk", label: "Deal Desk", icon: Handshake, ultra: true },
+      { href: "/dashboard/buyer-mandates", label: "Buyer Mandates", icon: ClipboardList },
       { href: "/dashboard/proposals", label: "My proposals", icon: FileText },
       { href: "/dashboard/refer", label: "Refer & earn", icon: Gift },
     ],
@@ -69,7 +70,6 @@ const REALTOR_SECTIONS: NavSection[] = [
     icon: Compass,
     items: [
       { href: "/dashboard/projects", label: "Projects", icon: Building2 },
-      { href: "/dashboard/buyer-mandates", label: "Buyer Mandates", icon: ClipboardList },
     ],
   },
   {
