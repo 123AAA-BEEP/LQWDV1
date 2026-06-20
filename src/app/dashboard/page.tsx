@@ -187,10 +187,10 @@ export default async function DashboardHome() {
         />
         <ActionCard
           icon={FileText}
-          title="Your Offers"
-          body="Track the counter-offers you've sent to developers and where each stands."
+          title="Negotiate Terms"
+          body="Ask developers for the commission, price, or incentive terms you need to close — and track every request."
           href="/dashboard/proposals"
-          cta="View proposals"
+          cta="Request terms"
           enabled={approved}
           lockedHint="Available after verification"
         />
