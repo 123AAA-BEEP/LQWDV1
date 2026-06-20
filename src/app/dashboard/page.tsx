@@ -39,6 +39,7 @@ import type { Profile } from "@/lib/types";
 import { cn } from "@/lib/cn";
 import type { ReactNode } from "react";
 import { SECTION_ACCENT, type SectionAccent } from "@/lib/section-accents";
+import { GetStartedBanner } from "@/components/dashboard/onboarding/get-started-banner";
 
 export const metadata: Metadata = { title: "Dashboard" };
 export const dynamic = "force-dynamic";
@@ -134,6 +135,8 @@ export default async function DashboardHome() {
           {approved ? "Browse projects" : "Start verification"}
         </ButtonLink>
       </div>
+
+      <GetStartedBanner />
 
       {approved ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
