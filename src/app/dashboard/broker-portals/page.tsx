@@ -59,7 +59,7 @@ function portalLink(p: PortalRow): string | null {
 }
 
 function PortalRowItem({ p }: { p: Portal }) {
-  const link = portalLink(p);
+  const hasLink = !!portalLink(p);
   return (
     <li className="flex items-center justify-between gap-3 py-2">
       <div className="min-w-0">
@@ -75,9 +75,9 @@ function PortalRowItem({ p }: { p: Portal }) {
         <Badge tone="neutral">
           {PORTAL_TYPE_LABEL[p.portal_type] ?? p.portal_type}
         </Badge>
-        {link ? (
+        {hasLink ? (
           <a
-            href={link}
+            href={`/dashboard/broker-portals/open/${p.id}`}
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center gap-1 text-sm font-medium text-brand-700 hover:underline"
@@ -255,7 +255,7 @@ export default async function BrokerPortals({
               </h2>
               <div className="grid gap-3 sm:grid-cols-2">
                 {featured.map((p) => {
-                  const link = portalLink(p);
+                  const hasLink = !!portalLink(p);
                   return (
                     <Card
                       key={p.id}
@@ -272,9 +272,9 @@ export default async function BrokerPortals({
                           {p.project.project_name}
                           {p.project.city ? ` · ${p.project.city}` : ""}
                         </p>
-                        {link ? (
+                        {hasLink ? (
                           <a
-                            href={link}
+                            href={`/dashboard/broker-portals/open/${p.id}`}
                             target="_blank"
                             rel="noreferrer"
                             className="inline-flex items-center gap-1 pt-1 text-sm font-medium text-brand-700 hover:underline"

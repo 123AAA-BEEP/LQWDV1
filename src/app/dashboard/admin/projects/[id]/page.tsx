@@ -84,6 +84,20 @@ export default async function AdminProjectEditor({
     .eq("project_id", id)
     .order("is_primary", { ascending: false });
 
+  // Click counts per portal (the ad-product metric).
+  const portalIds = ((portals as { id: string }[] | null) ?? []).map((p) => p.id);
+  const clickCounts = new Map<string, number>();
+  if (portalIds.length) {
+    const { data: ev } = await supabase
+      .from("broker_portal_events")
+      .select("portal_id")
+      .eq("event_type", "click")
+      .in("portal_id", portalIds);
+    for (const e of (ev as { portal_id: string }[] | null) ?? []) {
+      clickCounts.set(e.portal_id, (clickCounts.get(e.portal_id) ?? 0) + 1);
+    }
+  }
+
   // All realtors are assignable; the editor flags any who aren't approved +
   // public-profile-enabled (their card won't render on the public page).
   const { data: realtors } = await supabase
@@ -673,9 +687,10 @@ export default async function AdminProjectEditor({
                         <Badge tone="warning">Featured</Badge>
                       ) : null}
                     </p>
-                    {p.url ? (
-                      <p className="truncate text-xs text-slate-400">{p.url}</p>
-                    ) : null}
+                    <p className="truncate text-xs text-slate-400">
+                      {p.url ? `${p.url} · ` : ""}
+                      {clickCounts.get(p.id) ?? 0} clicks
+                    </p>
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
                     <form action={setBrokerPortalFeatured}>

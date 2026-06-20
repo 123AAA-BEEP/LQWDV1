@@ -106,6 +106,23 @@ export default async function ProjectsPage({
   const { data } = await request;
   const projects = (data as ProjectListItem[] | null) ?? [];
 
+  // Which of these projects have an active broker portal (for the badge that
+  // bridges Browse → the Broker Portals directory).
+  let portalSet = new Set<string>();
+  if (projects.length) {
+    const { data: pp } = await supabase
+      .from("project_broker_portals")
+      .select("project_id")
+      .eq("is_active", true)
+      .in(
+        "project_id",
+        projects.map((p) => p.id),
+      );
+    portalSet = new Set(
+      ((pp as { project_id: string }[] | null) ?? []).map((r) => r.project_id),
+    );
+  }
+
   const hasActiveFilter = query || cityFilter || salesFilter || constructionFilter;
 
   return (
@@ -212,6 +229,9 @@ export default async function ProjectsPage({
                       ) : null}
                       {p.record_status !== "published" ? (
                         <Badge tone="neutral">{p.record_status}</Badge>
+                      ) : null}
+                      {portalSet.has(p.id) ? (
+                        <Badge tone="brand">Portal</Badge>
                       ) : null}
                     </div>
                     <h2 className="mt-2 font-semibold text-ink">

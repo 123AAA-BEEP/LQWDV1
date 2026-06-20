@@ -2,32 +2,34 @@
 
 Agreed-but-deferred items. Flag here, build later. (Most recent on top.)
 
+## Shipped
+- **Broker Portals** — directory with search + city/type filters, **featured
+  (paid) placement**, admin management in the project editor, published-gated
+  population, a "Portal" badge on Browse cards, signed URLs for file portals,
+  and **click tracking** (`broker_portal_events`). Direct-link model.
+- **Quick Wins / rental referrals** — paying-buildings feed, refer-a-buyer flow,
+  agent status view, admin queue + developer self-serve inbox.
+- **Color-coded intent zones** (sidebar + home) with descriptors; realtor +
+  developer reorg; de-jargoned nav copy.
+
 ## Realtor experience
-- **Broker Portals surface (Explore zone).** LIQWD is pitched as *"the ultimate
-  broker portal,"* but broker portals (`project_broker_portals`) only appear on
-  the broker project-detail page today. Make the promise visible in the product:
-  a dedicated **"Broker Portals"** item in the **Explore** zone and/or a clear
-  "Broker portal" callout within **Browse Projects** (e.g., a badge + quick link
-  on project cards that have an active portal). This is why Explore currently
-  holds only Projects — it's the discovery zone this slots into.
-- **Earnings dashboard / estimator** — lifetime + pending referral $ for agents
-  (turn Quick Wins from a feed into a running income view).
-- **Notifications** on referral status changes (and other queue events) — email
-  and/or in-app.
+- **Portal impressions** — accurate counts need a client-side beacon
+  (server-render counts over-count via prefetch). Clicks are already tracked.
+- **Earnings dashboard / estimator** — lifetime + pending referral $ for agents.
+- **Notifications** on referral status changes (and other queue events).
 
 ## Rentals / PBR
 - **Payout ledger** — turn `rental_referrals.payout_status` into real
   invoicing/tracking (brokerage-to-brokerage per TRESA), triggered off "accepted".
-- **Re-point `referral_opportunities_view`** at `broker_projects_view` (it's
-  currently admin-scoped because it reads base `projects`) if we want one
-  reusable feed query instead of the two-query approach the Quick Wins page uses.
+- **Re-point `referral_opportunities_view`** at `broker_projects_view` (currently
+  admin-scoped) if we want one reusable feed query.
 
 ## Developer experience
 - **Promote now** (Featured listing, eBlast to agents/buyers) and **Research**
-  (project analytics, buyer-demand signals) — currently "coming soon" hubs at
-  `/dashboard/promote` and `/dashboard/research`. These are the operator
-  ad-revenue + insights streams.
+  (project analytics, buyer-demand signals) — "coming soon" hubs at
+  `/dashboard/promote` and `/dashboard/research`.
+- **Broker-portal ad billing** — invoice featured placement off click counts
+  (the `broker_portal_events` data is already being collected).
 
 ## Notes
-These are intentionally deferred. When picking one up, sync with `main` first
-(the SessionStart hook does this automatically).
+When picking one up, sync with `main` first (the SessionStart hook does this).
