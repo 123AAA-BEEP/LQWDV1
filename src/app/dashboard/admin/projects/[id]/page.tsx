@@ -16,6 +16,9 @@ import {
   publishProject,
   unpublishProject,
   saveRentalReferralTerms,
+  addBrokerPortal,
+  removeBrokerPortal,
+  setBrokerPortalFeatured,
 } from "./actions";
 import { ProjectUploads } from "./uploads";
 import { AgentSelect } from "./agent-select";
@@ -71,6 +74,15 @@ export default async function AdminProjectEditor({
     .select("*")
     .eq("project_id", id)
     .maybeSingle();
+
+  // Broker portals (direct links to the builder's portal/price list/worksheets).
+  const { data: portals } = await supabase
+    .from("project_broker_portals")
+    .select(
+      "id, portal_name, portal_type, url, access_notes, is_primary, is_active, is_featured",
+    )
+    .eq("project_id", id)
+    .order("is_primary", { ascending: false });
 
   // All realtors are assignable; the editor flags any who aren't approved +
   // public-profile-enabled (their card won't render on the public page).
@@ -619,6 +631,132 @@ export default async function AdminProjectEditor({
               />
             </Field>
             <Button type="submit">Save referral terms</Button>
+          </form>
+        </CardBody>
+      </Card>
+
+      {/* Broker portals */}
+      <Card>
+        <CardBody>
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold text-ink">Broker portals</h3>
+            <Badge tone="warning">Broker-only</Badge>
+          </div>
+          <p className="mt-1 text-sm text-slate-500">
+            Direct links to the builder&rsquo;s portal, price list, or worksheets.
+            Active links appear in the broker Broker Portals directory once the
+            project is published. Feature one for paid placement.
+          </p>
+
+          {portals && portals.length > 0 ? (
+            <ul className="mt-4 divide-y divide-slate-100">
+              {(
+                portals as {
+                  id: string;
+                  portal_name: string;
+                  portal_type: string;
+                  url: string | null;
+                  is_primary: boolean;
+                  is_active: boolean;
+                  is_featured: boolean;
+                }[]
+              ).map((p) => (
+                <li
+                  key={p.id}
+                  className="flex items-center justify-between gap-3 py-2"
+                >
+                  <div className="min-w-0">
+                    <p className="flex items-center gap-2 text-sm font-medium text-slate-800">
+                      <span className="truncate">{p.portal_name}</span>
+                      {p.is_primary ? <Badge tone="brand">Primary</Badge> : null}
+                      {p.is_featured ? (
+                        <Badge tone="warning">Featured</Badge>
+                      ) : null}
+                    </p>
+                    {p.url ? (
+                      <p className="truncate text-xs text-slate-400">{p.url}</p>
+                    ) : null}
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <form action={setBrokerPortalFeatured}>
+                      <input type="hidden" name="portal_id" value={p.id} />
+                      <input type="hidden" name="project_id" value={id} />
+                      <input
+                        type="hidden"
+                        name="is_featured"
+                        value={p.is_featured ? "false" : "true"}
+                      />
+                      <Button type="submit" size="sm" variant="secondary">
+                        {p.is_featured ? "Unfeature" : "Feature"}
+                      </Button>
+                    </form>
+                    <form action={removeBrokerPortal}>
+                      <input type="hidden" name="portal_id" value={p.id} />
+                      <input type="hidden" name="project_id" value={id} />
+                      <Button type="submit" size="sm" variant="danger">
+                        Remove
+                      </Button>
+                    </form>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-4 text-sm text-slate-400">No broker portals yet.</p>
+          )}
+
+          <form
+            action={addBrokerPortal}
+            className="mt-4 space-y-4 border-t border-slate-100 pt-4"
+          >
+            <input type="hidden" name="project_id" value={id} />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Portal name" htmlFor="portal_name">
+                <Input
+                  id="portal_name"
+                  name="portal_name"
+                  placeholder="e.g. Builder broker portal"
+                  required
+                />
+              </Field>
+              <Field label="Type" htmlFor="portal_type">
+                <Select
+                  id="portal_type"
+                  name="portal_type"
+                  defaultValue="external_url"
+                >
+                  <option value="external_url">Website</option>
+                  <option value="login_page">Login page</option>
+                  <option value="drive_folder">Drive folder</option>
+                  <option value="pdf">PDF</option>
+                  <option value="internal_file">File</option>
+                  <option value="other">Other</option>
+                </Select>
+              </Field>
+            </div>
+            <Field label="URL" htmlFor="url">
+              <Input id="url" name="url" type="url" placeholder="https://…" />
+            </Field>
+            <Field
+              label="Access notes"
+              htmlFor="access_notes"
+              hint="Login hint or how to request access (optional)."
+            >
+              <Input id="access_notes" name="access_notes" />
+            </Field>
+            <div className="flex flex-wrap gap-6">
+              <label className="flex items-center gap-2 text-sm text-slate-600">
+                <input type="checkbox" name="is_primary" className="size-4" />{" "}
+                Primary
+              </label>
+              <label className="flex items-center gap-2 text-sm text-slate-600">
+                <input type="checkbox" name="is_featured" className="size-4" />{" "}
+                Featured (paid placement)
+              </label>
+            </div>
+            <Button type="submit" variant="secondary">
+              Add portal
+            </Button>
           </form>
         </CardBody>
       </Card>
