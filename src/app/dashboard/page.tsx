@@ -168,6 +168,19 @@ export default async function DashboardHome() {
           ultra={!ultra}
         />
         <ActionCard
+          icon={ClipboardCheck}
+          title="Buyer Mandate"
+          body={
+            pro
+              ? "Submit a hard-to-match buyer — matching inventory surfaces to you automatically."
+              : "A Pro feature: submit a buyer mandate and let matching inventory come to you."
+          }
+          href={pro ? "/dashboard/buyer-mandates/new" : "/dashboard/upgrade"}
+          cta={pro ? "New mandate" : "Unlock with Pro"}
+          enabled={approved}
+          lockedHint="Available after verification"
+        />
+        <ActionCard
           icon={FileText}
           title="My proposals"
           body="Track the counter-offers you've sent to developers and where each stands."
@@ -193,19 +206,6 @@ export default async function DashboardHome() {
           body="Search active new-home projects across Ontario."
           href="/dashboard/projects"
           cta="View projects"
-          enabled={approved}
-          lockedHint="Available after verification"
-        />
-        <ActionCard
-          icon={ClipboardCheck}
-          title="Buyer Mandate"
-          body={
-            pro
-              ? "Submit a hard-to-match buyer — matching inventory surfaces to you automatically."
-              : "A Pro feature: submit a buyer mandate and let matching inventory come to you."
-          }
-          href={pro ? "/dashboard/buyer-mandates/new" : "/dashboard/upgrade"}
-          cta={pro ? "New mandate" : "Unlock with Pro"}
           enabled={approved}
           lockedHint="Available after verification"
         />
