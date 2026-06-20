@@ -229,3 +229,60 @@ export async function saveRentalReferralTerms(formData: FormData) {
 
   revalidatePath(`/dashboard/admin/projects/${projectId}`);
 }
+
+/** Adds a broker portal link to a project (admin-only). */
+export async function addBrokerPortal(formData: FormData) {
+  const projectId = String(formData.get("project_id") ?? "");
+  const portalName = str(formData.get("portal_name"));
+  if (!projectId || !portalName) return;
+
+  const supabase = await createClient();
+  const adminId = await assertAdmin(supabase);
+
+  await supabase.from("project_broker_portals").insert({
+    project_id: projectId,
+    portal_name: portalName,
+    portal_type: str(formData.get("portal_type")) ?? "external_url",
+    url: str(formData.get("url")),
+    access_notes: str(formData.get("access_notes")),
+    is_primary: formData.get("is_primary") === "on",
+    is_featured: formData.get("is_featured") === "on",
+    is_active: true,
+    added_by_user_id: adminId,
+  });
+
+  revalidatePath(`/dashboard/admin/projects/${projectId}`);
+  revalidatePath("/dashboard/broker-portals");
+}
+
+/** Removes a broker portal (admin-only). */
+export async function removeBrokerPortal(formData: FormData) {
+  const id = String(formData.get("portal_id") ?? "");
+  const projectId = String(formData.get("project_id") ?? "");
+  if (!id) return;
+
+  const supabase = await createClient();
+  await assertAdmin(supabase);
+  await supabase.from("project_broker_portals").delete().eq("id", id);
+
+  revalidatePath(`/dashboard/admin/projects/${projectId}`);
+  revalidatePath("/dashboard/broker-portals");
+}
+
+/** Toggles a broker portal's featured (paid-placement) flag (admin-only). */
+export async function setBrokerPortalFeatured(formData: FormData) {
+  const id = String(formData.get("portal_id") ?? "");
+  const projectId = String(formData.get("project_id") ?? "");
+  const featured = formData.get("is_featured") === "true";
+  if (!id) return;
+
+  const supabase = await createClient();
+  await assertAdmin(supabase);
+  await supabase
+    .from("project_broker_portals")
+    .update({ is_featured: featured })
+    .eq("id", id);
+
+  revalidatePath(`/dashboard/admin/projects/${projectId}`);
+  revalidatePath("/dashboard/broker-portals");
+}
