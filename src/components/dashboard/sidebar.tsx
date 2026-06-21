@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState, type ReactNode } from "react";
 import {
   LayoutDashboard,
   Building2,
@@ -24,6 +25,8 @@ import {
   Gift,
   Inbox,
   Rocket,
+  Menu,
+  X,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
@@ -152,6 +155,8 @@ export function Sidebar({
   isPro = false,
   isUltra = false,
   isDeveloper = false,
+  planBadge = null,
+  statusBadge = null,
 }: {
   name: string;
   email: string | null;
@@ -160,8 +165,33 @@ export function Sidebar({
   isPro?: boolean;
   isUltra?: boolean;
   isDeveloper?: boolean;
+  /** Plan / role chip shown in the mobile top bar (e.g. Free plan, Pro). */
+  planBadge?: ReactNode;
+  /** Verification status chip shown in the mobile top bar. */
+  statusBadge?: ReactNode;
 }) {
   const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+
+  // Lock body scroll while the mobile drawer is open.
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
+
+  // Close the drawer on Escape.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
 
   const renderItem = (item: NavItem, accent: SectionAccent) => {
     const a = SECTION_ACCENT[accent];
@@ -272,26 +302,21 @@ export function Sidebar({
         )
       : REALTOR_SECTIONS;
 
-  return (
-    <aside className="sticky top-0 flex h-dvh w-60 shrink-0 flex-col self-start border-r border-slate-200 bg-white">
-      <div className="flex h-16 items-center justify-between border-b border-slate-200 px-5">
-        <Link
-          href="/dashboard"
-          className="text-lg font-semibold tracking-tight text-ink"
-        >
-          {BRAND.name}
-        </Link>
-        {isDeveloper ? (
-          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">
-            Developer
-          </span>
-        ) : isUltra ? (
-          <UltraBadge />
-        ) : isPro ? (
-          <ProBadge />
-        ) : null}
-      </div>
+  // Brand tier chip shown beside the LIQWD wordmark in the rail/drawer header.
+  const tierBadge = isDeveloper ? (
+    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+      Developer
+    </span>
+  ) : isUltra ? (
+    <UltraBadge />
+  ) : isPro ? (
+    <ProBadge />
+  ) : null;
 
+  // Scrollable nav + upgrade chip + account footer — shared by the desktop
+  // rail and the mobile drawer.
+  const navBody = (
+    <>
       <nav className="flex-1 space-y-3 overflow-y-auto p-3">
         {homeLink}
         {sections.map(renderSection)}
@@ -353,6 +378,101 @@ export function Sidebar({
           </button>
         </form>
       </div>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* Desktop rail — hidden on small screens. */}
+      <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col self-start border-r border-slate-200 bg-white lg:flex">
+        <div className="flex h-16 items-center justify-between border-b border-slate-200 px-5">
+          <Link
+            href="/dashboard"
+            className="text-lg font-semibold tracking-tight text-ink"
+          >
+            {BRAND.name}
+          </Link>
+          {tierBadge}
+        </div>
+        {navBody}
+      </aside>
+
+      {/* Mobile top bar — hamburger + brand + plan/status chips. */}
+      <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-slate-200 bg-white px-4 lg:hidden">
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-label="Open menu"
+          className="-ml-1 flex size-9 items-center justify-center rounded-lg text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
+        >
+          <Menu className="size-5" strokeWidth={1.75} aria-hidden />
+        </button>
+        <Link
+          href="/dashboard"
+          className="text-base font-semibold tracking-tight text-ink"
+        >
+          {BRAND.name}
+        </Link>
+        <div className="ml-auto flex items-center gap-1.5">
+          {planBadge}
+          {statusBadge}
+        </div>
+      </header>
+
+      {/* Mobile drawer — overlay rail. */}
+      <div
+        className={cn(
+          "fixed inset-0 z-50 lg:hidden",
+          open ? "" : "pointer-events-none",
+        )}
+        aria-hidden={!open}
+      >
+        <button
+          type="button"
+          tabIndex={open ? 0 : -1}
+          aria-label="Close menu"
+          onClick={() => setOpen(false)}
+          className={cn(
+            "absolute inset-0 bg-slate-900/40 transition-opacity duration-200",
+            open ? "opacity-100" : "opacity-0",
+          )}
+        />
+        <aside
+          className={cn(
+            "absolute inset-y-0 left-0 flex w-72 max-w-[85%] flex-col border-r border-slate-200 bg-white shadow-xl transition-transform duration-200 ease-out",
+            open ? "translate-x-0" : "-translate-x-full",
+          )}
+        >
+          <div className="flex h-14 items-center justify-between border-b border-slate-200 px-4">
+            <div className="flex items-center gap-2">
+              <Link
+                href="/dashboard"
+                className="text-lg font-semibold tracking-tight text-ink"
+              >
+                {BRAND.name}
+              </Link>
+              {tierBadge}
+            </div>
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              aria-label="Close menu"
+              className="-mr-1 flex size-9 items-center justify-center rounded-lg text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
+            >
+              <X className="size-5" strokeWidth={1.75} aria-hidden />
+            </button>
+          </div>
+          {/* Close the drawer when a nav link inside it is tapped. */}
+          <div
+            className="contents"
+            onClick={(e) => {
+              if ((e.target as HTMLElement).closest("a")) setOpen(false);
+            }}
+          >
+            {navBody}
+          </div>
+        </aside>
+      </div>
+    </>
   );
 }
