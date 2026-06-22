@@ -6,7 +6,13 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "import:fetch": "node scripts/import-wp.mjs fetch",
+    "import:build": "node scripts/import-wp.mjs build",
+    "import:extract": "node scripts/import-wp.mjs extract",
+    "import:generate": "node scripts/import-wp.mjs generate",
+    "import:images": "node scripts/import-wp.mjs images",
+    "import:load": "node scripts/import-wp.mjs load"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",

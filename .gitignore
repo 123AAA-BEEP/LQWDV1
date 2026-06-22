@@ -40,3 +40,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# importer output (scraped source data + downloaded images — never commit)
+/scripts/out/
