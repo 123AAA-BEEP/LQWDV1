@@ -38,29 +38,47 @@ export async function requireUserProfile(): Promise<{
         ? title
         : null;
 
-    const { data: inserted } = await supabase
+    // Upsert (not insert) so that concurrent first-load requests — e.g. the
+    // post-login redirect racing a route prefetch — don't blow up: a plain
+    // insert makes the loser hit a primary-key violation, which surfaced as a
+    // dashboard crash. ON CONFLICT (id) DO UPDATE always returns the row, and
+    // every racing request writes the same signup-derived defaults so the
+    // protect-fields trigger (which only blocks *changes* to role /
+    // verification_status) is satisfied.
+    const { data: upserted } = await supabase
       .from("profiles")
-      .insert({
-        id: user.id,
-        email: user.email ?? null,
-        role: "realtor",
-        verification_status: "pending",
-        first_name: str("first_name"),
-        last_name: str("last_name"),
-        phone: str("phone"),
-        brokerage_name: str("brokerage_name"),
-        reco_registration_number: str("reco_registration_number"),
-        title: validTitle,
-      })
+      .upsert(
+        {
+          id: user.id,
+          email: user.email ?? null,
+          role: "realtor",
+          verification_status: "pending",
+          first_name: str("first_name"),
+          last_name: str("last_name"),
+          phone: str("phone"),
+          brokerage_name: str("brokerage_name"),
+          reco_registration_number: str("reco_registration_number"),
+          title: validTitle,
+        },
+        { onConflict: "id" },
+      )
       .select("*")
       .single();
-    profile = inserted;
+    profile = upserted;
+  }
+
+  if (!profile) {
+    // Authenticated but the profile could neither be loaded nor created.
+    // Surface a clear error rather than returning null and crashing
+    // downstream consumers that assume a profile is present. (Redirecting to
+    // /login would loop, since middleware sends signed-in users back here.)
+    throw new Error("Your profile could not be loaded. Please try again.");
   }
 
   return {
     userId: user.id,
     email: user.email ?? null,
-    profile: profile as Profile,
+    profile,
   };
 }
 
