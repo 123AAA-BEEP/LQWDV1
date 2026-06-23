@@ -1,7 +1,7 @@
 # LIQWD — Supabase Backend
 
 > ⚠️ **The live DB may be ahead of this folder.** These migrations
-> (`0001`–`0022`) track the schema, but some live changes are applied directly to
+> (`0001`–`0028`) track the schema, but some live changes are applied directly to
 > the production project `LIQWD DB V1` and may not all be reproduced as files
 > here. For the **full live schema** see
 > [`LIVE_SCHEMA.md`](./LIVE_SCHEMA.md) (human index) and
@@ -52,7 +52,9 @@ Run each file as its own query, in this exact order:
 | 20 | `migrations/0020_pro_until_entitlement.sql` | Extends `is_pro()` so reward time (`pro_until`) unlocks Pro alongside the paid `plan`, and adds `pro_until` to the self-escalation guard so realtors can't self-grant it. |
 | 21 | `migrations/0021_rental_referrals_and_suggestions.sql` | Adds `projects.listing_type` + `price_period`, the `project_rental_referral_terms` (PBR referral params + fee) and `platform_suggestions` tables, and the broker-only **security-invoker** `referral_opportunities_view`. No `worksheets` table — `buyer_mandates` already covers that concept. |
 | 22 | `migrations/0022_rental_referrals_and_suggestions_rls.sql` | Enables RLS on the two new tables, sets grants (incl. `service_role`), and creates their policies (referral terms: approved-realtor read, admin + granted-developer write; suggestions: submitter + admin). |
-| 23 | `seed.sql` *(optional)* | Inserts the base smoke-test fixtures (brokerage, approved realtor + `auth.users` row, a published project with public page/media, private rows, a sample lead) plus a published **for-rent** project with referral terms and a suggestion — enough to smoke-test the public view, the referral feed, and the RLS boundary. |
+| 23–26 | `migrations/0023_*` … `0026_*` | Rental referrals, the developer referrals view, and broker-portal **featured placement** + **click/impression events** (`broker_portal_events`). |
+| 28 | `migrations/0028_referral_link_attribution.sql` | Adds `project_leads.referred_by_profile_id` (+ index) for the realtor **Lead Pages** tool: a lead captured via a realtor's direct link `/projects/<slug>?ref=<referral_code>` is attributed to and routed to that realtor (link sharer wins over the page steward). Additive, no RLS change. See `docs/lead-pages-and-referral-links-design.md`. *(0027 is an unrelated broker-portal-suggestions migration on a separate feature branch.)* |
+| — | `seed.sql` *(optional)* | Inserts the base smoke-test fixtures (brokerage, approved realtor + `auth.users` row, a published project with public page/media, private rows, a sample lead) plus a published **for-rent** project with referral terms and a suggestion — enough to smoke-test the public view, the referral feed, and the RLS boundary. |
 
 > The SQL Editor runs as a superuser, so it bypasses RLS — migrations and seed
 > data apply cleanly.

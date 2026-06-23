@@ -25,6 +25,7 @@ import {
   Gift,
   Inbox,
   Rocket,
+  Link2,
   Menu,
   X,
   type LucideIcon,
@@ -78,6 +79,7 @@ const REALTOR_SECTIONS: NavSection[] = [
     icon: Compass,
     items: [
       { href: "/dashboard/projects", label: "Projects", icon: Building2 },
+      { href: "/dashboard/lead-pages", label: "Lead Pages", icon: Link2 },
       { href: "/dashboard/broker-portals", label: "Broker Portals", icon: DoorOpen },
     ],
   },
