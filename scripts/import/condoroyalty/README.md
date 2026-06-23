@@ -25,8 +25,8 @@ any time (`condoroyalty.com` is allowlisted): `python3 scrape.py --all --with-im
 |---|---|---|
 | 0 | Scrape CondoRoyalty → review.csv + images.csv | ✅ done (regenerable) |
 | 1 | Match CR→Altus, fill **geo + neighbourhood** (NULL-only, non-destructive) | ✅ **applied: 380 rows / 140 distinct projects** |
-| 2 | Re-host matched images (WebP, stripped metadata) → `project_media_candidates` for admin review | ⛔ needs Supabase creds + Storage |
-| 3 | Location-aware AI descriptions (OSM POIs → Sonnet 4.6 via `seo_prompt_settings`) | ⛔ needs OSM allowlist + Anthropic key |
+| 2 | Re-host matched hero images → public `project-media` Storage bucket + `project_media_candidates` for review | ✅ **applied: 140 projects / 380 candidate rows** |
+| 3 | Location-aware descriptions (OSM POIs → grounded prose) into `projects.description_ai_draft` | ✅ **applied: 140 projects** |
 
 **Matching** = exact normalized name + compatible city family (Toronto
 amalgamation handled) + CondoRoyalty geo inside a GTA bounding box. Of 2,393
@@ -55,11 +55,24 @@ set latitude=null, longitude=null, neighbourhood=null,
 where external_source='Altus Group' and import_notes like '%gta_seed%';
 ```
 
-## Prerequisites to run Phases 2–3
+## How Phases 2–3 were actually completed (Supabase Edge Functions)
 
-1. **Env vars:** `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`
-2. **Network allowlist:** `nominatim.openstreetmap.org`, `overpass-api.de`
+The sandbox's network allowlist and env-var settings never took effect across
+sessions, so Phases 2–3 were done **without them** — via Edge Functions deployed
+to the Supabase project (which has open egress and built-in service-role access).
+Source lives in [`edge-functions/`](./edge-functions):
 
-Phase 3 generates `seo_title` / `seo_meta_description` / sectioned
-`page_description` strictly from verified facts + OSM POIs (computed distances,
-never guessed); any section without verified data is omitted.
+| Function | Purpose |
+|---|---|
+| `liqwd-osm-pois` | `{lat,lng}` → nearby transit/parks/schools/shops from OpenStreetMap with computed distances |
+| `liqwd-write-descriptions` | Batch engine: per matched active project, fetch POIs → build a grounded description → write `description_ai_draft` (tag `[desc amenity v2]`) |
+| `liqwd-rehost-image` | Fetch a CondoRoyalty hero image → upload to public `project-media` bucket → insert `project_media_candidates` row (`provider='gta_seed'`, source URL never stored) |
+
+Descriptions are built strictly from verified place names + computed distances;
+any category without nearby data is omitted (no invented amenities). Invoke the
+batch functions with the anon key as Bearer; `liqwd-write-descriptions` should be
+called with `batch<=15` and repeated until `remaining_projects=0`.
+
+**Follow-ups (optional):** gallery images beyond the hero; WebP re-encode + EXIF
+strip on re-host; rotate the `service_role` key that was pasted into the env-vars
+box (it was never used — the Edge Functions use Supabase's built-in service role).
