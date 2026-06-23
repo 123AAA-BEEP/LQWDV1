@@ -206,6 +206,15 @@ export default async function DashboardHome() {
           cta="Get your invite link"
           enabled
         />
+        <ActionCard
+          icon={Link2}
+          title="Lead Pages"
+          body="See the project pages you're bound to and copy a direct referral link to hand a buyer — every lead it captures is attributed to you."
+          href="/dashboard/lead-pages"
+          cta="Open Lead Pages"
+          enabled={approved}
+          lockedHint="Available after verification"
+        />
       </HomeSection>
 
       <HomeSection
@@ -219,15 +228,6 @@ export default async function DashboardHome() {
           body="Search active new-home projects across Ontario."
           href="/dashboard/projects"
           cta="View projects"
-          enabled={approved}
-          lockedHint="Available after verification"
-        />
-        <ActionCard
-          icon={Link2}
-          title="Lead Pages"
-          body="See the project pages you're bound to and copy a direct referral link to hand a buyer — every lead it captures is attributed to you."
-          href="/dashboard/lead-pages"
-          cta="Open Lead Pages"
           enabled={approved}
           lockedHint="Available after verification"
         />

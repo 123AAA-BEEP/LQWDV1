@@ -70,6 +70,7 @@ const REALTOR_SECTIONS: NavSection[] = [
       { href: "/dashboard/buyer-mandates", label: "Buyer Matching", icon: ClipboardList },
       { href: "/dashboard/proposals", label: "Negotiate Terms", icon: FileText },
       { href: "/dashboard/refer", label: "Refer & earn", icon: Gift },
+      { href: "/dashboard/lead-pages", label: "Lead Pages", icon: Link2 },
     ],
   },
   {
@@ -79,7 +80,6 @@ const REALTOR_SECTIONS: NavSection[] = [
     icon: Compass,
     items: [
       { href: "/dashboard/projects", label: "Projects", icon: Building2 },
-      { href: "/dashboard/lead-pages", label: "Lead Pages", icon: Link2 },
       { href: "/dashboard/broker-portals", label: "Broker Portals", icon: DoorOpen },
     ],
   },
