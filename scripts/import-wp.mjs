@@ -531,14 +531,74 @@ async function phaseLoad(flags) {
 }
 
 // ---------------------------------------------------------------------------
+// PHASE: check  (egress preflight — verify the required hosts are allowlisted)
+// ---------------------------------------------------------------------------
+function hostOf(u) { try { return new URL(u).host; } catch { return u; } }
+function isAllowlistError(err) {
+  return /not in allowlist/i.test(String(err && err.message ? err.message : err));
+}
+function allowlistHelp() {
+  return [
+    "Egress blocked: a required host is not in this environment's network allowlist.",
+    "",
+    "Fix (Claude Code on the web):",
+    "  1. Open the environment selector (cloud icon) and edit the environment this session uses.",
+    "  2. Set 'Network access' to 'Custom', then add to 'Allowed domains' (one per line):",
+    `       ${hostOf(WP_BASE)}`,
+    "       *.supabase.co",
+    "       api.anthropic.com",
+    "     and tick 'Also include default list of common package managers'.",
+    "  3. Save, then START A NEW SESSION — allowlist changes never reach an already-running one.",
+  ].join("\n");
+}
+
+async function probe(url) {
+  try {
+    const res = await fetch(url, { headers: { "User-Agent": "liqwd-importer" } });
+    const body = res.ok ? "" : await res.text().catch(() => "");
+    return { status: res.status, blocked: res.status === 403 && /not in allowlist/i.test(body) };
+  } catch (err) {
+    return { status: 0, blocked: false, error: String(err).slice(0, 140) };
+  }
+}
+
+async function phaseCheck() {
+  const supaUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const targets = [
+    { url: `${WP_BASE}/wp-json/`, need: "fetch + images" },
+    { url: "https://api.anthropic.com/v1/models", need: "extract + generate" },
+  ];
+  if (supaUrl) targets.push({ url: `${supaUrl.replace(/\/$/, "")}/auth/v1/health`, need: "load + upload" });
+
+  let blocked = false;
+  for (const t of targets) {
+    const r = await probe(t.url);
+    if (r.blocked) blocked = true;
+    const state = r.blocked ? "BLOCKED" : r.status ? "ok " : "ERR";
+    const detail = r.blocked ? "  <- not in allowlist" : r.error ? `  ${r.error}` : `  HTTP ${r.status}`;
+    log(`  [${state}] ${hostOf(t.url).padEnd(28)} (${t.need})${detail}`);
+  }
+  if (blocked) { log("\n" + allowlistHelp()); process.exit(1); }
+  log("\ncheck: all probed hosts reachable.");
+}
+
+// ---------------------------------------------------------------------------
 // CLI
 // ---------------------------------------------------------------------------
 const [cmd, ...rest] = process.argv.slice(2);
 const flags = new Set(rest.filter((a) => a.startsWith("--")));
-const phases = { fetch: phaseFetch, build: phaseBuild, extract: phaseExtract, generate: phaseGenerate, images: () => phaseImages(flags), load: () => phaseLoad(flags) };
+const phases = { check: phaseCheck, fetch: phaseFetch, build: phaseBuild, extract: phaseExtract, generate: phaseGenerate, images: () => phaseImages(flags), load: () => phaseLoad(flags) };
 
 if (!phases[cmd]) {
-  console.error(`Usage: node scripts/import-wp.mjs <fetch|build|extract|generate|images|load> [--upload|--commit]`);
+  console.error(`Usage: node scripts/import-wp.mjs <check|fetch|build|extract|generate|images|load> [--upload|--commit]`);
   process.exit(1);
 }
-phases[cmd]().catch((err) => { console.error(err); process.exit(1); });
+phases[cmd]().catch((err) => {
+  if (isAllowlistError(err)) {
+    console.error(String(err.message || err).split("\n")[0] + "\n");
+    console.error(allowlistHelp());
+  } else {
+    console.error(err);
+  }
+  process.exit(1);
+});

@@ -28,6 +28,7 @@ SUPABASE_MEDIA_BUCKET=project-media
 ## Run it in order
 
 ```bash
+npm run import:check       # egress preflight — confirm required hosts are allowlisted
 npm run import:fetch       # pull Mississauga projects + media  -> scripts/out/raw.json
 npm run import:build       # derive clean facts -> scripts/out/projects.json + review.csv
 #  → open review.csv and sanity-check the facts before spending tokens
