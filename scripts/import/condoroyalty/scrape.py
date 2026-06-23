@@ -232,18 +232,32 @@ def image_dims(url: str) -> tuple[int, int]:
     _dim_cache[url] = dims
     return dims
 
-def classify_images(cands: list[str], measure: bool):
+def _img_priority(u: str):
+    """Rank likely hero candidates first: non-floorplan, newest upload year,
+    then shorter URL. Lets us measure only the top few per listing on big runs."""
+    ym = re.search(r"/uploads/(\d{4})/", u)
+    year = int(ym.group(1)) if ym else 0
+    return (bool(FLOORPLAN.search(u)), -year, len(u))
+
+def classify_images(cands: list[str], measure: bool, max_measure: int = 0):
     """Return (hero_url, hero_w, hero_h, rows) where rows = [[role,url,w,h]].
 
-    Hero preference: largest *landscape* non-floorplan image; if none has
-    measured dims (or none is landscape), fall back to the largest image overall,
-    else the first candidate so a listing is never left without a hero URL.
+    Hero preference: largest *landscape* non-floorplan image among the images we
+    measured; fall back to the largest measured image, then to the highest-
+    priority candidate so a listing is never left without a hero URL. When
+    `max_measure` > 0 only the top-priority candidates are downloaded/measured
+    (keeps the full ~2,393 run from downloading tens of thousands of images).
     """
+    ordered = sorted(cands, key=_img_priority)
     rows = []
-    best_land = (0, 0, None)   # (w, h, url) largest landscape non-floorplan
-    best_any = (0, 0, None)    # (w, h, url) largest of anything
-    for u in cands:
-        w, h = image_dims(u) if measure else (0, 0)
+    best_land = (0, 0, None)   # largest landscape non-floorplan (measured)
+    best_any = (0, 0, None)    # largest measured of anything
+    measured = 0
+    for u in ordered:
+        do = measure and (max_measure == 0 or measured < max_measure)
+        w, h = image_dims(u) if do else (0, 0)
+        if do:
+            measured += 1
         role = "floorplan" if FLOORPLAN.search(u) else "image"
         rows.append([role, u, w, h])
         if w * h > best_any[0] * best_any[1]:
@@ -251,8 +265,8 @@ def classify_images(cands: list[str], measure: bool):
         if role != "floorplan" and w >= h and w * h > best_land[0] * best_land[1]:
             best_land = (w, h, u)
     hero = best_land if best_land[2] else best_any
-    if not hero[2] and cands:                       # no measured dims at all
-        hero = (0, 0, cands[0])
+    if not hero[2] and ordered:                     # nothing measured -> heuristic pick
+        hero = (0, 0, ordered[0])
     for r in rows:
         if r[1] == hero[2] and r[0] != "floorplan":
             r[0] = "hero"
@@ -326,7 +340,9 @@ def main():
     ap.add_argument("--offset", type=int, default=0)
     ap.add_argument("--all", action="store_true")
     ap.add_argument("--with-images", action="store_true",
-                    help="download every candidate image to measure dims (slower)")
+                    help="download candidate images to measure dims (slower)")
+    ap.add_argument("--max-measure", type=int, default=0,
+                    help="cap images measured per listing (0=all); use ~6 on the full run")
     ap.add_argument("--delay", type=float, default=0.3)
     args = ap.parse_args()
 
@@ -355,7 +371,9 @@ def main():
     for d in listings:
         for img in d["_images"]:
             freq[img] += 1
-    thresh = max(3, int(0.2 * len(listings)))
+    # Scale-invariant: site furniture appears on a large absolute number of
+    # listings; the per-listing CHROME regex is the primary net, this is backup.
+    thresh = max(8, int(0.02 * len(listings)))
     shared = {img for img, n in freq.items() if n > thresh}
 
     review_cols = [
@@ -374,7 +392,7 @@ def main():
     for d in listings:
         slug = d["url"].rstrip("/").split("/")[-1]
         cands = sorted(img for img in d["_images"] if img not in shared)
-        hero_url, hw, hh, rows = classify_images(cands, args.with_images)
+        hero_url, hw, hh, rows = classify_images(cands, args.with_images, args.max_measure)
         for role, url, w, h in rows:
             image_rows.append([slug, role, url, w, h])
         needs = bool(args.with_images and hero_url and max(hw, hh) and max(hw, hh) < NEEDS_HERO_MIN_PX)
