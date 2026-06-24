@@ -1,0 +1,10 @@
+# Stage 0 (dedup) runs with the standard library only — no installs needed.
+
+# Live DB + network stages (run off-box, where egress + keys are available):
+supabase>=2.4.0          # Supabase Python client (service role)
+httpx>=0.27              # page + image fetch, Google CSE calls
+anthropic>=0.40          # Stage 1 extraction + Stage 4 copy (Claude Opus 4.8)
+trafilatura>=1.8         # main-content extraction from fetched HTML
+Pillow>=10.0             # Stage 2 image inspection
+ImageHash>=4.3           # Stage 2 perceptual-hash dedupe
+python-dotenv>=1.0       # load .env locally

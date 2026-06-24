@@ -1,0 +1,8 @@
+.env
+__pycache__/
+*.pyc
+.venv/
+# Generated data dumps / reports — do not commit DB content.
+reports/*.csv
+fixtures/
+*.json
