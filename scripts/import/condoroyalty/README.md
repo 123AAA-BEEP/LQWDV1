@@ -19,6 +19,23 @@ are tagged `external_source` stays `'Altus Group'` and `import_notes` carries
 `out/images.csv` (every hero/gallery/floorplan image + dimensions). Re-runnable
 any time (`condoroyalty.com` is allowlisted): `python3 scrape.py --all --with-images --max-measure 6`.
 
+### Image preference (rendering > exterior > interior > logo > floor plan)
+
+A floor plan should never be the hero unless nothing else exists. `scrape.py`
+now classifies every candidate into a *kind* (`image_kind`) and picks the hero
+in this order: **exterior/rendering → photo → interior → logo → floor plan**.
+Classification is heuristic — filename tokens (`render`, `exterior`,
+`elevation`, `floorplan`, `logo`, `kitchen`, …) plus aspect ratio (wide
+landscape ⇒ rendering/exterior; tall/portrait ⇒ likely a plan). Logos are kept
+as candidates (a logo beats a plan) instead of being dropped as chrome.
+
+For a *visual* rendering-vs-floor-plan call (the only fully reliable way), run a
+vision model off-box — the natural home is `liqwd-rehost-image` (it already
+fetches each image and has open egress), which can tag the candidate's kind on
+`project_media_candidates` so the admin Media queue and any auto-hero pick
+honour the same order. The in-app hero picker should likewise prefer a
+non-floor-plan candidate; today no published page uses a floor-plan hero.
+
 ## Phases
 
 | Phase | What | Status |

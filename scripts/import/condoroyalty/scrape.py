@@ -194,12 +194,45 @@ def title_from_slug(slug: str) -> str:
     return re.sub(r"\s+", " ", slug.replace("-", " ").replace("_", " ")).strip().title()
 
 # ----------------------------------------------------------------------- images
+# Pure site chrome we never want as a project image. NOTE: builder logos are
+# deliberately NOT dropped here — per the LIQWD image preference order a logo is
+# a valid *last-resort-but-one* hero (better than a floor plan), so we keep them
+# as low-priority candidates and let the kind ranking sort them out.
 CHROME = re.compile(
-    r"(toronto-star|contact\.png|/logo|favicon|icon|avatar|/agent|/users/|social|whatsapp"
+    r"(toronto-star|contact\.png|favicon|icon|avatar|/agent|/users/|social|whatsapp"
     r"|facebook|instagram|twitter|/2012/|placeholder|sprite|medium\.png|loader|spinner)",
     re.I)
 FLOORPLAN = re.compile(r"(floor[\-_ ]?plan|/plan|layout|keyplan|site[\-_ ]?plan|-fp[\-_.]|brochure)", re.I)
+LOGO = re.compile(r"(logo|wordmark|brandmark|/brand[\-_/]|-logo[\-_.])", re.I)
+EXTERIOR = re.compile(r"(render(ing)?|exterior|elevation|aerial|streetscape|street[\-_ ]?view|facade|fa[cç]ade|building|tower|podium|skyline|architect)", re.I)
+INTERIOR = re.compile(r"(interior|kitchen|living|bedroom|bath|suite|model[\-_ ]?(suite|home)|lobby|amenit|gym|rooftop|terrace|den|dining)", re.I)
 IMG_RE = re.compile(r"https?://[^\s\"']+?/wp-content/uploads/[^\s\"']+?\.(?:jpg|jpeg|png|webp)", re.I)
+
+# LIQWD image preference order (lower rank = better hero). A rendering of the
+# structure / exterior is best, then an interior rendering, then the project
+# logo, and a floor plan only as an absolute last resort.
+KIND_RANK = {"exterior": 0, "rendering": 0, "photo": 1, "interior": 2, "logo": 3, "floorplan": 4}
+
+def image_kind(url: str, w: int = 0, h: int = 0) -> str:
+    """Best-effort kind from the filename/URL plus aspect ratio. A true
+    rendering-vs-floorplan call wants a vision model (run off-box, e.g. in the
+    rehost Edge Function); these heuristics get most of the way for free."""
+    if FLOORPLAN.search(url):
+        return "floorplan"
+    if LOGO.search(url):
+        return "logo"
+    if EXTERIOR.search(url):
+        return "exterior"
+    if INTERIOR.search(url):
+        return "interior"
+    # No filename signal: a wide landscape image is almost always a rendering or
+    # exterior photo; a square/portrait one is more likely a logo or a plan.
+    if w and h:
+        if w >= h * 1.25:
+            return "exterior"
+        if h > w * 1.1:
+            return "floorplan"
+    return "photo"
 
 def listing_images(h: str) -> set[str]:
     """Original (suffix-stripped) upload URLs on a page, minus obvious chrome."""
@@ -233,45 +266,58 @@ def image_dims(url: str) -> tuple[int, int]:
     return dims
 
 def _img_priority(u: str):
-    """Rank likely hero candidates first: non-floorplan, newest upload year,
-    then shorter URL. Lets us measure only the top few per listing on big runs."""
+    """Rank likely hero candidates first by kind (rendering/exterior best, floor
+    plan last), then newest upload year, then shorter URL. Lets us measure only
+    the top few per listing on big runs and still measure the good ones first."""
     ym = re.search(r"/uploads/(\d{4})/", u)
     year = int(ym.group(1)) if ym else 0
-    return (bool(FLOORPLAN.search(u)), -year, len(u))
+    return (KIND_RANK.get(image_kind(u), 1), -year, len(u))
 
 def classify_images(cands: list[str], measure: bool, max_measure: int = 0):
     """Return (hero_url, hero_w, hero_h, rows) where rows = [[role,url,w,h]].
 
-    Hero preference: largest *landscape* non-floorplan image among the images we
-    measured; fall back to the largest measured image, then to the highest-
-    priority candidate so a listing is never left without a hero URL. When
-    `max_measure` > 0 only the top-priority candidates are downloaded/measured
-    (keeps the full ~2,393 run from downloading tens of thousands of images).
+    Hero preference follows the LIQWD image order: a rendering / exterior of the
+    structure first, then an interior rendering, then the project logo, and a
+    floor plan only as an absolute last resort. Within the best available kind we
+    take the largest landscape image. `max_measure` > 0 measures only the
+    top-priority (best-kind) candidates so the full run doesn't download tens of
+    thousands of images — and because priority is now kind-aware, the renderings
+    are exactly what gets measured.
     """
     ordered = sorted(cands, key=_img_priority)
     rows = []
-    best_land = (0, 0, None)   # largest landscape non-floorplan (measured)
-    best_any = (0, 0, None)    # largest measured of anything
     measured = 0
+    # Track the best candidate per kind: (area, landscape_bonus, w, h, url).
+    best_by_kind: dict[str, tuple] = {}
     for u in ordered:
         do = measure and (max_measure == 0 or measured < max_measure)
         w, h = image_dims(u) if do else (0, 0)
         if do:
             measured += 1
-        role = "floorplan" if FLOORPLAN.search(u) else "image"
-        rows.append([role, u, w, h])
-        if w * h > best_any[0] * best_any[1]:
-            best_any = (w, h, u)
-        if role != "floorplan" and w >= h and w * h > best_land[0] * best_land[1]:
-            best_land = (w, h, u)
-    hero = best_land if best_land[2] else best_any
-    if not hero[2] and ordered:                     # nothing measured -> heuristic pick
+        kind = image_kind(u, w, h)
+        rows.append([kind, u, w, h])
+        landscape = 1 if (w == 0 or w >= h) else 0   # unknown dims treated as ok
+        score = (landscape, w * h)
+        prev = best_by_kind.get(kind)
+        if prev is None or score > prev[0]:
+            best_by_kind[kind] = (score, w, h, u)
+
+    # Walk the preference order and take the first kind that produced a usable
+    # candidate; never let a floor plan win unless it's all that exists.
+    hero = (0, 0, None)
+    for kind in ("exterior", "rendering", "photo", "interior", "logo", "floorplan"):
+        if kind in best_by_kind:
+            _, w, h, u = best_by_kind[kind]
+            hero = (w, h, u)
+            break
+    if not hero[2] and ordered:                     # nothing usable -> heuristic pick
         hero = (0, 0, ordered[0])
+
     for r in rows:
-        if r[1] == hero[2] and r[0] != "floorplan":
+        if r[1] == hero[2]:
             r[0] = "hero"
-        elif r[0] == "image":
-            r[0] = "gallery"
+        elif r[0] not in ("floorplan", "logo", "interior"):
+            r[0] = "gallery"      # exterior/rendering/photo non-heroes -> gallery
     return hero[2], hero[0], hero[1], rows
 
 # ------------------------------------------------------------------------- main
