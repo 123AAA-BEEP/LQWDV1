@@ -205,9 +205,9 @@ export const DEV_SECTION_IMAGES = {
     src: `${MEDIA}/landing/dev-discreet.jpg`,
     alt: "Rendering of a new-home community, sold discreetly on LIQWD",
     caption: {
-      eyebrow: "Name hidden",
-      title: "Sell it without naming it",
-      body: "Move units without exposing your project, price, or brand — toggle exactly what each agent sees.",
+      eyebrow: "Off-market by default",
+      title: "Nobody needs to know it's you",
+      body: "Reach thousands of verified agents while your project, price, and brand stay off the public record — you decide what each one sees, and when the name drops.",
     },
   },
   demand: {
@@ -216,8 +216,8 @@ export const DEV_SECTION_IMAGES = {
     alt: "Rendering of new townhomes by a major Ontario builder",
     caption: {
       eyebrow: "Demand-driven",
-      title: "Real buyers, now",
-      body: "Match inventory to verified mandates from agents with ready buyers.",
+      title: "Real buyers. Right now.",
+      body: "We match your units to verified buyer mandates from agents whose clients are ready to sign — demand that's real today, not someday.",
     },
   },
   promote: {
@@ -279,7 +279,7 @@ export const DEV_BENEFITS = [
 
 /** The killer wedge: reach the right agents without public exposure. */
 export const DEV_DISCRETION = {
-  heading: "All the reach. None of the exposure.",
+  heading: "All the reach. None of the unwanted exposure.",
   body: "Sometimes the deal needs an incentive — or a price move. In public, that can drag your comps, complicate appraisals, and unsettle buyers who already closed. LIQWD keeps it off the open market and puts you in control: toggle exactly what each agent sees — your name, your project, your price, your terms — and reveal the rest only when you choose.",
   points: [
     { title: "Protect your price integrity", body: "Incentives move privately, so public comps and appraisals hold." },
