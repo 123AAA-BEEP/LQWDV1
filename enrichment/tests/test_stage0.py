@@ -73,6 +73,27 @@ def test_no_writes_are_performed():
     assert build_proposals(rows) == []  # singleton -> no proposal
 
 
+def test_stage3_routing():
+    from liqwd_enrich.stage3_score import score_project
+    from liqwd_enrich.stages import FieldCandidate
+
+    proj = {"id": "x", "city": "Mississauga", "builder_name": "Acme", "address_full": "1 King St"}
+    rich = [
+        FieldCandidate("x", "price_from_public", "900000", None, "d", 0.8),
+        FieldCandidate("x", "total_units", "300", None, "d", 0.7),
+        FieldCandidate("x", "storeys", "30", None, "d", 0.7),
+        FieldCandidate("x", "sales_status", "selling", None, "d", 0.9),
+        FieldCandidate("x", "construction_status", "preconstruction", None, "d", 0.9),
+    ]
+    assert score_project(proj, rich, has_image=False).routing == "teaser"
+    assert score_project(proj, rich, has_image=True).routing == "ready_for_review"
+    assert score_project({"id": "y", "city": "X"}, [], has_image=False).routing == "needs_contribution"
+    # A low-confidence candidate must NOT count toward viability.
+    weak = [FieldCandidate("z", "price_from_public", "900000", None, "d", 0.2)]
+    assert "price_from_public" in score_project(
+        {"id": "z"}, weak, has_image=False).missing_fields
+
+
 if __name__ == "__main__":
     fns = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     for fn in fns:

@@ -49,21 +49,9 @@ FIELD_SCHEMA = [
 ]
 
 
-def stage1_enrich_fields(*args: Any, **kwargs: Any):
-    """Search -> fetch -> Claude structured extraction -> FieldCandidate[]."""
-    raise NotImplementedError("Stage 1 implemented in the off-box build step.")
-
-
-def stage2_acquire_images(*args: Any, **kwargs: Any):
-    """Image search -> watermark filter + perceptual-hash dedupe -> media candidates."""
-    raise NotImplementedError("Stage 2 implemented in the off-box build step.")
-
-
-def stage3_score(*args: Any, **kwargs: Any):
-    """Completeness score + MVR routing (ready_for_review / teaser / needs_contribution)."""
-    raise NotImplementedError("Stage 3 implemented in the off-box build step.")
-
-
-def stage4_copy(*args: Any, **kwargs: Any):
-    """Claude copy drafts + JSON-LD + author attribution, grounded only in verified facts."""
-    raise NotImplementedError("Stage 4 implemented in the off-box build step.")
+# Stage implementations live in their own modules (kept small + testable):
+#   stage1_fields.py   search -> fetch -> Claude extraction -> FieldCandidate[]
+#   stage2_images.py   image search -> filter + phash dedupe -> media candidates
+#   stage3_score.py    completeness score + MVR routing
+#   stage4_copy.py     grounded copy + JSON-LD + author attribution
+# This module holds only the shared contract (FieldCandidate, schema, enums).

@@ -89,6 +89,102 @@ def run_stage0(args, settings, logger) -> int:
     return 0
 
 
+def _need(cond: bool, what: str) -> None:
+    if not cond:
+        raise SystemExit(f"Stages 1-4 require {what}. Set it in the environment (.env).")
+
+
+def run_enrich(args, settings, logger) -> int:
+    """Stages 1-4 over the target projects. Dry-run unless --commit."""
+    import httpx
+    from liqwd_enrich.config import SUPABASE_PROJECT_REF
+    from liqwd_enrich import stage1_fields, stage2_images, stage3_score, stage4_copy
+    from liqwd_enrich.normalize import builder_tokens
+
+    want = {"1", "2", "3", "4"} if args.stage == "all" else {args.stage}
+    _need(settings.has_search, "GOOGLE_CSE_KEY + GOOGLE_CSE_CX")
+    if want & {"1", "4"}:
+        _need(settings.has_anthropic, "ANTHROPIC_API_KEY")
+
+    from liqwd_enrich.search.cse import CseClient
+    cse = CseClient(settings.google_cse_key, settings.google_cse_cx)
+    anthropic_client = None
+    if want & {"1", "4"}:
+        import anthropic
+        anthropic_client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
+
+    db = None
+    run_id = None
+    if args.commit:
+        _need(settings.has_supabase, "SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY")
+        from liqwd_enrich.db import Db
+        db = Db(settings)
+        run_id = db.insert_run(args.city, args.stage, {"stages": sorted(want)})
+
+    rows = _load_rows(args, settings, logger)
+    if args.limit:
+        rows = rows[: args.limit]
+    # Skip locked rows entirely — defense in depth (the DB guard also refuses).
+    targets = [r for r in rows if r.get("record_status") not in ("published", "approved")]
+    skipped = len(rows) - len(targets)
+    http_client = httpx.Client(timeout=25.0)
+
+    summary = {"projects": 0, "field_candidates": 0, "media_candidates": 0, "routing": {}}
+    for project in targets:
+        cands = []
+        if "1" in want:
+            snaps = []
+            cands = stage1_fields.enrich_project(
+                project, cse=cse, anthropic_client=anthropic_client,
+                model=settings.anthropic_model, logger=logger,
+                http_client=http_client, on_snapshot=snaps.append,
+            )
+            if db:
+                for c in cands:
+                    db.upsert_field_candidate(stage1_fields.candidate_to_row(c, run_id))
+
+        media = []
+        if "2" in want:
+            existing = set()
+            media = stage2_images.acquire_images(
+                project, cse=cse, builder_tokens=builder_tokens(project.get("builder_name")),
+                logger=logger, existing_urls=existing,
+            )
+            if db:
+                for m in media:
+                    db.insert_media_candidate(m.to_row())
+
+        if "3" in want:
+            res = stage3_score.score_project(project, cands, has_image=bool(media))
+            summary["routing"][res.routing] = summary["routing"].get(res.routing, 0) + 1
+            log_event(logger, "routed", project_id=project["id"],
+                      routing=res.routing, score=res.score)
+
+        if "4" in want and anthropic_client is not None:
+            approved = {c.field_name: {"value": c.candidate_value,
+                                       "is_proposed": c.is_proposed} for c in cands}
+            copy = stage4_copy.draft_copy(project, approved, client=anthropic_client,
+                                          model=settings.anthropic_model)
+            if db:
+                for c in stage4_copy.copy_to_candidates(project["id"], copy, run_id):
+                    db.upsert_field_candidate(stage1_fields.candidate_to_row(c, run_id))
+
+        summary["projects"] += 1
+        summary["field_candidates"] += len(cands)
+        summary["media_candidates"] += len(media)
+
+    if db and run_id:
+        db.finish_run(run_id, summary)
+
+    print(f"\nStages {sorted(want)}: processed {summary['projects']} projects "
+          f"({skipped} locked rows skipped). "
+          f"{summary['field_candidates']} field candidates, "
+          f"{summary['media_candidates']} media candidates. "
+          f"Routing: {summary['routing']}.")
+    print("(dry run — no writes.)" if not args.commit else f"COMMIT: run {run_id} written.")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description="LIQWD project enrichment pipeline")
     p.add_argument("--city", default="Mississauga")
@@ -114,12 +210,7 @@ def main(argv: list[str] | None = None) -> int:
         if args.stage == "0":
             return rc
     if args.stage in ("1", "2", "3", "4", "all"):
-        print(
-            f"\nStage {args.stage}: requires open network egress + API keys "
-            "(Google CSE / Anthropic) — run off-box. Implementation pending.",
-            file=sys.stderr,
-        )
-        return 0 if args.stage == "all" else 2
+        return run_enrich(args, settings, logger)
     return 0
 
 
