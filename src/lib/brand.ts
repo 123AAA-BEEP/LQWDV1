@@ -163,16 +163,20 @@ export const SECTION_IMAGES = {
  * sections. Each image carries a frosted overlay caption in the hero card
  * style (see ShowcaseFigure).
  *
- * NOTE: these currently reuse the realtor showcase screenshots as placeholders
- * so the page renders. They should be swapped for builder-facing visuals —
- * see DEV_IMAGE_BRIEF below for exactly what to supply. `placeholder: true`
- * marks an asset awaiting a real replacement.
+ * INTERIM: these point at real, published project renderings we already host in
+ * the public `project-media` Storage bucket (low-rise / townhouse developments
+ * along the Mississauga–Oakville corridor) — a big step up from the realtor
+ * screenshots, and accurate to the builder pitch. Swap each `src` for a
+ * supplied builder-facing visual when ready (see DEV_IMAGE_BRIEF); the captions
+ * can stay or be overridden. Keep them landscape and ≥1200px wide.
  */
+const MEDIA = "https://mzdqlhopxfknwqxxuonn.supabase.co/storage/v1/object/public/project-media";
+
 export const DEV_SECTION_IMAGES = {
   inventory: {
-    src: "/showcase/flash-sale.webp",
-    alt: "Posting new-home inventory to Ontario's top agents in LIQWD",
-    placeholder: true,
+    // Brightwater Towns — Mississauga master-planned townhome community.
+    src: `${MEDIA}/3a58205e-6069-58bf-8eba-122b7748cd10/hero.jpg`,
+    alt: "Rendering of a master-planned townhome community in the GTA",
     caption: {
       eyebrow: "One workspace",
       title: "List in minutes",
@@ -180,9 +184,9 @@ export const DEV_SECTION_IMAGES = {
     },
   },
   demand: {
-    src: "/showcase/commission.webp",
-    alt: "Live buyer demand from verified agents shown in LIQWD",
-    placeholder: true,
+    // The Nine — Mississauga townhomes by Mattamy Homes.
+    src: `${MEDIA}/12b60766-826f-521d-ab0b-675ea6b99532/hero.jpg`,
+    alt: "Rendering of new townhomes by a major Ontario builder",
     caption: {
       eyebrow: "Demand-driven",
       title: "Real buyers, now",
@@ -190,9 +194,9 @@ export const DEV_SECTION_IMAGES = {
     },
   },
   promote: {
-    src: "/showcase/exclusive-discount.webp",
-    alt: "Promoting a pre-construction project across the LIQWD network",
-    placeholder: true,
+    // Princeton Heights — flagship luxury estate rendering by Fernbrook Homes.
+    src: `${MEDIA}/039d95a9-1b48-5329-b7ea-fbc5e5708e35/hero.jpg`,
+    alt: "Dusk rendering of a flagship luxury estate home in the GTA",
     caption: {
       eyebrow: "Promote",
       title: "Reach on demand",
@@ -206,6 +210,9 @@ export const DEV_SECTION_IMAGES = {
  * preference for any project visual: rendering → exterior photo → interior →
  * project logo → floor plan (last resort). See README in
  * scripts/import/condoroyalty for the same ranking applied to imports.
+ *
+ * To swap: drop the file in /public/showcase (or keep a hosted URL) and replace
+ * the matching `src` in DEV_SECTION_IMAGES above — nothing else changes.
  */
 export const DEV_IMAGE_BRIEF = [
   "Section 02 “One workspace to move your inventory”: a builder-facing screenshot or rendering of a development being listed (the deal/inventory composer). Landscape or square, min 1200px wide.",
