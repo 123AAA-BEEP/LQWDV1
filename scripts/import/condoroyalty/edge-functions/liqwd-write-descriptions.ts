@@ -3,11 +3,12 @@
 // each development is queried once and applied to all its phase rows): looks up
 // OSM POIs, builds a grounded amenity description (verified place names +
 // computed distances only — never invented), and writes it to
-// projects.description_ai_draft, tagging import_notes '[desc amenity v3]'.
+// projects.description_ai_draft, tagging import_notes '[desc amenity v4]'.
 //
-// Copy style (v5): conversational + Canadian. Distances are expressed as
-// walk/drive time (switching to drive past ~15 min) plus a unit figure in
-// brackets — feet for short hops, km for longer — never raw metres. The opening
+// Copy style (v6): conversational + Canadian. Distances are expressed as
+// walk time up to ~10 min (<=800 m), flipping to drive time beyond that, plus a
+// unit figure in brackets — feet for short hops, km for longer, never raw metres
+// — and the figure is dropped on the very-close "steps away" lines. The opening
 // is enriched from structured Altus fields (storeys → "25-storey condominium",
 // total_units → "with N suites/homes", builder, neighbourhood) and the property
 // type is inferred from the name AND storeys (>=5 storeys ⇒ condominium).
@@ -83,10 +84,10 @@ function reachTime(m: number, cat: string): string {
     const close: Record<string, string> = { transit: "right at the doorstep", shopping: "just steps away", park: "moments away", school: "just around the corner" };
     return close[cat] || "just steps away";
   }
-  if (m <= 1200) { const w = walkMin(m); return `${artMin(w)} ${w}-minute walk`; }
+  if (m <= 800) { const w = walkMin(m); return `${artMin(w)} ${w}-minute walk`; }
   const d = driveMin(m); return `${artMin(d)} ${d}-minute drive`;
 }
-function reach(m: number, cat: string): string { return `${reachTime(m, cat)} (${metricFigure(m)})`; }
+function reach(m: number, cat: string): string { const t = reachTime(m, cat); return m <= 140 ? t : `${t} (${metricFigure(m)})`; }
 function anN(n: number): string { const s = String(n); return (s[0] === "8" || n === 11 || n === 18 || (n >= 80 && n <= 89)) ? "an" : "a"; }
 function transitLabel(name: string): string { return /stat|stop|\bGO\b|terminal|line/i.test(name) ? name : name + " station"; }
 
@@ -135,7 +136,7 @@ Deno.serve(async (req: Request) => {
   const batch = body.batch ?? 12;
   const dry = !!body.dry_run;
   const onlyId = body.only_id || null;
-  const TAG = "[desc amenity v3]";
+  const TAG = "[desc amenity v4]";
   const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
   const { data: rows, error } = await supabase.from("projects")
     .select("id,project_name,city,neighbourhood,builder_name,sales_status,storeys,total_units,latitude,longitude,import_notes")
@@ -144,7 +145,7 @@ Deno.serve(async (req: Request) => {
   if (error) return json({ error: error.message }, 500);
   const groups = new Map<string, any[]>();
   for (const r of (rows || [])) {
-    if (!onlyId && String(r.import_notes || "").includes("desc amenity v3")) continue;
+    if (!onlyId && String(r.import_notes || "").includes("desc amenity v4")) continue;
     const k = (r.project_name || "") + "|" + (r.city || "");
     if (!groups.has(k)) groups.set(k, []);
     groups.get(k)!.push(r);
