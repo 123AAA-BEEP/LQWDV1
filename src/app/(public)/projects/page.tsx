@@ -130,7 +130,9 @@ export default async function MarketplacePage({
   const hasFilter = Boolean(q || cityFilter || typeFilter || statusFilter);
 
   // Featured strip — only on the unfiltered browse (a curated highlight, not
-  // search results). Sponsored/advertiser listings ride here too.
+  // search results). Capped at 3 so it's always one clean desktop row (shows
+  // 1–3 depending on how many are featured). Any extra featured/sponsored
+  // listings pepper into the results grid below (floated to top, badged).
   let featured: Row[] = [];
   if (!hasFilter) {
     const { data: fData } = await supabase
@@ -138,7 +140,7 @@ export default async function MarketplacePage({
       .select(SELECT)
       .or("is_featured.eq.true,is_advertiser.eq.true")
       .order("published_at", { ascending: false })
-      .limit(6);
+      .limit(3);
     featured = (fData as Row[] | null) ?? [];
   }
 
