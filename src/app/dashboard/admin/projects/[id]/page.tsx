@@ -19,6 +19,8 @@ import {
   addBrokerPortal,
   removeBrokerPortal,
   setBrokerPortalFeatured,
+  approveBrokerPortal,
+  rejectBrokerPortal,
 } from "./actions";
 import { ProjectUploads } from "./uploads";
 import { AgentSelect } from "./agent-select";
@@ -79,7 +81,7 @@ export default async function AdminProjectEditor({
   const { data: portals } = await supabase
     .from("project_broker_portals")
     .select(
-      "id, portal_name, portal_type, url, access_notes, is_primary, is_active, is_featured",
+      "id, portal_name, portal_type, url, access_notes, is_primary, is_active, is_featured, status, submitter:profiles!added_by_user_id(first_name,last_name,email)",
     )
     .eq("project_id", id)
     .order("is_primary", { ascending: false });
@@ -97,6 +99,29 @@ export default async function AdminProjectEditor({
       clickCounts.set(e.portal_id, (clickCounts.get(e.portal_id) ?? 0) + 1);
     }
   }
+
+  type PortalRow = {
+    id: string;
+    portal_name: string;
+    portal_type: string;
+    url: string | null;
+    access_notes: string | null;
+    is_primary: boolean;
+    is_active: boolean;
+    is_featured: boolean;
+    status: string;
+    submitter: {
+      first_name: string | null;
+      last_name: string | null;
+      email: string | null;
+    } | null;
+  };
+  const allPortals = (portals as PortalRow[] | null) ?? [];
+  // Realtor suggestions awaiting review vs. live (admin-approved) portals.
+  const pendingPortals = allPortals.filter((p) => p.status === "pending");
+  const livePortals = allPortals.filter(
+    (p) => p.status !== "pending" && p.status !== "rejected",
+  );
 
   // All realtors are assignable; the editor flags any who aren't approved +
   // public-profile-enabled (their card won't render on the public page).
@@ -662,19 +687,63 @@ export default async function AdminProjectEditor({
             project is published. Feature one for paid placement.
           </p>
 
-          {portals && portals.length > 0 ? (
+          {pendingPortals.length > 0 ? (
+            <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50/60 p-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-amber-800">
+                Realtor suggestions to review ({pendingPortals.length})
+              </p>
+              <ul className="mt-2 divide-y divide-amber-100">
+                {pendingPortals.map((p) => {
+                  const who =
+                    [p.submitter?.first_name, p.submitter?.last_name]
+                      .filter(Boolean)
+                      .join(" ") ||
+                    p.submitter?.email ||
+                    "a realtor";
+                  return (
+                    <li
+                      key={p.id}
+                      className="flex items-center justify-between gap-3 py-2"
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium text-slate-800">
+                          {p.portal_name}
+                        </p>
+                        <p className="truncate text-xs text-slate-500">
+                          {p.url ? `${p.url} · ` : ""}suggested by {who}
+                        </p>
+                        {p.access_notes ? (
+                          <p className="truncate text-xs text-slate-400">
+                            {p.access_notes}
+                          </p>
+                        ) : null}
+                      </div>
+                      <div className="flex shrink-0 items-center gap-2">
+                        <form action={approveBrokerPortal}>
+                          <input type="hidden" name="portal_id" value={p.id} />
+                          <input type="hidden" name="project_id" value={id} />
+                          <Button type="submit" size="sm">
+                            Approve
+                          </Button>
+                        </form>
+                        <form action={rejectBrokerPortal}>
+                          <input type="hidden" name="portal_id" value={p.id} />
+                          <input type="hidden" name="project_id" value={id} />
+                          <Button type="submit" size="sm" variant="danger">
+                            Reject
+                          </Button>
+                        </form>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ) : null}
+
+          {livePortals.length > 0 ? (
             <ul className="mt-4 divide-y divide-slate-100">
-              {(
-                portals as {
-                  id: string;
-                  portal_name: string;
-                  portal_type: string;
-                  url: string | null;
-                  is_primary: boolean;
-                  is_active: boolean;
-                  is_featured: boolean;
-                }[]
-              ).map((p) => (
+              {livePortals.map((p) => (
                 <li
                   key={p.id}
                   className="flex items-center justify-between gap-3 py-2"

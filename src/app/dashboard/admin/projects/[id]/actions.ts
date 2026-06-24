@@ -269,6 +269,48 @@ export async function removeBrokerPortal(formData: FormData) {
   revalidatePath("/dashboard/broker-portals");
 }
 
+/** Approves a realtor-suggested broker portal, making it live (admin-only). */
+export async function approveBrokerPortal(formData: FormData) {
+  const id = String(formData.get("portal_id") ?? "");
+  const projectId = String(formData.get("project_id") ?? "");
+  if (!id) return;
+
+  const supabase = await createClient();
+  const adminId = await assertAdmin(supabase);
+  await supabase
+    .from("project_broker_portals")
+    .update({
+      status: "approved",
+      is_active: true,
+      approved_by_user_id: adminId,
+    })
+    .eq("id", id);
+
+  revalidatePath(`/dashboard/admin/projects/${projectId}`);
+  revalidatePath("/dashboard/broker-portals");
+}
+
+/** Rejects a realtor-suggested broker portal (admin-only). */
+export async function rejectBrokerPortal(formData: FormData) {
+  const id = String(formData.get("portal_id") ?? "");
+  const projectId = String(formData.get("project_id") ?? "");
+  if (!id) return;
+
+  const supabase = await createClient();
+  const adminId = await assertAdmin(supabase);
+  await supabase
+    .from("project_broker_portals")
+    .update({
+      status: "rejected",
+      is_active: false,
+      approved_by_user_id: adminId,
+    })
+    .eq("id", id);
+
+  revalidatePath(`/dashboard/admin/projects/${projectId}`);
+  revalidatePath("/dashboard/broker-portals");
+}
+
 /** Toggles a broker portal's featured (paid-placement) flag (admin-only). */
 export async function setBrokerPortalFeatured(formData: FormData) {
   const id = String(formData.get("portal_id") ?? "");

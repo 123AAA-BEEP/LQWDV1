@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Card, CardBody } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
+import { Notice } from "@/components/ui/notice";
 import { VerificationRequired } from "@/components/dashboard/locked";
 import { formatPriceBand } from "@/lib/types";
 
@@ -14,11 +15,14 @@ export const dynamic = "force-dynamic";
 
 export default async function ProjectDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ message?: string }>;
 }) {
-  const { profile } = await requireUserProfile();
+  const { userId, profile } = await requireUserProfile();
   const { slug } = await params;
+  const { message } = await searchParams;
 
   if (!isApproved(profile)) {
     return (
@@ -42,24 +46,36 @@ export default async function ProjectDetailPage({
   if (!project) notFound();
 
   // Broker-only related data (RLS permits approved realtors to read).
-  const [{ data: commercials }, { data: portals }, { data: incentives }, { data: floorplans }] =
-    await Promise.all([
-      supabase
-        .from("project_private_commercials")
-        .select("*")
-        .eq("project_id", project.id)
-        .maybeSingle(),
-      supabase
-        .from("project_broker_portals")
-        .select("*")
-        .eq("project_id", project.id)
-        .eq("is_active", true),
-      supabase.from("project_incentives").select("*").eq("project_id", project.id),
-      supabase
-        .from("project_floorplans")
-        .select("*")
-        .eq("project_id", project.id),
-    ]);
+  const [
+    { data: commercials },
+    { data: portals },
+    { data: myPendingPortals },
+    { data: incentives },
+    { data: floorplans },
+  ] = await Promise.all([
+    supabase
+      .from("project_private_commercials")
+      .select("*")
+      .eq("project_id", project.id)
+      .maybeSingle(),
+    supabase
+      .from("project_broker_portals")
+      .select("*")
+      .eq("project_id", project.id)
+      .eq("is_active", true),
+    // This realtor's own suggestions still awaiting admin review.
+    supabase
+      .from("project_broker_portals")
+      .select("id, url, status")
+      .eq("project_id", project.id)
+      .eq("added_by_user_id", userId)
+      .eq("status", "pending"),
+    supabase.from("project_incentives").select("*").eq("project_id", project.id),
+    supabase
+      .from("project_floorplans")
+      .select("*")
+      .eq("project_id", project.id),
+  ]);
 
   const band = formatPriceBand(
     project.price_from_public,
@@ -114,6 +130,13 @@ export default async function ProjectDetailPage({
           </div>
         </div>
       </div>
+
+      {message === "portal-suggested" ? (
+        <Notice tone="success">
+          Thanks — your broker portal link was submitted for review. An admin
+          will approve it before it appears in the directory.
+        </Notice>
+      ) : null}
 
       {project.hero_image_url ? (
         <div className="overflow-hidden rounded-xl border border-slate-200">
@@ -296,6 +319,29 @@ export default async function ProjectDetailPage({
             ) : (
               <Empty>No broker portals on file.</Empty>
             )}
+
+            {myPendingPortals && myPendingPortals.length > 0 ? (
+              <ul className="mt-3 space-y-1 border-t border-slate-100 pt-3">
+                {myPendingPortals.map((p) => (
+                  <li
+                    key={p.id}
+                    className="flex items-center justify-between gap-2 text-xs text-slate-500"
+                  >
+                    <span className="truncate">{p.url}</span>
+                    <Badge tone="warning">Pending review</Badge>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+
+            <ButtonLink
+              href={`/dashboard/projects/${slug}/broker-portal`}
+              variant="secondary"
+              size="sm"
+              className="mt-3 w-full"
+            >
+              Suggest a broker portal
+            </ButtonLink>
           </Section>
         </div>
       </div>
