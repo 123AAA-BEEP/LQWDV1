@@ -77,6 +77,10 @@ export const SIGNUP_SECTION = {
   body: "Join LIQWD for free and unlock a better way to work through new-home opportunities in Ontario.",
 } as const;
 
+/** Footer data/accuracy disclaimer shown across public pages. */
+export const DISCLAIMER =
+  "LIQWD brings Ontario's new-construction inventory together in one place. Our database is built from builder data feeds, third-party datasets, and manual research and analysis of publicly available information. While we strive for accuracy and verify information wherever we can, LIQWD is not liable for any use or misuse of the information on this site. All information is provided for reference only and should be independently verified with the builder or brokerage." as const;
+
 /**
  * Brokerage logo marquee ("trust carousel") on the landing page.
  * IMPORTANT: only list brokerages you have permission to display — showing a
