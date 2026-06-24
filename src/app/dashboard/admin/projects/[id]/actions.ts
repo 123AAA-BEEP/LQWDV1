@@ -50,6 +50,7 @@ export async function updateProject(formData: FormData) {
       price_to_public: num(formData.get("price_to_public")),
       hero_image_url: str(formData.get("hero_image_url")),
       record_status: str(formData.get("record_status")) ?? "draft",
+      is_featured: formData.get("is_featured") === "on",
     })
     .eq("id", id);
 

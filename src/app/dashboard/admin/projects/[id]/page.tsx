@@ -420,6 +420,18 @@ export default async function AdminProjectEditor({
                 ))}
               </Select>
             </Field>
+            <label className="flex items-start gap-2 text-sm text-slate-700">
+              <input
+                type="checkbox"
+                name="is_featured"
+                defaultChecked={Boolean(project.is_featured)}
+                className="mt-0.5 size-4"
+              />
+              <span>
+                Feature on the public marketplace — shows in the “Featured
+                developments” strip and floats to the top of the results grid.
+              </span>
+            </label>
             <Button type="submit">Save project</Button>
           </form>
         </CardBody>
