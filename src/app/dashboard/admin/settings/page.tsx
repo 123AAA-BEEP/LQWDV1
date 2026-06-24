@@ -5,6 +5,7 @@ import { Field, Textarea } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { Notice } from "@/components/ui/notice";
 import { saveSeoPromptSettings } from "./actions";
+import { BackfillSectionsButton } from "./backfill-button";
 
 export const metadata: Metadata = { title: "Settings" };
 export const dynamic = "force-dynamic";
@@ -109,6 +110,21 @@ export default async function AdminSettings({
               ) : null}
             </div>
           </form>
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardBody>
+          <h3 className="font-semibold text-ink">Backfill content sections</h3>
+          <p className="mt-1 text-sm text-slate-500">
+            Generate the four page sections — intro, local amenities, getting
+            around, and the developer — for published projects that don&apos;t
+            have them yet. Runs 8 projects per click; keep clicking until it
+            reports 0 remaining. Existing copy is never overwritten.
+          </p>
+          <div className="mt-4">
+            <BackfillSectionsButton />
+          </div>
         </CardBody>
       </Card>
     </div>
