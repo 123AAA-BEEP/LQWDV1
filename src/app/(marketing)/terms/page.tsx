@@ -1,10 +1,11 @@
 /**
  * LIQWD Terms of Service.
  *
- * TEMPLATE / STARTING POINT — this is not legal advice. Before relying on it:
- *   1. Replace every [bracketed] placeholder with your real details.
- *   2. Have Ontario legal counsel review it (especially the accuracy
- *      disclaimer, limitation of liability, and governing-law clauses).
+ * TEMPLATE / STARTING POINT — this is not legal advice. Have Ontario legal
+ * counsel review it before relying on it (especially the accuracy disclaimer,
+ * limitation of liability, and governing-law clauses). When you have them, add
+ * your legal entity name and a business contact (address / legal@ email) to
+ * the intro and "Contact us" section.
  * Drafted for an Ontario, Canada context and the broker-portal model.
  */
 import type { Metadata } from "next";
@@ -26,10 +27,9 @@ export default function TermsOfServicePage() {
         <p>
           These Terms of Service (the “Terms”) govern your access to and use of
           the LIQWD broker portal and{" "}
-          <Link href="/">liqwd.ca</Link> (the “Service”), operated by [LIQWD
-          legal entity name] (“LIQWD,” “we,” “us,” or “our”). By creating an
-          account or using the Service, you agree to these Terms. If you do not
-          agree, do not use the Service.
+          <Link href="/">liqwd.ca</Link> (the “Service”), operated by LIQWD
+          (“we,” “us,” or “our”). By creating an account or using the Service,
+          you agree to these Terms. If you do not agree, do not use the Service.
         </p>
       }
     >
@@ -223,14 +223,8 @@ export default function TermsOfServicePage() {
 
       <LegalSection heading="17. Contact us">
         <p>
-          Questions about these Terms can be sent to:
-        </p>
-        <p>
-          [LIQWD legal entity name]
-          <br />
-          [business mailing address]
-          <br />
-          <a href="mailto:[legal@liqwd.ca]">[legal@liqwd.ca]</a>
+          Questions about these Terms can be sent to us through{" "}
+          <Link href="/">liqwd.ca</Link>.
         </p>
       </LegalSection>
     </LegalLayout>

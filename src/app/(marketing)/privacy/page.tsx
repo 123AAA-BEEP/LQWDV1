@@ -1,9 +1,11 @@
 /**
  * LIQWD Privacy Policy.
  *
- * TEMPLATE / STARTING POINT — this is not legal advice. Before relying on it:
- *   1. Replace every [bracketed] placeholder with your real details.
- *   2. Have Ontario legal counsel review it.
+ * TEMPLATE / STARTING POINT — this is not legal advice. Have Ontario legal
+ * counsel review it before relying on it. When you have them, add your legal
+ * entity name, a registered/business address, and a dedicated privacy contact
+ * email (e.g. privacy@liqwd.ca) to the intro and "Contact us" section, and
+ * revisit the cookies disclosure if you ever add analytics.
  * Drafted for a Canadian (PIPEDA) context, reflecting the data the platform
  * actually handles (realtor accounts, RECO verification, and consumer leads).
  */
@@ -24,9 +26,8 @@ export default function PrivacyPolicyPage() {
       updated="June 24, 2026"
       intro={
         <p>
-          This Privacy Policy explains how [LIQWD legal entity name] (“LIQWD,”
-          “we,” “us,” or “our”) collects, uses, discloses, and safeguards
-          personal information when you visit{" "}
+          This Privacy Policy explains how LIQWD (“we,” “us,” or “our”) collects,
+          uses, discloses, and safeguards personal information when you visit{" "}
           <Link href="/">liqwd.ca</Link> and use the LIQWD broker portal (the
           “Service”). We handle personal information in accordance with Canada’s
           Personal Information Protection and Electronic Documents Act (PIPEDA)
@@ -139,12 +140,11 @@ export default function PrivacyPolicyPage() {
 
       <LegalSection heading="5. Cookies and similar technologies">
         <p>
-          We use cookies that are necessary to operate the Service, including to
-          keep you signed in and to maintain session security. [If applicable,
-          describe any analytics or performance cookies here — otherwise state:
-          “We do not use third-party advertising or analytics cookies.”] Most
-          browsers let you control cookies through their settings; blocking
-          essential cookies may prevent you from signing in.
+          We use only the cookies necessary to operate the Service, including to
+          keep you signed in and to maintain session security. We do not use
+          third-party advertising or analytics cookies. Most browsers let you
+          control cookies through their settings; blocking essential cookies may
+          prevent you from signing in.
         </p>
       </LegalSection>
 
@@ -218,17 +218,13 @@ export default function PrivacyPolicyPage() {
 
       <LegalSection heading="12. Contact us">
         <p>
-          If you have questions about this Policy or how we handle personal
-          information, contact our Privacy Officer:
-        </p>
-        <p>
-          [LIQWD legal entity name]
-          <br />
-          Attn: Privacy Officer
-          <br />
-          [business mailing address]
-          <br />
-          <a href="mailto:[privacy@liqwd.ca]">[privacy@liqwd.ca]</a>
+          If you have questions about this Policy or how we handle your personal
+          information, or if you would like to exercise your privacy rights,
+          please contact our Privacy Officer through{" "}
+          <Link href="/">liqwd.ca</Link>. If you have an account, you can also
+          manage much of your information in your{" "}
+          <Link href="/dashboard/profile">profile settings</Link>. We will
+          respond as soon as we reasonably can.
         </p>
       </LegalSection>
     </LegalLayout>
