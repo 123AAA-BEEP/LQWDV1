@@ -3,22 +3,24 @@
 // each development is queried once and applied to all its phase rows): looks up
 // OSM POIs, builds a grounded amenity description (verified place names +
 // computed distances only — never invented), and writes it to
-// projects.description_ai_draft, tagging import_notes '[desc amenity v4]'.
+// projects.description_ai_draft, tagging import_notes '[desc amenity v5]'.
 //
-// Copy style (v7): conversational + Canadian. Distances are expressed as walk
-// time up to ~10 min (<=800 m), flipping to drive time beyond that, plus a unit
-// figure in brackets — feet for short hops, km for longer, never raw metres —
-// and the figure is dropped on the very-close "steps away" lines. The opening is
-// enriched from structured Altus fields (storeys -> "25-storey condominium",
-// total_units -> "with N suites/homes", neighbourhood) and the property type is
-// inferred from the name AND storeys (>=5 storeys => condominium). Nearby POIs
-// are de-duplicated by normalised name so the same station can't appear twice,
-// and multi-builder credits render as a proper "A, B and C" list.
+// Copy style (v8): conversational + Canadian, and deliberately VARIED so the
+// 140 listings don't read like one template. Distances are walk time up to
+// ~10 min (<=800 m), flipping to drive time beyond that, plus a feet/km figure
+// (dropped on the very-close "steps away" lines), never raw metres. Each
+// sentence (opening, status, transit, shopping, parks, school) is picked from a
+// pool of phrasings, and the amenity sentences are re-ordered — all driven by a
+// stable hash of the project name, so every project reads differently yet always
+// regenerates identically (no churn). Openings are enriched from structured
+// Altus fields; property type is inferred from the name AND storeys
+// (>=5 storeys => condominium); nearby POIs are de-duplicated by normalised name;
+// multi-builder credits render as a proper "A, B and C" list.
 //
 // Body: { batch?: number=12, dry_run?: boolean, only_id?: uuid }.
 //  - dry_run: build + return descriptions WITHOUT writing (preview).
 //  - only_id: restrict to the one development containing this row id; this also
-//    bypasses the "already v4" skip so a single project can be regenerated.
+//    bypasses the "already v5" skip so a single project can be regenerated.
 // Keep batches small (<=3) to stay under the edge worker compute limit; invoke
 // repeatedly until remaining_projects = 0.
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
@@ -75,9 +77,8 @@ async function poisFor(lat: number, lng: number, radius = 1500) {
   return items;
 }
 
-// ---- Conversational Canadian distance phrasing (v7) ----
-function walkMin(m: number): number { return Math.max(1, Math.round(m / 80)); }   // ~4.8 km/h
-function driveMin(m: number): number { return Math.max(1, Math.round(m / 450)); } // ~27 km/h city pace
+function walkMin(m: number): number { return Math.max(1, Math.round(m / 80)); }
+function driveMin(m: number): number { return Math.max(1, Math.round(m / 450)); }
 function artMin(n: number): string { return (n === 8 || n === 11 || n === 18) ? "an" : "a"; }
 function commas(n: number): string { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
 function metricFigure(m: number): string {
@@ -97,6 +98,51 @@ function anN(n: number): string { const s = String(n); return (s[0] === "8" || n
 function transitLabel(name: string): string { return /stat|stop|\bGO\b|terminal|line/i.test(name) ? name : name + " station"; }
 function builderPhrase(b: string): string { if (!b) return ""; const parts = String(b).split(/\s+and\s+/); if (parts.length >= 3) return " by " + parts.slice(0, -1).join(", ") + " and " + parts[parts.length - 1]; return " by " + b; }
 
+// ---- Deterministic variety: a stable per-project hash picks a phrasing + order ----
+function hashStr(str: string): number { let h = 2166136261 >>> 0; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; } return h >>> 0; }
+function mulberry(seed: number) { return function () { seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+function shuffle<T>(arr: T[], rng: () => number): T[] { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); const tmp = a[i]; a[i] = a[j]; a[j] = tmp; } return a; }
+
+const R = (x: any, c: string) => reach(x.distance_m, c);
+const SELLING = [" Sales are now underway.", " It's now selling.", " The project is selling now.", " Sales have launched."];
+const COMING = [" It's launching soon.", " Coming soon.", " A launch is on the horizon.", " Sales launch shortly."];
+const TRANSIT1 = [
+  (t: any) => `For transit, ${transitLabel(t.name)} is ${R(t, "transit")}.`,
+  (t: any) => `${transitLabel(t.name)} is ${R(t, "transit")}, keeping the commute simple.`,
+  (t: any) => `Commuters are well served, with ${transitLabel(t.name)} ${R(t, "transit")}.`,
+  (t: any) => `The nearest transit is ${transitLabel(t.name)}, ${R(t, "transit")}.`,
+];
+const TRANSIT2 = [
+  (a: any, b: any) => `Getting around is easy — ${transitLabel(a.name)} is ${R(a, "transit")} and ${transitLabel(b.name)} is ${R(b, "transit")}.`,
+  (a: any, b: any) => `Transit is well covered: ${transitLabel(a.name)} is ${R(a, "transit")}, with ${transitLabel(b.name)} ${R(b, "transit")}.`,
+  (a: any, b: any) => `${transitLabel(a.name)} is ${R(a, "transit")}, and ${transitLabel(b.name)} is ${R(b, "transit")} — transit is within easy reach.`,
+  (a: any, b: any) => `Two stations are close by — ${transitLabel(a.name)} is ${R(a, "transit")} and ${transitLabel(b.name)} is ${R(b, "transit")}.`,
+];
+const SHOP = [
+  (s: any) => `Day-to-day errands are covered, with ${s.name} ${R(s, "shopping")}.`,
+  (s: any) => `For groceries and essentials, ${s.name} is ${R(s, "shopping")}.`,
+  (s: any) => `Everyday shopping is handy — ${s.name} is ${R(s, "shopping")}.`,
+  (s: any) => `${s.name} is ${R(s, "shopping")} for the weekly grocery run.`,
+];
+const PARK1 = [
+  (p: any) => `For green space, ${p.name} is ${R(p, "park")}.`,
+  (p: any) => `Outdoor space is close, with ${p.name} ${R(p, "park")}.`,
+  (p: any) => `${p.name} is ${R(p, "park")} for time outdoors.`,
+  (p: any) => `Nearby green space includes ${p.name}, ${R(p, "park")}.`,
+];
+const PARK2 = [
+  (a: any, b: any) => `For green space, ${a.name} is ${R(a, "park")}, and ${b.name} is close by too.`,
+  (a: any, b: any) => `Green space is plentiful — ${a.name} is ${R(a, "park")}, with ${b.name} nearby as well.`,
+  (a: any, b: any) => `${a.name} is ${R(a, "park")}, and you'll also find ${b.name} close by.`,
+  (a: any, b: any) => `Two parks sit nearby — ${a.name} is ${R(a, "park")}, and ${b.name} is just beyond.`,
+];
+const SCHOOL = [
+  (s: any) => `${s.name} is ${R(s, "school")}, a draw for families.`,
+  (s: any) => `Families are close to ${s.name}, ${R(s, "school")}.`,
+  (s: any) => `For families, ${s.name} is ${R(s, "school")}.`,
+  (s: any) => `${s.name} is ${R(s, "school")} — convenient for families.`,
+];
+
 function buildDesc(p: any, pois: any[]): string {
   const name = p.project_name;
   const isTown = /\b(towns|townhome|townhomes|townhouse|townhouses)\b/i.test(name);
@@ -113,26 +159,25 @@ function buildDesc(p: any, pois: any[]): string {
   const cityDisp = p.city === "Old Toronto" ? "Toronto" : (["North York", "Scarborough", "Etobicoke", "East York", "York"].includes(p.city) ? p.city + ", Toronto" : p.city);
   const place = p.neighbourhood ? `in ${p.neighbourhood}, ${cityDisp}` : `in ${cityDisp}`;
   const builder = builderPhrase(p.builder_name);
-  let unitPhrase = "";
-  if (units > 0) unitPhrase = isCondo ? `, with ${units} suites` : `, with ${units} homes`;
-  const status = p.sales_status === "selling" ? " Sales are now underway." : p.sales_status === "coming_soon" ? " It's launching soon." : "";
-  let s = `${name} is ${lead}${builder} ${place}${unitPhrase}.${status}`;
+  const unitPhrase = units > 0 ? (isCondo ? `, with ${units} suites` : `, with ${units} homes`) : "";
+  const seed = (p.project_name || "") + "|" + (p.city || "");
+  const pick = (arr: any[], salt: string) => arr[hashStr(seed + "|" + salt) % arr.length];
+  const capPlace = place.charAt(0).toUpperCase() + place.slice(1);
+  const OPENINGS = [
+    () => `${name} is ${lead}${builder} ${place}${unitPhrase}.`,
+    () => `${capPlace}, ${name} is ${lead}${builder}${unitPhrase}.`,
+  ];
+  const statusArr = p.sales_status === "selling" ? SELLING : p.sales_status === "coming_soon" ? COMING : [""];
+  let s = pick(OPENINGS, "open")() + pick(statusArr, "status");
   const byCat: Record<string, any[]> = {};
   for (const i of pois) (byCat[i.category] ||= []).push(i);
-  const sents: string[] = [];
-  if (byCat.transit?.length) {
-    const t = byCat.transit;
-    if (t.length >= 2) sents.push(`Getting around is easy — ${transitLabel(t[0].name)} is ${reach(t[0].distance_m, "transit")} and ${transitLabel(t[1].name)} is ${reach(t[1].distance_m, "transit")}.`);
-    else sents.push(`For transit, ${transitLabel(t[0].name)} is ${reach(t[0].distance_m, "transit")}.`);
-  }
-  if (byCat.shopping?.length) sents.push(`Day-to-day errands are covered, with ${byCat.shopping[0].name} ${reach(byCat.shopping[0].distance_m, "shopping")}.`);
-  if (byCat.park?.length) {
-    const ps = byCat.park.slice(0, 2);
-    if (ps.length >= 2) sents.push(`For green space, ${ps[0].name} is ${reach(ps[0].distance_m, "park")}, and ${ps[1].name} is close by too.`);
-    else sents.push(`For green space, ${ps[0].name} is ${reach(ps[0].distance_m, "park")}.`);
-  }
-  if (byCat.school?.length) sents.push(`${byCat.school[0].name} is ${reach(byCat.school[0].distance_m, "school")}, a draw for families.`);
-  if (sents.length) s += " " + sents.join(" ");
+  const parts: string[] = [];
+  if (byCat.transit?.length) { const t = byCat.transit; parts.push(t.length >= 2 ? pick(TRANSIT2, "transit")(t[0], t[1]) : pick(TRANSIT1, "transit")(t[0])); }
+  if (byCat.shopping?.length) parts.push(pick(SHOP, "shop")(byCat.shopping[0]));
+  if (byCat.park?.length) { const ps = byCat.park.slice(0, 2); parts.push(ps.length >= 2 ? pick(PARK2, "park")(ps[0], ps[1]) : pick(PARK1, "park")(ps[0])); }
+  if (byCat.school?.length) parts.push(pick(SCHOOL, "school")(byCat.school[0]));
+  const ordered = shuffle(parts, mulberry(hashStr(seed + "|order")));
+  if (ordered.length) s += " " + ordered.join(" ");
   return s;
 }
 function json(o: any, status = 200) { return new Response(JSON.stringify(o), { status, headers: { "Content-Type": "application/json" } }); }
@@ -142,7 +187,7 @@ Deno.serve(async (req: Request) => {
   const batch = body.batch ?? 12;
   const dry = !!body.dry_run;
   const onlyId = body.only_id || null;
-  const TAG = "[desc amenity v4]";
+  const TAG = "[desc amenity v5]";
   const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
   const { data: rows, error } = await supabase.from("projects")
     .select("id,project_name,city,neighbourhood,builder_name,sales_status,storeys,total_units,latitude,longitude,import_notes")
@@ -151,7 +196,7 @@ Deno.serve(async (req: Request) => {
   if (error) return json({ error: error.message }, 500);
   const groups = new Map<string, any[]>();
   for (const r of (rows || [])) {
-    if (!onlyId && String(r.import_notes || "").includes("desc amenity v4")) continue;
+    if (!onlyId && String(r.import_notes || "").includes("desc amenity v5")) continue;
     const k = (r.project_name || "") + "|" + (r.city || "");
     if (!groups.has(k)) groups.set(k, []);
     groups.get(k)!.push(r);
@@ -162,7 +207,7 @@ Deno.serve(async (req: Request) => {
     for (const [k, g] of groups) if (g.some((r) => r.id === onlyId)) { target = k; break; }
     keys = target ? [target] : [];
   }
-  const todo = keys.slice(0, dry ? Math.min(batch, 6) : batch);
+  const todo = keys.slice(0, dry ? Math.min(batch, 8) : batch);
   const out: any[] = [];
   for (const k of todo) {
     const g = groups.get(k)!;
