@@ -1,0 +1,4 @@
+# CondoRoyalty importer data output (scraped artifacts, not source)
+out/
+__pycache__/
+*.pyc

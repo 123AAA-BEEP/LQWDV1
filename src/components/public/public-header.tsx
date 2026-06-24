@@ -12,9 +12,15 @@ export function PublicHeader() {
           </span>
           <span aria-hidden className="size-1.5 rounded-full bg-brand-500" />
         </Link>
-        <nav className="flex items-center gap-6 text-sm font-medium text-slate-600">
+        <nav className="flex items-center gap-4 text-sm font-medium text-slate-600 sm:gap-6">
           <Link href="/projects" className="hover:text-ink">
             New homes
+          </Link>
+          <Link
+            href="/developers"
+            className="hidden text-slate-500 hover:text-ink sm:inline"
+          >
+            For developers
           </Link>
           <Link href="/" className="text-slate-500 hover:text-ink">
             For agents →

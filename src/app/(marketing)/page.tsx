@@ -3,6 +3,8 @@ import Link from "next/link";
 import { ButtonLink } from "@/components/ui/button";
 import { LogoMarquee } from "@/components/marketing/logo-marquee";
 import { HeroVisual } from "@/components/marketing/hero-visual";
+import { ShowcaseFigure } from "@/components/marketing/showcase-figure";
+import type { ShowcaseCaption } from "@/lib/brand";
 import {
   HERO,
   PROOF_POINTS,
@@ -55,7 +57,7 @@ function FeatureSection({
   index: string;
   eyebrow: string;
   heading: string;
-  image: { src: string; alt: string };
+  image: { src: string; alt: string; caption?: ShowcaseCaption };
   imageLeft?: boolean;
   muted?: boolean;
   children: ReactNode;
@@ -74,15 +76,11 @@ function FeatureSection({
             <div className="mt-8">{children}</div>
           </div>
           <div className={imageLeft ? "lg:order-first" : undefined}>
-            <div className="overflow-hidden rounded-2xl border border-slate-200 shadow-xl shadow-slate-900/10 ring-1 ring-slate-900/5">
-              {/* eslint-disable-next-line @next/next/no-img-element -- marketing asset, CSS-sized */}
-              <img
-                src={image.src}
-                alt={image.alt}
-                loading="lazy"
-                className="block w-full"
-              />
-            </div>
+            <ShowcaseFigure
+              src={image.src}
+              alt={image.alt}
+              caption={image.caption}
+            />
           </div>
         </div>
       </div>
@@ -230,6 +228,19 @@ export default function LandingPage() {
             </li>
           ))}
         </ul>
+        {/* Free-leads throw-in — accented so it stands apart from the chips. */}
+        <div className="mt-8 flex gap-4 rounded-2xl border border-brand-100 bg-brand-50/70 p-5">
+          <span
+            aria-hidden
+            className="mt-1 size-2.5 shrink-0 rounded-full bg-brand-500 ring-4 ring-brand-100"
+          />
+          <p className="text-pretty leading-relaxed text-slate-700">
+            <span className="font-semibold text-brand-700">
+              {WHY.highlight.label}:
+            </span>{" "}
+            {WHY.highlight.body}
+          </p>
+        </div>
       </FeatureSection>
 
       {/* Signup CTA */}

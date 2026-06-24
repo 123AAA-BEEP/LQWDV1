@@ -69,13 +69,28 @@ export const WHY = {
     "Find projects faster.",
     "Work from one portal instead of many.",
     "See the opportunities worth acting on.",
+    "Pick up free buyer leads.",
   ],
+  /**
+   * The "free leads" throw-in: surfaced as an accented callout under the Why
+   * bullets so it stands out from the rest of the list. Verified realtors can
+   * be matched to public project pages and receive the buyer inquiries those
+   * pages generate — at no cost.
+   */
+  highlight: {
+    label: "And it's free",
+    body: "Get matched to public project pages and keep the buyer leads they generate — no fees, no catch. The portal is free for verified Ontario realtors.",
+  },
 } as const;
 
 export const SIGNUP_SECTION = {
   heading: "Get verified. Get access.",
   body: "Join LIQWD for free and unlock a better way to work through new-home opportunities in Ontario.",
 } as const;
+
+/** Footer data/accuracy disclaimer shown across public pages. */
+export const DISCLAIMER =
+  "LIQWD brings Ontario's new-construction inventory together in one place. Our database is built from builder data feeds, third-party datasets, and manual research and analysis of publicly available information. While we strive for accuracy and verify information wherever we can, LIQWD is not liable for any use or misuse of the information on this site. All information is provided for reference only and should be independently verified with the builder or brokerage." as const;
 
 /**
  * Brokerage logo marquee ("trust carousel") on the landing page.
@@ -98,23 +113,106 @@ export const BROKERAGES = [
 ] as const;
 
 /**
+ * A frosted "glass" caption rendered over a showcase image — same treatment as
+ * the hero value card (see HERO_VISUAL.card and ShowcaseFigure). Kept in code
+ * (not baked into the image) so copy + accent stay editable.
+ */
+export type ShowcaseCaption = {
+  eyebrow: string;
+  title: string;
+  body: string;
+};
+
+/**
  * Marketing visuals paired one-to-one with the three editorial sections.
- * Assets live in /public/showcase.
+ * Assets live in /public/showcase. Each carries a frosted overlay caption in
+ * the hero card style.
  */
 export const SECTION_IMAGES = {
   inventory: {
     src: "/showcase/flash-sale.webp",
     alt: "A new-home listing showing asking price and client savings in LIQWD",
+    caption: {
+      eyebrow: "One portal",
+      title: "Every active project",
+      body: "New-home inventory across Ontario, in one clean workflow.",
+    },
   },
   verified: {
     src: "/showcase/commission.webp",
     alt: "A verified realtor reviewing her commission on a new-home sale in LIQWD",
+    caption: {
+      eyebrow: "Verified access",
+      title: "Broker-to-broker",
+      body: "RECO-verified realtors only — a trusted network, not the open web.",
+    },
   },
   why: {
     src: "/showcase/exclusive-discount.webp",
     alt: "An exclusive new-home discount surfaced in LIQWD",
+    caption: {
+      eyebrow: "Free buyer leads",
+      title: "Leads, not just listings",
+      body: "Get matched to public project pages and keep the inquiries they bring in.",
+    },
   },
 } as const;
+
+/**
+ * Developer / builder showcase visuals for the `/developers` editorial
+ * sections. Each image carries a frosted overlay caption in the hero card
+ * style (see ShowcaseFigure).
+ *
+ * NOTE: these currently reuse the realtor showcase screenshots as placeholders
+ * so the page renders. They should be swapped for builder-facing visuals —
+ * see DEV_IMAGE_BRIEF below for exactly what to supply. `placeholder: true`
+ * marks an asset awaiting a real replacement.
+ */
+export const DEV_SECTION_IMAGES = {
+  inventory: {
+    src: "/showcase/flash-sale.webp",
+    alt: "Posting new-home inventory to Ontario's top agents in LIQWD",
+    placeholder: true,
+    caption: {
+      eyebrow: "One workspace",
+      title: "List in minutes",
+      body: "Post units, mandates, or a full development straight to top agents.",
+    },
+  },
+  demand: {
+    src: "/showcase/commission.webp",
+    alt: "Live buyer demand from verified agents shown in LIQWD",
+    placeholder: true,
+    caption: {
+      eyebrow: "Demand-driven",
+      title: "Real buyers, now",
+      body: "Match inventory to verified mandates from agents with ready buyers.",
+    },
+  },
+  promote: {
+    src: "/showcase/exclusive-discount.webp",
+    alt: "Promoting a pre-construction project across the LIQWD network",
+    placeholder: true,
+    caption: {
+      eyebrow: "Promote",
+      title: "Reach on demand",
+      body: "Feature your project — to agents, and to buyers when you choose.",
+    },
+  },
+} as const;
+
+/**
+ * What to send so the `/developers` showcase images can be finalized. Order of
+ * preference for any project visual: rendering → exterior photo → interior →
+ * project logo → floor plan (last resort). See README in
+ * scripts/import/condoroyalty for the same ranking applied to imports.
+ */
+export const DEV_IMAGE_BRIEF = [
+  "Section 02 “One workspace to move your inventory”: a builder-facing screenshot or rendering of a development being listed (the deal/inventory composer). Landscape or square, min 1200px wide.",
+  "Section 03 “Match your inventory to real buyers”: a visual of live buyer demand / mandates (a buyer-mandate card, or a rendering of a sold-out community). Same dimensions.",
+  "Section 04 “Promote your project, or your offer”: a hero rendering of a flagship project (exterior or interior), suitable for a featured-placement promo. Same dimensions.",
+  "For each: a one-line caption (eyebrow + short title + one sentence) if you want to override the defaults in DEV_SECTION_IMAGES.",
+] as const;
 
 /**
  * Developer / builder marketing — the `/developers` landing page. Mirrors the

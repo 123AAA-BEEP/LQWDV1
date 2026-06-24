@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Deno edge functions + Python/Node import tooling — not part of the
+    // Next app, and must not break the app's type-check or lint.
+    "scripts/**",
   ]),
 ]);
 

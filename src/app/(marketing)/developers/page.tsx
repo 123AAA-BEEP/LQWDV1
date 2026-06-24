@@ -4,6 +4,8 @@ import Link from "next/link";
 import { ShieldCheck, Users, EyeOff, SlidersHorizontal, type LucideIcon } from "lucide-react";
 import { ButtonLink } from "@/components/ui/button";
 import { HeroVisual } from "@/components/marketing/hero-visual";
+import { ShowcaseFigure } from "@/components/marketing/showcase-figure";
+import type { ShowcaseCaption } from "@/lib/brand";
 import {
   DEV_HERO,
   DEV_PROOF_POINTS,
@@ -12,7 +14,7 @@ import {
   DEV_DEMAND,
   DEV_PROMOTE,
   DEV_SIGNUP_SECTION,
-  SECTION_IMAGES,
+  DEV_SECTION_IMAGES,
 } from "@/lib/brand";
 
 export const metadata: Metadata = {
@@ -62,7 +64,7 @@ function FeatureSection({
   index: string;
   eyebrow: string;
   heading: string;
-  image: { src: string; alt: string };
+  image: { src: string; alt: string; caption?: ShowcaseCaption };
   imageLeft?: boolean;
   muted?: boolean;
   children: ReactNode;
@@ -79,10 +81,11 @@ function FeatureSection({
             <div className="mt-8">{children}</div>
           </div>
           <div className={imageLeft ? "lg:order-first" : undefined}>
-            <div className="overflow-hidden rounded-2xl border border-slate-200 shadow-xl shadow-slate-900/10 ring-1 ring-slate-900/5">
-              {/* eslint-disable-next-line @next/next/no-img-element -- marketing asset, CSS-sized */}
-              <img src={image.src} alt={image.alt} loading="lazy" className="block w-full" />
-            </div>
+            <ShowcaseFigure
+              src={image.src}
+              alt={image.alt}
+              caption={image.caption}
+            />
           </div>
         </div>
       </div>
@@ -189,7 +192,7 @@ export default function DevelopersLandingPage() {
         index="02"
         eyebrow="What you get"
         heading="One workspace to move your inventory"
-        image={SECTION_IMAGES.inventory}
+        image={DEV_SECTION_IMAGES.inventory}
         muted
       >
         <ol className="divide-y divide-slate-200">
@@ -211,7 +214,7 @@ export default function DevelopersLandingPage() {
         index="03"
         eyebrow="Demand-driven"
         heading={DEV_DEMAND.heading}
-        image={SECTION_IMAGES.verified}
+        image={DEV_SECTION_IMAGES.demand}
         imageLeft
       >
         <p className="text-pretty text-lg leading-relaxed text-slate-600">{DEV_DEMAND.body}</p>
@@ -230,7 +233,7 @@ export default function DevelopersLandingPage() {
         index="04"
         eyebrow="Promote your project"
         heading={DEV_PROMOTE.heading}
-        image={SECTION_IMAGES.why}
+        image={DEV_SECTION_IMAGES.promote}
         muted
       >
         <p className="text-pretty text-lg leading-relaxed text-slate-600">{DEV_PROMOTE.body}</p>
