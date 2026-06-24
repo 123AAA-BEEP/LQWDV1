@@ -5,18 +5,20 @@
 // computed distances only — never invented), and writes it to
 // projects.description_ai_draft, tagging import_notes '[desc amenity v4]'.
 //
-// Copy style (v6): conversational + Canadian. Distances are expressed as
-// walk time up to ~10 min (<=800 m), flipping to drive time beyond that, plus a
-// unit figure in brackets — feet for short hops, km for longer, never raw metres
-// — and the figure is dropped on the very-close "steps away" lines. The opening
-// is enriched from structured Altus fields (storeys → "25-storey condominium",
-// total_units → "with N suites/homes", builder, neighbourhood) and the property
-// type is inferred from the name AND storeys (>=5 storeys ⇒ condominium).
+// Copy style (v7): conversational + Canadian. Distances are expressed as walk
+// time up to ~10 min (<=800 m), flipping to drive time beyond that, plus a unit
+// figure in brackets — feet for short hops, km for longer, never raw metres —
+// and the figure is dropped on the very-close "steps away" lines. The opening is
+// enriched from structured Altus fields (storeys -> "25-storey condominium",
+// total_units -> "with N suites/homes", neighbourhood) and the property type is
+// inferred from the name AND storeys (>=5 storeys => condominium). Nearby POIs
+// are de-duplicated by normalised name so the same station can't appear twice,
+// and multi-builder credits render as a proper "A, B and C" list.
 //
 // Body: { batch?: number=12, dry_run?: boolean, only_id?: uuid }.
 //  - dry_run: build + return descriptions WITHOUT writing (preview).
 //  - only_id: restrict to the one development containing this row id; this also
-//    bypasses the "already v3" skip so a single project can be regenerated.
+//    bypasses the "already v4" skip so a single project can be regenerated.
 // Keep batches small (<=3) to stay under the edge worker compute limit; invoke
 // repeatedly until remaining_projects = 0.
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
@@ -54,23 +56,26 @@ function categorize(t: Record<string, string>): string | null {
   if (t.shop === "supermarket" || t.shop === "mall" || t.shop === "department_store") return "shopping";
   return null;
 }
+function normName(s: string): string { return s.toLowerCase().replace(/\b(station|subway|stop|go|line|transit)\b/g, " ").replace(/[^a-z0-9]+/g, " ").trim(); }
 async function poisFor(lat: number, lng: number, radius = 1500) {
   const q = `[out:json][timeout:25];(nwr(around:${radius},${lat},${lng})[railway=station];nwr(around:${radius},${lat},${lng})[station=subway];nwr(around:${radius},${lat},${lng})[railway=tram_stop];way(around:${radius},${lat},${lng})[leisure=park];nwr(around:${radius},${lat},${lng})[amenity=school];nwr(around:${radius},${lat},${lng})[shop=supermarket];nwr(around:${radius},${lat},${lng})[shop=mall];);out center tags 80;`;
   const data = await overpass(q);
-  const seen = new Set<string>();
-  const items: { name: string; category: string; distance_m: number }[] = [];
+  const all: { name: string; category: string; distance_m: number }[] = [];
   for (const e of (data.elements || [])) {
     const t = e.tags || {}; const name = t.name; const cat = categorize(t);
     if (!name || !cat) continue;
     const la = e.lat ?? e.center?.lat, lo = e.lon ?? e.center?.lon;
     if (la == null || lo == null) continue;
-    const key = cat + "|" + name; if (seen.has(key)) continue; seen.add(key);
-    items.push({ name, category: cat, distance_m: haversine(lat, lng, la, lo) });
+    all.push({ name, category: cat, distance_m: haversine(lat, lng, la, lo) });
   }
-  return items.sort((a, b) => a.distance_m - b.distance_m);
+  all.sort((a, b) => a.distance_m - b.distance_m);
+  const seen = new Set<string>();
+  const items: { name: string; category: string; distance_m: number }[] = [];
+  for (const it of all) { const key = it.category + "|" + normName(it.name); if (seen.has(key)) continue; seen.add(key); items.push(it); }
+  return items;
 }
 
-// ---- Conversational Canadian distance phrasing: walk/drive time + feet (short) / km (longer) ----
+// ---- Conversational Canadian distance phrasing (v7) ----
 function walkMin(m: number): number { return Math.max(1, Math.round(m / 80)); }   // ~4.8 km/h
 function driveMin(m: number): number { return Math.max(1, Math.round(m / 450)); } // ~27 km/h city pace
 function artMin(n: number): string { return (n === 8 || n === 11 || n === 18) ? "an" : "a"; }
@@ -90,6 +95,7 @@ function reachTime(m: number, cat: string): string {
 function reach(m: number, cat: string): string { const t = reachTime(m, cat); return m <= 140 ? t : `${t} (${metricFigure(m)})`; }
 function anN(n: number): string { const s = String(n); return (s[0] === "8" || n === 11 || n === 18 || (n >= 80 && n <= 89)) ? "an" : "a"; }
 function transitLabel(name: string): string { return /stat|stop|\bGO\b|terminal|line/i.test(name) ? name : name + " station"; }
+function builderPhrase(b: string): string { if (!b) return ""; const parts = String(b).split(/\s+and\s+/); if (parts.length >= 3) return " by " + parts.slice(0, -1).join(", ") + " and " + parts[parts.length - 1]; return " by " + b; }
 
 function buildDesc(p: any, pois: any[]): string {
   const name = p.project_name;
@@ -106,7 +112,7 @@ function buildDesc(p: any, pois: any[]): string {
   else lead = "a new home development";
   const cityDisp = p.city === "Old Toronto" ? "Toronto" : (["North York", "Scarborough", "Etobicoke", "East York", "York"].includes(p.city) ? p.city + ", Toronto" : p.city);
   const place = p.neighbourhood ? `in ${p.neighbourhood}, ${cityDisp}` : `in ${cityDisp}`;
-  const builder = p.builder_name ? ` by ${p.builder_name}` : "";
+  const builder = builderPhrase(p.builder_name);
   let unitPhrase = "";
   if (units > 0) unitPhrase = isCondo ? `, with ${units} suites` : `, with ${units} homes`;
   const status = p.sales_status === "selling" ? " Sales are now underway." : p.sales_status === "coming_soon" ? " It's launching soon." : "";

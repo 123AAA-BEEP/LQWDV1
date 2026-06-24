@@ -27,6 +27,31 @@ any time (`condoroyalty.com` is allowlisted): `python3 scrape.py --all --with-im
 | 1 | Match CR→Altus, fill **geo + neighbourhood** (NULL-only, non-destructive) | ✅ **applied: 380 rows / 140 distinct projects** |
 | 2 | Re-host matched hero images → public `project-media` Storage bucket + `project_media_candidates` for review | ✅ **applied: 140 projects / 380 candidate rows** |
 | 3 | Location-aware descriptions (OSM POIs → grounded prose) into `projects.description_ai_draft` | ✅ **applied: 140 projects** |
+| 4 | **Promote** reviewed drafts → live fields (`description_long`, `hero_image_url`) | ✅ **applied: 140 projects / 380 rows, tag `[promoted draft->live]`** |
+
+### Description voice
+
+Phase 3 prose is deliberately conversational and Canadian: distances read as
+**walk time up to ~10 min, flipping to drive time beyond that**, with a feet
+(short) / km (longer) figure in brackets and **never raw metres**. Openings are
+enriched from structured Altus fields (storeys, suite/home count, builder,
+neighbourhood). Every place name and distance is grounded in OSM/Altus — nothing
+invented, and no source branding anywhere. See `edge-functions/liqwd-write-descriptions.ts`.
+
+### Going live (Phase 4) and how to reverse it
+
+Promotion copies the reviewed draft into the field the UI actually renders. It is
+non-destructive (drafts/candidates are retained) and tagged for easy rollback.
+This affects the **broker dashboard only** — the public marketing page stays
+gated behind `record_status='published'`, which this pipeline never sets.
+
+```sql
+-- reverse the go-live (drafts remain intact in description_ai_draft / candidates)
+update public.projects
+set hero_image_url = null, description_long = null,
+    import_notes = replace(import_notes, ' [promoted draft->live]', '')
+where external_source='Altus Group' and import_notes like '%promoted draft->live%';
+```
 
 **Matching** = exact normalized name + compatible city family (Toronto
 amalgamation handled) + CondoRoyalty geo inside a GTA bounding box. Of 2,393
