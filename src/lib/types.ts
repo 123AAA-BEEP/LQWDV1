@@ -150,6 +150,10 @@ export interface PublicProject {
   price_to_public: number | null;
   price_currency: string | null;
   hero_image_url: string | null;
+  section_intro: string | null;
+  section_amenities: string | null;
+  section_getting_around: string | null;
+  section_developer: string | null;
 }
 
 export interface RealtorCard {

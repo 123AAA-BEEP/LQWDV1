@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardBody } from "@/components/ui/card";
@@ -30,6 +31,31 @@ async function getRealtorCard(
     .eq("profile_id", profileId)
     .maybeSingle();
   return (data as RealtorCard) ?? null;
+}
+
+interface MiniProject {
+  project_id: string;
+  slug: string;
+  project_name: string;
+  city: string | null;
+  hero_image_url: string | null;
+}
+
+/** Other published projects by the same builder — internal links for SEO. */
+async function getMoreFromBuilder(
+  builder: string | null,
+  excludeId: string,
+): Promise<MiniProject[]> {
+  if (!builder) return [];
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("public_projects_view")
+    .select("project_id, slug, project_name, city, hero_image_url")
+    .eq("builder_name", builder)
+    .neq("project_id", excludeId)
+    .not("hero_image_url", "is", null)
+    .limit(3);
+  return (data as MiniProject[] | null) ?? [];
 }
 
 export async function generateMetadata({
@@ -69,6 +95,14 @@ export default async function PublicProjectPage({
   const location = [project.neighbourhood, project.city, project.province]
     .filter(Boolean)
     .join(", ");
+  const moreFromBuilder = await getMoreFromBuilder(
+    project.builder_name,
+    project.project_id,
+  );
+  const intro =
+    project.section_intro ??
+    project.page_description ??
+    project.description_long;
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
@@ -105,11 +139,7 @@ export default async function PublicProjectPage({
           {project.headline ? (
             <p className="mt-6 text-lg text-slate-700">{project.headline}</p>
           ) : null}
-          {project.page_description ?? project.description_long ? (
-            <p className="mt-4 leading-relaxed text-slate-600">
-              {project.page_description ?? project.description_long}
-            </p>
-          ) : null}
+          {intro ? <Prose text={intro} className="mt-4" /> : null}
 
           {/* Public-safe facts */}
           <dl className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3">
@@ -135,6 +165,16 @@ export default async function PublicProjectPage({
               />
             ) : null}
           </dl>
+
+          <Section title="Local amenities" text={project.section_amenities} />
+          <Section
+            title="Getting around"
+            text={project.section_getting_around}
+          />
+          <Section
+            title={`About ${project.builder_name ?? "the developer"}`}
+            text={project.section_developer}
+          />
         </div>
 
         {/* Sidebar: lead form + realtor card */}
@@ -182,6 +222,38 @@ export default async function PublicProjectPage({
           ) : null}
         </div>
       </div>
+
+      {moreFromBuilder.length > 0 ? (
+        <section className="mt-12 border-t border-slate-200 pt-10">
+          <h2 className="text-xl font-semibold tracking-tight text-ink">
+            More from {project.builder_name}
+          </h2>
+          <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {moreFromBuilder.map((m) => (
+              <Link key={m.slug} href={`/projects/${m.slug}`}>
+                <Card className="h-full overflow-hidden transition-shadow hover:shadow-md">
+                  <div className="aspect-[4/3] overflow-hidden bg-slate-100">
+                    {m.hero_image_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={m.hero_image_url}
+                        alt={m.project_name}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : null}
+                  </div>
+                  <CardBody>
+                    <h3 className="font-semibold text-ink">{m.project_name}</h3>
+                    {m.city ? (
+                      <p className="text-sm text-slate-500">{m.city}</p>
+                    ) : null}
+                  </CardBody>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }
@@ -194,5 +266,31 @@ function Fact({ label, value }: { label: string; value: string }) {
       </dt>
       <dd className="mt-1 text-sm font-medium text-slate-800">{value}</dd>
     </div>
+  );
+}
+
+/** Renders double-newline-separated text as paragraphs. */
+function Prose({ text, className = "" }: { text: string; className?: string }) {
+  const paras = text
+    .split(/\n\s*\n/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  return (
+    <div className={`space-y-4 leading-relaxed text-slate-600 ${className}`}>
+      {paras.map((p, i) => (
+        <p key={i}>{p}</p>
+      ))}
+    </div>
+  );
+}
+
+/** An optional editorial section (renders nothing when the text is empty). */
+function Section({ title, text }: { title: string; text: string | null }) {
+  if (!text || !text.trim()) return null;
+  return (
+    <section className="mt-8">
+      <h2 className="text-xl font-semibold tracking-tight text-ink">{title}</h2>
+      <Prose text={text} className="mt-3" />
+    </section>
   );
 }
