@@ -17,12 +17,18 @@ export function SiteFooter() {
             Canada.
           </p>
         </div>
-        <nav className="flex items-center gap-6 text-sm text-slate-600">
+        <nav className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-slate-600">
           <Link href="/login" className="hover:text-ink">
             Log in
           </Link>
           <Link href="/signup" className="hover:text-ink">
             Sign up
+          </Link>
+          <Link href="/privacy" className="hover:text-ink">
+            Privacy
+          </Link>
+          <Link href="/terms" className="hover:text-ink">
+            Terms
           </Link>
         </nav>
       </div>
