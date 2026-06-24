@@ -25,6 +25,7 @@ import {
   Gift,
   Inbox,
   Rocket,
+  Link2,
   Menu,
   X,
   type LucideIcon,
@@ -69,6 +70,7 @@ const REALTOR_SECTIONS: NavSection[] = [
       { href: "/dashboard/buyer-mandates", label: "Buyer Matching", icon: ClipboardList },
       { href: "/dashboard/proposals", label: "Negotiate Terms", icon: FileText },
       { href: "/dashboard/refer", label: "Refer & earn", icon: Gift },
+      { href: "/dashboard/lead-pages", label: "Lead Pages", icon: Link2 },
     ],
   },
   {

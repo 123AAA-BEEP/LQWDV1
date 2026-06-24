@@ -51,10 +51,13 @@ export async function generateMetadata({
 
 export default async function PublicProjectPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ ref?: string }>;
 }) {
   const { slug } = await params;
+  const { ref } = await searchParams;
   const project = await getProject(slug);
   if (!project) notFound();
 
@@ -149,6 +152,7 @@ export default async function PublicProjectPage({
                   projectId={project.project_id}
                   publicPageId={project.public_page_id}
                   ctaText={project.custom_cta_text ?? "Request information"}
+                  refCode={ref}
                 />
               </div>
             </CardBody>

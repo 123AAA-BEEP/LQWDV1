@@ -9,10 +9,13 @@ export function LeadForm({
   projectId,
   publicPageId,
   ctaText,
+  refCode,
 }: {
   projectId: string;
   publicPageId: string;
   ctaText: string;
+  /** Referral code from `?ref=` — attributes the lead to the sharing realtor. */
+  refCode?: string;
 }) {
   const [status, setStatus] = useState<"idle" | "sending" | "done" | "error">(
     "idle",
@@ -45,6 +48,7 @@ export function LeadForm({
     >
       <input type="hidden" name="project_id" value={projectId} />
       <input type="hidden" name="public_page_id" value={publicPageId} />
+      {refCode ? <input type="hidden" name="ref" value={refCode} /> : null}
       <Field label="Full name" htmlFor="lead_name">
         <Input id="lead_name" name="lead_name" required autoComplete="name" />
       </Field>

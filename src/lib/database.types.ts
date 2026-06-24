@@ -1672,6 +1672,7 @@ export type Database = {
           message: string | null
           project_id: string
           public_project_page_id: string | null
+          referred_by_profile_id: string | null
           source_url: string | null
           status: string
         }
@@ -1686,6 +1687,7 @@ export type Database = {
           message?: string | null
           project_id: string
           public_project_page_id?: string | null
+          referred_by_profile_id?: string | null
           source_url?: string | null
           status?: string
         }
@@ -1700,6 +1702,7 @@ export type Database = {
           message?: string | null
           project_id?: string
           public_project_page_id?: string | null
+          referred_by_profile_id?: string | null
           source_url?: string | null
           status?: string
         }
