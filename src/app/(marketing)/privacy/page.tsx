@@ -150,12 +150,13 @@ export default function PrivacyPolicyPage() {
 
       <LegalSection heading="6. Data storage and location">
         <p>
-          Personal information is stored and processed using our cloud
-          infrastructure provider in [data hosting region — e.g., Canada
-          (ca-central-1) / United States]. Where information is stored or
-          processed outside your province or outside Canada, it may be subject
-          to the laws of the jurisdiction in which it is held, including lawful
-          access by courts and authorities there.
+          Personal information is stored and processed by our cloud
+          infrastructure provider (Supabase, running on Amazon Web Services) in
+          the United States (US West region, “us-west-2”). Because this is
+          outside Canada, your information may be subject to the laws of the
+          United States, including lawful access by U.S. courts, governments,
+          and law-enforcement authorities. We take reasonable steps to ensure
+          comparable protection through our service-provider arrangements.
         </p>
       </LegalSection>
 

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BRAND } from "@/lib/brand";
+import { BRAND, DISCLAIMER } from "@/lib/brand";
 
 export function SiteFooter() {
   return (
@@ -31,6 +31,11 @@ export function SiteFooter() {
             Terms
           </Link>
         </nav>
+      </div>
+      <div className="border-t border-slate-200">
+        <div className="mx-auto max-w-6xl px-6 py-6">
+          <p className="text-xs leading-relaxed text-slate-400">{DISCLAIMER}</p>
+        </div>
       </div>
       <div className="border-t border-slate-200">
         <div className="mx-auto flex max-w-6xl flex-col gap-2 px-6 py-5 text-xs text-slate-400 sm:flex-row sm:items-center sm:justify-between">
