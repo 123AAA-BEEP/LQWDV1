@@ -39,13 +39,14 @@ export const HERO_VISUAL = {
  * Developer-landing hero visual — a project rendering with a frosted value card
  * that leads with the network reach a builder gets.
  *
- * IMAGE: /public/showcase/dev-hero.jpg is an interim real rendering (clean space
- * top-left for the card); drop the supplied rendering at that exact path to swap.
+ * IMAGE: served from Supabase storage so it can be swapped WITHOUT a redeploy —
+ * upload the supplied rendering at /dev-asset-upload (drag-and-drop) and it
+ * replaces this within ~1 min. (Seeded with an interim rendering until then.)
  * STAT: "3,500+" is a PLACEHOLDER — confirm the real verified-realtor count
  * before relying on it publicly (brand accuracy guardrail).
  */
 export const DEV_HERO_VISUAL = {
-  src: "/showcase/dev-hero.jpg",
+  src: "https://mzdqlhopxfknwqxxuonn.supabase.co/storage/v1/object/public/project-media/landing/dev-hero.jpg",
   alt: "Architectural rendering of a new-home community in the Greater Toronto Area",
   card: {
     eyebrow: "The network",
@@ -197,11 +198,11 @@ const MEDIA = "https://mzdqlhopxfknwqxxuonn.supabase.co/storage/v1/object/public
 
 export const DEV_SECTION_IMAGES = {
   inventory: {
-    // Discreet-selling visual. IMAGE: /public/showcase/dev-discreet.jpg is an
-    // interim real rendering (clean space for the overlay); drop the supplied
-    // rendering at that exact path to swap. Overlay plays up the off-market /
-    // hide-the-name angle.
-    src: "/showcase/dev-discreet.jpg",
+    // Discreet-selling visual. IMAGE: served from Supabase storage so it can be
+    // swapped WITHOUT a redeploy — upload the supplied rendering at
+    // /dev-asset-upload and it replaces this within ~1 min. (Seeded interim.)
+    // Overlay plays up the off-market / hide-the-name angle.
+    src: `${MEDIA}/landing/dev-discreet.jpg`,
     alt: "Rendering of a new-home community, sold discreetly on LIQWD",
     caption: {
       eyebrow: "Name hidden",
