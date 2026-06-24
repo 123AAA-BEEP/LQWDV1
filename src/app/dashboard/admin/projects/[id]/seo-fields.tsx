@@ -91,6 +91,59 @@ export function SeoFields({
           onChange={set("page_description")}
         />
       </Field>
+
+      <Field
+        label="Section: Intro"
+        htmlFor="section_intro"
+        hint="What the project is and where it's headed. Blank line = new paragraph."
+      >
+        <Textarea
+          id="section_intro"
+          name="section_intro"
+          rows={4}
+          value={v.section_intro}
+          onChange={set("section_intro")}
+        />
+      </Field>
+      <Field
+        label="Section: Local amenities"
+        htmlFor="section_amenities"
+        hint="Shopping, dining, parks, schools, recreation."
+      >
+        <Textarea
+          id="section_amenities"
+          name="section_amenities"
+          rows={4}
+          value={v.section_amenities}
+          onChange={set("section_amenities")}
+        />
+      </Field>
+      <Field
+        label="Section: Getting around"
+        htmlFor="section_getting_around"
+        hint="Highways and transit serving the area."
+      >
+        <Textarea
+          id="section_getting_around"
+          name="section_getting_around"
+          rows={4}
+          value={v.section_getting_around}
+          onChange={set("section_getting_around")}
+        />
+      </Field>
+      <Field
+        label="Section: About the developer"
+        htmlFor="section_developer"
+        hint="The builder's focus and reputation."
+      >
+        <Textarea
+          id="section_developer"
+          name="section_developer"
+          rows={4}
+          value={v.section_developer}
+          onChange={set("section_developer")}
+        />
+      </Field>
     </div>
   );
 }

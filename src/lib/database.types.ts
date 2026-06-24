@@ -2678,6 +2678,10 @@ export type Database = {
           page_title: string | null
           project_id: string
           published_at: string | null
+          section_amenities: string | null
+          section_developer: string | null
+          section_getting_around: string | null
+          section_intro: string | null
           seo_meta_description: string | null
           seo_title: string | null
           slug: string
@@ -2699,6 +2703,10 @@ export type Database = {
           page_title?: string | null
           project_id: string
           published_at?: string | null
+          section_amenities?: string | null
+          section_developer?: string | null
+          section_getting_around?: string | null
+          section_intro?: string | null
           seo_meta_description?: string | null
           seo_title?: string | null
           slug: string
@@ -2720,6 +2728,10 @@ export type Database = {
           page_title?: string | null
           project_id?: string
           published_at?: string | null
+          section_amenities?: string | null
+          section_developer?: string | null
+          section_getting_around?: string | null
+          section_intro?: string | null
           seo_meta_description?: string | null
           seo_title?: string | null
           slug?: string

@@ -896,6 +896,10 @@ export default async function AdminProjectEditor({
                 seo_meta_description: page?.seo_meta_description ?? "",
                 page_summary: page?.page_summary ?? "",
                 page_description: page?.page_description ?? "",
+                section_intro: page?.section_intro ?? "",
+                section_amenities: page?.section_amenities ?? "",
+                section_getting_around: page?.section_getting_around ?? "",
+                section_developer: page?.section_developer ?? "",
               }}
             />
             <label className="flex items-center gap-3 text-sm text-slate-600">
