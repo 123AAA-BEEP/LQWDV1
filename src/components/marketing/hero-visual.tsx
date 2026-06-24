@@ -1,12 +1,26 @@
 import { HERO_VISUAL } from "@/lib/brand";
 
+type HeroCard = {
+  eyebrow: string;
+  title: string;
+  body?: string;
+  highlights?: readonly { value: string; label: string }[];
+};
+type HeroVisualData = { src: string; alt: string; card: HeroCard };
+
 /**
- * Hero visual: the supplied skyline image in a rounded frame, with a frosted
- * teal value card overlaid on the clean upper-left sky. The card is rendered
- * in code (not baked into the image) so its copy and accent stay editable.
+ * Hero visual: a supplied image in a rounded frame with a frosted teal value
+ * card overlaid on the clean upper-left. The card is rendered in code (not baked
+ * into the image) so its copy/accent stay editable. Pass `data` to override the
+ * default (realtor) visual — e.g. the developer landing passes DEV_HERO_VISUAL,
+ * whose card uses `highlights` (a small stat list) instead of `body`.
  */
-export function HeroVisual() {
-  const { src, alt, card } = HERO_VISUAL;
+export function HeroVisual({
+  data = HERO_VISUAL,
+}: {
+  data?: HeroVisualData;
+} = {}) {
+  const { src, alt, card } = data;
   return (
     <div className="relative">
       <div className="overflow-hidden rounded-3xl border border-slate-200 shadow-2xl shadow-slate-900/15 ring-1 ring-slate-900/5">
@@ -28,7 +42,23 @@ export function HeroVisual() {
         <p className="mt-2 text-xl font-semibold tracking-tight text-ink">
           {card.title}
         </p>
-        <p className="mt-1 text-sm leading-snug text-slate-600">{card.body}</p>
+        {card.body ? (
+          <p className="mt-1 text-sm leading-snug text-slate-600">{card.body}</p>
+        ) : null}
+        {card.highlights ? (
+          <ul className="mt-3 space-y-1.5">
+            {card.highlights.map((h) => (
+              <li key={h.label} className="flex items-baseline gap-2">
+                <span className="text-lg font-semibold tracking-tight text-ink">
+                  {h.value}
+                </span>
+                <span className="text-sm leading-snug text-slate-600">
+                  {h.label}
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
       </div>
     </div>
   );

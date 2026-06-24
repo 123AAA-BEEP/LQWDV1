@@ -8,6 +8,7 @@ import { ShowcaseFigure } from "@/components/marketing/showcase-figure";
 import type { ShowcaseCaption } from "@/lib/brand";
 import {
   DEV_HERO,
+  DEV_HERO_VISUAL,
   DEV_PROOF_POINTS,
   DEV_BENEFITS,
   DEV_DISCRETION,
@@ -130,7 +131,7 @@ export default function DevelopersLandingPage() {
             </div>
 
             <div className="mx-auto w-full max-w-sm sm:max-w-md lg:ml-auto lg:max-w-[28rem] lg:pl-4">
-              <HeroVisual />
+              <HeroVisual data={DEV_HERO_VISUAL} />
             </div>
           </div>
         </div>
