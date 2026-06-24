@@ -1,10 +1,14 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { resolveLeadSteward } from "@/lib/rewards";
 
 /**
- * Public lead capture. RLS allows anon INSERT into project_leads.
- * No private data is touched here.
+ * Public lead capture. Runs server-side with the service-role client so lead
+ * routing is trusted (not client-supplied): if the project's public page has an
+ * active lead steward — a realtor whose submission/update was approved and
+ * whose stewardship hasn't expired or been bumped — the lead is assigned to
+ * them. Otherwise it falls to the admin pool. No private data is exposed.
  */
 export async function submitLead(
   formData: FormData,
@@ -20,10 +24,16 @@ export async function submitLead(
     return { error: "Please provide your name and email." };
   }
 
-  const supabase = await createClient();
-  const { error } = await supabase.from("project_leads").insert({
+  const admin = createAdminClient();
+
+  const assignedRealtorId = public_page_id
+    ? await resolveLeadSteward(admin, public_page_id)
+    : null;
+
+  const { error } = await admin.from("project_leads").insert({
     project_id,
     public_project_page_id: public_page_id || null,
+    assigned_realtor_profile_id: assignedRealtorId,
     lead_name,
     lead_email,
     lead_phone: lead_phone || null,

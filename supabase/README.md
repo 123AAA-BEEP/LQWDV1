@@ -1,5 +1,14 @@
 # LIQWD — Supabase Backend
 
+> ⚠️ **The live DB may be ahead of this folder.** These migrations
+> (`0001`–`0022`) track the schema, but some live changes are applied directly to
+> the production project `LIQWD DB V1` and may not all be reproduced as files
+> here. For the **full live schema** see
+> [`LIVE_SCHEMA.md`](./LIVE_SCHEMA.md) (human index) and
+> [`../src/lib/database.types.ts`](../src/lib/database.types.ts) (generated,
+> authoritative table/column types). Regenerate types via the Supabase MCP
+> `generate_typescript_types` or `supabase gen types typescript`.
+
 Backend source of truth: `liqwd_supabase_schema_prompt_v2.md`.
 
 This folder contains the database schema, row-level security (RLS), storage
@@ -11,7 +20,11 @@ supabase/
 ├── migrations/
 │   ├── 0001_structural.sql     # tables, constraints, indexes, triggers, public views
 │   ├── 0002_rls_policies.sql   # helper functions, escalation guard, RLS + policies
-│   └── 0003_storage.sql        # storage buckets + storage.objects policies
+│   ├── 0003_storage.sql        # storage buckets + storage.objects policies
+│   ├── 0004_restrict_project_provenance.sql  # admin-only import/source fields + broker view
+│   ├── 0005_seo_prompt_settings.sql  # SEO prompt settings
+│   ├── 0006_deal_proposals.sql # worksheet proposals table, RLS (Deal Desk, Phase 1)
+│   └── 0007_deal_rfps.sql      # ultra tier + RFP tables + confidential RLS (Phase 1)
 └── seed.sql                    # optional, idempotent smoke-test fixtures
 ```
 
@@ -30,7 +43,16 @@ Run each file as its own query, in this exact order:
 | 1 | `migrations/0001_structural.sql` | Creates all tables, check constraints, FKs, unique constraints, indexes, the shared `updated_at` trigger, and the two public-safe **definer** views: `public_projects_view` and `public_realtor_cards`. |
 | 2 | `migrations/0002_rls_policies.sql` | Adds helper functions (`is_admin`, `is_approved`, `has_project_access`, `safe_uuid`), the profile escalation-guard trigger, enables RLS on every table, sets base grants, and creates all access policies. |
 | 3 | `migrations/0003_storage.sql` | Creates the `avatars`, `logos`, `project-media`, and `project-documents` buckets and their `storage.objects` access policies. |
-| 4 | `seed.sql` *(optional)* | Inserts one brokerage, one approved realtor (+ its `auth.users` row), one published project with an active public page, public media, private rows (commercials, broker portal, incentive, floorplan, restricted document), and a sample lead — enough to smoke-test the public view and the RLS boundary. |
+| 4 | `migrations/0004_restrict_project_provenance.sql` | Locks the private import/source-provenance fields on `projects` (`external_source`, `external_source_url`, `import_notes`, `builder_names_raw`, `description_ai_draft`) to **admins only**: base-table SELECT becomes admin-only and a new broker-safe definer view, `broker_projects_view`, exposes every other column to approved realtors. **Ship this with the app code that reads `broker_projects_view`** — once base SELECT is admin-only, any realtor page still querying `projects` directly returns no rows. |
+| 5 | `migrations/0005_seo_prompt_settings.sql` | SEO prompt settings. |
+| 6 | `migrations/0006_deal_proposals.sql` | Creates `project_proposals` (realtor-initiated worksheet/freeform counter-offers), its indexes, `updated_at` trigger, RLS policies, and grants. See `docs/monetization-deal-desk.md`. |
+| 7 | `migrations/0007_deal_rfps.sql` | Adds `profiles.realtor_tier` (admin-controlled ultra gate), `deal_rfps` / `deal_rfp_invitations` / `deal_rfp_proposals`, the `is_ultra` / `is_invited_to_rfp` / `can_respond_to_rfp` helpers, and confidential RLS. See `docs/monetization-deal-desk.md`. |
+| … | `migrations/0008_*` … `0018_*` | Deal-desk field hiding, pro plan, buyer mandates + marketplace, mandate connect, ultra paid tier, developer RFPs, mandate checklist, RECO certificate verification, RFP identity reveal, service-role grants. |
+| 19 | `migrations/0019_referrals_rewards.sql` | Growth/data-quality reward system: `referral_code` / `referred_by_profile_id` / `pro_until` on `profiles`, `assigned_realtor_until` on `public_project_pages`, the `referrals` and `rewards_ledger` tables (idempotent grants), the `gen_referral_code()` helper, and their RLS. |
+| 20 | `migrations/0020_pro_until_entitlement.sql` | Extends `is_pro()` so reward time (`pro_until`) unlocks Pro alongside the paid `plan`, and adds `pro_until` to the self-escalation guard so realtors can't self-grant it. |
+| 21 | `migrations/0021_rental_referrals_and_suggestions.sql` | Adds `projects.listing_type` + `price_period`, the `project_rental_referral_terms` (PBR referral params + fee) and `platform_suggestions` tables, and the broker-only **security-invoker** `referral_opportunities_view`. No `worksheets` table — `buyer_mandates` already covers that concept. |
+| 22 | `migrations/0022_rental_referrals_and_suggestions_rls.sql` | Enables RLS on the two new tables, sets grants (incl. `service_role`), and creates their policies (referral terms: approved-realtor read, admin + granted-developer write; suggestions: submitter + admin). |
+| 23 | `seed.sql` *(optional)* | Inserts the base smoke-test fixtures (brokerage, approved realtor + `auth.users` row, a published project with public page/media, private rows, a sample lead) plus a published **for-rent** project with referral terms and a suggestion — enough to smoke-test the public view, the referral feed, and the RLS boundary. |
 
 > The SQL Editor runs as a superuser, so it bypasses RLS — migrations and seed
 > data apply cleanly.
@@ -42,9 +64,17 @@ Run each file as its own query, in this exact order:
   `public_project_pages`.
 - Raw private tables (commercials, broker portals, restricted incentives/documents,
   internal notes, import/source metadata) are never public.
+- Import/source provenance on `projects` (`external_source`, `external_source_url`,
+  `import_notes`, `builder_names_raw`, `description_ai_draft`) is **admin-only** —
+  not exposed to the public *or* to approved realtors. Realtors read projects
+  through `broker_projects_view`, which omits these columns.
 - Broker-only data requires an **approved** realtor.
 - Developer document access is **grant-based and uploader-scoped**.
-- Review queues and `audit_logs` are **admin-only**.
+- `project_rental_referral_terms` is broker-readable (approved realtors) and
+  writable by admins + the granted developer. `referral_opportunities_view` is
+  **security invoker** (broker-only) — it respects the caller's RLS, unlike the
+  public definer views, so it won't trip the linter's "security definer view" notice.
+- Review queues, `platform_suggestions` review, and `audit_logs` are **admin-only**.
 
 ---
 
@@ -88,10 +118,11 @@ The scripts cover schema, RLS, and bucket definitions. These remain dashboard-si
   app/dashboard, then run the bootstrap SQL in section 2.
 - **Storage (verify):** confirm `avatars`, `logos`, `project-media`, and
   `project-documents` exist, and that **`project-documents` is private**.
-- **Advisor / linter notice (expected):** `public_projects_view` and
-  `public_realtor_cards` will be flagged as "security definer view." This is
-  **intentional** — they are the controlled public gateways — so those two
-  warnings can be dismissed.
+- **Advisor / linter notice (expected):** `public_projects_view`,
+  `public_realtor_cards`, and `broker_projects_view` will be flagged as
+  "security definer view." This is **intentional** — they are the controlled
+  access gateways (the first two public, the third broker-only) that self-gate
+  via their `WHERE` clause — so those warnings can be dismissed.
 
 ### Storage path conventions (required by the storage policies)
 

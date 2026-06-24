@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { requireUserProfile, isApproved } from "@/lib/auth";
+import { requireUserProfile, isApproved, isAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardBody } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -58,21 +58,35 @@ export default async function ProjectsPage({
 
   const supabase = await createClient();
 
+  // Realtors only browse vetted projects; admins see every record state so they
+  // can find drafts / pending-review rows. Anything not approved or published
+  // is internal-only and must not surface in the broker browse list.
+  const VISIBLE_RECORD_STATUSES = ["approved", "published"];
+  const restrictByStatus = !isAdmin(profile);
+
   // Fetch distinct cities for the city dropdown.
-  const { data: cityRows } = await supabase
-    .from("projects")
+  let cityRequest = supabase
+    .from("broker_projects_view")
     .select("city")
     .not("city", "is", null)
     .order("city", { ascending: true });
+  if (restrictByStatus) {
+    cityRequest = cityRequest.in("record_status", VISIBLE_RECORD_STATUSES);
+  }
+  const { data: cityRows } = await cityRequest;
   const cities = [...new Set((cityRows ?? []).map((r) => r.city as string))];
 
   let request = supabase
-    .from("projects")
+    .from("broker_projects_view")
     .select(
       "id, slug, project_name, builder_name, city, sales_status, construction_status, occupancy_estimate_text, price_from_public, price_to_public, hero_image_url, record_status",
     )
     .order("created_at", { ascending: false })
     .limit(60);
+
+  if (restrictByStatus) {
+    request = request.in("record_status", VISIBLE_RECORD_STATUSES);
+  }
 
   if (query) {
     request = request.or(
@@ -91,6 +105,23 @@ export default async function ProjectsPage({
 
   const { data } = await request;
   const projects = (data as ProjectListItem[] | null) ?? [];
+
+  // Which of these projects have an active broker portal (for the badge that
+  // bridges Browse → the Broker Portals directory).
+  let portalSet = new Set<string>();
+  if (projects.length) {
+    const { data: pp } = await supabase
+      .from("project_broker_portals")
+      .select("project_id")
+      .eq("is_active", true)
+      .in(
+        "project_id",
+        projects.map((p) => p.id),
+      );
+    portalSet = new Set(
+      ((pp as { project_id: string }[] | null) ?? []).map((r) => r.project_id),
+    );
+  }
 
   const hasActiveFilter = query || cityFilter || salesFilter || constructionFilter;
 
@@ -198,6 +229,9 @@ export default async function ProjectsPage({
                       ) : null}
                       {p.record_status !== "published" ? (
                         <Badge tone="neutral">{p.record_status}</Badge>
+                      ) : null}
+                      {portalSet.has(p.id) ? (
+                        <Badge tone="brand">Portal</Badge>
                       ) : null}
                     </div>
                     <h2 className="mt-2 font-semibold text-ink">

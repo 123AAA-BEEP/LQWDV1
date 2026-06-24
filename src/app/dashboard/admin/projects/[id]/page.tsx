@@ -11,14 +11,23 @@ import { RECORD_STATUS, RECORD_STATUS_OPTIONS } from "@/lib/status";
 import type { RecordStatus } from "@/lib/status";
 import {
   updateProject,
+  saveCommercials,
   savePublicPage,
   publishProject,
   unpublishProject,
+  saveRentalReferralTerms,
+  addBrokerPortal,
+  removeBrokerPortal,
+  setBrokerPortalFeatured,
 } from "./actions";
 import { ProjectUploads } from "./uploads";
+import { AgentSelect } from "./agent-select";
+import { SeoFields } from "./seo-fields";
 
 export const metadata: Metadata = { title: "Edit project" };
 export const dynamic = "force-dynamic";
+// Headroom for inline SEO generation on publish.
+export const maxDuration = 60;
 
 const UPLOAD_MESSAGES: Record<string, string> = {
   "media-added": "Image uploaded.",
@@ -49,6 +58,80 @@ export default async function AdminProjectEditor({
     .select("*")
     .eq("project_id", id)
     .maybeSingle();
+
+  // Broker-only commercial terms (admin-writable).
+  const { data: commercials } = await supabase
+    .from("project_private_commercials")
+    .select("*")
+    .eq("project_id", id)
+    .maybeSingle();
+  const tri = (v: boolean | null | undefined) =>
+    v === true ? "true" : v === false ? "false" : "";
+
+  // PBR rental referral terms (admin-writable; broker-readable).
+  const { data: referral } = await supabase
+    .from("project_rental_referral_terms")
+    .select("*")
+    .eq("project_id", id)
+    .maybeSingle();
+
+  // Broker portals (direct links to the builder's portal/price list/worksheets).
+  const { data: portals } = await supabase
+    .from("project_broker_portals")
+    .select(
+      "id, portal_name, portal_type, url, access_notes, is_primary, is_active, is_featured",
+    )
+    .eq("project_id", id)
+    .order("is_primary", { ascending: false });
+
+  // Click counts per portal (the ad-product metric).
+  const portalIds = ((portals as { id: string }[] | null) ?? []).map((p) => p.id);
+  const clickCounts = new Map<string, number>();
+  if (portalIds.length) {
+    const { data: ev } = await supabase
+      .from("broker_portal_events")
+      .select("portal_id")
+      .eq("event_type", "click")
+      .in("portal_id", portalIds);
+    for (const e of (ev as { portal_id: string }[] | null) ?? []) {
+      clickCounts.set(e.portal_id, (clickCounts.get(e.portal_id) ?? 0) + 1);
+    }
+  }
+
+  // All realtors are assignable; the editor flags any who aren't approved +
+  // public-profile-enabled (their card won't render on the public page).
+  const { data: realtors } = await supabase
+    .from("profiles")
+    .select(
+      "id, first_name, last_name, brokerage_name, verification_status, is_public_profile_enabled",
+    )
+    .eq("role", "realtor")
+    .order("last_name", { ascending: true });
+  const agentOptions = (
+    (realtors ?? []) as {
+      id: string;
+      first_name: string | null;
+      last_name: string | null;
+      brokerage_name: string | null;
+      verification_status: string;
+      is_public_profile_enabled: boolean;
+    }[]
+  ).map((r) => {
+    const name =
+      [r.first_name, r.last_name].filter(Boolean).join(" ") || "Unnamed agent";
+    const eligible =
+      r.verification_status === "approved" && r.is_public_profile_enabled;
+    const suffix = eligible
+      ? ""
+      : r.verification_status !== "approved"
+        ? ` (${r.verification_status})`
+        : " (profile not public)";
+    return {
+      id: r.id,
+      label: `${name}${r.brokerage_name ? ` — ${r.brokerage_name}` : ""}${suffix}`,
+      eligible,
+    };
+  });
 
   // Upload-managed assets.
   const [{ data: media }, { data: floorplans }, { data: documents }] =
@@ -232,6 +315,31 @@ export default async function AdminProjectEditor({
                   ))}
                 </Select>
               </Field>
+              <Field label="Listing type" htmlFor="listing_type">
+                <Select
+                  id="listing_type"
+                  name="listing_type"
+                  defaultValue={project.listing_type ?? "for_sale"}
+                >
+                  <option value="for_sale">For sale</option>
+                  <option value="for_rent">For rent</option>
+                  <option value="mixed_use">Mixed use</option>
+                </Select>
+              </Field>
+              <Field
+                label="Price period"
+                htmlFor="price_period"
+                hint="Use “Monthly” for rentals; price from/to are read as monthly rent."
+              >
+                <Select
+                  id="price_period"
+                  name="price_period"
+                  defaultValue={project.price_period ?? "total"}
+                >
+                  <option value="total">Total (sale)</option>
+                  <option value="monthly">Monthly (rent)</option>
+                </Select>
+              </Field>
               <Field label="Price from (public)" htmlFor="price_from_public">
                 <Input
                   id="price_from_public"
@@ -292,6 +400,382 @@ export default async function AdminProjectEditor({
         </CardBody>
       </Card>
 
+      {/* Broker-only commission & negotiability */}
+      <Card>
+        <CardBody>
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold text-ink">Commission &amp; negotiability</h3>
+            <Badge tone="warning">Broker-only</Badge>
+          </div>
+          <p className="mt-1 text-sm text-slate-500">
+            Private commercial terms. Visible to approved brokers; never shown on
+            the public page.
+          </p>
+          <form action={saveCommercials} className="mt-4 space-y-4">
+            <input type="hidden" name="project_id" value={id} />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Commission summary" htmlFor="commission_summary">
+                <Input
+                  id="commission_summary"
+                  name="commission_summary"
+                  defaultValue={commercials?.commission_summary ?? ""}
+                />
+              </Field>
+              <Field label="Commission %" htmlFor="commission_percent">
+                <Input
+                  id="commission_percent"
+                  name="commission_percent"
+                  type="number"
+                  step="0.01"
+                  defaultValue={commercials?.commission_percent ?? ""}
+                />
+              </Field>
+              <Field label="Commission negotiable" htmlFor="commission_is_negotiable">
+                <Select
+                  id="commission_is_negotiable"
+                  name="commission_is_negotiable"
+                  defaultValue={tri(commercials?.commission_is_negotiable)}
+                >
+                  <option value="">Unknown</option>
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
+                </Select>
+              </Field>
+              <Field label="Price negotiable" htmlFor="price_is_negotiable">
+                <Select
+                  id="price_is_negotiable"
+                  name="price_is_negotiable"
+                  defaultValue={tri(commercials?.price_is_negotiable)}
+                >
+                  <option value="">Unknown</option>
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
+                </Select>
+              </Field>
+              <Field
+                label="Incentives negotiable"
+                htmlFor="incentives_are_negotiable"
+              >
+                <Select
+                  id="incentives_are_negotiable"
+                  name="incentives_are_negotiable"
+                  defaultValue={tri(commercials?.incentives_are_negotiable)}
+                >
+                  <option value="">Unknown</option>
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
+                </Select>
+              </Field>
+            </div>
+            <Field
+              label="Commission notes"
+              htmlFor="negotiability_notes"
+              hint="Shown to brokers in the Commission & negotiability panel."
+            >
+              <Textarea
+                id="negotiability_notes"
+                name="negotiability_notes"
+                defaultValue={commercials?.negotiability_notes ?? ""}
+              />
+            </Field>
+            <Field
+              label="Private incentive notes"
+              htmlFor="private_incentive_notes"
+              hint="Short-term / broker-only incentive details."
+            >
+              <Textarea
+                id="private_incentive_notes"
+                name="private_incentive_notes"
+                defaultValue={commercials?.private_incentive_notes ?? ""}
+              />
+            </Field>
+            <Button type="submit">Save commission details</Button>
+          </form>
+        </CardBody>
+      </Card>
+
+      {/* Rental referral terms (PBR) */}
+      <Card>
+        <CardBody>
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold text-ink">Rental referral terms (PBR)</h3>
+            <Badge tone="brand">Rental</Badge>
+          </div>
+          <p className="mt-1 text-sm text-slate-500">
+            For purpose-built-rental projects. When enabled and the project is
+            published with listing type “for rent”, it appears in the broker-only
+            referral feed.
+          </p>
+          <form action={saveRentalReferralTerms} className="mt-4 space-y-4">
+            <input type="hidden" name="project_id" value={id} />
+            <div className="flex flex-wrap gap-6">
+              <label className="flex items-center gap-2 text-sm text-slate-600">
+                <input
+                  type="checkbox"
+                  name="accepts_referrals"
+                  defaultChecked={referral?.accepts_referrals ?? false}
+                  className="size-4"
+                />
+                Accepts referrals
+              </label>
+              <label className="flex items-center gap-2 text-sm text-slate-600">
+                <input
+                  type="checkbox"
+                  name="is_active"
+                  defaultChecked={referral?.is_active ?? true}
+                  className="size-4"
+                />
+                Active
+              </label>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field
+                label="Service mode"
+                htmlFor="service_mode"
+                hint="Who works the referral inbox."
+              >
+                <Select
+                  id="service_mode"
+                  name="service_mode"
+                  defaultValue={referral?.service_mode ?? "self_serve"}
+                >
+                  <option value="self_serve">Self-serve (operator)</option>
+                  <option value="full_service">Full-service (LIQWD)</option>
+                </Select>
+              </Field>
+              <Field label="Fee type" htmlFor="referral_fee_type">
+                <Select
+                  id="referral_fee_type"
+                  name="referral_fee_type"
+                  defaultValue={referral?.referral_fee_type ?? ""}
+                >
+                  <option value="">—</option>
+                  <option value="months_rent">Months of rent</option>
+                  <option value="percent_first_year">% of first year</option>
+                  <option value="flat">Flat fee</option>
+                </Select>
+              </Field>
+              <Field
+                label="Fee value"
+                htmlFor="referral_fee_value"
+                hint="e.g. 1 (month), 50 (%), 750 (flat $)."
+              >
+                <Input
+                  id="referral_fee_value"
+                  name="referral_fee_value"
+                  type="number"
+                  step="0.01"
+                  defaultValue={referral?.referral_fee_value ?? ""}
+                />
+              </Field>
+              <Field label="Min lease (months)" htmlFor="min_lease_term_months">
+                <Input
+                  id="min_lease_term_months"
+                  name="min_lease_term_months"
+                  type="number"
+                  defaultValue={referral?.min_lease_term_months ?? ""}
+                />
+              </Field>
+              <Field label="Min household income" htmlFor="min_household_income">
+                <Input
+                  id="min_household_income"
+                  name="min_household_income"
+                  type="number"
+                  defaultValue={referral?.min_household_income ?? ""}
+                />
+              </Field>
+              <Field label="Min credit band" htmlFor="min_credit_band">
+                <Select
+                  id="min_credit_band"
+                  name="min_credit_band"
+                  defaultValue={referral?.min_credit_band ?? ""}
+                >
+                  <option value="">—</option>
+                  <option value="excellent">Excellent</option>
+                  <option value="good">Good</option>
+                  <option value="fair">Fair</option>
+                  <option value="poor">Poor</option>
+                  <option value="unknown">Unknown</option>
+                </Select>
+              </Field>
+              <Field label="Pets allowed" htmlFor="pets_allowed">
+                <Select
+                  id="pets_allowed"
+                  name="pets_allowed"
+                  defaultValue={tri(referral?.pets_allowed)}
+                >
+                  <option value="">Unknown</option>
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
+                </Select>
+              </Field>
+              <Field label="Earliest move-in" htmlFor="earliest_move_in">
+                <Input
+                  id="earliest_move_in"
+                  name="earliest_move_in"
+                  type="date"
+                  defaultValue={referral?.earliest_move_in ?? ""}
+                />
+              </Field>
+              <Field label="Latest move-in" htmlFor="latest_move_in">
+                <Input
+                  id="latest_move_in"
+                  name="latest_move_in"
+                  type="date"
+                  defaultValue={referral?.latest_move_in ?? ""}
+                />
+              </Field>
+            </div>
+            <Field label="Fee notes (broker-visible)" htmlFor="referral_fee_notes">
+              <Textarea
+                id="referral_fee_notes"
+                name="referral_fee_notes"
+                defaultValue={referral?.referral_fee_notes ?? ""}
+              />
+            </Field>
+            <Field
+              label="Payout terms"
+              htmlFor="payout_terms"
+              hint="e.g. invoiced 30 days after lease commencement, brokerage-to-brokerage."
+            >
+              <Textarea
+                id="payout_terms"
+                name="payout_terms"
+                defaultValue={referral?.payout_terms ?? ""}
+              />
+            </Field>
+            <Button type="submit">Save referral terms</Button>
+          </form>
+        </CardBody>
+      </Card>
+
+      {/* Broker portals */}
+      <Card>
+        <CardBody>
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold text-ink">Broker portals</h3>
+            <Badge tone="warning">Broker-only</Badge>
+          </div>
+          <p className="mt-1 text-sm text-slate-500">
+            Direct links to the builder&rsquo;s portal, price list, or worksheets.
+            Active links appear in the broker Broker Portals directory once the
+            project is published. Feature one for paid placement.
+          </p>
+
+          {portals && portals.length > 0 ? (
+            <ul className="mt-4 divide-y divide-slate-100">
+              {(
+                portals as {
+                  id: string;
+                  portal_name: string;
+                  portal_type: string;
+                  url: string | null;
+                  is_primary: boolean;
+                  is_active: boolean;
+                  is_featured: boolean;
+                }[]
+              ).map((p) => (
+                <li
+                  key={p.id}
+                  className="flex items-center justify-between gap-3 py-2"
+                >
+                  <div className="min-w-0">
+                    <p className="flex items-center gap-2 text-sm font-medium text-slate-800">
+                      <span className="truncate">{p.portal_name}</span>
+                      {p.is_primary ? <Badge tone="brand">Primary</Badge> : null}
+                      {p.is_featured ? (
+                        <Badge tone="warning">Featured</Badge>
+                      ) : null}
+                    </p>
+                    <p className="truncate text-xs text-slate-400">
+                      {p.url ? `${p.url} · ` : ""}
+                      {clickCounts.get(p.id) ?? 0} clicks
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <form action={setBrokerPortalFeatured}>
+                      <input type="hidden" name="portal_id" value={p.id} />
+                      <input type="hidden" name="project_id" value={id} />
+                      <input
+                        type="hidden"
+                        name="is_featured"
+                        value={p.is_featured ? "false" : "true"}
+                      />
+                      <Button type="submit" size="sm" variant="secondary">
+                        {p.is_featured ? "Unfeature" : "Feature"}
+                      </Button>
+                    </form>
+                    <form action={removeBrokerPortal}>
+                      <input type="hidden" name="portal_id" value={p.id} />
+                      <input type="hidden" name="project_id" value={id} />
+                      <Button type="submit" size="sm" variant="danger">
+                        Remove
+                      </Button>
+                    </form>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-4 text-sm text-slate-400">No broker portals yet.</p>
+          )}
+
+          <form
+            action={addBrokerPortal}
+            className="mt-4 space-y-4 border-t border-slate-100 pt-4"
+          >
+            <input type="hidden" name="project_id" value={id} />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Portal name" htmlFor="portal_name">
+                <Input
+                  id="portal_name"
+                  name="portal_name"
+                  placeholder="e.g. Builder broker portal"
+                  required
+                />
+              </Field>
+              <Field label="Type" htmlFor="portal_type">
+                <Select
+                  id="portal_type"
+                  name="portal_type"
+                  defaultValue="external_url"
+                >
+                  <option value="external_url">Website</option>
+                  <option value="login_page">Login page</option>
+                  <option value="drive_folder">Drive folder</option>
+                  <option value="pdf">PDF</option>
+                  <option value="internal_file">File</option>
+                  <option value="other">Other</option>
+                </Select>
+              </Field>
+            </div>
+            <Field label="URL" htmlFor="url">
+              <Input id="url" name="url" type="url" placeholder="https://…" />
+            </Field>
+            <Field
+              label="Access notes"
+              htmlFor="access_notes"
+              hint="Login hint or how to request access (optional)."
+            >
+              <Input id="access_notes" name="access_notes" />
+            </Field>
+            <div className="flex flex-wrap gap-6">
+              <label className="flex items-center gap-2 text-sm text-slate-600">
+                <input type="checkbox" name="is_primary" className="size-4" />{" "}
+                Primary
+              </label>
+              <label className="flex items-center gap-2 text-sm text-slate-600">
+                <input type="checkbox" name="is_featured" className="size-4" />{" "}
+                Featured (paid placement)
+              </label>
+            </div>
+            <Button type="submit" variant="secondary">
+              Add portal
+            </Button>
+          </form>
+        </CardBody>
+      </Card>
+
       {/* Public, SEO-safe page fields */}
       <Card>
         <CardBody>
@@ -302,6 +786,16 @@ export default async function AdminProjectEditor({
           </p>
           <form action={savePublicPage} className="mt-4 space-y-4">
             <input type="hidden" name="project_id" value={id} />
+            <Field
+              label="Assigned agent"
+              htmlFor="assigned_realtor_profile_id"
+              hint="Realtor shown as the contact card on the public page. Lists all agents; only approved + public-profile-enabled agents render publicly."
+            >
+              <AgentSelect
+                agents={agentOptions}
+                defaultValue={page?.assigned_realtor_profile_id ?? ""}
+              />
+            </Field>
             <Field
               label="Slug"
               htmlFor="slug"
@@ -314,38 +808,15 @@ export default async function AdminProjectEditor({
                 required
               />
             </Field>
-            <Field label="SEO title" htmlFor="seo_title">
-              <Input
-                id="seo_title"
-                name="seo_title"
-                defaultValue={page?.seo_title ?? ""}
-              />
-            </Field>
-            <Field label="Meta description" htmlFor="seo_meta_description">
-              <Textarea
-                id="seo_meta_description"
-                name="seo_meta_description"
-                defaultValue={page?.seo_meta_description ?? ""}
-              />
-            </Field>
-            <Field label="Page summary" htmlFor="page_summary">
-              <Textarea
-                id="page_summary"
-                name="page_summary"
-                defaultValue={page?.page_summary ?? ""}
-              />
-            </Field>
-            <Field
-              label="Public description"
-              htmlFor="page_description"
-              hint="Approved, public-safe copy shown on the public page."
-            >
-              <Textarea
-                id="page_description"
-                name="page_description"
-                defaultValue={page?.page_description ?? ""}
-              />
-            </Field>
+            <SeoFields
+              projectId={id}
+              defaults={{
+                seo_title: page?.seo_title ?? "",
+                seo_meta_description: page?.seo_meta_description ?? "",
+                page_summary: page?.page_summary ?? "",
+                page_description: page?.page_description ?? "",
+              }}
+            />
             <label className="flex items-center gap-3 text-sm text-slate-600">
               <input
                 type="checkbox"

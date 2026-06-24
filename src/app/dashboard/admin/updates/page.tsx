@@ -50,6 +50,22 @@ export default async function UpdatesQueue() {
   const openRows = (open as unknown as Row[]) ?? [];
   const decidedRows = (decided as unknown as Row[]) ?? [];
 
+  // Resolve signed URLs for any image attachments (private bucket).
+  const attachmentPaths = openRows.flatMap((r) =>
+    Array.isArray(r.update_payload?.attachments)
+      ? (r.update_payload!.attachments as string[])
+      : [],
+  );
+  const signed: Record<string, string> = {};
+  if (attachmentPaths.length > 0) {
+    const { data: urls } = await supabase.storage
+      .from("project-documents")
+      .createSignedUrls(attachmentPaths, 3600);
+    (urls ?? []).forEach((u) => {
+      if (u.path && u.signedUrl) signed[u.path] = u.signedUrl;
+    });
+  }
+
   return (
     <div className="space-y-8">
       <section className="space-y-3">
@@ -90,12 +106,7 @@ export default async function UpdatesQueue() {
                     "unknown"}
                 </p>
 
-                {r.update_payload &&
-                Object.keys(r.update_payload).length > 0 ? (
-                  <pre className="overflow-x-auto rounded-lg bg-slate-50 p-3 text-xs text-slate-600">
-                    {JSON.stringify(r.update_payload, null, 2)}
-                  </pre>
-                ) : null}
+                <RequestPayload payload={r.update_payload} signed={signed} />
 
                 <div className="flex flex-wrap items-center gap-2">
                   {r.project_id ? (
@@ -175,6 +186,53 @@ export default async function UpdatesQueue() {
             </CardBody>
           </Card>
         </section>
+      ) : null}
+    </div>
+  );
+}
+
+/** Renders an update request's details text and any image attachments. */
+function RequestPayload({
+  payload,
+  signed,
+}: {
+  payload: Record<string, unknown> | null;
+  signed: Record<string, string>;
+}) {
+  const details =
+    typeof payload?.details === "string" ? payload.details : null;
+  const attachments = Array.isArray(payload?.attachments)
+    ? (payload!.attachments as string[])
+    : [];
+
+  if (!details && attachments.length === 0) {
+    return <p className="text-xs text-slate-400">No details provided.</p>;
+  }
+
+  return (
+    <div className="space-y-2">
+      {details ? (
+        <p className="whitespace-pre-wrap text-sm text-slate-600">{details}</p>
+      ) : null}
+      {attachments.length > 0 ? (
+        <div className="flex flex-wrap gap-2">
+          {attachments.map((p) =>
+            signed[p] ? (
+              <a key={p} href={signed[p]} target="_blank" rel="noreferrer">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={signed[p]}
+                  alt="Attachment"
+                  className="h-24 w-24 rounded-lg border border-slate-200 object-cover"
+                />
+              </a>
+            ) : (
+              <span key={p} className="text-xs text-slate-400">
+                attachment unavailable
+              </span>
+            ),
+          )}
+        </div>
       ) : null}
     </div>
   );

@@ -4,12 +4,10 @@ import Link from "next/link";
 import { requireUserProfile, isApproved } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardBody } from "@/components/ui/card";
-import { Field, Select, Textarea } from "@/components/ui/field";
 import { Notice } from "@/components/ui/notice";
-import { SubmitButton } from "@/components/ui/submit-button";
 import { VerificationRequired } from "@/components/dashboard/locked";
 import { UPDATE_TYPE_OPTIONS, updateTypeLabel } from "@/lib/status";
-import { submitUpdateRequest } from "./actions";
+import { UpdateForm } from "./update-form";
 
 export const metadata: Metadata = { title: "Suggest an update" };
 export const dynamic = "force-dynamic";
@@ -38,7 +36,7 @@ export default async function SuggestUpdatePage({
 
   const supabase = await createClient();
   const { data: project } = await supabase
-    .from("projects")
+    .from("broker_projects_view")
     .select("id, slug, project_name")
     .eq("slug", slug)
     .maybeSingle();
@@ -70,43 +68,14 @@ export default async function SuggestUpdatePage({
 
       <Card>
         <CardBody>
-          <form action={submitUpdateRequest} className="space-y-4">
-            <input type="hidden" name="slug" value={project.slug} />
-            <input type="hidden" name="project_id" value={project.id} />
-
-            <Field label="What needs updating?" htmlFor="update_type">
-              <Select id="update_type" name="update_type" required defaultValue="">
-                <option value="" disabled>
-                  Choose a category…
-                </option>
-                {UPDATE_TYPE_OPTIONS.map((t) => (
-                  <option key={t} value={t}>
-                    {updateTypeLabel(t)}
-                  </option>
-                ))}
-              </Select>
-            </Field>
-
-            <Field
-              label="Details"
-              htmlFor="details"
-              hint="Describe the change. Include source links or context where helpful."
-            >
-              <Textarea id="details" name="details" required />
-            </Field>
-
-            <div className="flex items-center gap-3">
-              <SubmitButton pendingLabel="Submitting…">
-                Submit for review
-              </SubmitButton>
-              <Link
-                href={`/dashboard/projects/${slug}`}
-                className="text-sm text-slate-500 hover:text-slate-800"
-              >
-                Cancel
-              </Link>
-            </div>
-          </form>
+          <UpdateForm
+            slug={project.slug}
+            projectId={project.id}
+            typeOptions={UPDATE_TYPE_OPTIONS.map((t) => ({
+              value: t,
+              label: updateTypeLabel(t),
+            }))}
+          />
         </CardBody>
       </Card>
     </div>
