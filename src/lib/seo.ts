@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 
 export interface SeoFieldsValue {
@@ -63,10 +64,11 @@ function describe(base: string, custom: string | null | undefined): string {
  */
 export async function generateSeoFields(
   projectId: string,
+  db?: SupabaseClient,
 ): Promise<SeoFieldsValue | null> {
   if (!process.env.ANTHROPIC_API_KEY) return null;
 
-  const supabase = await createClient();
+  const supabase = db ?? (await createClient());
   const { data: project } = await supabase
     .from("projects")
     .select(PROJECT_SELECT)
@@ -201,10 +203,11 @@ export async function generateSeoFields(
  */
 export async function maybeGenerateSeoOnPublish(
   projectId: string,
+  db?: SupabaseClient,
 ): Promise<boolean> {
   try {
     if (!process.env.ANTHROPIC_API_KEY) return false;
-    const supabase = await createClient();
+    const supabase = db ?? (await createClient());
     const { data: page } = await supabase
       .from("public_project_pages")
       .select(
@@ -228,7 +231,7 @@ export async function maybeGenerateSeoOnPublish(
       return false;
     }
 
-    const gen = await generateSeoFields(projectId);
+    const gen = await generateSeoFields(projectId, supabase);
     if (!gen) return false;
 
     const update: Record<string, string> = {};

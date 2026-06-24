@@ -7,6 +7,7 @@ import {
   maybeGenerateSeoOnPublish,
   type SeoFieldsValue,
 } from "@/lib/seo";
+import { runHeroSourcingBatch, type SourcingResult } from "@/lib/hero-sourcing";
 
 export type SeoResult = SeoFieldsValue | { error: string };
 
@@ -76,4 +77,23 @@ export async function backfillSections(): Promise<
     if (await maybeGenerateSeoOnPublish(id)) processed++;
   }
   return { processed, remaining: Math.max(0, ids.length - processed) };
+}
+
+export type SourcingRunResult =
+  | { processed: number; published: number; results: SourcingResult[] }
+  | { error: string };
+
+/**
+ * On-demand trigger for the hands-off hero-sourcing pipeline (admin-only).
+ * Same logic the weekly cron runs — source candidates, AI vision-verify, then
+ * publish only real renderings with auto-generated sections.
+ */
+export async function sourceHeroesNow(): Promise<SourcingRunResult> {
+  const supabase = await createClient();
+  try {
+    await assertAdmin(supabase);
+  } catch {
+    return { error: "Admin access required." };
+  }
+  return runHeroSourcingBatch(3);
 }

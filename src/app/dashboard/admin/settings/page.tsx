@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Notice } from "@/components/ui/notice";
 import { saveSeoPromptSettings } from "./actions";
 import { BackfillSectionsButton } from "./backfill-button";
+import { SourceHeroesButton } from "./source-heroes-button";
 
 export const metadata: Metadata = { title: "Settings" };
 export const dynamic = "force-dynamic";
@@ -124,6 +125,22 @@ export default async function AdminSettings({
           </p>
           <div className="mt-4">
             <BackfillSectionsButton />
+          </div>
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardBody>
+          <h3 className="font-semibold text-ink">Auto-source &amp; publish heroes</h3>
+          <p className="mt-1 text-sm text-slate-500">
+            Finds draft projects without a real hero image, sources a candidate
+            rendering, AI-verifies it&apos;s an actual building rendering (not a
+            floor plan, map, or logo), then publishes it with auto-generated
+            sections. Runs 3 per click; the same job runs automatically every
+            week. Nothing publishes unless the image passes the vision check.
+          </p>
+          <div className="mt-4">
+            <SourceHeroesButton />
           </div>
         </CardBody>
       </Card>
