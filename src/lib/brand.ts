@@ -211,8 +211,8 @@ export const DEV_SECTION_IMAGES = {
     },
   },
   demand: {
-    // The Nine — Mississauga townhomes by Mattamy Homes.
-    src: `${MEDIA}/12b60766-826f-521d-ab0b-675ea6b99532/hero.jpg`,
+    // Served from storage — swap via /dev-asset-upload (seeded with The Nine).
+    src: `${MEDIA}/landing/dev-demand.jpg`,
     alt: "Rendering of new townhomes by a major Ontario builder",
     caption: {
       eyebrow: "Demand-driven",
@@ -221,8 +221,8 @@ export const DEV_SECTION_IMAGES = {
     },
   },
   promote: {
-    // Princeton Heights — flagship luxury estate rendering by Fernbrook Homes.
-    src: `${MEDIA}/039d95a9-1b48-5329-b7ea-fbc5e5708e35/hero.jpg`,
+    // Served from storage — swap via /dev-asset-upload (seeded with Princeton).
+    src: `${MEDIA}/landing/dev-promote.jpg`,
     alt: "Dusk rendering of a flagship luxury estate home in the GTA",
     caption: {
       eyebrow: "Promote",

@@ -21,6 +21,18 @@ const SLOTS: Slot[] = [
     title: "Discreet visual (section 02)",
     hint: "Clean rendering behind the “Sell it without naming it” overlay.",
   },
+  {
+    key: "demand",
+    path: "landing/dev-demand.jpg",
+    title: "Demand visual (section 03)",
+    hint: "Rendering behind the “Real buyers, now” overlay.",
+  },
+  {
+    key: "promote",
+    path: "landing/dev-promote.jpg",
+    title: "Promote visual (section 04)",
+    hint: "Rendering behind the “Reach on demand” overlay.",
+  },
 ];
 
 function Dropzone({ slot }: { slot: Slot }) {

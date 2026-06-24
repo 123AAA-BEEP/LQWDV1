@@ -17,7 +17,12 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const BUCKET = "project-media";
-const ALLOW = new Set(["landing/dev-hero.jpg", "landing/dev-discreet.jpg"]);
+const ALLOW = new Set([
+  "landing/dev-hero.jpg",
+  "landing/dev-discreet.jpg",
+  "landing/dev-demand.jpg",
+  "landing/dev-promote.jpg",
+]);
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "*",
