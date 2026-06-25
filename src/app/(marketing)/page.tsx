@@ -256,7 +256,7 @@ export default function LandingPage() {
                   New to pre-construction?
                 </p>
                 <h2 className="mt-2 text-balance text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
-                  You don&apos;t need to be an expert to close these leads.
+                  You don&apos;t need to be a project expert to follow up.
                 </h2>
                 <p className="mt-3 text-pretty leading-relaxed text-slate-600">
                   Resale-focused? Every project comes with a step-by-step

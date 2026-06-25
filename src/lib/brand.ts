@@ -122,7 +122,7 @@ export const EARN = {
   featured: {
     eyebrow: "The core offer",
     title: "Free buyer lead path",
-    body: "Upload or update eligible projects, get matched to public project pages, and receive buyer inquiries when those pages generate interest.",
+    body: "Turn project knowledge into potential buyer inquiries, with no referral fee, no subscription, and no brokerage change.",
     badges: ["No referral fee", "No brokerage change", "RECO verified access"],
     // The lead path, left to right.
     path: ["Project update", "Public page", "Buyer inquiry", "Realtor lead"],
