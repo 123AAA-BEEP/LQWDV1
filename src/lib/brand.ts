@@ -110,35 +110,50 @@ export const HOW_IT_WORKS = {
     "LIQWD does not guarantee lead quantity, lead quality, or conversion. Newer, active, and better-updated projects may generate more interest.",
 } as const;
 
-/** Value-proposition heading + the five feature cards (money-first angle). */
+/**
+ * "The offer" — an earning-opportunity stack, not a flat feature grid. One
+ * dominant featured panel (the free buyer-lead path, with a visual route +
+ * a mock inquiry) plus secondary supporting tiles. Money-first, no lead promise.
+ */
 export const EARN = {
   heading: "More ways to earn from new-home projects",
   subheading:
     "LIQWD gives Ontario realtors a free path to buyer leads, project visibility, and new earning opportunities — without changing brokerages.",
-} as const;
-
-export const FEATURE_CARDS = [
-  {
+  featured: {
+    eyebrow: "The core offer",
     title: "Free buyer lead path",
-    body: "Receive buyer inquiries from public project pages you're matched to.",
+    body: "Upload or update eligible projects, get matched to public project pages, and receive buyer inquiries when those pages generate interest.",
+    badges: ["No referral fee", "No brokerage change", "RECO verified access"],
+    // The lead path, left to right.
+    path: ["Project update", "Public page", "Buyer inquiry", "Realtor lead"],
+    // A small illustrative inquiry card inside the featured panel.
+    sample: {
+      label: "New buyer inquiry",
+      project: "Maplewood Towns",
+      matchedTo: "Verified Realtor",
+      referralFee: "$0",
+    },
   },
-  {
-    title: "No referral fees",
-    body: "Keep the opportunity without paying a platform split.",
-  },
-  {
-    title: "No brokerage change",
-    body: "Use LIQWD from your current brokerage.",
-  },
-  {
-    title: "Project updates in one place",
-    body: "Track incentives, pricing, availability, and launch updates faster.",
-  },
-  {
-    title: "More ways to earn",
-    body: "Rental referral and earning pools are being developed for future access.",
-  },
-] as const;
+  // Secondary benefits — deliberately lighter than the featured panel.
+  supporting: [
+    {
+      title: "No referral fees",
+      body: "Keep the opportunity without paying a platform split.",
+    },
+    {
+      title: "No brokerage change",
+      body: "Use LIQWD from your current brokerage.",
+    },
+    {
+      title: "Project updates in one place",
+      body: "Track incentives, pricing, availability, and launch updates faster.",
+    },
+    {
+      title: "More ways to earn",
+      body: "Rental referral and earning pools are being developed for future access.",
+    },
+  ],
+} as const;
 
 /** Forward-looking earning paths — kept low on the page, not a lead promise. */
 export const COMING_SOON = {
