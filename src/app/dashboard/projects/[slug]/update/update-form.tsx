@@ -6,49 +6,68 @@ import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { Notice } from "@/components/ui/notice";
 import { createClient } from "@/lib/supabase/client";
 import { validateUpload, extFor, IMAGE_MIME, DOC_MAX } from "@/lib/upload";
+import {
+  UPDATE_FIELDS,
+  UPDATE_FIELD_GROUPS,
+  IMAGE_KIND_OPTIONS,
+  type ProposedChange,
+} from "@/lib/update-fields";
 import { submitUpdateRequest } from "./actions";
 
 /**
- * Suggest-an-update form. Image attachments are uploaded straight from the
- * browser to the private `project-documents` bucket (avoiding Vercel's Server
- * Action body limit); only the resulting storage paths are submitted to the
- * server action, which records them on the update request for admin review.
+ * Structured "Suggest an update": every broker-safe field is pre-filled with
+ * its current value; the realtor edits any subset and we submit only the diff
+ * (current → proposed). The admin reviews that diff and applies it in one
+ * click. Image attachments + a free-text note round it out.
  */
 export function UpdateForm({
   slug,
   projectId,
-  typeOptions,
+  current,
 }: {
   slug: string;
   projectId: string;
-  typeOptions: { value: string; label: string }[];
+  current: Record<string, string>;
 }) {
+  const [values, setValues] = useState<Record<string, string>>({ ...current });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const set = (key: string, v: string) =>
+    setValues((prev) => ({ ...prev, [key]: v }));
+
+  function diff(): ProposedChange[] {
+    return UPDATE_FIELDS.filter(
+      (f) => (values[f.key] ?? "").trim() !== (current[f.key] ?? "").trim(),
+    ).map((f) => ({
+      key: f.key,
+      label: f.label,
+      group: f.group,
+      source: f.source,
+      column: f.column,
+      type: f.type,
+      from: current[f.key] ?? "",
+      to: (values[f.key] ?? "").trim(),
+    }));
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
 
     const form = e.currentTarget;
-    const updateType = (
-      form.elements.namedItem("update_type") as HTMLSelectElement
+    const note = (
+      form.elements.namedItem("note") as HTMLTextAreaElement
+    ).value.trim();
+    const imageKind = (
+      form.elements.namedItem("image_kind") as HTMLSelectElement
     ).value;
-    const details = (
-      form.elements.namedItem("details") as HTMLTextAreaElement
-    ).value.trim();
-    const commission = (
-      form.elements.namedItem("commission_percent") as HTMLInputElement
-    ).value.trim();
     const fileInput = form.elements.namedItem("images") as HTMLInputElement;
     const files = Array.from(fileInput.files ?? []);
+    const changes = diff();
 
-    if (!updateType) {
-      setError("Please choose what needs updating.");
-      return;
-    }
-    if (!details && files.length === 0 && !commission) {
-      setError("Add a description, a commission %, or at least one image.");
+    if (changes.length === 0 && files.length === 0 && !note) {
+      setError("Change at least one field, attach an image, or add a note.");
       return;
     }
 
@@ -80,9 +99,9 @@ export function UpdateForm({
     const fd = new FormData();
     fd.set("slug", slug);
     fd.set("project_id", projectId);
-    fd.set("update_type", updateType);
-    fd.set("details", details);
-    fd.set("commission_percent", commission);
+    fd.set("changes", JSON.stringify(changes));
+    fd.set("note", note);
+    fd.set("image_kind", paths.length > 0 ? imageKind : "");
     for (const p of paths) fd.append("attachment_paths", p);
 
     // The server action redirects on success (and on failure, back here with
@@ -91,59 +110,116 @@ export function UpdateForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <Field label="What needs updating?" htmlFor="update_type">
-        <Select id="update_type" name="update_type" required defaultValue="">
-          <option value="" disabled>
-            Choose a category…
-          </option>
-          {typeOptions.map((t) => (
-            <option key={t.value} value={t.value}>
-              {t.label}
-            </option>
-          ))}
-        </Select>
-      </Field>
+    <form onSubmit={handleSubmit} className="space-y-8">
+      {UPDATE_FIELD_GROUPS.map((group) => {
+        const fields = UPDATE_FIELDS.filter((f) => f.group === group);
+        return (
+          <fieldset key={group} className="space-y-4">
+            <legend className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+              {group}
+            </legend>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {fields.map((f) => {
+                const changed =
+                  (values[f.key] ?? "").trim() !== (current[f.key] ?? "").trim();
+                const label = (
+                  <span className="flex items-center gap-2">
+                    {f.label}
+                    {changed ? (
+                      <span className="rounded-full bg-brand-50 px-1.5 py-0.5 text-[10px] font-medium text-brand-700">
+                        edited
+                      </span>
+                    ) : null}
+                  </span>
+                );
+                return (
+                  <Field key={f.key} label={label} htmlFor={f.key} hint={f.hint}>
+                    {f.type === "enum" ? (
+                      <Select
+                        id={f.key}
+                        value={values[f.key] ?? ""}
+                        onChange={(e) => set(f.key, e.target.value)}
+                      >
+                        <option value="">—</option>
+                        {f.options?.map((o) => (
+                          <option key={o.value} value={o.value}>
+                            {o.label}
+                          </option>
+                        ))}
+                      </Select>
+                    ) : f.type === "boolean" ? (
+                      <Select
+                        id={f.key}
+                        value={values[f.key] ?? ""}
+                        onChange={(e) => set(f.key, e.target.value)}
+                      >
+                        <option value="">—</option>
+                        <option value="true">Yes</option>
+                        <option value="false">No</option>
+                      </Select>
+                    ) : (
+                      <Input
+                        id={f.key}
+                        type={
+                          f.type === "currency" || f.type === "number"
+                            ? "number"
+                            : f.type === "url"
+                              ? "url"
+                              : "text"
+                        }
+                        inputMode={
+                          f.type === "currency" || f.type === "number"
+                            ? "decimal"
+                            : undefined
+                        }
+                        step={f.type === "currency" ? "1" : "any"}
+                        value={values[f.key] ?? ""}
+                        onChange={(e) => set(f.key, e.target.value)}
+                      />
+                    )}
+                  </Field>
+                );
+              })}
+            </div>
+          </fieldset>
+        );
+      })}
 
-      <Field
-        label="Commission % (optional)"
-        htmlFor="commission_percent"
-        hint="The co-op commission paid to brokers, if you're submitting it — e.g. 3.5"
-      >
-        <Input
-          id="commission_percent"
-          name="commission_percent"
-          type="number"
-          min={0}
-          max={100}
-          step={0.05}
-          inputMode="decimal"
-          placeholder="e.g. 3.5"
-        />
-      </Field>
-
-      <Field
-        label="Details"
-        htmlFor="details"
-        hint="Describe the change. Include source links or context where helpful."
-      >
-        <Textarea id="details" name="details" />
-      </Field>
-
-      <Field
-        label="Images (optional)"
-        htmlFor="images"
-        hint="Attach photos or renderings — PNG, JPG, or WebP, up to 25 MB each."
-      >
-        <input
-          type="file"
-          id="images"
-          name="images"
-          accept="image/png,image/jpeg,image/webp"
-          multiple
-          className="block w-full text-sm text-slate-600 file:mr-3 file:rounded-md file:border-0 file:bg-slate-100 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-slate-700 hover:file:bg-slate-200"
-        />
-      </Field>
+      <fieldset className="space-y-4">
+        <legend className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+          Images & notes
+        </legend>
+        <Field
+          label="Images (optional)"
+          htmlFor="images"
+          hint="Attach renderings, floor plans, or photos — PNG, JPG, or WebP, up to 25 MB each."
+        >
+          <input
+            type="file"
+            id="images"
+            name="images"
+            accept="image/png,image/jpeg,image/webp"
+            multiple
+            className="block w-full text-sm text-slate-600 file:mr-3 file:rounded-md file:border-0 file:bg-slate-100 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-slate-700 hover:file:bg-slate-200"
+          />
+        </Field>
+        <Field label="What are the images?" htmlFor="image_kind">
+          <Select id="image_kind" name="image_kind" defaultValue="rendering">
+            {IMAGE_KIND_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </Select>
+        </Field>
+        <Field
+          label="Anything else? (optional)"
+          htmlFor="note"
+          hint="Context, a source link, or a change not covered by the fields above."
+        >
+          <Textarea id="note" name="note" />
+        </Field>
+      </fieldset>
 
       {error ? <Notice tone="error">{error}</Notice> : null}
 
