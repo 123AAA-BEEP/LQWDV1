@@ -22,6 +22,9 @@ const ALLOW = new Set([
   "landing/dev-discreet.jpg",
   "landing/dev-demand.jpg",
   "landing/dev-promote.jpg",
+  "landing/realtor-dashboard.jpg",
+  "landing/realtor-project-page.jpg",
+  "landing/realtor-outcome.jpg",
 ]);
 const CORS = {
   "Access-Control-Allow-Origin": "*",
