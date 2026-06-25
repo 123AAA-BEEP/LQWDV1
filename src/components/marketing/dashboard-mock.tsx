@@ -24,9 +24,9 @@ export function DashboardMock() {
     >
       {/* Title bar */}
       <div className="flex items-center justify-between px-3.5 pt-3.5">
-        <span className="flex items-center gap-1.5 text-xs font-semibold text-ink">
+        <span className="flex items-center gap-2 text-base font-semibold text-ink">
           <span aria-hidden className="size-1.5 rounded-full bg-brand-500" />
-          My projects
+          My Projects
         </span>
         <span className="rounded-full bg-brand-50 px-1.5 py-0.5 text-[10px] font-medium text-brand-700">
           2 new leads
@@ -35,12 +35,19 @@ export function DashboardMock() {
 
       {/* Project rows (single line, to stay compact) */}
       <ul className="mb-1 mt-2.5 divide-y divide-slate-200/70 pb-1">
-        {ROWS.map((row) => (
+        {ROWS.map((row) => {
+          // Gmail-style: a project with a new lead reads as "unread" (bold).
+          const unread = row.chip === "New lead";
+          return (
           <li
             key={row.name}
             className="flex items-center justify-between gap-2 px-3.5 py-2"
           >
-            <span className="truncate text-xs font-medium text-ink">
+            <span
+              className={`truncate text-xs ${
+                unread ? "font-bold text-ink" : "font-normal text-slate-500"
+              }`}
+            >
               {row.name}
             </span>
             <span
@@ -49,7 +56,8 @@ export function DashboardMock() {
               {row.chip}
             </span>
           </li>
-        ))}
+          );
+        })}
       </ul>
     </div>
   );
