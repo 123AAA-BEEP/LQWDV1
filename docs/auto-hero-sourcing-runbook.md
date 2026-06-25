@@ -19,7 +19,16 @@ pages/images); the agent does discovery + visual verification + publishing.
    ```
 2. **Discover** (per project): `WebSearch` "<name> <city> <builder> condos|homes".
    Prefer rich listing/builder pages that carry a hero rendering as `og:image`
-   (aggregators like gta-homes.com, builder sites). Collect 2–3 candidate page URLs.
+   (aggregators like gta-homes.com, condonow.com, tallproperty.com, builder
+   sites). Collect 2–3 candidate page URLs.
+   - **Harbour Marketing** (`harbourmarketing.ca`) is a first-class source —
+     their VIP broker portals are frequently the only page that exists for a
+     "coming soon" project with minimal details elsewhere, and the portal's
+     `og:image` is usually the project rendering. Try these slug shapes (name
+     concatenated, no separators): `harbourmarketing.ca/account/<nameconcat>`,
+     `harbourmarketing.ca/<nameconcat>`, `harbourmarketing.ca/project-<dashed>`.
+     Use it both to source the hero AND to back-fill project facts (builder,
+     units, price, occupancy) when a project isn't yet in the DB.
 3. **Fetch off-box**: for each candidate page URL, POST to the edge function
    (no auth — `verify_jwt=false`):
    ```bash
