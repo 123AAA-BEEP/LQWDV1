@@ -33,6 +33,24 @@ const SLOTS: Slot[] = [
     title: "Promote visual (section 04)",
     hint: "Rendering behind the “Reach on demand” overlay.",
   },
+  {
+    key: "realtor-dashboard",
+    path: "landing/realtor-dashboard.jpg",
+    title: "Realtor dashboard mockup",
+    hint: "Product screenshot/mock: active projects, bonus commission, “Matched to project page”, “Buyer inquiry received”. Landscape, ≥1200px wide.",
+  },
+  {
+    key: "realtor-project-page",
+    path: "landing/realtor-project-page.jpg",
+    title: "Public project page preview",
+    hint: "Mock of a public project page with a “Request info / Contact agent” form — where buyer inquiries come from. Landscape, ≥1200px wide.",
+  },
+  {
+    key: "realtor-outcome",
+    path: "landing/realtor-outcome.jpg",
+    title: "Realtor outcome (verified section)",
+    hint: "Natural realtor-at-work image: phone in hand / laptop open with a project page or inquiry notification. Avoid generic smiling stock.",
+  },
 ];
 
 function Dropzone({ slot }: { slot: Slot }) {

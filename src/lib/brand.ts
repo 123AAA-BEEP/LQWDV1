@@ -12,12 +12,13 @@ export const BRAND = {
 } as const;
 
 export const HERO = {
-  headline: "The Ultimate Broker Portal",
-  subheadline: "For New Homes in Ontario",
-  supporting: "Free for verified realtors. Built in Canada.",
-  body: "Access broker portals, track active new-home projects, and move faster on the opportunities that matter. LIQWD gives Ontario realtors one place to work through new-home inventory without bouncing between disconnected portals, scattered files, and outdated updates.",
+  headline: "Get free new-home buyer leads",
+  subheadline: "without switching brokerages.",
+  supporting: "Free for verified Ontario realtors",
+  body: "Upload or update eligible new-home projects, get matched to public project pages, and receive buyer inquiries when those pages generate interest.",
   primaryCta: "Sign up free",
-  secondaryCta: "Get verified",
+  secondaryCta: "Log in",
+  microcopy: "No referral fees. No brokerage change. RECO verification required.",
 } as const;
 
 /**
@@ -59,33 +60,104 @@ export const DEV_HERO_VISUAL = {
 } as const;
 
 export const PROOF_POINTS = [
-  "Free for realtors",
-  "Made in Canada",
+  "No referral fees",
+  "No brokerage change",
   "RECO verification required",
-  "Built for Ontario brokers and agents",
+  "Free for Ontario realtors",
 ] as const;
 
+/**
+ * "How realtors earn leads" — the mechanism, told as three plain steps with an
+ * honest expectations disclaimer (no guaranteed-income claims).
+ */
+export const HOW_IT_WORKS = {
+  heading: "How free project leads work",
+  subheading:
+    "Keep project information current. When your update is verified, you can be matched to the public project page that generates buyer inquiries.",
+  /** The product model as a left-to-right flow, rendered as a graphic. */
+  flow: [
+    "Project update",
+    "Verified match",
+    "Public page",
+    "Buyer inquiry",
+    "Realtor lead",
+  ],
+  steps: [
+    {
+      title: "Update a project",
+      body: "Add or refresh eligible new-home project information.",
+    },
+    {
+      title: "Get matched",
+      body: "Verified updates can place you in line for that project's public inquiries.",
+    },
+    {
+      title: "Receive inquiries",
+      body: "When buyers request information, matched realtors can receive those leads.",
+    },
+  ],
+  disclaimer:
+    "LIQWD does not guarantee lead quantity, lead quality, or conversion. Newer, active, and better-updated projects may generate more interest.",
+} as const;
+
+/** Value-proposition heading + the five feature cards (money-first angle). */
+export const EARN = {
+  heading: "More ways to earn from new-home projects",
+  subheading:
+    "LIQWD gives Ontario realtors a free path to buyer leads, project visibility, and new earning opportunities — without changing brokerages.",
+} as const;
+
+export const FEATURE_CARDS = [
+  {
+    title: "Free buyer lead path",
+    body: "Receive buyer inquiries from public project pages you're matched to.",
+  },
+  {
+    title: "No referral fees",
+    body: "Keep the opportunity without paying a platform split.",
+  },
+  {
+    title: "No brokerage change",
+    body: "Use LIQWD from your current brokerage.",
+  },
+  {
+    title: "Project updates in one place",
+    body: "Track incentives, pricing, availability, and launch updates faster.",
+  },
+  {
+    title: "More ways to earn",
+    body: "Rental referral and earning pools are being developed for future access.",
+  },
+] as const;
+
+/** Forward-looking earning paths — kept low on the page, not a lead promise. */
+export const COMING_SOON = {
+  heading: "More earning paths are coming",
+  subheading:
+    "LIQWD is building additional ways for verified realtors to earn, including a rental referral and earning pool. New features will roll out as the platform grows.",
+} as const;
+
 export const BENEFITS = [
-  "Access broker portals in one place.",
-  "View active projects through a cleaner, faster workflow.",
-  "Spot where opportunities may exist on commissions, pricing, and incentives.",
-  "Reduce time lost chasing scattered project details.",
-  "Move faster with a portal built specifically for Ontario realtors.",
+  "Access new-home project information in one place.",
+  "Track incentives, pricing, availability, and launch updates.",
+  "Spot commission and buyer-value opportunities faster.",
+  "Reduce time spent chasing PDFs, links, and scattered emails.",
+  "Move faster with a portal built for Ontario realtors.",
 ] as const;
 
 export const VERIFICATION = {
   heading: "Verified broker-to-broker access",
-  body: "LIQWD is built for real estate professionals. To keep the platform trusted and useful, access is reserved for verified Ontario realtors using RECO registration details.",
+  body: "LIQWD is gated for verified Ontario realtors — so project updates, opportunities, and inquiries stay inside a trusted professional network.",
   bullets: [
-    "Verify access using RECO registration details.",
-    "Keep broker-only tools inside a trusted network.",
-    "Access a platform built for real estate professionals, not the general public.",
+    "Builders release off-market deals and stronger commissions to a verified broker channel, not the public web.",
+    "Verify access with your RECO registration details.",
+    "Keep broker-only tools inside a trusted realtor network.",
   ],
 } as const;
 
 export const WHY = {
   heading: "Why realtors use LIQWD",
-  body: "The value is simple: less friction, faster access, and a clearer path to the right project information. Instead of chasing updates across multiple broker portals, LIQWD helps realtors work from one organized workflow built around speed, clarity, and opportunity.",
+  body: "LIQWD helps Ontario realtors create more potential lead paths, find projects worth pitching, and stay current on the new-home opportunities buyers care about.",
   bullets: [
     "Save time.",
     "Stay organized.",
@@ -107,8 +179,8 @@ export const WHY = {
 } as const;
 
 export const SIGNUP_SECTION = {
-  heading: "Get verified. Get access.",
-  body: "Join LIQWD for free and unlock a better way to work through new-home opportunities in Ontario.",
+  heading: "Start earning from new-home project updates.",
+  body: "Join LIQWD for free, verify your realtor status, and create new potential lead paths from Ontario new-home projects.",
 } as const;
 
 /** Footer data/accuracy disclaimer shown across public pages. */

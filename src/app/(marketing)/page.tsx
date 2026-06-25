@@ -1,21 +1,37 @@
-import type { ReactNode } from "react";
-import Link from "next/link";
+import { type ReactNode, Fragment } from "react";
+import {
+  Gift,
+  Ban,
+  Building2,
+  LayoutGrid,
+  TrendingUp,
+  type LucideIcon,
+} from "lucide-react";
 import { ButtonLink } from "@/components/ui/button";
 import { LogoMarquee } from "@/components/marketing/logo-marquee";
-import { HeroVisual } from "@/components/marketing/hero-visual";
+import { DashboardMock } from "@/components/marketing/dashboard-mock";
+import { ProjectPageMock } from "@/components/marketing/project-page-mock";
 import { ShowcaseFigure } from "@/components/marketing/showcase-figure";
 import type { ShowcaseCaption } from "@/lib/brand";
 import {
   HERO,
+  HERO_VISUAL,
   PROOF_POINTS,
+  HOW_IT_WORKS,
+  EARN,
+  FEATURE_CARDS,
   BENEFITS,
   VERIFICATION,
   WHY,
+  COMING_SOON,
   SIGNUP_SECTION,
   LOGO_STRIP,
   BROKERAGES,
   SECTION_IMAGES,
 } from "@/lib/brand";
+
+// One icon per feature card (order matches FEATURE_CARDS).
+const FEATURE_ICONS: LucideIcon[] = [Gift, Ban, Building2, LayoutGrid, TrendingUp];
 
 function CheckIcon() {
   return (
@@ -76,11 +92,11 @@ function FeatureSection({
             <div className="mt-8">{children}</div>
           </div>
           <div className={imageLeft ? "lg:order-first" : undefined}>
-            <ShowcaseFigure
-              src={image.src}
-              alt={image.alt}
-              caption={image.caption}
-            />
+            {/* No frosted caption here: the realtor showcase images already
+                carry their own baked-in overlay, so a code caption would double
+                up. (The developer page intentionally captions its bare
+                renderings — that's a separate component.) */}
+            <ShowcaseFigure src={image.src} alt={image.alt} />
           </div>
         </div>
       </div>
@@ -111,29 +127,31 @@ export default function LandingPage() {
               <p className="mt-5 max-w-xl text-pretty text-lg leading-relaxed text-slate-600">
                 {HERO.body}
               </p>
-              <div className="mt-8 flex flex-wrap items-center gap-6">
+              <div className="mt-8">
                 <ButtonLink href="/signup" size="lg" className="px-8">
                   {HERO.primaryCta}
                 </ButtonLink>
-                <Link
-                  href="/signup"
-                  className="group inline-flex items-center gap-2 text-base font-medium text-ink"
-                >
-                  {HERO.secondaryCta}
-                  <span
-                    aria-hidden
-                    className="transition-transform group-hover:translate-x-1"
-                  >
-                    →
-                  </span>
-                </Link>
               </div>
+              <p className="mt-4 text-sm text-slate-500">{HERO.microcopy}</p>
             </div>
 
-            {/* Cap + top-align so the square visual doesn't push the CTA below
-                the fold on laptop viewports. */}
+            {/* Skyline shot with the coded dashboard mock pasted over it — the
+                hero shows the product, framed by a real-estate backdrop. */}
             <div className="mx-auto w-full max-w-sm sm:max-w-md lg:ml-auto lg:max-w-[28rem] lg:pl-4">
-              <HeroVisual />
+              <div className="relative">
+                <div className="overflow-hidden rounded-3xl border border-slate-200 shadow-2xl shadow-slate-900/15 ring-1 ring-slate-900/5">
+                  {/* eslint-disable-next-line @next/next/no-img-element -- hero LCP image, CSS-sized */}
+                  <img
+                    src={HERO_VISUAL.src}
+                    alt={HERO_VISUAL.alt}
+                    fetchPriority="high"
+                    className="block aspect-square w-full object-cover"
+                  />
+                </div>
+                <div className="absolute left-4 top-4 sm:left-6 sm:top-6">
+                  <DashboardMock />
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -162,14 +180,140 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 01 — What you get */}
+      {/* 01 — How free project leads work */}
+      <section id="how-it-works" className="scroll-mt-20 bg-white">
+        <div className="mx-auto max-w-6xl px-6 py-24 sm:py-32">
+          <div className="max-w-2xl">
+            <SectionLabel index="01">How it works</SectionLabel>
+            <h2 className="mt-4 text-balance text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
+              {HOW_IT_WORKS.heading}
+            </h2>
+            <p className="mt-5 text-pretty text-lg leading-relaxed text-slate-600">
+              {HOW_IT_WORKS.subheading}
+            </p>
+          </div>
+
+          {/* Lead-flow graphic — the product model, left to right. */}
+          <div className="mt-12 flex flex-col gap-2 sm:flex-row sm:items-stretch">
+            {HOW_IT_WORKS.flow.map((node, i) => (
+              <Fragment key={node}>
+                <div className="flex flex-1 items-center justify-center rounded-xl border border-brand-100 bg-brand-50/70 px-3 py-4 text-center text-sm font-semibold text-brand-800">
+                  {node}
+                </div>
+                {i < HOW_IT_WORKS.flow.length - 1 ? (
+                  <span
+                    aria-hidden
+                    className="flex items-center justify-center text-lg text-brand-300"
+                  >
+                    <span className="rotate-90 sm:rotate-0">→</span>
+                  </span>
+                ) : null}
+              </Fragment>
+            ))}
+          </div>
+
+          {/* The public page that generates inquiries, paired with the steps. */}
+          <div className="mt-14 grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
+            <div className="mx-auto w-full max-w-sm">
+              <ProjectPageMock />
+            </div>
+            <ol className="space-y-8">
+              {HOW_IT_WORKS.steps.map((step, i) => (
+                <li key={step.title} className="flex gap-4">
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand-600 text-sm font-semibold text-white">
+                    {i + 1}
+                  </span>
+                  <div>
+                    <h3 className="text-lg font-semibold text-ink">
+                      {step.title}
+                    </h3>
+                    <p className="mt-1 text-sm leading-relaxed text-slate-500">
+                      {step.body}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </div>
+          <p className="mt-12 max-w-3xl text-xs leading-relaxed text-slate-400">
+            {HOW_IT_WORKS.disclaimer}
+          </p>
+        </div>
+      </section>
+
+      {/* 02 — More ways to earn + feature cards */}
+      <section className="border-y border-slate-200 bg-slate-50/60">
+        <div className="mx-auto max-w-6xl px-6 py-24 sm:py-32">
+          <div className="max-w-2xl">
+            <SectionLabel index="02">The offer</SectionLabel>
+            <h2 className="mt-4 text-balance text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
+              {EARN.heading}
+            </h2>
+            <p className="mt-5 text-pretty text-lg leading-relaxed text-slate-600">
+              {EARN.subheading}
+            </p>
+          </div>
+          <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {FEATURE_CARDS.map((card, i) => {
+              const Icon = FEATURE_ICONS[i];
+              // The free buyer-lead path is the headline offer — feature it.
+              const featured = i === 0;
+              return (
+                <div
+                  key={card.title}
+                  className={`group rounded-2xl border p-6 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${
+                    featured
+                      ? "border-brand-200 bg-brand-50/70 sm:col-span-2"
+                      : "border-slate-200 bg-white hover:border-slate-300"
+                  }`}
+                >
+                  <span
+                    className={`flex items-center justify-center rounded-xl ring-1 ring-inset transition-colors ${
+                      featured
+                        ? "size-12 bg-brand-600 text-white ring-brand-600"
+                        : "size-11 bg-brand-50 text-brand-600 ring-brand-100 group-hover:bg-brand-100"
+                    }`}
+                  >
+                    <Icon
+                      className={featured ? "size-6" : "size-5"}
+                      strokeWidth={1.75}
+                      aria-hidden
+                    />
+                  </span>
+                  <h3
+                    className={`mt-5 font-semibold text-ink ${
+                      featured ? "text-xl" : "text-base"
+                    }`}
+                  >
+                    {card.title}
+                  </h3>
+                  <p
+                    className={`mt-1.5 leading-relaxed ${
+                      featured
+                        ? "text-base text-slate-600"
+                        : "text-sm text-slate-500"
+                    }`}
+                  >
+                    {card.body}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* 03 — One portal: product benefits + why it pays off (merged) */}
       <FeatureSection
-        index="01"
+        index="03"
         eyebrow="What you get"
         heading="One portal for new-home inventory"
         image={SECTION_IMAGES.inventory}
       >
-        <ol className="divide-y divide-slate-200">
+        <p className="text-pretty text-lg leading-relaxed text-slate-600">
+          {WHY.body}
+        </p>
+        <ol className="mt-8 divide-y divide-slate-200">
           {BENEFITS.map((benefit, i) => (
             <li
               key={benefit}
@@ -184,11 +328,24 @@ export default function LandingPage() {
             </li>
           ))}
         </ol>
+        {/* Free-leads throw-in — accented so it stands apart from the list. */}
+        <div className="mt-8 flex gap-4 rounded-2xl border border-brand-100 bg-brand-50/70 p-5">
+          <span
+            aria-hidden
+            className="mt-1 size-2.5 shrink-0 rounded-full bg-brand-500 ring-4 ring-brand-100"
+          />
+          <p className="text-pretty leading-relaxed text-slate-700">
+            <span className="font-semibold text-brand-700">
+              {WHY.highlight.label}:
+            </span>{" "}
+            {WHY.highlight.body}
+          </p>
+        </div>
       </FeatureSection>
 
-      {/* 02 — Verified access */}
+      {/* 04 — Verified access (why gated access produces better deals) */}
       <FeatureSection
-        index="02"
+        index="04"
         eyebrow="Verified access"
         heading={VERIFICATION.heading}
         image={SECTION_IMAGES.verified}
@@ -208,40 +365,22 @@ export default function LandingPage() {
         </ul>
       </FeatureSection>
 
-      {/* 03 — Why LIQWD */}
-      <FeatureSection
-        index="03"
-        eyebrow="Why LIQWD"
-        heading={WHY.heading}
-        image={SECTION_IMAGES.why}
-      >
-        <p className="text-pretty text-lg leading-relaxed text-slate-600">
-          {WHY.body}
-        </p>
-        <ul className="mt-8 flex flex-wrap gap-3">
-          {WHY.bullets.map((b) => (
-            <li
-              key={b}
-              className="rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50"
-            >
-              {b.replace(/\.$/, "")}
-            </li>
-          ))}
-        </ul>
-        {/* Free-leads throw-in — accented so it stands apart from the chips. */}
-        <div className="mt-8 flex gap-4 rounded-2xl border border-brand-100 bg-brand-50/70 p-5">
-          <span
-            aria-hidden
-            className="mt-1 size-2.5 shrink-0 rounded-full bg-brand-500 ring-4 ring-brand-100"
-          />
-          <p className="text-pretty leading-relaxed text-slate-700">
-            <span className="font-semibold text-brand-700">
-              {WHY.highlight.label}:
-            </span>{" "}
-            {WHY.highlight.body}
-          </p>
+      {/* Coming soon — more earning paths (kept low on the page) */}
+      <section className="bg-white">
+        <div className="mx-auto max-w-6xl px-6 pb-24 pt-4 sm:pb-28">
+          <div className="rounded-3xl border border-slate-200 bg-slate-50/60 p-10 text-center sm:p-12">
+            <p className="text-xs font-medium uppercase tracking-[0.2em] text-brand-600">
+              Coming soon
+            </p>
+            <h2 className="mx-auto mt-4 max-w-xl text-balance text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
+              {COMING_SOON.heading}
+            </h2>
+            <p className="mx-auto mt-3 max-w-2xl text-pretty leading-relaxed text-slate-600">
+              {COMING_SOON.subheading}
+            </p>
+          </div>
         </div>
-      </FeatureSection>
+      </section>
 
       {/* Signup CTA */}
       <section className="relative isolate overflow-hidden bg-ink">
@@ -263,8 +402,8 @@ export default function LandingPage() {
             <ButtonLink href="/signup" size="lg" variant="white" className="px-8">
               Sign up free
             </ButtonLink>
-            <ButtonLink href="/signup" size="lg" variant="outlineLight">
-              Start verification
+            <ButtonLink href="#how-it-works" size="lg" variant="outlineLight">
+              See how it works
             </ButtonLink>
           </div>
         </div>
