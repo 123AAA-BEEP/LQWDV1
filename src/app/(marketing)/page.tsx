@@ -9,7 +9,8 @@ import {
 } from "lucide-react";
 import { ButtonLink } from "@/components/ui/button";
 import { LogoMarquee } from "@/components/marketing/logo-marquee";
-import { HeroVisual } from "@/components/marketing/hero-visual";
+import { DashboardMock } from "@/components/marketing/dashboard-mock";
+import { ProjectPageMock } from "@/components/marketing/project-page-mock";
 import { ShowcaseFigure } from "@/components/marketing/showcase-figure";
 import type { ShowcaseCaption } from "@/lib/brand";
 import {
@@ -131,10 +132,10 @@ export default function LandingPage() {
               <p className="mt-4 text-sm text-slate-500">{HERO.microcopy}</p>
             </div>
 
-            {/* Cap + top-align so the square visual doesn't push the CTA below
-                the fold on laptop viewports. */}
+            {/* Product proof, not a stock photo: a coded dashboard mock so the
+                hero shows the thing realtors actually get. */}
             <div className="mx-auto w-full max-w-sm sm:max-w-md lg:ml-auto lg:max-w-[28rem] lg:pl-4">
-              <HeroVisual />
+              <DashboardMock />
             </div>
           </div>
         </div>
@@ -195,23 +196,31 @@ export default function LandingPage() {
             ))}
           </div>
 
-          {/* Action steps — lighter than the benefit cards below, on purpose. */}
-          <ol className="mt-14 grid gap-8 sm:grid-cols-3">
-            {HOW_IT_WORKS.steps.map((step, i) => (
-              <li key={step.title}>
-                <span className="flex size-9 items-center justify-center rounded-full bg-brand-600 text-sm font-semibold text-white">
-                  {i + 1}
-                </span>
-                <h3 className="mt-4 text-lg font-semibold text-ink">
-                  {step.title}
-                </h3>
-                <p className="mt-1.5 text-sm leading-relaxed text-slate-500">
-                  {step.body}
-                </p>
-              </li>
-            ))}
-          </ol>
-          <p className="mt-10 max-w-3xl text-xs leading-relaxed text-slate-400">
+          {/* The public page that generates inquiries, paired with the steps —
+              lighter than the benefit cards below, on purpose. */}
+          <div className="mt-14 grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
+            <div className="mx-auto w-full max-w-sm">
+              <ProjectPageMock />
+            </div>
+            <ol className="space-y-8">
+              {HOW_IT_WORKS.steps.map((step, i) => (
+                <li key={step.title} className="flex gap-4">
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand-600 text-sm font-semibold text-white">
+                    {i + 1}
+                  </span>
+                  <div>
+                    <h3 className="text-lg font-semibold text-ink">
+                      {step.title}
+                    </h3>
+                    <p className="mt-1 text-sm leading-relaxed text-slate-500">
+                      {step.body}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </div>
+          <p className="mt-12 max-w-3xl text-xs leading-relaxed text-slate-400">
             {HOW_IT_WORKS.disclaimer}
           </p>
         </div>
