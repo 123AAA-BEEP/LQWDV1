@@ -155,6 +155,15 @@ export default async function DashboardHome() {
         description="Commissions, referrals & rewards"
       >
         <ActionCard
+          icon={Link2}
+          title="Lead Pages"
+          body="See the project pages you're bound to and copy a direct referral link to hand a buyer — every lead it captures is attributed to you."
+          href="/dashboard/lead-pages"
+          cta="Open Lead Pages"
+          enabled={approved}
+          lockedHint="Available after verification"
+        />
+        <ActionCard
           icon={Coins}
           title="Quick Wins"
           body="Get paid to refer renters to purpose-built rentals — the building's team handles the rest."
@@ -205,15 +214,6 @@ export default async function DashboardHome() {
           href="/dashboard/refer"
           cta="Get your invite link"
           enabled
-        />
-        <ActionCard
-          icon={Link2}
-          title="Lead Pages"
-          body="See the project pages you're bound to and copy a direct referral link to hand a buyer — every lead it captures is attributed to you."
-          href="/dashboard/lead-pages"
-          cta="Open Lead Pages"
-          enabled={approved}
-          lockedHint="Available after verification"
         />
       </HomeSection>
 

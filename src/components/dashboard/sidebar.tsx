@@ -65,12 +65,12 @@ const REALTOR_SECTIONS: NavSection[] = [
     description: "Commissions, referrals & rewards",
     icon: Coins,
     items: [
+      { href: "/dashboard/lead-pages", label: "Lead Pages", icon: Link2 },
       { href: "/dashboard/quick-wins", label: "Quick Wins", icon: Coins },
       { href: "/dashboard/deal-desk", label: "Developer Deals", icon: Handshake, ultra: true },
       { href: "/dashboard/buyer-mandates", label: "Buyer Matching", icon: ClipboardList },
       { href: "/dashboard/proposals", label: "Negotiate Terms", icon: FileText },
       { href: "/dashboard/refer", label: "Refer & earn", icon: Gift },
-      { href: "/dashboard/lead-pages", label: "Lead Pages", icon: Link2 },
     ],
   },
   {
