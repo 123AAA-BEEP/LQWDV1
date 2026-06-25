@@ -37,6 +37,16 @@ export const HERO_VISUAL = {
 } as const;
 
 /**
+ * "How it works" showcase rendering — a real new-build rendering with the coded
+ * public-project-page mock floated over it (top-left), matching the hero's
+ * rendering + overlay treatment. Served from public/ (swap the file to change).
+ */
+export const PROJECT_PAGE_VISUAL = {
+  src: "/showcase/project-page-rendering.webp",
+  alt: "Architectural rendering of a new-build townhome community at dusk",
+} as const;
+
+/**
  * Developer-landing hero visual — a project rendering with a frosted value card
  * that leads with the network reach a builder gets.
  *

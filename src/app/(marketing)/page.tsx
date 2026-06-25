@@ -17,6 +17,7 @@ import { AGENT_CONCERNS } from "@/lib/training";
 import {
   HERO,
   HERO_VISUAL,
+  PROJECT_PAGE_VISUAL,
   PROOF_POINTS,
   HOW_IT_WORKS,
   EARN,
@@ -213,10 +214,24 @@ export default function LandingPage() {
             ))}
           </div>
 
-          {/* The public page that generates inquiries, paired with the steps. */}
+          {/* The public page that generates inquiries, paired with the steps.
+              Rendering + coded project-page mock floated top-left, matching the
+              hero's rendering/overlay treatment. */}
           <div className="mt-14 grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
-            <div className="mx-auto w-full max-w-sm">
-              <ProjectPageMock />
+            <div className="mx-auto w-full max-w-md">
+              <div className="relative">
+                <div className="overflow-hidden rounded-3xl border border-slate-200 shadow-2xl shadow-slate-900/15 ring-1 ring-slate-900/5">
+                  {/* eslint-disable-next-line @next/next/no-img-element -- CSS-sized showcase image */}
+                  <img
+                    src={PROJECT_PAGE_VISUAL.src}
+                    alt={PROJECT_PAGE_VISUAL.alt}
+                    className="block aspect-square w-full object-cover"
+                  />
+                </div>
+                <div className="absolute left-4 top-4 w-[15rem] sm:left-6 sm:top-6 sm:w-[16.5rem]">
+                  <ProjectPageMock />
+                </div>
+              </div>
             </div>
             <ol className="space-y-8">
               {HOW_IT_WORKS.steps.map((step, i) => (
