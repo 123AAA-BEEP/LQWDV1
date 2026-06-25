@@ -303,14 +303,17 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 03 — One portal for new-home inventory (the product) */}
+      {/* 03 — One portal: product benefits + why it pays off (merged) */}
       <FeatureSection
         index="03"
         eyebrow="What you get"
         heading="One portal for new-home inventory"
         image={SECTION_IMAGES.inventory}
       >
-        <ol className="divide-y divide-slate-200">
+        <p className="text-pretty text-lg leading-relaxed text-slate-600">
+          {WHY.body}
+        </p>
+        <ol className="mt-8 divide-y divide-slate-200">
           {BENEFITS.map((benefit, i) => (
             <li
               key={benefit}
@@ -325,6 +328,19 @@ export default function LandingPage() {
             </li>
           ))}
         </ol>
+        {/* Free-leads throw-in — accented so it stands apart from the list. */}
+        <div className="mt-8 flex gap-4 rounded-2xl border border-brand-100 bg-brand-50/70 p-5">
+          <span
+            aria-hidden
+            className="mt-1 size-2.5 shrink-0 rounded-full bg-brand-500 ring-4 ring-brand-100"
+          />
+          <p className="text-pretty leading-relaxed text-slate-700">
+            <span className="font-semibold text-brand-700">
+              {WHY.highlight.label}:
+            </span>{" "}
+            {WHY.highlight.body}
+          </p>
+        </div>
       </FeatureSection>
 
       {/* 04 — Verified access (why gated access produces better deals) */}
@@ -347,41 +363,6 @@ export default function LandingPage() {
             </li>
           ))}
         </ul>
-      </FeatureSection>
-
-      {/* 05 — Why realtors use LIQWD (the broader value) */}
-      <FeatureSection
-        index="05"
-        eyebrow="Why LIQWD"
-        heading={WHY.heading}
-        image={SECTION_IMAGES.why}
-      >
-        <p className="text-pretty text-lg leading-relaxed text-slate-600">
-          {WHY.body}
-        </p>
-        <ul className="mt-8 flex flex-wrap gap-3">
-          {WHY.bullets.map((b) => (
-            <li
-              key={b}
-              className="rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50"
-            >
-              {b.replace(/\.$/, "")}
-            </li>
-          ))}
-        </ul>
-        {/* Free-leads throw-in — accented so it stands apart from the chips. */}
-        <div className="mt-8 flex gap-4 rounded-2xl border border-brand-100 bg-brand-50/70 p-5">
-          <span
-            aria-hidden
-            className="mt-1 size-2.5 shrink-0 rounded-full bg-brand-500 ring-4 ring-brand-100"
-          />
-          <p className="text-pretty leading-relaxed text-slate-700">
-            <span className="font-semibold text-brand-700">
-              {WHY.highlight.label}:
-            </span>{" "}
-            {WHY.highlight.body}
-          </p>
-        </div>
       </FeatureSection>
 
       {/* Coming soon — more earning paths (kept low on the page) */}

@@ -138,26 +138,26 @@ export const COMING_SOON = {
 } as const;
 
 export const BENEFITS = [
-  "Access broker portals in one place.",
-  "View active projects through a cleaner, faster workflow.",
-  "Spot where opportunities may exist on commissions, pricing, and incentives.",
-  "Reduce time lost chasing scattered project details.",
-  "Move faster with a portal built specifically for Ontario realtors.",
+  "Access new-home project information in one place.",
+  "Track incentives, pricing, availability, and launch updates.",
+  "Spot commission and buyer-value opportunities faster.",
+  "Reduce time spent chasing PDFs, links, and scattered emails.",
+  "Move faster with a portal built for Ontario realtors.",
 ] as const;
 
 export const VERIFICATION = {
   heading: "Verified broker-to-broker access",
-  body: "Access is reserved for verified Ontario realtors using RECO registration details — and that gating is exactly why the best opportunities surface here.",
+  body: "LIQWD is gated for verified Ontario realtors — so project updates, opportunities, and inquiries stay inside a trusted professional network.",
   bullets: [
-    "Builders release off-market and discreet deals — and stronger commissions — when they know it's going straight to verified brokers, not the open public.",
-    "Higher-commission and incentive offers circulate faster on a broker-only tool than they ever would on the public web.",
-    "Verify with RECO registration details and keep broker-only tools inside a trusted network.",
+    "Builders release off-market deals and stronger commissions to a verified broker channel, not the public web.",
+    "Verify access with your RECO registration details.",
+    "Keep broker-only tools inside a trusted realtor network.",
   ],
 } as const;
 
 export const WHY = {
   heading: "Why realtors use LIQWD",
-  body: "The value is simple: less friction, faster access, and a clearer path to the right project information. Instead of chasing updates across multiple broker portals, LIQWD helps realtors work from one organized workflow built around speed, clarity, and opportunity.",
+  body: "LIQWD helps Ontario realtors create more potential lead paths, find projects worth pitching, and stay current on the new-home opportunities buyers care about.",
   bullets: [
     "Save time.",
     "Stay organized.",
