@@ -26,6 +26,7 @@ import {
   Inbox,
   Rocket,
   Link2,
+  Magnet,
   BookOpen,
   Menu,
   X,
@@ -66,7 +67,7 @@ const REALTOR_SECTIONS: NavSection[] = [
     description: "Commissions, referrals & rewards",
     icon: Coins,
     items: [
-      { href: "/dashboard/lead-pages", label: "Lead Pages", icon: Link2 },
+      { href: "/dashboard/get-free-leads", label: "Get free leads", icon: Magnet },
       { href: "/dashboard/quick-wins", label: "Quick Wins", icon: Coins },
       { href: "/dashboard/deal-desk", label: "Developer Deals", icon: Handshake, ultra: true },
       { href: "/dashboard/buyer-mandates", label: "Buyer Matching", icon: ClipboardList },
@@ -82,6 +83,7 @@ const REALTOR_SECTIONS: NavSection[] = [
     items: [
       { href: "/dashboard/projects", label: "Projects", icon: Building2 },
       { href: "/dashboard/broker-portals", label: "Broker Portals", icon: DoorOpen },
+      { href: "/dashboard/lead-pages", label: "Lead Pages", icon: Link2 },
     ],
   },
   {
