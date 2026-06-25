@@ -5,9 +5,9 @@
  * covering it. Decorative marketing proof point.
  */
 const ROWS = [
-  { name: "Maplewood Towns", chip: "Matched", tone: "brand" as const },
-  { name: "The Lockwood Residences", chip: "New lead", tone: "amber" as const },
-  { name: "Parkview Condos", chip: "Live", tone: "slate" as const },
+  { name: "Maplewood Towns", chip: "New lead", tone: "brand" as const },
+  { name: "Parkview Condos", chip: "New lead", tone: "brand" as const },
+  { name: "The Lockwood Residences", chip: "Matched", tone: "slate" as const },
 ];
 
 const CHIP_TONE: Record<string, string> = {
@@ -29,7 +29,7 @@ export function DashboardMock() {
           My projects
         </span>
         <span className="rounded-full bg-brand-50 px-1.5 py-0.5 text-[10px] font-medium text-brand-700">
-          3 matched
+          2 new leads
         </span>
       </div>
 
