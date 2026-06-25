@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/field";
 import { UPDATE_STATUS } from "@/lib/status";
 import type { UpdateStatus } from "@/lib/status";
+import { formatFieldValue, type ProposedChange } from "@/lib/update-fields";
 import { decideUpdate } from "./actions";
 
 export const metadata: Metadata = { title: "Update requests" };
@@ -114,7 +115,7 @@ export default async function UpdatesQueue() {
                       href={`/dashboard/admin/projects/${r.project_id}`}
                       className="text-xs text-brand-700 hover:underline"
                     >
-                      Open project to apply changes →
+                      Open in project editor →
                     </Link>
                   ) : null}
                 </div>
@@ -191,7 +192,11 @@ export default async function UpdatesQueue() {
   );
 }
 
-/** Renders an update request's details text and any image attachments. */
+/**
+ * Renders an update request: the structured field diff (current → proposed) for
+ * new requests, plus any note and image attachments. Falls back to the legacy
+ * free-text `details` shape for older requests.
+ */
 function RequestPayload({
   payload,
   signed,
@@ -199,39 +204,76 @@ function RequestPayload({
   payload: Record<string, unknown> | null;
   signed: Record<string, string>;
 }) {
-  const details =
-    typeof payload?.details === "string" ? payload.details : null;
+  const changes = Array.isArray(payload?.changes)
+    ? (payload!.changes as ProposedChange[])
+    : [];
+  const note =
+    typeof payload?.note === "string"
+      ? payload.note
+      : typeof payload?.details === "string"
+        ? payload.details
+        : null;
   const attachments = Array.isArray(payload?.attachments)
     ? (payload!.attachments as string[])
     : [];
+  const imageKind =
+    typeof payload?.image_kind === "string" ? payload.image_kind : null;
 
-  if (!details && attachments.length === 0) {
+  if (changes.length === 0 && !note && attachments.length === 0) {
     return <p className="text-xs text-slate-400">No details provided.</p>;
   }
 
   return (
-    <div className="space-y-2">
-      {details ? (
-        <p className="whitespace-pre-wrap text-sm text-slate-600">{details}</p>
+    <div className="space-y-3">
+      {changes.length > 0 ? (
+        <ul className="divide-y divide-slate-100 overflow-hidden rounded-lg border border-slate-200">
+          {changes.map((c) => (
+            <li
+              key={c.key}
+              className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 px-3 py-2 text-sm"
+            >
+              <span className="font-medium text-slate-700">{c.label}</span>
+              <span className="text-slate-400 line-through">
+                {formatFieldValue(c.type, c.from)}
+              </span>
+              <span aria-hidden className="text-brand-500">
+                →
+              </span>
+              <span className="font-semibold text-ink">
+                {formatFieldValue(c.type, c.to)}
+              </span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      {note ? (
+        <p className="whitespace-pre-wrap text-sm text-slate-600">{note}</p>
       ) : null}
       {attachments.length > 0 ? (
-        <div className="flex flex-wrap gap-2">
-          {attachments.map((p) =>
-            signed[p] ? (
-              <a key={p} href={signed[p]} target="_blank" rel="noreferrer">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={signed[p]}
-                  alt="Attachment"
-                  className="h-24 w-24 rounded-lg border border-slate-200 object-cover"
-                />
-              </a>
-            ) : (
-              <span key={p} className="text-xs text-slate-400">
-                attachment unavailable
-              </span>
-            ),
-          )}
+        <div className="space-y-1.5">
+          {imageKind ? (
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+              {imageKind.replace(/_/g, " ")}
+            </p>
+          ) : null}
+          <div className="flex flex-wrap gap-2">
+            {attachments.map((p) =>
+              signed[p] ? (
+                <a key={p} href={signed[p]} target="_blank" rel="noreferrer">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={signed[p]}
+                    alt="Attachment"
+                    className="h-24 w-24 rounded-lg border border-slate-200 object-cover"
+                  />
+                </a>
+              ) : (
+                <span key={p} className="text-xs text-slate-400">
+                  attachment unavailable
+                </span>
+              ),
+            )}
+          </div>
         </div>
       ) : null}
     </div>
