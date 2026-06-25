@@ -1,16 +1,9 @@
 import { type ReactNode, Fragment } from "react";
-import {
-  Gift,
-  Ban,
-  Building2,
-  LayoutGrid,
-  TrendingUp,
-  type LucideIcon,
-} from "lucide-react";
 import { ButtonLink } from "@/components/ui/button";
 import { LogoMarquee } from "@/components/marketing/logo-marquee";
 import { DashboardMock } from "@/components/marketing/dashboard-mock";
 import { ProjectPageMock } from "@/components/marketing/project-page-mock";
+import { OfferStack } from "@/components/marketing/offer-stack";
 import { ShowcaseFigure } from "@/components/marketing/showcase-figure";
 import type { ShowcaseCaption } from "@/lib/brand";
 import { AGENT_CONCERNS } from "@/lib/training";
@@ -21,7 +14,6 @@ import {
   PROOF_POINTS,
   HOW_IT_WORKS,
   EARN,
-  FEATURE_CARDS,
   BENEFITS,
   VERIFICATION,
   WHY,
@@ -31,9 +23,6 @@ import {
   BROKERAGES,
   SECTION_IMAGES,
 } from "@/lib/brand";
-
-// One icon per feature card (order matches FEATURE_CARDS).
-const FEATURE_ICONS: LucideIcon[] = [Gift, Ban, Building2, LayoutGrid, TrendingUp];
 
 function CheckIcon() {
   return (
@@ -295,7 +284,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 02 — More ways to earn + feature cards */}
+      {/* 02 — The offer: earning-opportunity stack (featured lead path + tiles) */}
       <section className="border-y border-slate-200 bg-slate-50/60">
         <div className="mx-auto max-w-6xl px-6 py-24 sm:py-32">
           <div className="max-w-2xl">
@@ -307,53 +296,7 @@ export default function LandingPage() {
               {EARN.subheading}
             </p>
           </div>
-          <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {FEATURE_CARDS.map((card, i) => {
-              const Icon = FEATURE_ICONS[i];
-              // The free buyer-lead path is the headline offer — feature it.
-              const featured = i === 0;
-              return (
-                <div
-                  key={card.title}
-                  className={`group rounded-2xl border p-6 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${
-                    featured
-                      ? "border-brand-200 bg-brand-50/70 sm:col-span-2"
-                      : "border-slate-200 bg-white hover:border-slate-300"
-                  }`}
-                >
-                  <span
-                    className={`flex items-center justify-center rounded-xl ring-1 ring-inset transition-colors ${
-                      featured
-                        ? "size-12 bg-brand-600 text-white ring-brand-600"
-                        : "size-11 bg-brand-50 text-brand-600 ring-brand-100 group-hover:bg-brand-100"
-                    }`}
-                  >
-                    <Icon
-                      className={featured ? "size-6" : "size-5"}
-                      strokeWidth={1.75}
-                      aria-hidden
-                    />
-                  </span>
-                  <h3
-                    className={`mt-5 font-semibold text-ink ${
-                      featured ? "text-xl" : "text-base"
-                    }`}
-                  >
-                    {card.title}
-                  </h3>
-                  <p
-                    className={`mt-1.5 leading-relaxed ${
-                      featured
-                        ? "text-base text-slate-600"
-                        : "text-sm text-slate-500"
-                    }`}
-                  >
-                    {card.body}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
+          <OfferStack />
         </div>
       </section>
 
