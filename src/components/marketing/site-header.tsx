@@ -58,6 +58,12 @@ export function SiteHeader() {
         </Link>
 
         <div className="flex items-center gap-1 sm:gap-3">
+          <Link
+            href="/login"
+            className="hidden items-center text-sm font-semibold text-slate-700 transition-colors hover:text-ink sm:inline-flex"
+          >
+            Log in
+          </Link>
           <ButtonLink
             href="/signup"
             variant="primary"
