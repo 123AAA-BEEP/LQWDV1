@@ -147,11 +147,11 @@ export const BENEFITS = [
 
 export const VERIFICATION = {
   heading: "Verified broker-to-broker access",
-  body: "LIQWD is built for real estate professionals. To keep the platform trusted and useful, access is reserved for verified Ontario realtors using RECO registration details.",
+  body: "Access is reserved for verified Ontario realtors using RECO registration details — and that gating is exactly why the best opportunities surface here.",
   bullets: [
-    "Verify access using RECO registration details.",
-    "Keep broker-only tools inside a trusted network.",
-    "Access a platform built for real estate professionals, not the general public.",
+    "Builders release off-market and discreet deals — and stronger commissions — when they know it's going straight to verified brokers, not the open public.",
+    "Higher-commission and incentive offers circulate faster on a broker-only tool than they ever would on the public web.",
+    "Verify with RECO registration details and keep broker-only tools inside a trusted network.",
   ],
 } as const;
 

@@ -20,7 +20,9 @@ import {
   HOW_IT_WORKS,
   EARN,
   FEATURE_CARDS,
+  BENEFITS,
   VERIFICATION,
+  WHY,
   COMING_SOON,
   SIGNUP_SECTION,
   LOGO_STRIP,
@@ -210,8 +212,7 @@ export default function LandingPage() {
             ))}
           </div>
 
-          {/* The public page that generates inquiries, paired with the steps —
-              lighter than the benefit cards below, on purpose. */}
+          {/* The public page that generates inquiries, paired with the steps. */}
           <div className="mt-14 grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
             <div className="mx-auto w-full max-w-sm">
               <ProjectPageMock />
@@ -244,7 +245,7 @@ export default function LandingPage() {
       <section className="border-y border-slate-200 bg-slate-50/60">
         <div className="mx-auto max-w-6xl px-6 py-24 sm:py-32">
           <div className="max-w-2xl">
-            <SectionLabel index="02">Why LIQWD</SectionLabel>
+            <SectionLabel index="02">The offer</SectionLabel>
             <h2 className="mt-4 text-balance text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
               {EARN.heading}
             </h2>
@@ -302,13 +303,38 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 03 — Verified access (trust) */}
+      {/* 03 — One portal for new-home inventory (the product) */}
       <FeatureSection
         index="03"
+        eyebrow="What you get"
+        heading="One portal for new-home inventory"
+        image={SECTION_IMAGES.inventory}
+      >
+        <ol className="divide-y divide-slate-200">
+          {BENEFITS.map((benefit, i) => (
+            <li
+              key={benefit}
+              className="group flex gap-5 py-5 transition-colors first:pt-0 last:pb-0"
+            >
+              <span className="pt-0.5 font-mono text-sm tabular-nums text-brand-600">
+                {String(i + 1).padStart(2, "0")}
+              </span>
+              <p className="text-pretty leading-relaxed text-slate-700 transition-colors group-hover:text-ink">
+                {benefit}
+              </p>
+            </li>
+          ))}
+        </ol>
+      </FeatureSection>
+
+      {/* 04 — Verified access (why gated access produces better deals) */}
+      <FeatureSection
+        index="04"
         eyebrow="Verified access"
         heading={VERIFICATION.heading}
         image={SECTION_IMAGES.verified}
         imageLeft
+        muted
       >
         <p className="text-pretty text-lg leading-relaxed text-slate-600">
           {VERIFICATION.body}
@@ -321,6 +347,41 @@ export default function LandingPage() {
             </li>
           ))}
         </ul>
+      </FeatureSection>
+
+      {/* 05 — Why realtors use LIQWD (the broader value) */}
+      <FeatureSection
+        index="05"
+        eyebrow="Why LIQWD"
+        heading={WHY.heading}
+        image={SECTION_IMAGES.why}
+      >
+        <p className="text-pretty text-lg leading-relaxed text-slate-600">
+          {WHY.body}
+        </p>
+        <ul className="mt-8 flex flex-wrap gap-3">
+          {WHY.bullets.map((b) => (
+            <li
+              key={b}
+              className="rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50"
+            >
+              {b.replace(/\.$/, "")}
+            </li>
+          ))}
+        </ul>
+        {/* Free-leads throw-in — accented so it stands apart from the chips. */}
+        <div className="mt-8 flex gap-4 rounded-2xl border border-brand-100 bg-brand-50/70 p-5">
+          <span
+            aria-hidden
+            className="mt-1 size-2.5 shrink-0 rounded-full bg-brand-500 ring-4 ring-brand-100"
+          />
+          <p className="text-pretty leading-relaxed text-slate-700">
+            <span className="font-semibold text-brand-700">
+              {WHY.highlight.label}:
+            </span>{" "}
+            {WHY.highlight.body}
+          </p>
+        </div>
       </FeatureSection>
 
       {/* Coming soon — more earning paths (kept low on the page) */}
