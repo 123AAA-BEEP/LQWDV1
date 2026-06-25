@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Field, Select, Textarea } from "@/components/ui/field";
+import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { Notice } from "@/components/ui/notice";
 import { createClient } from "@/lib/supabase/client";
 import { validateUpload, extFor, IMAGE_MIME, DOC_MAX } from "@/lib/upload";
@@ -37,6 +37,9 @@ export function UpdateForm({
     const details = (
       form.elements.namedItem("details") as HTMLTextAreaElement
     ).value.trim();
+    const commission = (
+      form.elements.namedItem("commission_percent") as HTMLInputElement
+    ).value.trim();
     const fileInput = form.elements.namedItem("images") as HTMLInputElement;
     const files = Array.from(fileInput.files ?? []);
 
@@ -44,8 +47,8 @@ export function UpdateForm({
       setError("Please choose what needs updating.");
       return;
     }
-    if (!details && files.length === 0) {
-      setError("Add a description or attach at least one image.");
+    if (!details && files.length === 0 && !commission) {
+      setError("Add a description, a commission %, or at least one image.");
       return;
     }
 
@@ -79,6 +82,7 @@ export function UpdateForm({
     fd.set("project_id", projectId);
     fd.set("update_type", updateType);
     fd.set("details", details);
+    fd.set("commission_percent", commission);
     for (const p of paths) fd.append("attachment_paths", p);
 
     // The server action redirects on success (and on failure, back here with
@@ -99,6 +103,23 @@ export function UpdateForm({
             </option>
           ))}
         </Select>
+      </Field>
+
+      <Field
+        label="Commission % (optional)"
+        htmlFor="commission_percent"
+        hint="The co-op commission paid to brokers, if you're submitting it — e.g. 3.5"
+      >
+        <Input
+          id="commission_percent"
+          name="commission_percent"
+          type="number"
+          min={0}
+          max={100}
+          step={0.05}
+          inputMode="decimal"
+          placeholder="e.g. 3.5"
+        />
       </Field>
 
       <Field

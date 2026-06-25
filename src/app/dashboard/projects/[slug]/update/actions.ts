@@ -13,6 +13,12 @@ export async function submitUpdateRequest(formData: FormData) {
   const projectId = String(formData.get("project_id") ?? "");
   const updateType = String(formData.get("update_type") ?? "").trim();
   const details = String(formData.get("details") ?? "").trim();
+  const commissionPercent = (() => {
+    const s = String(formData.get("commission_percent") ?? "").trim();
+    if (!s) return null;
+    const n = Number(s.replace(/[%\s]/g, ""));
+    return Number.isFinite(n) && n >= 0 && n <= 100 ? n : null;
+  })();
   // Image attachments are uploaded to the `project-documents` bucket from the
   // browser; we receive their storage paths here.
   const attachments = formData
@@ -25,9 +31,9 @@ export async function submitUpdateRequest(formData: FormData) {
   if (!projectId || !updateType) {
     redirect(`${back}?error=${encodeURIComponent("Please choose what to update.")}`);
   }
-  if (!details && attachments.length === 0) {
+  if (!details && attachments.length === 0 && commissionPercent == null) {
     redirect(
-      `${back}?error=${encodeURIComponent("Please describe the change or attach an image.")}`,
+      `${back}?error=${encodeURIComponent("Please describe the change, enter a commission %, or attach an image.")}`,
     );
   }
 
@@ -53,7 +59,11 @@ export async function submitUpdateRequest(formData: FormData) {
     project_id: projectId,
     submitted_by_user_id: user.id,
     update_type: updateType,
-    update_payload: { details: details || null, attachments },
+    update_payload: {
+      details: details || null,
+      attachments,
+      commission_percent: commissionPercent,
+    },
     status: "pending_review",
   });
 

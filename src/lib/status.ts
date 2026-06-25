@@ -180,6 +180,7 @@ export const RECORD_STATUS_OPTIONS: RecordStatus[] = [
 
 export const UPDATE_TYPE_LABELS: Record<string, string> = {
   pricing: "Pricing",
+  commission: "Commission / co-op",
   incentives: "Incentives",
   availability: "Availability / status",
   broker_portal: "Broker portal",
