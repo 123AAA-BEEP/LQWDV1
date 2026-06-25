@@ -54,7 +54,6 @@ export const DEV_HERO_VISUAL = {
     highlights: [
       { value: "100%", label: "verified brokers" },
       { value: "3,500+", label: "realtors" },
-      { value: "1,100+", label: "active projects" },
     ],
   },
 } as const;
