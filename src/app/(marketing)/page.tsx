@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { type ReactNode, Fragment } from "react";
 import {
   Gift,
   Ban,
@@ -163,8 +163,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 01 — How realtors earn leads */}
-      <section className="bg-white">
+      {/* 01 — How free project leads work */}
+      <section id="how-it-works" className="scroll-mt-20 bg-white">
         <div className="mx-auto max-w-6xl px-6 py-24 sm:py-32">
           <div className="max-w-2xl">
             <SectionLabel index="01">How it works</SectionLabel>
@@ -175,14 +175,32 @@ export default function LandingPage() {
               {HOW_IT_WORKS.subheading}
             </p>
           </div>
-          <ol className="mt-12 grid gap-6 sm:grid-cols-3">
+
+          {/* Lead-flow graphic — the product model, left to right. */}
+          <div className="mt-12 flex flex-col gap-2 sm:flex-row sm:items-stretch">
+            {HOW_IT_WORKS.flow.map((node, i) => (
+              <Fragment key={node}>
+                <div className="flex flex-1 items-center justify-center rounded-xl border border-brand-100 bg-brand-50/70 px-3 py-4 text-center text-sm font-semibold text-brand-800">
+                  {node}
+                </div>
+                {i < HOW_IT_WORKS.flow.length - 1 ? (
+                  <span
+                    aria-hidden
+                    className="flex items-center justify-center text-lg text-brand-300"
+                  >
+                    <span className="rotate-90 sm:rotate-0">→</span>
+                  </span>
+                ) : null}
+              </Fragment>
+            ))}
+          </div>
+
+          {/* Action steps — lighter than the benefit cards below, on purpose. */}
+          <ol className="mt-14 grid gap-8 sm:grid-cols-3">
             {HOW_IT_WORKS.steps.map((step, i) => (
-              <li
-                key={step.title}
-                className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
-              >
-                <span className="font-mono text-sm tabular-nums text-brand-600">
-                  {String(i + 1).padStart(2, "0")}
+              <li key={step.title}>
+                <span className="flex size-9 items-center justify-center rounded-full bg-brand-600 text-sm font-semibold text-white">
+                  {i + 1}
                 </span>
                 <h3 className="mt-4 text-lg font-semibold text-ink">
                   {step.title}
@@ -193,7 +211,7 @@ export default function LandingPage() {
               </li>
             ))}
           </ol>
-          <p className="mt-8 max-w-3xl text-xs leading-relaxed text-slate-400">
+          <p className="mt-10 max-w-3xl text-xs leading-relaxed text-slate-400">
             {HOW_IT_WORKS.disclaimer}
           </p>
         </div>
@@ -214,18 +232,44 @@ export default function LandingPage() {
           <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {FEATURE_CARDS.map((card, i) => {
               const Icon = FEATURE_ICONS[i];
+              // The free buyer-lead path is the headline offer — feature it.
+              const featured = i === 0;
               return (
                 <div
                   key={card.title}
-                  className="group rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
+                  className={`group rounded-2xl border p-6 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${
+                    featured
+                      ? "border-brand-200 bg-brand-50/70 sm:col-span-2"
+                      : "border-slate-200 bg-white hover:border-slate-300"
+                  }`}
                 >
-                  <span className="flex size-11 items-center justify-center rounded-xl bg-brand-50 text-brand-600 ring-1 ring-inset ring-brand-100 transition-colors group-hover:bg-brand-100">
-                    <Icon className="size-5" strokeWidth={1.75} aria-hidden />
+                  <span
+                    className={`flex items-center justify-center rounded-xl ring-1 ring-inset transition-colors ${
+                      featured
+                        ? "size-12 bg-brand-600 text-white ring-brand-600"
+                        : "size-11 bg-brand-50 text-brand-600 ring-brand-100 group-hover:bg-brand-100"
+                    }`}
+                  >
+                    <Icon
+                      className={featured ? "size-6" : "size-5"}
+                      strokeWidth={1.75}
+                      aria-hidden
+                    />
                   </span>
-                  <h3 className="mt-5 text-base font-semibold text-ink">
+                  <h3
+                    className={`mt-5 font-semibold text-ink ${
+                      featured ? "text-xl" : "text-base"
+                    }`}
+                  >
                     {card.title}
                   </h3>
-                  <p className="mt-1.5 text-sm leading-relaxed text-slate-500">
+                  <p
+                    className={`mt-1.5 leading-relaxed ${
+                      featured
+                        ? "text-base text-slate-600"
+                        : "text-sm text-slate-500"
+                    }`}
+                  >
                     {card.body}
                   </p>
                 </div>
@@ -293,8 +337,8 @@ export default function LandingPage() {
             <ButtonLink href="/signup" size="lg" variant="white" className="px-8">
               Sign up free
             </ButtonLink>
-            <ButtonLink href="/signup" size="lg" variant="outlineLight">
-              Start verification
+            <ButtonLink href="#how-it-works" size="lg" variant="outlineLight">
+              See how it works
             </ButtonLink>
           </div>
         </div>

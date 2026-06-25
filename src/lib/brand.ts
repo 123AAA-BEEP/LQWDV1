@@ -15,7 +15,7 @@ export const HERO = {
   headline: "Get free new-home buyer leads",
   subheadline: "without switching brokerages.",
   supporting: "Free for verified Ontario realtors",
-  body: "LIQWD helps verified Ontario realtors turn new-home project updates into potential buyer inquiries. Upload or update eligible projects, get matched to public project pages, and keep the leads they generate.",
+  body: "Upload or update eligible new-home projects, get matched to public project pages, and receive buyer inquiries when those pages generate interest.",
   primaryCta: "Sign up free",
   secondaryCta: "Log in",
   microcopy: "No referral fees. No brokerage change. RECO verification required.",
@@ -71,21 +71,29 @@ export const PROOF_POINTS = [
  * honest expectations disclaimer (no guaranteed-income claims).
  */
 export const HOW_IT_WORKS = {
-  heading: "How realtors earn leads on LIQWD",
+  heading: "How free project leads work",
   subheading:
-    "Keep project information current. Get matched to the project pages that generate buyer interest.",
+    "Keep project information current. When your update is verified, you can be matched to the public project page that generates buyer inquiries.",
+  /** The product model as a left-to-right flow, rendered as a graphic. */
+  flow: [
+    "Project update",
+    "Verified match",
+    "Public page",
+    "Buyer inquiry",
+    "Realtor lead",
+  ],
   steps: [
     {
       title: "Update a project",
       body: "Add or refresh eligible new-home project information.",
     },
     {
-      title: "Get verified",
-      body: "LIQWD reviews the update and confirms realtor access.",
+      title: "Get matched",
+      body: "Verified updates can place you in line for that project's public inquiries.",
     },
     {
       title: "Receive inquiries",
-      body: "If the public project page generates buyer interest, matched realtors can receive those leads.",
+      body: "When buyers request information, matched realtors can receive those leads.",
     },
   ],
   disclaimer:
@@ -102,7 +110,7 @@ export const EARN = {
 export const FEATURE_CARDS = [
   {
     title: "Free buyer lead path",
-    body: "Receive inquiries from public project pages you're matched to.",
+    body: "Receive buyer inquiries from public project pages you're matched to.",
   },
   {
     title: "No referral fees",
@@ -114,7 +122,7 @@ export const FEATURE_CARDS = [
   },
   {
     title: "Project updates in one place",
-    body: "Track active new-home projects, incentives, pricing, and availability.",
+    body: "Track incentives, pricing, availability, and launch updates faster.",
   },
   {
     title: "More ways to earn",
