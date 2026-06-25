@@ -163,15 +163,15 @@ export default async function ProjectDetailPage({
           <Section title="Commission &amp; negotiability" brokerOnly>
             {commercials ? (
               <dl className="grid gap-3 sm:grid-cols-2">
-                {commercials.commission_summary ? (
-                  <Detail label="Commission" value={commercials.commission_summary} />
-                ) : null}
-                {commercials.commission_percent != null ? (
-                  <Detail
-                    label="Commission %"
-                    value={`${commercials.commission_percent}%`}
-                  />
-                ) : null}
+                <Detail
+                  label="Base commission"
+                  value={
+                    commercials.commission_summary ??
+                    (commercials.commission_percent != null
+                      ? `${commercials.commission_percent}%`
+                      : "Unknown")
+                  }
+                />
                 <Detail
                   label="Commission negotiable"
                   value={yesNo(commercials.commission_is_negotiable)}
@@ -184,13 +184,6 @@ export default async function ProjectDetailPage({
                   label="Incentives negotiable"
                   value={yesNo(commercials.incentives_are_negotiable)}
                 />
-                {commercials.negotiability_notes ? (
-                  <Detail
-                    label="Commission notes"
-                    value={commercials.negotiability_notes}
-                    full
-                  />
-                ) : null}
                 {commercials.private_incentive_notes ? (
                   <Detail
                     label="Incentive notes"
