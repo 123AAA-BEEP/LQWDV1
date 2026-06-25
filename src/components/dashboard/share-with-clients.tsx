@@ -79,8 +79,8 @@ export function ShareWithClients({
           <>
             <p className="text-sm text-slate-600">
               Turn this project into your own referral link. With Pro you can
-              share up to 10 projects with buyers and collect every lead they
-              bring back — automatically attributed to you.
+              share any project with buyers and collect every lead it brings
+              back — automatically attributed to you.
             </p>
             <ButtonLink href="/dashboard/upgrade" size="sm">
               <Zap className="size-4" aria-hidden />
