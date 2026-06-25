@@ -1,27 +1,13 @@
 /**
- * A stylized mock of the LIQWD realtor dashboard, rendered entirely in code (no
- * screenshot) so it stays crisp, responsive, and on-brand. Decorative — it's a
- * marketing proof point on the realtor landing hero, not a live widget.
+ * A compact, frosted mock of the LIQWD realtor dashboard, rendered in code (no
+ * screenshot). Sized and styled to match the other hero/showcase overlay cards
+ * (~15rem, bg-white/80 backdrop-blur) so it sits over the skyline image without
+ * covering it. Decorative marketing proof point.
  */
 const ROWS = [
-  {
-    name: "Maplewood Towns",
-    city: "North district",
-    chip: "Matched",
-    tone: "brand" as const,
-  },
-  {
-    name: "The Lockwood Residences",
-    city: "Lakeside",
-    chip: "Buyer inquiry",
-    tone: "amber" as const,
-  },
-  {
-    name: "Parkview Condos",
-    city: "Uptown",
-    chip: "Live",
-    tone: "slate" as const,
-  },
+  { name: "Maplewood Towns", chip: "Matched", tone: "brand" as const },
+  { name: "The Lockwood Residences", chip: "Buyer inquiry", tone: "amber" as const },
+  { name: "Parkview Condos", chip: "Live", tone: "slate" as const },
 ];
 
 const CHIP_TONE: Record<string, string> = {
@@ -34,30 +20,31 @@ export function DashboardMock() {
   return (
     <div
       aria-hidden
-      className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl shadow-slate-900/10 ring-1 ring-slate-900/5"
+      className="w-[15rem] overflow-hidden rounded-2xl bg-white/80 shadow-lg ring-1 ring-white/60 backdrop-blur-md"
     >
       {/* Title bar */}
-      <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/80 px-5 py-3">
-        <div className="flex items-center gap-2">
-          <span className="size-2.5 rounded-full bg-brand-500" />
-          <span className="text-sm font-semibold text-ink">My projects</span>
-        </div>
-        <span className="rounded-full bg-brand-50 px-2.5 py-1 text-xs font-medium text-brand-700">
+      <div className="flex items-center justify-between px-3.5 pt-3.5">
+        <span className="flex items-center gap-1.5 text-xs font-semibold text-ink">
+          <span aria-hidden className="size-1.5 rounded-full bg-brand-500" />
+          My projects
+        </span>
+        <span className="rounded-full bg-brand-50 px-1.5 py-0.5 text-[10px] font-medium text-brand-700">
           3 matched
         </span>
       </div>
 
-      {/* Project rows */}
-      <ul className="divide-y divide-slate-100">
+      {/* Project rows (single line, to stay compact) */}
+      <ul className="mt-2.5 divide-y divide-slate-200/70">
         {ROWS.map((row) => (
-          <li key={row.name} className="flex items-center gap-3 px-5 py-3.5">
-            <span className="size-9 shrink-0 rounded-lg bg-gradient-to-br from-brand-100 to-slate-200" />
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-ink">{row.name}</p>
-              <p className="truncate text-xs text-slate-400">{row.city}</p>
-            </div>
+          <li
+            key={row.name}
+            className="flex items-center justify-between gap-2 px-3.5 py-2"
+          >
+            <span className="truncate text-xs font-medium text-ink">
+              {row.name}
+            </span>
             <span
-              className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${CHIP_TONE[row.tone]}`}
+              className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-medium ring-1 ring-inset ${CHIP_TONE[row.tone]}`}
             >
               {row.chip}
             </span>
@@ -66,9 +53,9 @@ export function DashboardMock() {
       </ul>
 
       {/* Footer stat */}
-      <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50/60 px-5 py-4">
-        <span className="text-sm text-slate-500">Bonus commission</span>
-        <span className="text-lg font-semibold tracking-tight text-ink">
+      <div className="flex items-center justify-between border-t border-slate-200/70 px-3.5 py-2.5">
+        <span className="text-[11px] text-slate-500">Bonus commission</span>
+        <span className="text-sm font-semibold tracking-tight text-ink">
           Up to 4%
         </span>
       </div>

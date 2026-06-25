@@ -146,7 +146,7 @@ export default function LandingPage() {
                     className="block aspect-square w-full object-cover"
                   />
                 </div>
-                <div className="absolute inset-x-4 bottom-4 sm:inset-x-6 sm:bottom-6">
+                <div className="absolute left-4 top-4 sm:left-6 sm:top-6">
                   <DashboardMock />
                 </div>
               </div>
