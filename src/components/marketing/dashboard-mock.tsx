@@ -5,20 +5,20 @@
  */
 const ROWS = [
   {
-    name: "Aura at Lakeview Village",
-    city: "Mississauga",
+    name: "Maplewood Towns",
+    city: "North district",
     chip: "Matched",
     tone: "brand" as const,
   },
   {
-    name: "Bridge House at Brightwater",
-    city: "Port Credit",
+    name: "The Lockwood Residences",
+    city: "Lakeside",
     chip: "Buyer inquiry",
     tone: "amber" as const,
   },
   {
-    name: "Pier House Towns",
-    city: "Lakeview Village",
+    name: "Parkview Condos",
+    city: "Uptown",
     chip: "Live",
     tone: "slate" as const,
   },

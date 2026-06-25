@@ -15,6 +15,7 @@ import { ShowcaseFigure } from "@/components/marketing/showcase-figure";
 import type { ShowcaseCaption } from "@/lib/brand";
 import {
   HERO,
+  HERO_VISUAL,
   PROOF_POINTS,
   HOW_IT_WORKS,
   EARN,
@@ -132,10 +133,23 @@ export default function LandingPage() {
               <p className="mt-4 text-sm text-slate-500">{HERO.microcopy}</p>
             </div>
 
-            {/* Product proof, not a stock photo: a coded dashboard mock so the
-                hero shows the thing realtors actually get. */}
+            {/* Skyline shot with the coded dashboard mock pasted over it — the
+                hero shows the product, framed by a real-estate backdrop. */}
             <div className="mx-auto w-full max-w-sm sm:max-w-md lg:ml-auto lg:max-w-[28rem] lg:pl-4">
-              <DashboardMock />
+              <div className="relative">
+                <div className="overflow-hidden rounded-3xl border border-slate-200 shadow-2xl shadow-slate-900/15 ring-1 ring-slate-900/5">
+                  {/* eslint-disable-next-line @next/next/no-img-element -- hero LCP image, CSS-sized */}
+                  <img
+                    src={HERO_VISUAL.src}
+                    alt={HERO_VISUAL.alt}
+                    fetchPriority="high"
+                    className="block aspect-square w-full object-cover"
+                  />
+                </div>
+                <div className="absolute inset-x-4 bottom-4 sm:inset-x-6 sm:bottom-6">
+                  <DashboardMock />
+                </div>
+              </div>
             </div>
           </div>
         </div>

@@ -19,13 +19,13 @@ export function ProjectPageMock() {
 
       <div className="p-5">
         <p className="text-base font-semibold tracking-tight text-ink">
-          Aura at Lakeview Village
+          Maplewood Towns
         </p>
         <div className="mt-1 flex items-center gap-2 text-sm text-slate-500">
-          <span>Mississauga</span>
+          <span>North district</span>
           <span aria-hidden className="size-1 rounded-full bg-slate-300" />
           <span>
-            From <span className="font-medium text-ink">$700,000s</span>
+            From <span className="font-medium text-ink">$600,000s</span>
           </span>
         </div>
 
