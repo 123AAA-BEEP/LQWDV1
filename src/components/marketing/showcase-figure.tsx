@@ -32,9 +32,26 @@ export function ShowcaseFigure({
           <p className="mt-2 text-xl font-semibold tracking-tight text-ink">
             {caption.title}
           </p>
-          <p className="mt-1 text-sm leading-snug text-slate-600">
-            {caption.body}
-          </p>
+          {caption.bullets ? (
+            <ul className="mt-2 space-y-1">
+              {caption.bullets.map((b) => (
+                <li
+                  key={b}
+                  className="flex items-start gap-1.5 text-sm leading-snug text-slate-600"
+                >
+                  <span
+                    aria-hidden
+                    className="mt-1.5 size-1 shrink-0 rounded-full bg-brand-500"
+                  />
+                  {b}
+                </li>
+              ))}
+            </ul>
+          ) : caption.body ? (
+            <p className="mt-1 text-sm leading-snug text-slate-600">
+              {caption.body}
+            </p>
+          ) : null}
         </div>
       ) : null}
     </div>
