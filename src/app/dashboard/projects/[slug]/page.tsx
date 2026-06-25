@@ -1,14 +1,17 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { headers } from "next/headers";
 import Link from "next/link";
-import { requireUserProfile, isApproved } from "@/lib/auth";
+import { requireUserProfile, isApproved, isPro } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardBody } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { Notice } from "@/components/ui/notice";
 import { VerificationRequired } from "@/components/dashboard/locked";
-import { formatPriceBand } from "@/lib/types";
+import { WorkThisLead } from "@/components/dashboard/work-this-lead";
+import { ShareWithClients } from "@/components/dashboard/share-with-clients";
+import { formatPriceBand, hasActivePro } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Project detail" };
 export const dynamic = "force-dynamic";
@@ -52,6 +55,7 @@ export default async function ProjectDetailPage({
     { data: myPendingPortals },
     { data: incentives },
     { data: floorplans },
+    { data: page },
   ] = await Promise.all([
     supabase
       .from("project_private_commercials")
@@ -75,6 +79,13 @@ export default async function ProjectDetailPage({
       .from("project_floorplans")
       .select("*")
       .eq("project_id", project.id),
+    supabase
+      .from("public_project_pages")
+      .select(
+        "section_intro, section_amenities, section_getting_around, section_developer",
+      )
+      .eq("project_id", project.id)
+      .maybeSingle(),
   ]);
 
   const band = formatPriceBand(
@@ -84,6 +95,37 @@ export default async function ProjectDetailPage({
   const location = [project.neighbourhood, project.city, project.province]
     .filter(Boolean)
     .join(", ");
+  const sqftRange =
+    project.size_range_sqft_min && project.size_range_sqft_max
+      ? `${project.size_range_sqft_min.toLocaleString()}–${project.size_range_sqft_max.toLocaleString()} sq ft`
+      : project.size_range_sqft_min
+        ? `From ${project.size_range_sqft_min.toLocaleString()} sq ft`
+        : null;
+  const intersection = [
+    project.intersection_primary,
+    project.intersection_secondary,
+  ]
+    .filter(Boolean)
+    .join(" & ");
+  const hasContact = Boolean(
+    project.sales_centre_name ||
+      project.sales_centre_address ||
+      project.sales_centre_hours ||
+      project.sales_centre_phone ||
+      project.sales_centre_email ||
+      project.website_url,
+  );
+
+  // "Share with clients": the realtor's own attributing referral link for this
+  // project (Pro unlocks it; free sees an upsell). Same `?ref=` mechanism the
+  // Lead Pages feature uses, surfaced right where the agent is working a lead.
+  const proAccess = isPro(profile) || hasActivePro(profile);
+  const refCode = profile.referral_code;
+  const h = await headers();
+  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "liqwd.com";
+  const proto = h.get("x-forwarded-proto") ?? "https";
+  const pageUrl = `${proto}://${host}/projects/${slug}`;
+  const refUrl = refCode ? `${pageUrl}?ref=${refCode}` : pageUrl;
 
   return (
     <div className="space-y-6">
@@ -149,12 +191,49 @@ export default async function ProjectDetailPage({
         </div>
       ) : null}
 
+      <ShareWithClients
+        proAccess={proAccess}
+        hasCode={!!refCode}
+        refUrl={refUrl}
+        pageUrl={pageUrl}
+      />
+
+      <WorkThisLead />
+
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
-          {project.description_long || project.description_short ? (
+          {project.description_long ||
+          project.description_short ||
+          page?.section_intro ? (
             <Section title="Overview">
-              <p className="leading-relaxed text-slate-600">
-                {project.description_long ?? project.description_short}
+              <p className="whitespace-pre-line leading-relaxed text-slate-600">
+                {project.description_long ??
+                  page?.section_intro ??
+                  project.description_short}
+              </p>
+            </Section>
+          ) : null}
+
+          {page?.section_amenities ? (
+            <Section title="Amenities &amp; lifestyle">
+              <p className="whitespace-pre-line leading-relaxed text-slate-600">
+                {page.section_amenities}
+              </p>
+            </Section>
+          ) : null}
+
+          {page?.section_getting_around ? (
+            <Section title="Location &amp; getting around">
+              <p className="whitespace-pre-line leading-relaxed text-slate-600">
+                {page.section_getting_around}
+              </p>
+            </Section>
+          ) : null}
+
+          {page?.section_developer ? (
+            <Section title="About the builder">
+              <p className="whitespace-pre-line leading-relaxed text-slate-600">
+                {page.section_developer}
               </p>
             </Section>
           ) : null}
@@ -272,12 +351,27 @@ export default async function ProjectDetailPage({
         <div className="space-y-6">
           <Section title="Key facts">
             <dl className="space-y-2 text-sm">
-              {band ? <Detail label="Pricing" value={band} /> : null}
-              {project.occupancy_estimate_text ? (
+              {project.project_type ? (
                 <Detail
-                  label="Occupancy"
-                  value={project.occupancy_estimate_text}
+                  label="Product type"
+                  value={String(project.project_type).replace(/_/g, " ")}
                 />
+              ) : null}
+              {project.ownership_type ? (
+                <Detail
+                  label="Ownership"
+                  value={String(project.ownership_type).replace(/_/g, " ")}
+                />
+              ) : null}
+              {band ? <Detail label="Pricing" value={band} /> : null}
+              {project.bedrooms_summary ? (
+                <Detail label="Bedrooms" value={project.bedrooms_summary} />
+              ) : null}
+              {project.bathrooms_summary ? (
+                <Detail label="Bathrooms" value={project.bathrooms_summary} />
+              ) : null}
+              {sqftRange ? (
+                <Detail label="Suite sizes" value={sqftRange} />
               ) : null}
               {project.total_units ? (
                 <Detail label="Units" value={String(project.total_units)} />
@@ -285,8 +379,89 @@ export default async function ProjectDetailPage({
               {project.storeys ? (
                 <Detail label="Storeys" value={String(project.storeys)} />
               ) : null}
+              {project.occupancy_estimate_text ? (
+                <Detail
+                  label="Occupancy"
+                  value={project.occupancy_estimate_text}
+                />
+              ) : null}
             </dl>
           </Section>
+
+          <Section title="Location">
+            <dl className="space-y-2 text-sm">
+              {project.address_full ? (
+                <Detail label="Address" value={project.address_full} />
+              ) : null}
+              {location ? <Detail label="Area" value={location} /> : null}
+              {intersection ? (
+                <Detail label="Major intersection" value={intersection} />
+              ) : null}
+            </dl>
+            {!project.address_full && !location && !intersection ? (
+              <Empty>No location details on file.</Empty>
+            ) : null}
+          </Section>
+
+          {hasContact ? (
+            <Section title="Sales centre &amp; contact">
+              <dl className="space-y-2 text-sm">
+                {project.sales_centre_name ? (
+                  <Detail
+                    label="Sales centre"
+                    value={project.sales_centre_name}
+                  />
+                ) : null}
+                {project.sales_centre_address ? (
+                  <Detail label="Address" value={project.sales_centre_address} />
+                ) : null}
+                {project.sales_centre_hours ? (
+                  <Detail label="Hours" value={project.sales_centre_hours} />
+                ) : null}
+                {project.sales_centre_phone ? (
+                  <Detail
+                    label="Phone"
+                    value={
+                      <a
+                        href={`tel:${project.sales_centre_phone}`}
+                        className="text-brand-700 hover:underline"
+                      >
+                        {project.sales_centre_phone}
+                      </a>
+                    }
+                  />
+                ) : null}
+                {project.sales_centre_email ? (
+                  <Detail
+                    label="Email"
+                    value={
+                      <a
+                        href={`mailto:${project.sales_centre_email}`}
+                        className="break-words text-brand-700 hover:underline"
+                      >
+                        {project.sales_centre_email}
+                      </a>
+                    }
+                  />
+                ) : null}
+                {project.website_url ? (
+                  <Detail
+                    label="Website"
+                    value={
+                      <a
+                        href={project.website_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-brand-700 hover:underline"
+                      >
+                        Visit project site →
+                      </a>
+                    }
+                  />
+                ) : null}
+              </dl>
+            </Section>
+          ) : null}
 
           <Section title="Broker portals" brokerOnly>
             {portals && portals.length > 0 ? (
@@ -373,7 +548,7 @@ function Detail({
   full,
 }: {
   label: string;
-  value: string;
+  value: React.ReactNode;
   full?: boolean;
 }) {
   return (

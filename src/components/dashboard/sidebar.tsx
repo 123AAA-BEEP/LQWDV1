@@ -26,6 +26,7 @@ import {
   Inbox,
   Rocket,
   Link2,
+  BookOpen,
   Menu,
   X,
   type LucideIcon,
@@ -90,6 +91,7 @@ const REALTOR_SECTIONS: NavSection[] = [
     icon: Settings2,
     items: [
       { href: "/dashboard/start", label: "Get started", icon: Rocket },
+      { href: "/dashboard/learn", label: "Playbook", icon: BookOpen },
       { href: "/dashboard/submit", label: "Submit project", icon: PlusCircle },
       { href: "/dashboard/updates", label: "Update Requests", icon: Bell },
       { href: "/dashboard/profile", label: "Profile", icon: UserCircle },
