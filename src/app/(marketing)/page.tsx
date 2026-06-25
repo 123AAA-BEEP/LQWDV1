@@ -13,6 +13,7 @@ import { DashboardMock } from "@/components/marketing/dashboard-mock";
 import { ProjectPageMock } from "@/components/marketing/project-page-mock";
 import { ShowcaseFigure } from "@/components/marketing/showcase-figure";
 import type { ShowcaseCaption } from "@/lib/brand";
+import { AGENT_CONCERNS } from "@/lib/training";
 import {
   HERO,
   HERO_VISUAL,
@@ -238,6 +239,44 @@ export default function LandingPage() {
           <p className="mt-12 max-w-3xl text-xs leading-relaxed text-slate-400">
             {HOW_IT_WORKS.disclaimer}
           </p>
+        </div>
+      </section>
+
+      {/* Reassurance — never sold pre-construction? */}
+      <section className="bg-white">
+        <div className="mx-auto max-w-6xl px-6 pb-8 sm:pb-12">
+          <div className="rounded-3xl border border-slate-200 bg-slate-50/60 p-6 sm:p-10">
+            <div className="grid gap-8 lg:grid-cols-5 lg:gap-12">
+              <div className="lg:col-span-2">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-600">
+                  New to pre-construction?
+                </p>
+                <h2 className="mt-2 text-balance text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
+                  You don&apos;t need to be an expert to close these leads.
+                </h2>
+                <p className="mt-3 text-pretty leading-relaxed text-slate-600">
+                  Resale-focused? Every project comes with a step-by-step
+                  playbook and a quick-facts sheet — so you can qualify,
+                  position, and follow up with confidence from day one.
+                </p>
+              </div>
+              <ul className="grid gap-4 sm:grid-cols-3 lg:col-span-3">
+                {AGENT_CONCERNS.map((c) => (
+                  <li
+                    key={c.concern}
+                    className="rounded-2xl border border-slate-200 bg-white p-5"
+                  >
+                    <p className="text-sm font-semibold text-ink">
+                      “{c.concern}”
+                    </p>
+                    <p className="mt-2 text-sm leading-relaxed text-slate-500">
+                      {c.answer}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
         </div>
       </section>
 

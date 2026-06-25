@@ -41,6 +41,7 @@ import { cn } from "@/lib/cn";
 import type { ReactNode } from "react";
 import { SECTION_ACCENT, type SectionAccent } from "@/lib/section-accents";
 import { GetStartedBanner } from "@/components/dashboard/onboarding/get-started-banner";
+import { PlaybookCallout } from "@/components/dashboard/playbook-callout";
 
 export const metadata: Metadata = { title: "Dashboard" };
 export const dynamic = "force-dynamic";
@@ -147,6 +148,8 @@ export default async function DashboardHome() {
           <Stat icon={FileText} label="Your proposals" value={proposalCount} />
         </div>
       ) : null}
+
+      <PlaybookCallout />
 
       <HomeSection
         label="Earn"
