@@ -21,6 +21,7 @@ import {
   Gift,
   Coins,
   Link2,
+  Magnet,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -158,13 +159,12 @@ export default async function DashboardHome() {
         description="Commissions, referrals & rewards"
       >
         <ActionCard
-          icon={Link2}
-          title="Lead Pages"
-          body="See the project pages you're bound to and copy a direct referral link to hand a buyer — every lead it captures is attributed to you."
-          href="/dashboard/lead-pages"
-          cta="Open Lead Pages"
-          enabled={approved}
-          lockedHint="Available after verification"
+          icon={Magnet}
+          title="Get free leads"
+          body="Add or update a new-home project to get matched as its agent — newer, active projects tend to draw the most buyer interest. Here's how to set up."
+          href="/dashboard/get-free-leads"
+          cta="Start getting leads"
+          enabled
         />
         <ActionCard
           icon={Coins}
@@ -231,6 +231,15 @@ export default async function DashboardHome() {
           body="Search active new-home projects across Ontario."
           href="/dashboard/projects"
           cta="View projects"
+          enabled={approved}
+          lockedHint="Available after verification"
+        />
+        <ActionCard
+          icon={Link2}
+          title="Lead Pages"
+          body="See the project pages you're bound to and copy a direct referral link to hand a buyer — every lead it captures is attributed to you."
+          href="/dashboard/lead-pages"
+          cta="Open Lead Pages"
           enabled={approved}
           lockedHint="Available after verification"
         />
