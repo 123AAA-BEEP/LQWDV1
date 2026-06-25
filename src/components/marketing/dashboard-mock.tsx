@@ -6,7 +6,7 @@
  */
 const ROWS = [
   { name: "Maplewood Towns", chip: "Matched", tone: "brand" as const },
-  { name: "The Lockwood Residences", chip: "Buyer inquiry", tone: "amber" as const },
+  { name: "The Lockwood Residences", chip: "New lead", tone: "amber" as const },
   { name: "Parkview Condos", chip: "Live", tone: "slate" as const },
 ];
 
@@ -34,7 +34,7 @@ export function DashboardMock() {
       </div>
 
       {/* Project rows (single line, to stay compact) */}
-      <ul className="mt-2.5 divide-y divide-slate-200/70">
+      <ul className="mb-1 mt-2.5 divide-y divide-slate-200/70 pb-1">
         {ROWS.map((row) => (
           <li
             key={row.name}
@@ -51,14 +51,6 @@ export function DashboardMock() {
           </li>
         ))}
       </ul>
-
-      {/* Footer stat */}
-      <div className="flex items-center justify-between border-t border-slate-200/70 px-3.5 py-2.5">
-        <span className="text-[11px] text-slate-500">Bonus commission</span>
-        <span className="text-sm font-semibold tracking-tight text-ink">
-          Up to 4%
-        </span>
-      </div>
     </div>
   );
 }
