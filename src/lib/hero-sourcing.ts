@@ -57,6 +57,9 @@ function candidatePageUrls(
   const c = slug(city);
   const b = slug((builder ?? "").split(/[,/]| and /i)[0]); // first builder only
   const dash = name.trim().replace(/\s+/g, "-");
+  // Harbour Marketing portal slugs concatenate the name (no separators), e.g.
+  // navaoakville, oxfordestates, thegardenseries2, allure.
+  const concat = name.toLowerCase().replace(/[^a-z0-9]/g, "");
   const urls: string[] = [];
   if (c) {
     urls.push(`https://www.gta-homes.com/${c}-condos/${n}/`);
@@ -66,6 +69,13 @@ function candidatePageUrls(
   urls.push(`https://condonow.com/${dash}-Towns`);
   if (b && c) {
     urls.push(`https://www.tallproperty.com/property/${n}-by-${b}-in-${c}/`);
+  }
+  // Harbour Marketing — VIP broker portals, often the only source for a
+  // "coming soon" project with minimal details elsewhere.
+  if (concat) {
+    urls.push(`https://www.harbourmarketing.ca/account/${concat}`);
+    urls.push(`https://www.harbourmarketing.ca/${concat}`);
+    urls.push(`https://www.harbourmarketing.ca/project-${n}`);
   }
   return urls;
 }

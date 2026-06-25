@@ -7,6 +7,16 @@ const nextConfig: NextConfig = {
       bodySizeLimit: "25mb",
     },
   },
+  async redirects() {
+    return [
+      // Project slug changes: keep old public URLs alive (permanent 308).
+      {
+        source: "/projects/uptown-meadowvale",
+        destination: "/projects/derry-lane-towns",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

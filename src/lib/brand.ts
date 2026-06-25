@@ -50,11 +50,10 @@ export const DEV_HERO_VISUAL = {
   alt: "Architectural rendering of a new-home community in the Greater Toronto Area",
   card: {
     eyebrow: "The network",
-    title: "Built-in distribution",
+    title: "Built-In Distribution",
     highlights: [
       { value: "100%", label: "verified brokers" },
       { value: "3,500+", label: "realtors" },
-      { value: "1,100+", label: "active projects" },
     ],
   },
 } as const;
@@ -144,7 +143,10 @@ export const BROKERAGES = [
 export type ShowcaseCaption = {
   eyebrow: string;
   title: string;
-  body: string;
+  /** A short supporting line. Prefer `bullets` on the developer overlays. */
+  body?: string;
+  /** Punchy bullet points, shown instead of a paragraph when present. */
+  bullets?: readonly string[];
 };
 
 /**
@@ -206,8 +208,12 @@ export const DEV_SECTION_IMAGES = {
     alt: "Rendering of a new-home community, sold discreetly on LIQWD",
     caption: {
       eyebrow: "Off-market by default",
-      title: "Nobody needs to know it's you",
-      body: "Reach thousands of verified agents while your project, price, and brand stay off the public record — you decide what each one sees, and when the name drops.",
+      title: "Nobody Needs To Know It's You",
+      bullets: [
+        "Brand stays off the public record",
+        "You choose what each agent sees",
+        "Drop the name when you're ready",
+      ],
     },
   },
   demand: {
@@ -216,8 +222,12 @@ export const DEV_SECTION_IMAGES = {
     alt: "Rendering of new townhomes by a major Ontario builder",
     caption: {
       eyebrow: "Demand-driven",
-      title: "Real buyers. Right now.",
-      body: "We match your units to verified buyer mandates from agents whose clients are ready to sign — demand that's real today, not someday.",
+      title: "Real Buyers. Right Now.",
+      bullets: [
+        "Matched to verified buyer mandates",
+        "Clients ready to sign now",
+        "Real demand today, not someday",
+      ],
     },
   },
   promote: {
@@ -226,8 +236,11 @@ export const DEV_SECTION_IMAGES = {
     alt: "Dusk rendering of a flagship luxury estate home in the GTA",
     caption: {
       eyebrow: "Promote",
-      title: "Reach on demand",
-      body: "Feature your project — to agents, and to buyers when you choose.",
+      title: "Reach On Demand",
+      bullets: [
+        "Featured to Ontario's top agents",
+        "Shown to buyers on your terms",
+      ],
     },
   },
 } as const;

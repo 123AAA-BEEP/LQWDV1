@@ -78,3 +78,6 @@ Overview shows live pending counts per queue.
   (approved-realtor write, admin read). Direct browser upload pattern avoids Vercel's 4.5MB action limit.
 - Data: ~1,145 projects (Altus + small livabl seed). Dedup key is the Altus inventory # (in import_notes).
   Same name+city can be legit separate phases — don't blind-dedup.
+- **Finding/verifying NEW projects**: `docs/project-data-sources.md` is the source-of-truth list of where we
+  discover + back-fill + verify projects (builder portals incl. Harbour Marketing & Capital North Realty,
+  aggregators, Altus/livabl provenance). Add new sources there. Hero-fetch loop: `docs/auto-hero-sourcing-runbook.md`.
