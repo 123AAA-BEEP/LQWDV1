@@ -43,6 +43,7 @@ import type { ReactNode } from "react";
 import { SECTION_ACCENT, type SectionAccent } from "@/lib/section-accents";
 import { GetStartedBanner } from "@/components/dashboard/onboarding/get-started-banner";
 import { PlaybookCallout } from "@/components/dashboard/playbook-callout";
+import { LeadPathStatus } from "@/components/dashboard/lead-path-status";
 
 export const metadata: Metadata = { title: "Dashboard" };
 export const dynamic = "force-dynamic";
@@ -82,11 +83,12 @@ export default async function DashboardHome() {
   let projectCount = 0;
   let newThisWeek = 0;
   let cityCount = 0;
-  let proposalCount = 0;
+  let matchedPages = 0;
+  let buyerInquiries = 0;
   let recent: RailProject[] = [];
 
   if (approved) {
-    const [pc, ntw, cityRows, props, rec] = await Promise.all([
+    const [pc, ntw, cityRows, matched, leads, rec] = await Promise.all([
       supabase
         .from("broker_projects_view")
         .select("id", { count: "exact", head: true })
@@ -101,10 +103,16 @@ export default async function DashboardHome() {
         .select("city")
         .in("record_status", VISIBLE)
         .not("city", "is", null),
+      // Public pages where this realtor is the assigned agent (the lead path).
       supabase
-        .from("project_proposals")
+        .from("public_projects_view")
+        .select("public_page_id", { count: "exact", head: true })
+        .eq("assigned_realtor_profile_id", profile.id),
+      // Buyer inquiries attributed to them (organic steward + referral-link).
+      supabase
+        .from("project_leads")
         .select("id", { count: "exact", head: true })
-        .eq("submitted_by_user_id", userId),
+        .eq("assigned_realtor_profile_id", profile.id),
       supabase
         .from("broker_projects_view")
         .select(
@@ -117,7 +125,8 @@ export default async function DashboardHome() {
     projectCount = pc.count ?? 0;
     newThisWeek = ntw.count ?? 0;
     cityCount = new Set((cityRows.data ?? []).map((r) => r.city as string)).size;
-    proposalCount = props.count ?? 0;
+    matchedPages = matched.count ?? 0;
+    buyerInquiries = leads.count ?? 0;
     recent = (rec.data as RailProject[] | null) ?? [];
   }
 
@@ -130,7 +139,7 @@ export default async function DashboardHome() {
           </h1>
           <p className="mt-1 text-slate-500">
             {approved
-              ? "Browse active new-home projects and work your opportunities."
+              ? "Turn new-home project updates into buyer inquiries — free, no referral fees, no brokerage change."
               : "Get verified to unlock broker-only project tools."}
           </p>
         </div>
@@ -139,14 +148,20 @@ export default async function DashboardHome() {
         </ButtonLink>
       </div>
 
+      {approved ? (
+        <LeadPathStatus
+          matchedPages={matchedPages}
+          buyerInquiries={buyerInquiries}
+        />
+      ) : null}
+
       <GetStartedBanner />
 
       {approved ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-3">
           <Stat icon={Building2} label="Active projects" value={projectCount} />
           <Stat icon={TrendingUp} label="New this week" value={newThisWeek} />
           <Stat icon={MapPin} label="Cities covered" value={cityCount} />
-          <Stat icon={FileText} label="Your proposals" value={proposalCount} />
         </div>
       ) : null}
 
