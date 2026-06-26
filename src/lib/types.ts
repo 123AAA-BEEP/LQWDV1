@@ -119,6 +119,7 @@ export interface ProjectListItem {
   record_status: string;
   is_featured: boolean | null;
   featured_rank: number | null;
+  created_at: string | null;
 }
 
 export interface PublicProject {
