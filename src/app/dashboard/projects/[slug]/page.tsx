@@ -469,9 +469,9 @@ export default async function ProjectDetailPage({
                         href={project.website_url}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-brand-700 hover:underline"
+                        className="inline-flex items-center gap-1 rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-50"
                       >
-                        Visit project site →
+                        Visit project site ↗
                       </a>
                     }
                   />
@@ -482,22 +482,33 @@ export default async function ProjectDetailPage({
 
           <Section title="Broker portals" brokerOnly>
             {portals && portals.length > 0 ? (
-              <ul className="space-y-2">
+              <ul className="space-y-2.5">
                 {portals.map((portal) => (
                   <li key={portal.id}>
                     <a
                       href={portal.url ?? portal.file_url ?? "#"}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-sm font-medium text-brand-700 hover:underline"
+                      className="group flex items-center gap-3 rounded-xl border border-brand-200 bg-brand-50 px-4 py-3 transition-colors hover:border-brand-400 hover:bg-brand-100"
                     >
-                      {portal.portal_name}
+                      <span
+                        aria-hidden
+                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-600 text-base text-white"
+                      >
+                        ↗
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-semibold text-brand-800">
+                          {portal.portal_name}
+                        </span>
+                        <span className="block truncate text-xs text-brand-700/80">
+                          {portal.access_notes ?? "Register / sign in for broker pricing & worksheets"}
+                        </span>
+                      </span>
+                      <span className="inline-flex shrink-0 items-center rounded-lg bg-brand-700 px-3 py-1.5 text-xs font-semibold text-white transition-colors group-hover:bg-brand-800">
+                        Open portal
+                      </span>
                     </a>
-                    {portal.access_notes ? (
-                      <p className="text-xs text-slate-500">
-                        {portal.access_notes}
-                      </p>
-                    ) : null}
                   </li>
                 ))}
               </ul>

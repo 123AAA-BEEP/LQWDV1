@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 const SELECT =
-  "project_id, slug, project_name, builder_name, city, neighbourhood, province, project_type, sales_status, construction_status, price_from_public, price_to_public, hero_image_url, published_at, is_featured, is_advertiser";
+  "project_id, slug, project_name, builder_name, city, neighbourhood, province, project_type, sales_status, construction_status, price_from_public, price_to_public, hero_image_url, published_at, is_featured, is_advertiser, featured_rank";
 
 const TYPE_OPTIONS = [
   { value: "condo", label: "Condos" },
@@ -45,6 +45,7 @@ interface Row {
   hero_image_url: string | null;
   is_featured: boolean | null;
   is_advertiser: boolean | null;
+  featured_rank: number | null;
 }
 
 const isFeatured = (p: Row) => Boolean(p.is_featured || p.is_advertiser);
@@ -139,6 +140,7 @@ export default async function MarketplacePage({
       .from("public_projects_view")
       .select(SELECT)
       .or("is_featured.eq.true,is_advertiser.eq.true")
+      .order("featured_rank", { ascending: true, nullsFirst: false })
       .order("published_at", { ascending: false })
       .limit(3);
     featured = (fData as Row[] | null) ?? [];
@@ -149,6 +151,7 @@ export default async function MarketplacePage({
   let req = supabase
     .from("public_projects_view")
     .select(SELECT)
+    .order("featured_rank", { ascending: true, nullsFirst: false })
     .order("is_advertiser", { ascending: false })
     .order("is_featured", { ascending: false })
     .order("published_at", { ascending: false })

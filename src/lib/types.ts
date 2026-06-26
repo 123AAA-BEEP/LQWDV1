@@ -117,6 +117,8 @@ export interface ProjectListItem {
   price_to_public: number | null;
   hero_image_url: string | null;
   record_status: string;
+  is_featured: boolean | null;
+  featured_rank: number | null;
 }
 
 export interface PublicProject {

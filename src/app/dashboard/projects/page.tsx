@@ -79,8 +79,12 @@ export default async function ProjectsPage({
   let request = supabase
     .from("broker_projects_view")
     .select(
-      "id, slug, project_name, builder_name, city, sales_status, construction_status, occupancy_estimate_text, price_from_public, price_to_public, hero_image_url, record_status",
+      "id, slug, project_name, builder_name, city, sales_status, construction_status, occupancy_estimate_text, price_from_public, price_to_public, hero_image_url, record_status, is_featured, featured_rank",
     )
+    // Pinned (featured_rank) and featured projects lead the list for everyone,
+    // then newest first — the same priority the public marketplace uses.
+    .order("featured_rank", { ascending: true, nullsFirst: false })
+    .order("is_featured", { ascending: false })
     .order("created_at", { ascending: false })
     .limit(60);
 
@@ -217,6 +221,9 @@ export default async function ProjectsPage({
                   </div>
                   <CardBody>
                     <div className="flex flex-wrap items-center gap-2">
+                      {p.is_featured ? (
+                        <Badge tone="warning">★ Featured</Badge>
+                      ) : null}
                       {p.sales_status ? (
                         <Badge tone="brand">
                           {p.sales_status.replace(/_/g, " ")}
