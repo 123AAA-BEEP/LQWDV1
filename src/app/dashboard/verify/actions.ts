@@ -8,6 +8,7 @@ import { requireUserProfile } from "@/lib/auth";
 import {
   sendAgentVerifiedEmail,
   sendVerificationReceivedEmail,
+  sendVerificationSubmittedOpsEmail,
 } from "@/lib/email";
 import {
   extractRecoCertificate,
@@ -130,10 +131,23 @@ export async function submitVerification(formData: FormData) {
     })
     .eq("id", userId);
 
-  // Immediate "received — under review" acknowledgment. Fire-and-forget.
+  // Immediate "received — under review" acknowledgment to the agent, plus an
+  // ops alert to leads@getliqwd.com so the team can manually verify right away.
+  // Both fire-and-forget (no-op until Resend is configured; never throw).
   if (profile.email) {
     await sendVerificationReceivedEmail(profile.email, profile.first_name);
   }
+  await sendVerificationSubmittedOpsEmail({
+    name:
+      [profile.first_name, profile.last_name].filter(Boolean).join(" ") ||
+      profile.email ||
+      "Realtor",
+    email: profile.email,
+    phone: profile.phone,
+    reco,
+    brokerage: brokerage || profile.brokerage_name,
+    notes: notes || null,
+  });
 
   redirect("/dashboard/verify?message=submitted");
 }

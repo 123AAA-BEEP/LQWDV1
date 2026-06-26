@@ -166,3 +166,45 @@ export async function sendVerificationReceivedEmail(
     }),
   });
 }
+
+/**
+ * Internal ops alert sent to the team inbox (LEADS_NOTIFY_EMAIL, default
+ * leads@getliqwd.com) the moment a realtor SUBMITS a RECO verification for
+ * manual review — so it can be actioned without watching the admin queue. Carries
+ * everything needed to verify (name, contact, RECO #, brokerage, notes) plus a
+ * deep link to the queue. Fire-and-forget; reply_to is the agent.
+ */
+export async function sendVerificationSubmittedOpsEmail(opts: {
+  name: string;
+  email: string | null;
+  phone?: string | null;
+  reco: string;
+  brokerage?: string | null;
+  notes?: string | null;
+}): Promise<boolean> {
+  const to = process.env.LEADS_NOTIFY_EMAIL ?? "leads@getliqwd.com";
+  const rows = [
+    `<strong>Name:</strong> ${esc(opts.name)}`,
+    opts.email ? `<strong>Email:</strong> ${esc(opts.email)}` : null,
+    opts.phone ? `<strong>Phone:</strong> ${esc(opts.phone)}` : null,
+    opts.brokerage ? `<strong>Brokerage:</strong> ${esc(opts.brokerage)}` : null,
+    `<strong>RECO #:</strong> ${esc(opts.reco)}`,
+    opts.notes ? `<strong>Notes:</strong> ${esc(opts.notes)}` : null,
+  ]
+    .filter(Boolean)
+    .join("<br>");
+  return sendEmail({
+    to,
+    replyTo: opts.email ?? undefined,
+    subject: `Verification to review: ${opts.name}`,
+    html: brandedEmail({
+      heading: "New verification to review",
+      body:
+        "A realtor just submitted their RECO verification for manual review." +
+        `<br><br>${rows}`,
+      ctaUrl: `${siteBase()}/dashboard/admin/verifications`,
+      ctaLabel: "Review in admin",
+      footnote: "LIQWD internal notification.",
+    }),
+  });
+}
