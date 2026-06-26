@@ -6,7 +6,10 @@ import { Card, CardBody } from "@/components/ui/card";
 import { formatPriceBand } from "@/lib/types";
 import type { PublicProject, RealtorCard } from "@/lib/types";
 import { TITLE_LABELS } from "@/lib/types";
-import { NeighbourhoodBlock } from "@/components/projects/neighbourhood-block";
+import {
+  NeighbourhoodBlock,
+  hasNeighbourhood,
+} from "@/components/projects/neighbourhood-block";
 import { LeadForm } from "./lead-form";
 
 export const dynamic = "force-dynamic";
@@ -172,7 +175,7 @@ export default async function PublicProjectPage({
             title="Getting around"
             text={project.section_getting_around}
           />
-          {project.neighbourhood_features ? (
+          {hasNeighbourhood(project.neighbourhood_features) ? (
             <section className="mt-8">
               <NeighbourhoodBlock
                 features={project.neighbourhood_features}

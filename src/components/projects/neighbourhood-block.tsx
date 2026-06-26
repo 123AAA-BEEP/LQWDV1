@@ -31,6 +31,15 @@ function fmtDist(m: number): string {
   return m < 950 ? `${m} m` : `${(m / 1000).toFixed(1)} km`;
 }
 
+/** True when there's at least one real nearby feature to show. Lets callers
+ *  skip the section wrapper for empty / `_unresolved` records. */
+export function hasNeighbourhood(
+  features: NeighbourhoodFeatures | null | undefined,
+): boolean {
+  if (!features) return false;
+  return ORDER.some((c) => (features[c.key] ?? []).length > 0);
+}
+
 /**
  * Structured "what's nearby" block, rendered from the OSM-sourced
  * neighbourhood_features (real, named places + straight-line distances). Shows
