@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { assertAdmin } from "@/lib/admin";
 import { awardReferralVerificationBonus } from "@/lib/rewards";
+import { sendEmail, brandedEmail } from "@/lib/email";
 
 type Decision = "approved" | "rejected" | "suspended";
 
@@ -44,8 +45,44 @@ export async function decideVerification(formData: FormData) {
   // parties (idempotent; no-op if they weren't referred).
   if (decision === "approved") {
     await awardReferralVerificationBonus(profileId);
+    await sendVerificationApprovedEmail(supabase, profileId);
   }
 
   revalidatePath("/dashboard/admin/verifications");
   revalidatePath("/dashboard/admin");
+}
+
+/**
+ * Fires the automated "you're verified" welcome email when an agent is
+ * approved. Fire-and-forget: sendEmail never throws and is a no-op until Resend
+ * is configured (RESEND_API_KEY + EMAIL_FROM in Vercel), so approval is never
+ * blocked or broken by mail.
+ */
+async function sendVerificationApprovedEmail(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  profileId: string,
+) {
+  const { data: who } = await supabase
+    .from("profiles")
+    .select("email, first_name")
+    .eq("id", profileId)
+    .maybeSingle();
+  if (!who?.email) return;
+
+  const firstName = who.first_name?.trim() || "there";
+  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "https://liqwd.ca";
+
+  await sendEmail({
+    to: who.email,
+    subject: "You're verified on LIQWD — start getting buyer leads",
+    html: brandedEmail({
+      heading: `You're verified, ${firstName}`,
+      body:
+        "Your LIQWD account is approved — you now have full broker access. " +
+        "Start getting free buyer leads from new-home project pages, with no referral fees and no brokerage change. " +
+        "The fastest way to begin: add or update a project to get matched as its agent, and buyer inquiries from its public page route straight to you.",
+      ctaUrl: `${base}/dashboard/get-free-leads`,
+      ctaLabel: "Start getting leads",
+    }),
+  });
 }
