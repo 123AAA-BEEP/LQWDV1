@@ -26,4 +26,6 @@ export async function setRealtorTier(formData: FormData) {
     .eq("role", "realtor");
 
   revalidatePath("/dashboard/admin/realtors");
+  // Refresh the per-realtor detail view too (the toggle is offered there).
+  revalidatePath("/dashboard/admin/realtors/[id]", "page");
 }
