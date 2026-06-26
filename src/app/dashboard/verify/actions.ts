@@ -6,6 +6,10 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireUserProfile } from "@/lib/auth";
 import {
+  sendAgentVerifiedEmail,
+  sendVerificationReceivedEmail,
+} from "@/lib/email";
+import {
   extractRecoCertificate,
   recoCertificateApproves,
   type RecoExtract,
@@ -79,6 +83,12 @@ export async function verifyRecoCertificate(formData: FormData) {
   // Projects, the sidebar, etc. immediately (no hard refresh needed).
   revalidatePath("/dashboard", "layout");
 
+  // Same "you're verified" welcome as the admin-review path (instant approval
+  // bypasses decideVerification). Fire-and-forget.
+  if (profile.email) {
+    await sendAgentVerifiedEmail(profile.email, profile.first_name);
+  }
+
   verifyRedirect("approved");
 }
 
@@ -96,14 +106,11 @@ export async function submitVerification(formData: FormData) {
     redirect("/dashboard/verify?error=" + encodeURIComponent("RECO registration number is required."));
   }
 
+  const { profile, userId } = await requireUserProfile();
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
 
   const { error } = await supabase.from("verification_requests").insert({
-    profile_id: user.id,
+    profile_id: userId,
     reco_registration_number: reco,
     brokerage_name_submitted: brokerage || null,
     notes: notes || null,
@@ -121,7 +128,12 @@ export async function submitVerification(formData: FormData) {
       reco_registration_number: reco,
       verification_status: "pending",
     })
-    .eq("id", user.id);
+    .eq("id", userId);
+
+  // Immediate "received — under review" acknowledgment. Fire-and-forget.
+  if (profile.email) {
+    await sendVerificationReceivedEmail(profile.email, profile.first_name);
+  }
 
   redirect("/dashboard/verify?message=submitted");
 }
