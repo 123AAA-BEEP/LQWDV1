@@ -72,11 +72,12 @@ export function GetStartedBanner() {
           </span>
           <div>
             <h2 className="font-semibold text-ink">
-              New here? See how you get paid on LIQWD
+              New to LIQWD? See how free project leads work
             </h2>
             <p className="mt-0.5 text-sm text-slate-600">
-              A 2-minute walkthrough of the simplest ways to earn — pick one and
-              we&apos;ll show you how.
+              A 2-minute walkthrough — update a project, get matched to its
+              public page, and receive buyer inquiries. Pick a path and
+              we&apos;ll show you.
             </p>
           </div>
         </div>
