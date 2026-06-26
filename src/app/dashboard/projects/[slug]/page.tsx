@@ -11,7 +11,10 @@ import { Notice } from "@/components/ui/notice";
 import { VerificationRequired } from "@/components/dashboard/locked";
 import { WorkThisLead } from "@/components/dashboard/work-this-lead";
 import { ShareWithClients } from "@/components/dashboard/share-with-clients";
-import { NeighbourhoodBlock } from "@/components/projects/neighbourhood-block";
+import {
+  NeighbourhoodBlock,
+  hasNeighbourhood,
+} from "@/components/projects/neighbourhood-block";
 import { formatPriceBand, hasActivePro } from "@/lib/types";
 import type { NeighbourhoodFeatures } from "@/lib/types";
 
@@ -240,11 +243,13 @@ export default async function ProjectDetailPage({
             </Section>
           ) : null}
 
-          {page?.neighbourhood_features ? (
+          {hasNeighbourhood(
+            page?.neighbourhood_features as unknown as NeighbourhoodFeatures,
+          ) ? (
             <Section title="Neighbourhood">
               <NeighbourhoodBlock
                 features={
-                  page.neighbourhood_features as unknown as NeighbourhoodFeatures
+                  page?.neighbourhood_features as unknown as NeighbourhoodFeatures
                 }
               />
             </Section>
