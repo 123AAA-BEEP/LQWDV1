@@ -18,8 +18,8 @@ const PROJECT_SELECT =
 
 const SYSTEM =
   "You are an expert SEO copywriter for a Canadian new-home / pre-construction real estate marketing site. " +
-  "Write accurate, public-safe copy using the supplied project facts PLUS well-known, stable facts about the project's city/neighbourhood — major highways, GO/transit lines, and the general character of the area. " +
-  "Never invent prices, dates, unit counts, awards, or hyper-specific claims (named businesses, named schools, exact distances or travel times) that aren't in the supplied facts; when unsure, stay at the neighbourhood/area level. " +
+  "Write accurate, public-safe copy using the supplied project facts, a supplied list of REAL nearby places (hospitals, shopping, schools, post-secondary, transit, groceries, parks, and points of interest, each with a distance), and well-known, stable facts about the city/neighbourhood such as the major highways and GO/transit lines that serve the area. " +
+  "Never invent prices, dates, unit counts, awards, place names, schools, or distances that aren't in the supplied facts or the nearby-places list; you MAY name any place that appears in that list, and should prefer the closest, most notable ones. When you lack a specific, stay at the neighbourhood/area level. " +
   "Weave in the city/neighbourhood and builder naturally for local SEO. Vary your sentence openings — do NOT start multiple sections the same way, and do NOT lead every section with the project name or with 'Located in'. " +
   "Write like a knowledgeable local journalist: concrete, human, specific. No hype clichés, no ALL CAPS, no emojis. Canadian spelling.";
 
@@ -35,9 +35,9 @@ const FIELD_DESCRIPTIONS = {
   section_intro:
     "2–4 sentences (you may use two short paragraphs, separated by a blank line) introducing what the project is and where it's headed — the builder, home type, scale, and what stage it's at. Don't merely restate the title; give a sense of the place.",
   section_amenities:
-    "A short paragraph (you may use two, blank-line separated) on local amenities and lifestyle — shopping, dining, parks, schools, recreation. Use specific names/distances ONLY if they appear in the supplied facts or description; otherwise describe the neighbourhood's character and well-known nearby destinations at the area level. Never fabricate business or school names or exact distances.",
+    "A short paragraph (you may use two, blank-line separated) on local amenities and lifestyle. Draw on the supplied nearby-places list and name the most relevant REAL places, roughly in priority order — hospitals, shopping, schools and post-secondary, then groceries, parks, and notable points of interest — leading with what is genuinely close. Only name places that appear in the supplied facts or nearby-places list; never fabricate a business or school name or a distance.",
   section_getting_around:
-    "A short paragraph on getting around — the major highways and transit (GO lines/stations, subway/LRT, regional bus) that genuinely serve this city/area, grounded in the supplied city/intersection. Use stable, well-known infrastructure; never invent route numbers or precise travel times.",
+    "A short paragraph on getting around. Name the REAL nearby transit from the supplied list (GO stations, subway/LRT stations, regional bus) and the major highways that genuinely serve this city/area. Use stable, well-known infrastructure; never invent route numbers, station names not in the list, or precise travel times.",
   section_developer:
     "A short, non-promotional paragraph about the builder — their focus and reputation in the GTA/Ontario. If the builder isn't well known, keep it general and factual; never fabricate awards, project counts, or years in business.",
 } as const;
@@ -75,6 +75,15 @@ export async function generateSeoFields(
     .eq("id", projectId)
     .maybeSingle();
   if (!project) return null;
+
+  // Real nearby places (OSM-sourced) so amenities / getting-around name actual
+  // anchors instead of guessing — never fabricate beyond this list.
+  const { data: page } = await supabase
+    .from("public_project_pages")
+    .select("neighbourhood_features")
+    .eq("project_id", projectId)
+    .maybeSingle();
+  const nearby = page?.neighbourhood_features ?? null;
 
   const { data: settings } = await supabase
     .from("seo_prompt_settings")
@@ -166,11 +175,13 @@ export async function generateSeoFields(
       messages: [
         {
           role: "user",
-          content: `Project facts (JSON):\n${JSON.stringify(
-            project,
-            null,
-            2,
-          )}\n\nGenerate the SEO metadata.`,
+          content:
+            `Project facts (JSON):\n${JSON.stringify(project, null, 2)}\n\n` +
+            `Nearby places (real, from map data — name these, do not invent others):\n${JSON.stringify(
+              nearby ?? {},
+              null,
+              2,
+            )}\n\nGenerate the SEO metadata.`,
         },
       ],
     });
