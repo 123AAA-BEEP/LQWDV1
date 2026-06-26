@@ -79,10 +79,11 @@ export default async function ProjectsPage({
   let request = supabase
     .from("broker_projects_view")
     .select(
-      "id, slug, project_name, builder_name, city, sales_status, construction_status, occupancy_estimate_text, price_from_public, price_to_public, hero_image_url, record_status, is_featured, featured_rank",
+      "id, slug, project_name, builder_name, city, sales_status, construction_status, occupancy_estimate_text, price_from_public, price_to_public, hero_image_url, record_status, is_featured, featured_rank, created_at",
     )
     // Pinned (featured_rank) and featured projects lead the list for everyone,
-    // then newest first — the same priority the public marketplace uses.
+    // then newest first — the same priority the public marketplace uses. The
+    // featured cluster is capped to one grid row below (see FEATURED_AT_TOP).
     .order("featured_rank", { ascending: true, nullsFirst: false })
     .order("is_featured", { ascending: false })
     .order("created_at", { ascending: false })
@@ -108,7 +109,20 @@ export default async function ProjectsPage({
   }
 
   const { data } = await request;
-  const projects = (data as ProjectListItem[] | null) ?? [];
+  const fetched = (data as ProjectListItem[] | null) ?? [];
+
+  // Cap the featured cluster to a single grid row (3 on desktop). Extra featured
+  // projects beyond the cap fall back into the list newest-first like any other
+  // — so the top is always one clean row of pinned/featured projects, never a
+  // ragged spill into the next row. `fetched` is already featured-first (by
+  // rank, then newest), so the top featured rows are simply the leading slice.
+  const FEATURED_AT_TOP = 3;
+  const pinned = fetched.filter((p) => p.is_featured).slice(0, FEATURED_AT_TOP);
+  const pinnedIds = new Set(pinned.map((p) => p.id));
+  const rest = fetched
+    .filter((p) => !pinnedIds.has(p.id))
+    .sort((a, b) => (b.created_at ?? "").localeCompare(a.created_at ?? ""));
+  const projects = [...pinned, ...rest];
 
   // Which of these projects have an active broker portal (for the badge that
   // bridges Browse → the Broker Portals directory).
