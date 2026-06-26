@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { linkReferralOnSignup } from "@/lib/rewards";
+import { sendEmail, brandedEmail } from "@/lib/email";
 import type { Profile } from "@/lib/types";
 
 /**
@@ -62,6 +63,8 @@ export async function requireUserProfile(): Promise<{
       // their account). Link the referral and pay the signup reward to both
       // parties. Server-side, idempotent, and safe when no code was used.
       await linkReferralOnSignup(inserted.id, str("referral_code_used"));
+      // Internal alert: a new agent just registered (pending verification).
+      await notifyNewRealtorRegistration(inserted as Profile);
     } else {
       // The insert returned no row — almost always because a concurrent request
       // (the layout and page both call this on first load) won the race and
@@ -85,6 +88,56 @@ export async function requireUserProfile(): Promise<{
     email: user.email ?? null,
     profile: profile as Profile,
   };
+}
+
+function escHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+/**
+ * Internal alert when a new realtor registers — sent to the ops inbox
+ * (LEADS_NOTIFY_EMAIL, default leads@getliqwd.com). Fires once, from the
+ * profile-bootstrap insert (so it can't double-send on subsequent loads).
+ * Fire-and-forget: sendEmail is a no-op until Resend is configured and never
+ * throws, so it can't break the first-load bootstrap.
+ */
+async function notifyNewRealtorRegistration(p: Profile) {
+  const to = process.env.LEADS_NOTIFY_EMAIL ?? "leads@getliqwd.com";
+  const name =
+    [p.first_name, p.last_name].filter(Boolean).join(" ") || "New agent";
+  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "https://liqwd.ca";
+  const rows = [
+    `<strong>Name:</strong> ${escHtml(name)}`,
+    p.email ? `<strong>Email:</strong> ${escHtml(p.email)}` : null,
+    p.phone ? `<strong>Phone:</strong> ${escHtml(p.phone)}` : null,
+    p.brokerage_name
+      ? `<strong>Brokerage:</strong> ${escHtml(p.brokerage_name)}`
+      : null,
+    p.reco_registration_number
+      ? `<strong>RECO #:</strong> ${escHtml(p.reco_registration_number)}`
+      : null,
+  ]
+    .filter(Boolean)
+    .join("<br>");
+
+  await sendEmail({
+    to,
+    replyTo: p.email ?? undefined,
+    subject: `New realtor sign-up: ${name}`,
+    html: brandedEmail({
+      heading: "New realtor registration",
+      body:
+        "A new agent just registered on LIQWD (pending verification)." +
+        `<br><br>${rows}`,
+      ctaUrl: `${base}/dashboard/admin/verifications`,
+      ctaLabel: "Review in admin",
+      footnote: "LIQWD internal notification.",
+    }),
+  });
 }
 
 export function isApproved(profile: Pick<Profile, "verification_status">) {
