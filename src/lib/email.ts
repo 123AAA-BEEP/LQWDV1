@@ -99,3 +99,64 @@ export function brandedEmail(opts: {
   </body>
 </html>`;
 }
+
+/** Escapes user-supplied text before it goes into email HTML. */
+function esc(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+function siteBase(): string {
+  return process.env.NEXT_PUBLIC_SITE_URL ?? "https://liqwd.ca";
+}
+
+/**
+ * "You're verified" welcome — sent whenever an agent becomes approved, whether
+ * via admin review or the instant RECO-certificate path. Shared so both routes
+ * stay identical. Fire-and-forget.
+ */
+export async function sendAgentVerifiedEmail(
+  to: string,
+  firstName: string | null,
+): Promise<boolean> {
+  const name = firstName?.trim() ? esc(firstName.trim()) : "there";
+  return sendEmail({
+    to,
+    subject: "You're verified on LIQWD — start getting buyer leads",
+    html: brandedEmail({
+      heading: `You're verified, ${name}`,
+      body:
+        "Your LIQWD account is approved — you now have full broker access. " +
+        "Start getting free buyer leads from new-home project pages, with no referral fees and no brokerage change. " +
+        "The fastest way to begin: add or update a project to get matched as its agent, and buyer inquiries from its public page route straight to you.",
+      ctaUrl: `${siteBase()}/dashboard/get-free-leads`,
+      ctaLabel: "Start getting leads",
+    }),
+  });
+}
+
+/**
+ * "We received your verification — under review" acknowledgment, sent the
+ * moment an agent submits a RECO request for manual review. Fire-and-forget.
+ */
+export async function sendVerificationReceivedEmail(
+  to: string,
+  firstName: string | null,
+): Promise<boolean> {
+  const name = firstName?.trim() ? esc(firstName.trim()) : "there";
+  return sendEmail({
+    to,
+    subject: "We received your LIQWD verification",
+    html: brandedEmail({
+      heading: "Verification received",
+      body:
+        `Thanks, ${name} — we've received your RECO verification and our team is reviewing it now. ` +
+        "We'll email you the moment your account is approved (usually within one business day). " +
+        "In the meantime, feel free to explore the dashboard and browse new-home projects.",
+      ctaUrl: `${siteBase()}/dashboard`,
+      ctaLabel: "Open your dashboard",
+    }),
+  });
+}
