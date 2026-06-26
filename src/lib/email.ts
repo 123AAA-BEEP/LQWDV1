@@ -10,7 +10,13 @@ import "server-only";
  * docs/auth-emails/README.md for the Resend/DNS setup.
  */
 
-const FROM = process.env.EMAIL_FROM ?? "LIQWD <no-reply@mail.liqwd.ca>";
+// Accept either name: EMAIL_FROM is the documented one, but MAIL_FROM is a
+// common alias and is what's set in our Vercel project — support both so a
+// rename isn't required. Must be an address on a verified Resend domain.
+const FROM =
+  process.env.EMAIL_FROM ??
+  process.env.MAIL_FROM ??
+  "LIQWD <no-reply@mail.liqwd.ca>";
 
 /** True once Resend is configured. Use to gate UI like "email reminders on". */
 export function isEmailConfigured(): boolean {
