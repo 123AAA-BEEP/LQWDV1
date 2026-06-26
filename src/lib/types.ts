@@ -154,6 +154,28 @@ export interface PublicProject {
   section_amenities: string | null;
   section_getting_around: string | null;
   section_developer: string | null;
+  neighbourhood_features: NeighbourhoodFeatures | null;
+}
+
+/** A single nearby place from the OSM-sourced neighbourhood enrichment. */
+export interface NeighbourhoodFeature {
+  name: string;
+  distance_m: number;
+  /** e.g. transit station type ("subway", "GO"); EQAO rank layered in later. */
+  kind?: string | null;
+  rank?: number | null;
+}
+
+/** Structured nearby features, by category, in display-priority order. */
+export interface NeighbourhoodFeatures {
+  hospitals?: NeighbourhoodFeature[];
+  shopping?: NeighbourhoodFeature[];
+  schools?: NeighbourhoodFeature[];
+  postsecondary?: NeighbourhoodFeature[];
+  transit?: NeighbourhoodFeature[];
+  groceries?: NeighbourhoodFeature[];
+  parks?: NeighbourhoodFeature[];
+  poi?: NeighbourhoodFeature[];
 }
 
 export interface RealtorCard {

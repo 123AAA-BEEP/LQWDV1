@@ -11,7 +11,9 @@ import { Notice } from "@/components/ui/notice";
 import { VerificationRequired } from "@/components/dashboard/locked";
 import { WorkThisLead } from "@/components/dashboard/work-this-lead";
 import { ShareWithClients } from "@/components/dashboard/share-with-clients";
+import { NeighbourhoodBlock } from "@/components/projects/neighbourhood-block";
 import { formatPriceBand, hasActivePro } from "@/lib/types";
+import type { NeighbourhoodFeatures } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Project detail" };
 export const dynamic = "force-dynamic";
@@ -82,7 +84,7 @@ export default async function ProjectDetailPage({
     supabase
       .from("public_project_pages")
       .select(
-        "section_intro, section_amenities, section_getting_around, section_developer",
+        "section_intro, section_amenities, section_getting_around, section_developer, neighbourhood_features",
       )
       .eq("project_id", project.id)
       .maybeSingle(),
@@ -235,6 +237,16 @@ export default async function ProjectDetailPage({
               <p className="whitespace-pre-line leading-relaxed text-slate-600">
                 {page.section_developer}
               </p>
+            </Section>
+          ) : null}
+
+          {page?.neighbourhood_features ? (
+            <Section title="Neighbourhood">
+              <NeighbourhoodBlock
+                features={
+                  page.neighbourhood_features as unknown as NeighbourhoodFeatures
+                }
+              />
             </Section>
           ) : null}
 
