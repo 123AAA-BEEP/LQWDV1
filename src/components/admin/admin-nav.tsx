@@ -16,6 +16,7 @@ const TABS = [
   { href: "/dashboard/admin/media-candidates", label: "Media" },
   { href: "/dashboard/admin/suggestions", label: "Suggestions" },
   { href: "/dashboard/admin/projects", label: "Projects" },
+  { href: "/dashboard/admin/email-intake", label: "Email intake" },
   { href: "/dashboard/admin/rewards", label: "Rewards" },
   { href: "/dashboard/admin/settings", label: "Settings" },
 ];
