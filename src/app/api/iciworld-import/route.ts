@@ -72,13 +72,39 @@ export async function GET(request: Request) {
   }
 
   // ---- PROBE: fetch a page and stash its HTML for parser development --------
+  // ICIWorld 500s/403s bare server requests, so prime a session first: GET the
+  // homepage to collect Set-Cookie, then request the target with that cookie +
+  // a same-site Referer, mimicking a real browser navigation.
   const target = url.searchParams.get("u") ?? "https://iciworld.com/Result1.jsp";
+  const browserHeaders: Record<string, string> = {
+    "User-Agent": UA,
+    Accept:
+      "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+    "Accept-Language": "en-CA,en;q=0.9",
+    "Upgrade-Insecure-Requests": "1",
+  };
   try {
+    // 1) Prime cookies from the homepage (best-effort).
+    let cookie = "";
+    try {
+      const home = await fetch("https://iciworld.com/", {
+        headers: browserHeaders,
+        redirect: "follow",
+      });
+      // Drain the body so the connection completes; we only want the cookie.
+      await home.text();
+      const sc = home.headers.get("set-cookie");
+      if (sc) cookie = sc.split(",").map((c) => c.split(";")[0].trim()).join("; ");
+    } catch {
+      /* homepage priming is best-effort */
+    }
+
+    // 2) Fetch the real target with the primed cookie + a same-site referer.
     const res = await fetch(target, {
       headers: {
-        "User-Agent": UA,
-        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "en-CA,en;q=0.9",
+        ...browserHeaders,
+        Referer: "https://iciworld.com/",
+        ...(cookie ? { Cookie: cookie } : {}),
       },
       redirect: "follow",
     });
@@ -88,13 +114,14 @@ export async function GET(request: Request) {
       http_status: res.status,
       content_type: res.headers.get("content-type"),
       body: body.slice(0, 300_000),
-      note: `mode=${mode} fullLength=${body.length}`,
+      note: `mode=${mode} fullLength=${body.length} cookie=${cookie ? "yes" : "no"}`,
     });
     return Response.json({
-      ok: true,
+      ok: res.status < 400,
       status: res.status,
       finalUrl: res.url,
       length: body.length,
+      primedCookie: Boolean(cookie),
     });
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
