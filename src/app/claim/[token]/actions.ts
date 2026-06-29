@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { ensureProfile, isAdmin, isApproved } from "@/lib/auth";
 import { TITLE_LABELS, type Profile } from "@/lib/types";
 
 /** UUID v4-ish shape guard so we never run a wildcard query on garbage. */
@@ -32,13 +33,16 @@ function contactSnapshot(profile: Profile, email: string | null) {
 }
 
 /**
- * Claims a sourced listing for the logged-in agent and publishes it.
+ * Claims a sourced listing for the logged-in agent.
  *
- * Security model: the token is the unguessable secret (sent only to the agent's
- * on-file address). We re-validate it server-side, require an authenticated
- * realtor, and only ever act on a row that is still `pending_claim`. The admin
- * (service-role) client is used because the claimer doesn't own the row yet, so
- * RLS would block the read/update — every check is enforced here in code.
+ * Security model: the token is the unguessable, single-use secret (sent only to
+ * the agent's on-file address). We re-validate it server-side, bootstrap +
+ * require an authenticated agent, and only ever act on a row that is still
+ * UNCLAIMED. An approved agent's listing goes live immediately; an unverified
+ * agent claims it into a held (still-dark) state that publishes when their RECO
+ * verification is approved. The token is nulled on claim so a forwarded link
+ * can't resolve again. The admin (service-role) client is used because the
+ * claimer doesn't own the row yet — every check is enforced here in code.
  */
 export async function claimListing(formData: FormData) {
   const token = formData.get("token");
@@ -51,30 +55,28 @@ export async function claimListing(formData: FormData) {
   } = await supabase.auth.getUser();
   if (!user) redirect(`/login?redirect=/claim/${token}`);
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .maybeSingle();
+  // Bootstrap the profile if this is their first authenticated action (the
+  // claim flow can land a brand-new agent here before they ever hit /dashboard).
+  const profile = await ensureProfile(supabase, user);
   if (!profile) redirect(`/login?redirect=/claim/${token}`);
 
   // Only real estate agents (or an admin, for testing) can claim a listing.
-  if (profile.role !== "realtor" && profile.role !== "admin") {
+  if (profile.role !== "realtor" && !isAdmin(profile)) {
     redirect(`/claim/${token}?error=role`);
   }
+  // Approved agents (and admins) publish immediately; unverified agents are
+  // held dark until an admin approves their verification.
+  const approved = isAdmin(profile) || isApproved(profile);
 
   const admin = createAdminClient();
   const { data: listing } = await admin
     .from("off_market_listings")
-    .select("id, status")
+    .select("id, claimed_by_profile_id")
     .eq("claim_token", token)
     .maybeSingle();
 
   if (!listing) redirect("/claim/invalid");
-  if (listing.status !== "pending_claim") {
-    // Already claimed (or archived) — show the listing's current state.
-    redirect(`/claim/${token}`);
-  }
+  if (listing.claimed_by_profile_id) redirect("/claim/invalid"); // already claimed
 
   const { error } = await admin
     .from("off_market_listings")
@@ -82,13 +84,14 @@ export async function claimListing(formData: FormData) {
       realtor_id: user.id,
       claimed_by_profile_id: user.id,
       claimed_at: new Date().toISOString(),
-      status: "published",
+      status: approved ? "published" : "pending_claim",
+      claim_token: null, // single-use: the link can't resolve again
       ...contactSnapshot(profile as Profile, user.email ?? null),
     })
     .eq("id", listing.id)
-    .eq("status", "pending_claim"); // guard against a concurrent claim
+    .is("claimed_by_profile_id", null); // guard against a concurrent claim
 
   if (error) redirect(`/claim/${token}?error=save`);
 
-  redirect(`/claim/${token}?done=1`);
+  redirect(approved ? "/claim/done" : "/claim/done?held=1");
 }

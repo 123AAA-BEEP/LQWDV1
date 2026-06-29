@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
+import { safeRelativePath } from "@/lib/safe-redirect";
 
 async function originUrl() {
   const h = await headers();
@@ -14,7 +15,8 @@ async function originUrl() {
 export async function signIn(formData: FormData) {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
-  const redirectTo = String(formData.get("redirect") ?? "/dashboard");
+  // Open-redirect guard: only ever honour an in-app relative path.
+  const redirectTo = safeRelativePath(formData.get("redirect"));
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -22,7 +24,7 @@ export async function signIn(formData: FormData) {
   if (error) {
     redirect(`/login?error=${encodeURIComponent(error.message)}`);
   }
-  redirect(redirectTo || "/dashboard");
+  redirect(redirectTo);
 }
 
 export async function signUp(formData: FormData) {
@@ -35,10 +37,8 @@ export async function signUp(formData: FormData) {
   const reco = String(formData.get("reco_registration_number") ?? "").trim();
   const title = String(formData.get("title") ?? "").trim();
   const referralCode = String(formData.get("ref") ?? "").trim().toUpperCase();
-  const rawNext = String(formData.get("next") ?? "");
   // Open-redirect guard: only ever honour an in-app relative path.
-  const next =
-    rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : "/dashboard";
+  const next = safeRelativePath(formData.get("next"));
   const origin = await originUrl();
 
   const fail = (msg: string) =>

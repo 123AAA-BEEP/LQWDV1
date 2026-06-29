@@ -51,9 +51,13 @@ export default async function OffMarketDetailPage({
 
   const { id } = await params;
   const supabase = await createClient();
+  // Explicit, provenance-free column list (never select source/source_ref/
+  // claim_email into a render tree). RLS still gates which rows are visible.
   const { data } = await supabase
     .from("off_market_listings")
-    .select("*")
+    .select(
+      "id, realtor_id, title, price, price_type, listing_status, property_types, city_region, address, property_type_description, size_value, size_type, image_urls, realtor_name, realtor_title, brokerage_name, contact_phone, contact_email, created_at, updated_at, post_kind, status, claim_token, claimed_by_profile_id",
+    )
     .eq("id", id)
     .maybeSingle();
   const listing = data as OffMarketListing | null;

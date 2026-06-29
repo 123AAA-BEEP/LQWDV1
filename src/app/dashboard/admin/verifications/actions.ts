@@ -46,6 +46,13 @@ export async function decideVerification(formData: FormData) {
   if (decision === "approved") {
     await awardReferralVerificationBonus(profileId);
     await sendVerificationApprovedEmail(supabase, profileId);
+    // Publish any off-market listings this agent claimed before being verified
+    // (held dark until now). Admin RLS permits the update.
+    await supabase
+      .from("off_market_listings")
+      .update({ status: "published" })
+      .eq("claimed_by_profile_id", profileId)
+      .eq("status", "pending_claim");
   }
 
   revalidatePath("/dashboard/admin/verifications");

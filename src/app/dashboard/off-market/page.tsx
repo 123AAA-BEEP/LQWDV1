@@ -84,13 +84,14 @@ export default async function OffMarketPage({
     else counts.have += 1; // 'have' or null (native posts)
   }
 
-  // Admin: how many sourced placeholders are still waiting to be claimed.
+  // Admin: how many sourced placeholders are still unclaimed (need a link sent).
   let pendingCount = 0;
   if (admin) {
     const { count } = await supabase
       .from("off_market_listings")
       .select("id", { count: "exact", head: true })
-      .eq("status", "pending_claim");
+      .eq("status", "pending_claim")
+      .is("claimed_by_profile_id", null);
     pendingCount = count ?? 0;
   }
 
@@ -100,7 +101,7 @@ export default async function OffMarketPage({
     .order("created_at", { ascending: false })
     .limit(300);
   if (pendingView) {
-    req = req.eq("status", "pending_claim");
+    req = req.eq("status", "pending_claim").is("claimed_by_profile_id", null);
   } else {
     req = req.eq("status", "published");
     if (kind === "have") req = req.or("post_kind.eq.have,post_kind.is.null");

@@ -43,8 +43,17 @@ export async function GET(request: Request) {
         .filter(Boolean),
     );
 
+    // Never re-seed refs an admin removed / an agent opted out of (CASL).
+    const { data: suppressedRows } = await admin
+      .from("off_market_suppressed_refs")
+      .select("source_ref")
+      .eq("source", "iciworld");
+    const suppressed = new Set(
+      ((suppressedRows ?? []) as { source_ref: string }[]).map((r) => r.source_ref),
+    );
+
     const toInsert = rows
-      .filter((r) => !have.has(r.ref))
+      .filter((r) => !have.has(r.ref) && !suppressed.has(r.ref))
       .map((r) => ({
         source: "iciworld",
         source_ref: r.ref,

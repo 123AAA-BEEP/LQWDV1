@@ -1,13 +1,80 @@
 import { redirect } from "next/navigation";
+import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { linkReferralOnSignup } from "@/lib/rewards";
 import { sendEmail, brandedEmail } from "@/lib/email";
 import type { Profile } from "@/lib/types";
 
+type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
+
+/**
+ * Returns the signed-in user's profile, creating it on first access from the
+ * metadata captured at signup. Race-safe. Returns null only if the row can't be
+ * loaded or created. Use this anywhere a logged-in user might land *before* the
+ * dashboard (e.g. the /claim flow) — profiles are otherwise never bootstrapped.
+ * The insert is permitted by RLS (id = auth.uid()).
+ */
+export async function ensureProfile(
+  supabase: SupabaseServerClient,
+  user: User,
+): Promise<Profile | null> {
+  const { data: existing } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", user.id)
+    .maybeSingle();
+  if (existing) return existing as Profile;
+
+  // Populate from the metadata captured at signup (auth.signUp options.data).
+  const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
+  const str = (k: string) =>
+    typeof meta[k] === "string" && meta[k] ? (meta[k] as string) : null;
+  const title = str("title");
+  const validTitle =
+    title && ["sales_representative", "broker", "broker_of_record"].includes(title)
+      ? title
+      : null;
+
+  const { data: inserted } = await supabase
+    .from("profiles")
+    .insert({
+      id: user.id,
+      email: user.email ?? null,
+      role: "realtor",
+      verification_status: "pending",
+      first_name: str("first_name"),
+      last_name: str("last_name"),
+      phone: str("phone"),
+      brokerage_name: str("brokerage_name"),
+      reco_registration_number: str("reco_registration_number"),
+      title: validTitle,
+    })
+    .select("*")
+    .maybeSingle();
+
+  if (inserted) {
+    // First profile load == the invited agent has a session (i.e. confirmed
+    // their account). Link the referral and pay the signup reward to both
+    // parties. Server-side, idempotent, and safe when no code was used.
+    await linkReferralOnSignup(inserted.id, str("referral_code_used"));
+    // Internal alert: a new agent just registered (pending verification).
+    await notifyNewRealtorRegistration(inserted as Profile);
+    return inserted as Profile;
+  }
+
+  // The insert returned no row — almost always because a concurrent request
+  // won the race and already created the profile. Re-fetch instead of failing.
+  const { data: raced } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", user.id)
+    .maybeSingle();
+  return (raced as Profile | null) ?? null;
+}
+
 /**
  * Returns the current user + their profile, bootstrapping a profile row on
- * first access. The profile insert is permitted by RLS (id = auth.uid()).
- * Redirects to /login when there is no session.
+ * first access. Redirects to /login when there is no session.
  */
 export async function requireUserProfile(): Promise<{
   userId: string;
@@ -23,61 +90,7 @@ export async function requireUserProfile(): Promise<{
     redirect("/login");
   }
 
-  let { data: profile } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .maybeSingle();
-
-  if (!profile) {
-    // Populate from the metadata captured at signup (auth.signUp options.data).
-    const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
-    const str = (k: string) =>
-      typeof meta[k] === "string" && meta[k] ? (meta[k] as string) : null;
-    const title = str("title");
-    const validTitle =
-      title && ["sales_representative", "broker", "broker_of_record"].includes(title)
-        ? title
-        : null;
-
-    const { data: inserted } = await supabase
-      .from("profiles")
-      .insert({
-        id: user.id,
-        email: user.email ?? null,
-        role: "realtor",
-        verification_status: "pending",
-        first_name: str("first_name"),
-        last_name: str("last_name"),
-        phone: str("phone"),
-        brokerage_name: str("brokerage_name"),
-        reco_registration_number: str("reco_registration_number"),
-        title: validTitle,
-      })
-      .select("*")
-      .maybeSingle();
-
-    if (inserted) {
-      profile = inserted;
-      // First profile load == the invited agent has a session (i.e. confirmed
-      // their account). Link the referral and pay the signup reward to both
-      // parties. Server-side, idempotent, and safe when no code was used.
-      await linkReferralOnSignup(inserted.id, str("referral_code_used"));
-      // Internal alert: a new agent just registered (pending verification).
-      await notifyNewRealtorRegistration(inserted as Profile);
-    } else {
-      // The insert returned no row — almost always because a concurrent request
-      // (the layout and page both call this on first load) won the race and
-      // already created the profile. Re-fetch it instead of throwing a 500.
-      const { data: existing } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .maybeSingle();
-      profile = existing;
-    }
-  }
-
+  const profile = await ensureProfile(supabase, user);
   if (!profile) {
     // Could not load or bootstrap a profile — send to login rather than crash.
     redirect("/login");
@@ -86,7 +99,7 @@ export async function requireUserProfile(): Promise<{
   return {
     userId: user.id,
     email: user.email ?? null,
-    profile: profile as Profile,
+    profile,
   };
 }
 

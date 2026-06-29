@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { ensureProfile, isAdmin, isApproved } from "@/lib/auth";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Notice } from "@/components/ui/notice";
 import {
@@ -24,14 +25,25 @@ const TOKEN_RE =
 function Shell({ children }: { children: React.ReactNode }) {
   return (
     <main className="mx-auto flex min-h-screen max-w-lg flex-col justify-center px-6 py-12">
-      <Link
-        href="/"
-        className="mb-8 text-xl font-bold tracking-tight text-ink"
-      >
+      <Link href="/" className="mb-8 text-xl font-bold tracking-tight text-ink">
         LIQWD
       </Link>
       {children}
     </main>
+  );
+}
+
+function InvalidLink() {
+  return (
+    <Shell>
+      <h1 className="text-2xl font-semibold tracking-tight text-ink">
+        This claim link is no longer active
+      </h1>
+      <p className="mt-2 text-slate-500">
+        The link may be incomplete, expired, or the listing may already have been
+        claimed. If you think this is a mistake, reply to the email we sent you.
+      </p>
+    </Shell>
   );
 }
 
@@ -40,47 +52,26 @@ export default async function ClaimPage({
   searchParams,
 }: {
   params: Promise<{ token: string }>;
-  searchParams: Promise<{ done?: string; error?: string }>;
+  searchParams: Promise<{ error?: string }>;
 }) {
   const { token } = await params;
-  const { done, error } = await searchParams;
+  const { error } = await searchParams;
 
-  if (!TOKEN_RE.test(token)) {
-    return (
-      <Shell>
-        <h1 className="text-2xl font-semibold tracking-tight text-ink">
-          This claim link isn&apos;t valid
-        </h1>
-        <p className="mt-2 text-slate-500">
-          The link may be incomplete or expired. Please use the most recent link
-          we sent you.
-        </p>
-      </Shell>
-    );
-  }
+  if (!TOKEN_RE.test(token)) return <InvalidLink />;
 
   // Look the listing up by its secret token (RLS would hide a pending row, so
   // use the service-role client — read-only here, just to render the preview).
+  // A claimed listing has had its token nulled, so it won't be found here.
   const admin = createAdminClient();
   const { data: listing } = await admin
     .from("off_market_listings")
-    .select("id, title, city_region, address, post_kind, listing_status, status")
+    .select(
+      "id, title, city_region, address, post_kind, listing_status, claimed_by_profile_id",
+    )
     .eq("claim_token", token)
     .maybeSingle();
 
-  if (!listing) {
-    return (
-      <Shell>
-        <h1 className="text-2xl font-semibold tracking-tight text-ink">
-          This claim link isn&apos;t valid
-        </h1>
-        <p className="mt-2 text-slate-500">
-          We couldn&apos;t find a listing for this link. Please use the most
-          recent link we sent you.
-        </p>
-      </Shell>
-    );
-  }
+  if (!listing || listing.claimed_by_profile_id) return <InvalidLink />;
 
   const kindLabel = listing.post_kind
     ? POST_KIND_LABELS[listing.post_kind as OffMarketPostKind]
@@ -109,58 +100,17 @@ export default async function ClaimPage({
     </div>
   );
 
-  // Success state.
-  if (done) {
-    return (
-      <Shell>
-        <Notice tone="success">Listing claimed.</Notice>
-        <h1 className="mt-4 text-2xl font-semibold tracking-tight text-ink">
-          You&apos;re all set
-        </h1>
-        <p className="mt-2 text-slate-500">
-          This listing is now live on the LIQWD off-market board under your name.
-          Finish your account setup to manage it, add photos and pricing, and
-          browse other agents&apos; deals.
-        </p>
-        {preview}
-        <div className="mt-6">
-          <ButtonLink href="/dashboard/off-market">Go to my dashboard</ButtonLink>
-        </div>
-      </Shell>
-    );
-  }
-
-  // Already claimed (by someone) — don't let it be re-claimed.
-  if (listing.status !== "pending_claim") {
-    return (
-      <Shell>
-        <h1 className="text-2xl font-semibold tracking-tight text-ink">
-          This listing has already been claimed
-        </h1>
-        <p className="mt-2 text-slate-500">
-          If you believe this is a mistake, reply to the email we sent you and
-          we&apos;ll sort it out.
-        </p>
-        {preview}
-      </Shell>
-    );
-  }
-
-  // Is anyone signed in?
+  // Who, if anyone, is signed in? Bootstrap their profile so a just-confirmed
+  // agent (no profile row yet) is correctly recognised as a realtor.
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  let role: string | null = null;
-  if (user) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .maybeSingle();
-    role = (profile?.role as string | null) ?? null;
-  }
-  const canClaim = role === "realtor" || role === "admin";
+  const profile = user ? await ensureProfile(supabase, user) : null;
+  const canClaim =
+    !!profile && (profile.role === "realtor" || isAdmin(profile));
+  const heldUntilVerified =
+    !!profile && profile.role === "realtor" && !isApproved(profile);
 
   return (
     <Shell>
@@ -173,12 +123,6 @@ export default async function ClaimPage({
         connect with co-broking agents.
       </p>
 
-      {error === "role" ? (
-        <Notice tone="warning" className="mt-4">
-          You&apos;re signed in with an account that can&apos;t claim listings.
-          Sign in with your agent account to continue.
-        </Notice>
-      ) : null}
       {error === "save" ? (
         <Notice tone="error" className="mt-4">
           Something went wrong claiming the listing. Please try again.
@@ -187,17 +131,32 @@ export default async function ClaimPage({
 
       {preview}
 
-      {user && canClaim ? (
-        <form action={claimListing} className="mt-6">
+      {canClaim ? (
+        <form action={claimListing} className="mt-6 space-y-2">
           <input type="hidden" name="token" value={token} />
           <Button type="submit" className="w-full">
-            This is my listing — claim &amp; publish
+            This is my listing — claim{heldUntilVerified ? "" : " & publish"}
           </Button>
+          {heldUntilVerified ? (
+            <p className="text-center text-xs text-slate-500">
+              You&apos;ll claim it now; it goes live once your RECO verification
+              is approved.
+            </p>
+          ) : null}
         </form>
-      ) : user && !canClaim ? (
-        <Notice tone="warning" className="mt-6">
-          Sign in with your LIQWD agent account to claim this listing.
-        </Notice>
+      ) : profile ? (
+        <div className="mt-6 space-y-3">
+          <Notice tone="warning">
+            You&apos;re signed in with an account that can&apos;t claim listings.
+            Sign out and open your claim link again with your LIQWD agent
+            account.
+          </Notice>
+          <form action="/auth/signout" method="post">
+            <Button type="submit" variant="secondary" className="w-full">
+              Sign out
+            </Button>
+          </form>
+        </div>
       ) : (
         <div className="mt-6 space-y-3">
           <ButtonLink href={`/signup?next=/claim/${token}`} className="w-full">
