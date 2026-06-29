@@ -75,7 +75,6 @@ const REALTOR_SECTIONS: NavSection[] = [
         href: "/dashboard/off-market",
         label: "Off-Market",
         icon: EyeOff,
-        realtorOnly: true,
       },
       { href: "/dashboard/quick-wins", label: "Quick Wins", icon: Coins },
       { href: "/dashboard/deal-desk", label: "Developer Deals", icon: Handshake, ultra: true },
