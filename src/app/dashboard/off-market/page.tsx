@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { requireUserProfile, isApproved } from "@/lib/auth";
+import { requireUserProfile, isApproved, isAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardBody } from "@/components/ui/card";
 import { Button, ButtonLink } from "@/components/ui/button";
@@ -34,9 +34,11 @@ export default async function OffMarketPage({
 }) {
   const { userId, profile } = await requireUserProfile();
 
-  // Approved realtors only — the board is invisible to developers/admins/public
-  // (RLS enforces the same; this keeps the page from rendering empty/forbidden).
-  if (profile.role !== "realtor" || !isApproved(profile)) {
+  // Approved realtors can browse + post; admins (the owner) can browse to
+  // moderate. Developers/public are blocked (RLS enforces the same).
+  const canPost = profile.role === "realtor" && isApproved(profile);
+  const canView = canPost || isAdmin(profile);
+  if (!canView) {
     return (
       <div className="space-y-6">
         <h1 className="text-2xl font-semibold tracking-tight text-ink">
@@ -101,7 +103,9 @@ export default async function OffMarketPage({
             Visible only to verified LIQWD realtors.
           </p>
         </div>
-        <ButtonLink href="/dashboard/off-market/new">Post a listing</ButtonLink>
+        {canPost ? (
+          <ButtonLink href="/dashboard/off-market/new">Post a listing</ButtonLink>
+        ) : null}
       </div>
 
       {created ? (
@@ -151,13 +155,15 @@ export default async function OffMarketPage({
             <p className="text-sm text-slate-500">
               {q || kind
                 ? "No posts match your filters."
-                : "No off-market listings yet. Be the first to post one."}
+                : "No off-market listings yet."}
             </p>
-            <div>
-              <ButtonLink href="/dashboard/off-market/new" size="sm">
-                Post a listing
-              </ButtonLink>
-            </div>
+            {canPost ? (
+              <div>
+                <ButtonLink href="/dashboard/off-market/new" size="sm">
+                  Post a listing
+                </ButtonLink>
+              </div>
+            ) : null}
           </CardBody>
         </Card>
       ) : (
