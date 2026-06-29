@@ -1,7 +1,7 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { slugify } from "@/lib/slug";
-import { findExistingProject } from "@/lib/projects-dedup";
+import { findExistingProjectFuzzy } from "@/lib/projects-dedup";
 import { maybeGenerateSeoOnPublish } from "@/lib/seo";
 import type { ExtractedProject, InboundImage } from "./extract";
 
@@ -161,7 +161,7 @@ export async function ingestExtractedProject(
     `brokerage=${ex.brokerage_name ?? "?"}`;
 
   try {
-    const match = await findExistingProject(admin, ex.project_name, ex.city);
+    const match = await findExistingProjectFuzzy(admin, ex.project_name, ex.city);
 
     // ---- UPDATE an existing project (non-destructive) ----------------------
     if (match) {
@@ -206,7 +206,7 @@ export async function ingestExtractedProject(
         action: "updated",
         project_id: match.id,
         published: cur.record_status === "published",
-        notes: `Matched “${match.project_name}” (${match.record_status}); filled ${Object.keys(patch).length} field(s).`,
+        notes: `Matched “${match.project_name}” (${match.record_status}, ${match.matched_by}); filled ${Object.keys(patch).length} field(s).`,
       };
     }
 
