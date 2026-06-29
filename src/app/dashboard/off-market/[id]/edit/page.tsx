@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { requireUserProfile, isApproved } from "@/lib/auth";
+import { requireUserProfile, isApproved, isAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardBody } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,7 +23,7 @@ export default async function EditOffMarketPage({
 }) {
   const { userId, profile } = await requireUserProfile();
 
-  if (profile.role !== "realtor" || !isApproved(profile)) {
+  if (!isAdmin(profile) && (profile.role !== "realtor" || !isApproved(profile))) {
     return (
       <div className="space-y-6">
         <h1 className="text-2xl font-semibold tracking-tight text-ink">
@@ -45,8 +45,8 @@ export default async function EditOffMarketPage({
     .maybeSingle();
   const listing = data as OffMarketListing | null;
 
-  // Only the owner can edit (RLS also blocks the write either way).
-  if (!listing || listing.realtor_id !== userId) notFound();
+  // The owner can edit their own; admins can edit any (RLS enforces the same).
+  if (!listing || (listing.realtor_id !== userId && !isAdmin(profile))) notFound();
 
   return (
     <div className="space-y-6">

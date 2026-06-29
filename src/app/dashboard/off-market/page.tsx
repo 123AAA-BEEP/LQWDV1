@@ -34,10 +34,11 @@ export default async function OffMarketPage({
 }) {
   const { userId, profile } = await requireUserProfile();
 
-  // Approved realtors can browse + post; admins (the owner) can browse to
-  // moderate. Developers/public are blocked (RLS enforces the same).
-  const canPost = profile.role === "realtor" && isApproved(profile);
-  const canView = canPost || isAdmin(profile);
+  // Approved realtors and admins (the owner) can browse + post; admins can
+  // also edit/remove any listing to moderate + seed. Developers/public are
+  // blocked (RLS enforces the same).
+  const canPost = isAdmin(profile) || (profile.role === "realtor" && isApproved(profile));
+  const canView = canPost;
   if (!canView) {
     return (
       <div className="space-y-6">
