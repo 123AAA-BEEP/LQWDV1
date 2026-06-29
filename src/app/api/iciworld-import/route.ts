@@ -1,25 +1,24 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import seedData from "@/lib/iciworld/seed-data.json";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 /**
- * ICIWorld importer — PROBE stage.
+ * ICIWorld importer.
  *
- * The sandbox can't reach iciworld.com, so this Vercel route fetches a target
- * page server-side and stashes the HTML into the admin-only `iciworld_raw`
- * table, where the parser can be developed against the real markup (read via the
- * Supabase tools). Gated by the existing INBOUND_EMAIL_SECRET so it's not public.
- *
- * Trigger in a browser:
- *   /api/iciworld-import?key=<INBOUND_EMAIL_SECRET>&mode=probe
- *   /api/iciworld-import?key=...&mode=probe&u=<encoded url>   (override target)
- *
- * mode=import (the real seed) is added once the parse is confirmed.
+ * ?key=<INBOUND_EMAIL_SECRET> is required (so it's not public). Modes:
+ *   mode=probe&u=<url>  — fetch a page server-side and stash HTML in iciworld_raw
+ *                         (used to develop the parser; default target Result1.jsp).
+ *   mode=seed           — bulk-insert the parsed Haves & Wants board (seed-data.json)
+ *                         into off_market_listings as UNCLAIMED rows. Idempotent:
+ *                         skips source_refs already present.
  */
 const UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36";
+
+type Seed = { ref: string; title: string; kind: string; status: string | null };
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -29,11 +28,51 @@ export async function GET(request: Request) {
   }
 
   const mode = url.searchParams.get("mode") ?? "probe";
-  const target =
-    url.searchParams.get("u") ?? "https://iciworld.com/Result1.jsp";
-
   const admin = createAdminClient();
 
+  // ---- SEED: insert the parsed board as unclaimed off-market listings -------
+  if (mode === "seed") {
+    const rows = seedData as Seed[];
+    const { data: existing } = await admin
+      .from("off_market_listings")
+      .select("source_ref")
+      .eq("source", "iciworld");
+    const have = new Set(
+      ((existing ?? []) as { source_ref: string | null }[])
+        .map((r) => r.source_ref)
+        .filter(Boolean),
+    );
+
+    const toInsert = rows
+      .filter((r) => !have.has(r.ref))
+      .map((r) => ({
+        source: "iciworld",
+        source_ref: r.ref,
+        title: r.title,
+        post_kind: r.kind,
+        listing_status: r.status,
+      }));
+
+    let inserted = 0;
+    const errors: string[] = [];
+    for (let i = 0; i < toInsert.length; i += 500) {
+      const batch = toInsert.slice(i, i + 500);
+      const { error } = await admin.from("off_market_listings").insert(batch);
+      if (error) errors.push(error.message);
+      else inserted += batch.length;
+    }
+
+    return Response.json({
+      ok: errors.length === 0,
+      total: rows.length,
+      alreadyPresent: have.size,
+      inserted,
+      errors,
+    });
+  }
+
+  // ---- PROBE: fetch a page and stash its HTML for parser development --------
+  const target = url.searchParams.get("u") ?? "https://iciworld.com/Result1.jsp";
   try {
     const res = await fetch(target, {
       headers: {
@@ -44,21 +83,18 @@ export async function GET(request: Request) {
       redirect: "follow",
     });
     const body = await res.text();
-
     await admin.from("iciworld_raw").insert({
       url: res.url,
       http_status: res.status,
       content_type: res.headers.get("content-type"),
-      body: body.slice(0, 300_000), // enough to see the listing structure
+      body: body.slice(0, 300_000),
       note: `mode=${mode} fullLength=${body.length}`,
     });
-
     return Response.json({
       ok: true,
       status: res.status,
       finalUrl: res.url,
       length: body.length,
-      stored: Math.min(body.length, 300_000),
     });
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
