@@ -420,3 +420,137 @@ export const SUGGESTION_STATUS_LABELS: Record<SuggestionStatus, string> = {
   shipped: "Shipped",
   declined: "Declined",
 };
+
+// =============================================================================
+// Off-market listings (migration 0037)
+// =============================================================================
+//
+// A broker-to-broker board: any APPROVED realtor can post an off-market deal and
+// browse every other realtor's listings (with contact info) to connect. Only the
+// owner can edit/delete their own. Invisible to developers/admins/public. Enums
+// are modelled as text + CHECK in the DB (matching the rest of the schema), so
+// these unions are the single source of truth the UI validates against.
+
+export type PriceType =
+  | "flat_price"
+  | "price_per_sqft"
+  | "price_per_acre"
+  | "price_per_unit";
+
+export type ListingStatus = "for_sale" | "for_lease" | "for_sale_and_lease";
+
+export type SizeType = "square_footage" | "acreage" | "unit_count";
+
+export type PropertyType =
+  | "residential_resale"
+  | "residential_assignment"
+  | "commercial"
+  | "industrial"
+  | "office"
+  | "land"
+  | "business";
+
+export interface OffMarketListing {
+  id: string;
+  realtor_id: string;
+  title: string;
+  price: number;
+  price_type: PriceType;
+  listing_status: ListingStatus;
+  property_types: PropertyType[];
+  city_region: string;
+  address: string | null;
+  property_type_description: string | null;
+  size_value: number | null;
+  size_type: SizeType | null;
+  image_urls: string[];
+  realtor_name: string;
+  realtor_title: string | null;
+  brokerage_name: string;
+  contact_phone: string;
+  contact_email: string;
+  created_at: string;
+  updated_at: string;
+}
+
+/** Shape for inserting a listing: server fills id/timestamps + contact snapshot. */
+export type OffMarketListingInsert = Omit<
+  OffMarketListing,
+  "id" | "created_at" | "updated_at"
+>;
+
+/** Shape for updating a listing: everything optional but the id. */
+export type OffMarketListingUpdate = Partial<
+  Omit<OffMarketListing, "id" | "realtor_id" | "created_at" | "updated_at">
+> & { id: string };
+
+export const PROPERTY_TYPES: PropertyType[] = [
+  "residential_resale",
+  "residential_assignment",
+  "commercial",
+  "industrial",
+  "office",
+  "land",
+  "business",
+];
+
+export const PROPERTY_TYPE_LABELS: Record<PropertyType, string> = {
+  residential_resale: "Residential — resale",
+  residential_assignment: "Residential — assignment",
+  commercial: "Commercial",
+  industrial: "Industrial",
+  office: "Office",
+  land: "Land",
+  business: "Business",
+};
+
+export const PRICE_TYPE_LABELS: Record<PriceType, string> = {
+  flat_price: "Flat price",
+  price_per_sqft: "Per sq ft",
+  price_per_acre: "Per acre",
+  price_per_unit: "Per unit",
+};
+
+export const LISTING_STATUS_LABELS: Record<ListingStatus, string> = {
+  for_sale: "For sale",
+  for_lease: "For lease",
+  for_sale_and_lease: "For sale & lease",
+};
+
+export const SIZE_TYPE_LABELS: Record<SizeType, string> = {
+  square_footage: "Sq ft",
+  acreage: "Acres",
+  unit_count: "Units",
+};
+
+/** Formats a listing's price with its rate basis, e.g. "$1,250,000" or
+ *  "$45 / sq ft" / "$320,000 / unit". */
+export function formatOffMarketPrice(
+  price: number,
+  priceType: PriceType,
+): string {
+  const amount = new Intl.NumberFormat("en-CA", {
+    style: "currency",
+    currency: "CAD",
+    maximumFractionDigits: price % 1 === 0 ? 0 : 2,
+  }).format(price);
+  const suffix: Record<PriceType, string> = {
+    flat_price: "",
+    price_per_sqft: " / sq ft",
+    price_per_acre: " / acre",
+    price_per_unit: " / unit",
+  };
+  return amount + suffix[priceType];
+}
+
+/** Formats the optional size, e.g. "1,200 sq ft" / "2.5 acres" / "12 units". */
+export function formatOffMarketSize(
+  value: number | null,
+  type: SizeType | null,
+): string | null {
+  if (value == null || !type) return null;
+  const n = new Intl.NumberFormat("en-CA", {
+    maximumFractionDigits: value % 1 === 0 ? 0 : 2,
+  }).format(value);
+  return `${n} ${SIZE_TYPE_LABELS[type]}`;
+}

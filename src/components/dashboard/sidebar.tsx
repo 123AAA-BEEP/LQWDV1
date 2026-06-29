@@ -27,6 +27,7 @@ import {
   Rocket,
   Link2,
   Magnet,
+  EyeOff,
   BookOpen,
   Menu,
   X,
@@ -43,6 +44,8 @@ type NavItem = {
   icon: LucideIcon;
   exact?: boolean;
   ultra?: boolean;
+  /** Realtor-only entry — hidden from admins (developers use a separate nav). */
+  realtorOnly?: boolean;
 };
 type NavSection = {
   accent: SectionAccent;
@@ -68,6 +71,12 @@ const REALTOR_SECTIONS: NavSection[] = [
     icon: Coins,
     items: [
       { href: "/dashboard/get-free-leads", label: "Get free leads", icon: Magnet },
+      {
+        href: "/dashboard/off-market",
+        label: "Off-Market",
+        icon: EyeOff,
+        realtorOnly: true,
+      },
       { href: "/dashboard/quick-wins", label: "Quick Wins", icon: Coins },
       { href: "/dashboard/deal-desk", label: "Developer Deals", icon: Handshake, ultra: true },
       { href: "/dashboard/buyer-mandates", label: "Buyer Matching", icon: ClipboardList },
@@ -291,12 +300,15 @@ export function Sidebar({
   const sections = isDeveloper
     ? DEVELOPER_SECTIONS
     : isAdmin
-      ? REALTOR_SECTIONS.map((s) =>
-          s.accent === "slate"
+      ? REALTOR_SECTIONS.map((s) => {
+          // Admins see the realtor nav, minus realtor-only tools (e.g. the
+          // Off-Market board), plus the Admin console link under Account.
+          const items = s.items.filter((i) => !i.realtorOnly);
+          return s.accent === "slate"
             ? {
                 ...s,
                 items: [
-                  ...s.items,
+                  ...items,
                   {
                     href: "/dashboard/admin",
                     label: "Admin",
@@ -304,8 +316,8 @@ export function Sidebar({
                   },
                 ],
               }
-            : s,
-        )
+            : { ...s, items };
+        })
       : REALTOR_SECTIONS;
 
   // Brand tier chip shown beside the LIQWD wordmark in the rail/drawer header.
