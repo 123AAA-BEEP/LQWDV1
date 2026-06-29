@@ -9,6 +9,7 @@ import { Notice } from "@/components/ui/notice";
 import { VerificationRequired } from "@/components/dashboard/locked";
 import { ListingCard } from "@/components/dashboard/off-market/listing-card";
 import { cn } from "@/lib/cn";
+import { claimUrlFor } from "@/lib/off-market";
 import type { OffMarketListing } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Off-Market" };
@@ -30,6 +31,7 @@ export default async function OffMarketPage({
     deleted?: string;
     kind?: string;
     q?: string;
+    view?: string;
   }>;
 }) {
   const { userId, profile } = await requireUserProfile();
@@ -50,19 +52,30 @@ export default async function OffMarketPage({
     );
   }
 
-  const { created, updated, deleted, kind: rawKind, q: rawQ } = await searchParams;
+  const admin = isAdmin(profile);
+  const {
+    created,
+    updated,
+    deleted,
+    kind: rawKind,
+    q: rawQ,
+    view: rawView,
+  } = await searchParams;
   const kind = ["have", "want", "service"].includes(rawKind ?? "")
     ? (rawKind as string)
     : "";
   const q = (rawQ ?? "").trim();
+  // Admin-only "Pending claims" view: the sourced placeholders that aren't live
+  // yet, each with a claim link to send to the listing agent.
+  const pendingView = admin && rawView === "pending";
 
   const supabase = await createClient();
 
-  // Counts per kind for the filter chips ("Have" also covers native member
-  // posts, which have no post_kind).
+  // Kind-chip counts reflect what the network sees: published listings only.
   const { data: kindRows } = await supabase
     .from("off_market_listings")
-    .select("post_kind");
+    .select("post_kind")
+    .eq("status", "published");
   const counts = { all: 0, have: 0, want: 0, service: 0 };
   for (const r of (kindRows ?? []) as { post_kind: string | null }[]) {
     counts.all += 1;
@@ -71,13 +84,29 @@ export default async function OffMarketPage({
     else counts.have += 1; // 'have' or null (native posts)
   }
 
+  // Admin: how many sourced placeholders are still unclaimed (need a link sent).
+  let pendingCount = 0;
+  if (admin) {
+    const { count } = await supabase
+      .from("off_market_listings")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "pending_claim")
+      .is("claimed_by_profile_id", null);
+    pendingCount = count ?? 0;
+  }
+
   let req = supabase
     .from("off_market_listings")
     .select("*")
     .order("created_at", { ascending: false })
     .limit(300);
-  if (kind === "have") req = req.or("post_kind.eq.have,post_kind.is.null");
-  else if (kind) req = req.eq("post_kind", kind);
+  if (pendingView) {
+    req = req.eq("status", "pending_claim").is("claimed_by_profile_id", null);
+  } else {
+    req = req.eq("status", "published");
+    if (kind === "have") req = req.or("post_kind.eq.have,post_kind.is.null");
+    else if (kind) req = req.eq("post_kind", kind);
+  }
   if (q) req = req.ilike("title", `%${q}%`);
 
   const { data } = await req;
@@ -115,50 +144,104 @@ export default async function OffMarketPage({
       {updated ? <Notice tone="success">Listing updated.</Notice> : null}
       {deleted ? <Notice tone="success">Listing removed.</Notice> : null}
 
-      {/* Filters: kind chips + title search */}
-      <div className="flex flex-wrap items-center gap-3">
+      {/* Admin: toggle between the live board and pending claims. */}
+      {admin ? (
         <div className="flex flex-wrap gap-1.5">
-          {KINDS.map((k) => {
-            const active = kind === k.value;
-            const count =
-              k.value === "" ? counts.all : counts[k.value as keyof typeof counts];
-            return (
-              <Link
-                key={k.value || "all"}
-                href={chipHref(k.value)}
-                className={cn(
-                  "rounded-full border px-3 py-1.5 text-sm font-medium transition-colors",
-                  active
-                    ? "border-brand-600 bg-brand-600 text-white"
-                    : "border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50",
-                )}
-              >
-                {k.label}
-                <span className={cn("ml-1.5", active ? "text-white/80" : "text-slate-400")}>
-                  {count}
-                </span>
-              </Link>
-            );
-          })}
+          <Link
+            href="/dashboard/off-market"
+            className={cn(
+              "rounded-full border px-3 py-1.5 text-sm font-medium transition-colors",
+              !pendingView
+                ? "border-brand-600 bg-brand-600 text-white"
+                : "border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50",
+            )}
+          >
+            Live board
+            <span className={cn("ml-1.5", !pendingView ? "text-white/80" : "text-slate-400")}>
+              {counts.all}
+            </span>
+          </Link>
+          <Link
+            href="/dashboard/off-market?view=pending"
+            className={cn(
+              "rounded-full border px-3 py-1.5 text-sm font-medium transition-colors",
+              pendingView
+                ? "border-amber-500 bg-amber-500 text-white"
+                : "border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50",
+            )}
+          >
+            Pending claims
+            <span className={cn("ml-1.5", pendingView ? "text-white/80" : "text-slate-400")}>
+              {pendingCount}
+            </span>
+          </Link>
         </div>
-        <form method="get" className="flex flex-1 gap-2 sm:max-w-xs">
-          {kind ? <input type="hidden" name="kind" value={kind} /> : null}
+      ) : null}
+
+      {pendingView ? (
+        <Notice tone="info">
+          These sourced listings are hidden from the network. Send each agent
+          their claim link — when they sign up and claim it, the listing goes
+          live under their name.
+        </Notice>
+      ) : null}
+
+      {/* Filters: kind chips + title search (live board only) */}
+      {!pendingView ? (
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap gap-1.5">
+            {KINDS.map((k) => {
+              const active = kind === k.value;
+              const count =
+                k.value === "" ? counts.all : counts[k.value as keyof typeof counts];
+              return (
+                <Link
+                  key={k.value || "all"}
+                  href={chipHref(k.value)}
+                  className={cn(
+                    "rounded-full border px-3 py-1.5 text-sm font-medium transition-colors",
+                    active
+                      ? "border-brand-600 bg-brand-600 text-white"
+                      : "border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50",
+                  )}
+                >
+                  {k.label}
+                  <span className={cn("ml-1.5", active ? "text-white/80" : "text-slate-400")}>
+                    {count}
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+          <form method="get" className="flex flex-1 gap-2 sm:max-w-xs">
+            {kind ? <input type="hidden" name="kind" value={kind} /> : null}
+            <Input name="q" placeholder="Search…" defaultValue={q} className="flex-1" />
+            <Button type="submit" variant="secondary">
+              Search
+            </Button>
+          </form>
+        </div>
+      ) : (
+        <form method="get" className="flex gap-2 sm:max-w-xs">
+          <input type="hidden" name="view" value="pending" />
           <Input name="q" placeholder="Search…" defaultValue={q} className="flex-1" />
           <Button type="submit" variant="secondary">
             Search
           </Button>
         </form>
-      </div>
+      )}
 
       {listings.length === 0 ? (
         <Card>
           <CardBody className="space-y-3 py-10 text-center">
             <p className="text-sm text-slate-500">
-              {q || kind
-                ? "No posts match your filters."
-                : "No off-market listings yet."}
+              {pendingView
+                ? "No pending claims."
+                : q || kind
+                  ? "No posts match your filters."
+                  : "No off-market listings yet."}
             </p>
-            {canPost ? (
+            {canPost && !pendingView ? (
               <div>
                 <ButtonLink href="/dashboard/off-market/new" size="sm">
                   Post a listing
@@ -174,7 +257,10 @@ export default async function OffMarketPage({
               key={l.id}
               listing={l}
               isOwner={l.realtor_id === userId}
-              canEdit={l.realtor_id === userId || isAdmin(profile)}
+              canEdit={l.realtor_id === userId || admin}
+              claimUrl={
+                pendingView && l.claim_token ? claimUrlFor(l.claim_token) : null
+              }
             />
           ))}
         </div>

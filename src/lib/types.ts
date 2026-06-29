@@ -480,7 +480,12 @@ export interface OffMarketListing {
   claim_email?: string | null;
   claimed_by_profile_id?: string | null;
   claimed_at?: string | null;
+  // Publish + claim flow (migration 0044).
+  status?: OffMarketStatus;
+  claim_token?: string | null;
 }
+
+export type OffMarketStatus = "pending_claim" | "published" | "archived";
 
 export const POST_KIND_LABELS: Record<OffMarketPostKind, string> = {
   have: "Have",

@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireUserProfile, isApproved, isAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { pathFromPublicUrl } from "@/lib/upload";
 import { PROPERTY_TYPES, type PropertyType } from "@/lib/types";
 
@@ -147,7 +148,9 @@ export async function createListing(formData: FormData) {
   const supabase = await createClient();
   const { error: dbError } = await supabase
     .from("off_market_listings")
-    .insert({ realtor_id: userId, ...row });
+    // Native posts an agent makes go live immediately (the column default is
+    // the fail-closed 'pending_claim' used for sourced placeholders).
+    .insert({ realtor_id: userId, status: "published", ...row });
 
   if (dbError) {
     redirect(
@@ -198,7 +201,26 @@ export async function deleteListing(formData: FormData) {
   if (!id) redirect(BASE);
 
   const supabase = await createClient();
+
+  // Note the source ref before deleting so a sourced listing can be tombstoned
+  // — removing it must be durable (an opted-out listing must not be re-seeded).
+  const { data: row } = await supabase
+    .from("off_market_listings")
+    .select("source, source_ref")
+    .eq("id", id)
+    .maybeSingle();
+
   await supabase.from("off_market_listings").delete().eq("id", id);
+
+  if (row?.source && row?.source_ref) {
+    // Service-role: suppression is a system tombstone (admin-only RLS).
+    await createAdminClient()
+      .from("off_market_suppressed_refs")
+      .upsert(
+        { source: row.source, source_ref: row.source_ref, reason: "deleted" },
+        { onConflict: "source,source_ref" },
+      );
+  }
 
   revalidatePath(BASE);
   redirect(`${BASE}?deleted=1`);

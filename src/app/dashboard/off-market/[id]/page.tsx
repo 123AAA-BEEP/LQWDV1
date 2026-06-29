@@ -7,6 +7,8 @@ import { Card, CardBody } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { VerificationRequired } from "@/components/dashboard/locked";
+import { CopyClaimLink } from "@/components/dashboard/off-market/copy-claim-link";
+import { claimUrlFor } from "@/lib/off-market";
 import {
   PROPERTY_TYPE_LABELS,
   LISTING_STATUS_LABELS,
@@ -49,16 +51,22 @@ export default async function OffMarketDetailPage({
 
   const { id } = await params;
   const supabase = await createClient();
+  // Explicit, provenance-free column list (never select source/source_ref/
+  // claim_email into a render tree). RLS still gates which rows are visible.
   const { data } = await supabase
     .from("off_market_listings")
-    .select("*")
+    .select(
+      "id, realtor_id, title, price, price_type, listing_status, property_types, city_region, address, property_type_description, size_value, size_type, image_urls, realtor_name, realtor_title, brokerage_name, contact_phone, contact_email, created_at, updated_at, post_kind, status, claim_token, claimed_by_profile_id",
+    )
     .eq("id", id)
     .maybeSingle();
   const listing = data as OffMarketListing | null;
   if (!listing) notFound();
 
   const isOwner = listing.realtor_id === userId;
-  const canEdit = isOwner || isAdmin(profile);
+  const admin = isAdmin(profile);
+  const canEdit = isOwner || admin;
+  const pending = listing.status === "pending_claim";
 
   const price =
     listing.price != null && listing.price_type
@@ -126,6 +134,24 @@ export default async function OffMarketDetailPage({
           </p>
         ) : null}
       </div>
+
+      {/* Admin: this listing is still dark — send the agent its claim link. */}
+      {admin && pending && listing.claim_token ? (
+        <Card>
+          <CardBody className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Badge tone="warning">Pending claim</Badge>
+              <p className="text-sm text-slate-500">
+                Hidden from the network until the listing agent claims it.
+              </p>
+            </div>
+            <p className="text-sm font-medium text-slate-800">
+              Send the listing agent their claim link:
+            </p>
+            <CopyClaimLink url={claimUrlFor(listing.claim_token)} />
+          </CardBody>
+        </Card>
+      ) : null}
 
       {/* Photos */}
       {photos.length ? (
