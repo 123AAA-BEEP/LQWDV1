@@ -211,10 +211,14 @@ export default function LandingPage() {
               <div className="relative">
                 <div className="overflow-hidden rounded-3xl border border-slate-200 shadow-2xl shadow-slate-900/15 ring-1 ring-slate-900/5">
                   {/* eslint-disable-next-line @next/next/no-img-element -- CSS-sized showcase image */}
+                  {/* Fixed height on mobile so the floated mock (whose height is
+                      fixed by its content, ~26rem) always fits inside the
+                      rendering instead of spilling onto the next step; the
+                      square framing returns at sm+ where the mock fits anyway. */}
                   <img
                     src={PROJECT_PAGE_VISUAL.src}
                     alt={PROJECT_PAGE_VISUAL.alt}
-                    className="block aspect-square w-full object-cover"
+                    className="block h-[28rem] w-full object-cover sm:aspect-square sm:h-auto"
                   />
                 </div>
                 <div className="absolute left-4 top-4 w-[15rem] sm:left-6 sm:top-6 sm:w-[16.5rem]">
