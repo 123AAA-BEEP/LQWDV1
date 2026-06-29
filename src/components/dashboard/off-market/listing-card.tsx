@@ -18,15 +18,19 @@ function fmtDate(s: string): string {
   });
 }
 
-/** One off-market listing on the broker board. Handles both native realtor posts
- *  and seeded (ICIWorld) unclaimed posts, which may have no price/type/contact. */
+/** One off-market listing on the broker board. Handles both fully-detailed
+ *  posts and lighter ones that may have no price/type/contact yet. The whole
+ *  card links through to the listing detail page. */
 export function ListingCard({
   listing,
   isOwner,
+  canEdit = isOwner,
 }: {
   listing: OffMarketListing;
   isOwner: boolean;
+  canEdit?: boolean;
 }) {
+  const href = `/dashboard/off-market/${listing.id}`;
   const price =
     listing.price != null && listing.price_type
       ? formatOffMarketPrice(listing.price, listing.price_type)
@@ -35,24 +39,24 @@ export function ListingCard({
   const cover = listing.image_urls?.[0];
   const extra = (listing.image_urls?.length ?? 0) - 1;
   const edited = listing.updated_at !== listing.created_at;
-
-  const seeded = listing.source === "iciworld";
-  const unclaimed = seeded && !listing.claimed_by_profile_id;
   const hasContact = Boolean(listing.realtor_name);
+  const claimable = !listing.claimed_by_profile_id && !hasContact;
 
   return (
-    <Card className="flex h-full flex-col overflow-hidden">
-      {cover ? (
-        <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={cover} alt={listing.title} className="h-full w-full object-cover" />
-          {extra > 0 ? (
-            <span className="absolute bottom-3 right-3 rounded-full bg-slate-900/70 px-2 py-0.5 text-xs font-medium text-white">
-              +{extra} photo{extra === 1 ? "" : "s"}
-            </span>
-          ) : null}
-        </div>
-      ) : null}
+    <Card className="flex h-full flex-col overflow-hidden transition-shadow hover:shadow-md">
+      <Link href={href} className="block">
+        {cover ? (
+          <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={cover} alt={listing.title} className="h-full w-full object-cover" />
+            {extra > 0 ? (
+              <span className="absolute bottom-3 right-3 rounded-full bg-slate-900/70 px-2 py-0.5 text-xs font-medium text-white">
+                +{extra} photo{extra === 1 ? "" : "s"}
+              </span>
+            ) : null}
+          </div>
+        ) : null}
+      </Link>
 
       <CardBody className="flex flex-1 flex-col gap-3">
         <div className="flex flex-wrap items-center gap-1.5">
@@ -66,13 +70,15 @@ export function ListingCard({
               {LISTING_STATUS_LABELS[listing.listing_status]}
             </Badge>
           ) : null}
-          {seeded ? <Badge tone="neutral">via ICIWorld</Badge> : null}
-          {unclaimed ? <Badge tone="warning">Unclaimed</Badge> : null}
           {isOwner ? <Badge tone="neutral">Your listing</Badge> : null}
         </div>
 
         <div>
-          <h3 className="font-semibold leading-snug text-ink">{listing.title}</h3>
+          <h3 className="font-semibold leading-snug text-ink">
+            <Link href={href} className="hover:underline">
+              {listing.title}
+            </Link>
+          </h3>
           {listing.city_region || listing.address ? (
             <p className="mt-0.5 text-sm text-slate-500">
               {[listing.city_region, listing.address].filter(Boolean).join(" · ")}
@@ -102,12 +108,12 @@ export function ListingCard({
         ) : null}
 
         {listing.property_type_description ? (
-          <p className="text-sm leading-relaxed text-slate-600">
+          <p className="line-clamp-3 text-sm leading-relaxed text-slate-600">
             {listing.property_type_description}
           </p>
         ) : null}
 
-        {/* Contact (native posts) or a claim prompt (seeded/unclaimed). */}
+        {/* Contact, or a claim prompt when no contact is posted yet. */}
         <div className="mt-auto rounded-lg border border-slate-100 bg-slate-50/70 p-3 text-sm">
           {hasContact ? (
             <>
@@ -136,10 +142,10 @@ export function ListingCard({
                 ) : null}
               </div>
             </>
-          ) : unclaimed ? (
+          ) : claimable ? (
             <p className="text-xs text-slate-500">
-              Sourced from ICIWorld — unclaimed. The listing agent can claim it by
-              signing up and verifying.
+              Are you the listing agent? Claim this listing to add your contact
+              details.
             </p>
           ) : (
             <p className="text-xs text-slate-400">No contact provided.</p>
@@ -148,17 +154,22 @@ export function ListingCard({
 
         <div className="flex items-center justify-between text-xs text-slate-400">
           <span>
-            {seeded ? "Imported" : "Posted"} {fmtDate(listing.created_at)}
-            {edited && !seeded ? ` · Updated ${fmtDate(listing.updated_at)}` : ""}
+            Listed {fmtDate(listing.created_at)}
+            {edited ? ` · Updated ${fmtDate(listing.updated_at)}` : ""}
           </span>
-          {isOwner ? (
-            <Link
-              href={`/dashboard/off-market/${listing.id}/edit`}
-              className="font-medium text-brand-700 hover:underline"
-            >
-              Edit
+          <div className="flex items-center gap-3">
+            <Link href={href} className="font-medium text-brand-700 hover:underline">
+              View details
             </Link>
-          ) : null}
+            {canEdit ? (
+              <Link
+                href={`${href}/edit`}
+                className="font-medium text-brand-700 hover:underline"
+              >
+                Edit
+              </Link>
+            ) : null}
+          </div>
         </div>
       </CardBody>
     </Card>

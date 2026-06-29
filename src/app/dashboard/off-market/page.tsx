@@ -174,6 +174,7 @@ export default async function OffMarketPage({
               key={l.id}
               listing={l}
               isOwner={l.realtor_id === userId}
+              canEdit={l.realtor_id === userId || isAdmin(profile)}
             />
           ))}
         </div>
