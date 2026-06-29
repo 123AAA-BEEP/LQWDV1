@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { requireUserProfile, isApproved } from "@/lib/auth";
+import { requireUserProfile, isApproved, isAdmin } from "@/lib/auth";
 import { Card, CardBody } from "@/components/ui/card";
 import { Notice } from "@/components/ui/notice";
 import { VerificationRequired } from "@/components/dashboard/locked";
@@ -17,7 +17,7 @@ export default async function NewOffMarketPage({
 }) {
   const { userId, profile } = await requireUserProfile();
 
-  if (profile.role !== "realtor" || !isApproved(profile)) {
+  if (!isAdmin(profile) && (profile.role !== "realtor" || !isApproved(profile))) {
     return (
       <div className="space-y-6">
         <h1 className="text-2xl font-semibold tracking-tight text-ink">

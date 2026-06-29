@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { requireUserProfile, isApproved } from "@/lib/auth";
+import { requireUserProfile, isApproved, isAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { pathFromPublicUrl } from "@/lib/upload";
 import { PROPERTY_TYPES, type PropertyType } from "@/lib/types";
@@ -125,10 +125,11 @@ function parseListing(fd: FormData): { row?: ParsedListing; error?: string } {
   };
 }
 
-/** Approved-realtor gate shared by every action (RLS is the real backstop). */
+/** Poster gate shared by every action: approved realtors or admins (the
+ * owner). RLS is the real backstop. */
 async function requireApprovedRealtor() {
   const { userId, profile } = await requireUserProfile();
-  if (profile.role !== "realtor" || !isApproved(profile)) {
+  if (!isAdmin(profile) && (profile.role !== "realtor" || !isApproved(profile))) {
     redirect("/dashboard");
   }
   return { userId, profile };
