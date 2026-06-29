@@ -1,15 +1,25 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { requireUserProfile, isApproved } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardBody } from "@/components/ui/card";
-import { ButtonLink } from "@/components/ui/button";
+import { Button, ButtonLink } from "@/components/ui/button";
+import { Input } from "@/components/ui/field";
 import { Notice } from "@/components/ui/notice";
 import { VerificationRequired } from "@/components/dashboard/locked";
 import { ListingCard } from "@/components/dashboard/off-market/listing-card";
+import { cn } from "@/lib/cn";
 import type { OffMarketListing } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Off-Market" };
 export const dynamic = "force-dynamic";
+
+const KINDS = [
+  { value: "", label: "All" },
+  { value: "have", label: "Have" },
+  { value: "want", label: "Wanted" },
+  { value: "service", label: "Services" },
+] as const;
 
 export default async function OffMarketPage({
   searchParams,
@@ -18,6 +28,8 @@ export default async function OffMarketPage({
     created?: string;
     updated?: string;
     deleted?: string;
+    kind?: string;
+    q?: string;
   }>;
 }) {
   const { userId, profile } = await requireUserProfile();
@@ -35,15 +47,46 @@ export default async function OffMarketPage({
     );
   }
 
-  const { created, updated, deleted } = await searchParams;
+  const { created, updated, deleted, kind: rawKind, q: rawQ } = await searchParams;
+  const kind = ["have", "want", "service"].includes(rawKind ?? "")
+    ? (rawKind as string)
+    : "";
+  const q = (rawQ ?? "").trim();
 
   const supabase = await createClient();
-  const { data } = await supabase
+
+  // Counts per kind for the filter chips ("Have" also covers native member
+  // posts, which have no post_kind).
+  const { data: kindRows } = await supabase
+    .from("off_market_listings")
+    .select("post_kind");
+  const counts = { all: 0, have: 0, want: 0, service: 0 };
+  for (const r of (kindRows ?? []) as { post_kind: string | null }[]) {
+    counts.all += 1;
+    if (r.post_kind === "want") counts.want += 1;
+    else if (r.post_kind === "service") counts.service += 1;
+    else counts.have += 1; // 'have' or null (native posts)
+  }
+
+  let req = supabase
     .from("off_market_listings")
     .select("*")
     .order("created_at", { ascending: false })
-    .limit(120);
+    .limit(300);
+  if (kind === "have") req = req.or("post_kind.eq.have,post_kind.is.null");
+  else if (kind) req = req.eq("post_kind", kind);
+  if (q) req = req.ilike("title", `%${q}%`);
+
+  const { data } = await req;
   const listings = (data as OffMarketListing[] | null) ?? [];
+
+  const chipHref = (k: string) => {
+    const p = new URLSearchParams();
+    if (k) p.set("kind", k);
+    if (q) p.set("q", q);
+    const s = p.toString();
+    return s ? `/dashboard/off-market?${s}` : "/dashboard/off-market";
+  };
 
   return (
     <div className="space-y-6">
@@ -54,8 +97,8 @@ export default async function OffMarketPage({
           </h1>
           <p className="mt-1 max-w-2xl text-slate-500">
             A private board for verified agents to share and find off-market
-            deals. Post your own, browse others, and reach out directly to
-            co-broke. Visible only to verified LIQWD realtors.
+            deals, plus buyer Wants. Browse, then reach out directly to co-broke.
+            Visible only to verified LIQWD realtors.
           </p>
         </div>
         <ButtonLink href="/dashboard/off-market/new">Post a listing</ButtonLink>
@@ -67,11 +110,48 @@ export default async function OffMarketPage({
       {updated ? <Notice tone="success">Listing updated.</Notice> : null}
       {deleted ? <Notice tone="success">Listing removed.</Notice> : null}
 
+      {/* Filters: kind chips + title search */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap gap-1.5">
+          {KINDS.map((k) => {
+            const active = kind === k.value;
+            const count =
+              k.value === "" ? counts.all : counts[k.value as keyof typeof counts];
+            return (
+              <Link
+                key={k.value || "all"}
+                href={chipHref(k.value)}
+                className={cn(
+                  "rounded-full border px-3 py-1.5 text-sm font-medium transition-colors",
+                  active
+                    ? "border-brand-600 bg-brand-600 text-white"
+                    : "border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50",
+                )}
+              >
+                {k.label}
+                <span className={cn("ml-1.5", active ? "text-white/80" : "text-slate-400")}>
+                  {count}
+                </span>
+              </Link>
+            );
+          })}
+        </div>
+        <form method="get" className="flex flex-1 gap-2 sm:max-w-xs">
+          {kind ? <input type="hidden" name="kind" value={kind} /> : null}
+          <Input name="q" placeholder="Search…" defaultValue={q} className="flex-1" />
+          <Button type="submit" variant="secondary">
+            Search
+          </Button>
+        </form>
+      </div>
+
       {listings.length === 0 ? (
         <Card>
           <CardBody className="space-y-3 py-10 text-center">
             <p className="text-sm text-slate-500">
-              No off-market listings yet. Be the first to post one.
+              {q || kind
+                ? "No posts match your filters."
+                : "No off-market listings yet. Be the first to post one."}
             </p>
             <div>
               <ButtonLink href="/dashboard/off-market/new" size="sm">
