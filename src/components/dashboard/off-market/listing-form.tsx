@@ -83,7 +83,7 @@ export function ListingForm({
               name="price"
               required
               inputMode="decimal"
-              defaultValue={listing ? String(listing.price) : ""}
+              defaultValue={listing?.price != null ? String(listing.price) : ""}
               placeholder="1250000"
             />
           </Field>

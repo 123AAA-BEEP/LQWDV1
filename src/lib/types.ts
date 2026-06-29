@@ -450,28 +450,44 @@ export type PropertyType =
   | "land"
   | "business";
 
+export type OffMarketPostKind = "have" | "want" | "service" | "other";
+
 export interface OffMarketListing {
   id: string;
-  realtor_id: string;
+  realtor_id: string | null;
   title: string;
-  price: number;
-  price_type: PriceType;
-  listing_status: ListingStatus;
-  property_types: PropertyType[];
-  city_region: string;
+  price: number | null;
+  price_type: PriceType | null;
+  listing_status: ListingStatus | null;
+  property_types: PropertyType[] | null;
+  city_region: string | null;
   address: string | null;
   property_type_description: string | null;
   size_value: number | null;
   size_type: SizeType | null;
   image_urls: string[];
-  realtor_name: string;
+  realtor_name: string | null;
   realtor_title: string | null;
-  brokerage_name: string;
-  contact_phone: string;
-  contact_email: string;
+  brokerage_name: string | null;
+  contact_phone: string | null;
+  contact_email: string | null;
   created_at: string;
   updated_at: string;
+  // Seeded / claimable (migrations 0039–0040). NULL for native realtor posts.
+  source?: string | null;
+  source_ref?: string | null;
+  post_kind?: OffMarketPostKind | null;
+  claim_email?: string | null;
+  claimed_by_profile_id?: string | null;
+  claimed_at?: string | null;
 }
+
+export const POST_KIND_LABELS: Record<OffMarketPostKind, string> = {
+  have: "Have",
+  want: "Wanted",
+  service: "Service",
+  other: "Post",
+};
 
 /** Shape for inserting a listing: server fills id/timestamps + contact snapshot. */
 export type OffMarketListingInsert = Omit<
