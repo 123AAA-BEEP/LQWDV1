@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Card, CardBody } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { CopyClaimLink } from "@/components/dashboard/off-market/copy-claim-link";
 import {
   PROPERTY_TYPE_LABELS,
   LISTING_STATUS_LABELS,
@@ -25,10 +26,13 @@ export function ListingCard({
   listing,
   isOwner,
   canEdit = isOwner,
+  claimUrl = null,
 }: {
   listing: OffMarketListing;
   isOwner: boolean;
   canEdit?: boolean;
+  /** Admin "pending claims" view: the link to send the listing agent. */
+  claimUrl?: string | null;
 }) {
   const href = `/dashboard/off-market/${listing.id}`;
   const price =
@@ -70,6 +74,7 @@ export function ListingCard({
               {LISTING_STATUS_LABELS[listing.listing_status]}
             </Badge>
           ) : null}
+          {claimUrl ? <Badge tone="warning">Pending claim</Badge> : null}
           {isOwner ? <Badge tone="neutral">Your listing</Badge> : null}
         </div>
 
@@ -113,9 +118,17 @@ export function ListingCard({
           </p>
         ) : null}
 
-        {/* Contact, or a claim prompt when no contact is posted yet. */}
+        {/* Admin pending view: the claim link to send the listing agent.
+            Otherwise contact info, or a claim prompt when none is posted. */}
         <div className="mt-auto rounded-lg border border-slate-100 bg-slate-50/70 p-3 text-sm">
-          {hasContact ? (
+          {claimUrl ? (
+            <div className="space-y-2">
+              <p className="text-xs text-slate-500">
+                Send this link to the listing agent to claim &amp; publish:
+              </p>
+              <CopyClaimLink url={claimUrl} />
+            </div>
+          ) : hasContact ? (
             <>
               <p className="font-medium text-slate-800">{listing.realtor_name}</p>
               <p className="text-xs text-slate-500">

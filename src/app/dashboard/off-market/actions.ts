@@ -147,7 +147,9 @@ export async function createListing(formData: FormData) {
   const supabase = await createClient();
   const { error: dbError } = await supabase
     .from("off_market_listings")
-    .insert({ realtor_id: userId, ...row });
+    // Native posts an agent makes go live immediately (the column default is
+    // the fail-closed 'pending_claim' used for sourced placeholders).
+    .insert({ realtor_id: userId, status: "published", ...row });
 
   if (dbError) {
     redirect(

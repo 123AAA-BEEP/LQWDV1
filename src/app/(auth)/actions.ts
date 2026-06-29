@@ -35,6 +35,10 @@ export async function signUp(formData: FormData) {
   const reco = String(formData.get("reco_registration_number") ?? "").trim();
   const title = String(formData.get("title") ?? "").trim();
   const referralCode = String(formData.get("ref") ?? "").trim().toUpperCase();
+  const rawNext = String(formData.get("next") ?? "");
+  // Open-redirect guard: only ever honour an in-app relative path.
+  const next =
+    rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : "/dashboard";
   const origin = await originUrl();
 
   const fail = (msg: string) =>
@@ -54,7 +58,7 @@ export async function signUp(formData: FormData) {
     email,
     password,
     options: {
-      emailRedirectTo: `${origin}/auth/callback?next=/dashboard`,
+      emailRedirectTo: `${origin}/auth/callback?next=${encodeURIComponent(next)}`,
       // Carried on the auth user so the profile can be populated on first
       // dashboard load, even when email confirmation is enabled (no session
       // exists at signup time to write directly to the profiles table).
@@ -77,7 +81,7 @@ export async function signUp(formData: FormData) {
 
   // If email confirmation is disabled, a session exists immediately.
   if (data.session) {
-    redirect("/dashboard");
+    redirect(next);
   }
   redirect("/login?message=check-email");
 }

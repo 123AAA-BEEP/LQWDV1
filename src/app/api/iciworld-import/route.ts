@@ -51,6 +51,8 @@ export async function GET(request: Request) {
         title: r.title,
         post_kind: r.kind,
         listing_status: r.status,
+        // Sourced placeholders stay dark until their agent claims them.
+        status: "pending_claim",
       }));
 
     let inserted = 0;

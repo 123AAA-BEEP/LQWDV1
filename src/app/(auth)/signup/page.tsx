@@ -11,10 +11,15 @@ export const metadata: Metadata = { title: "Sign up" };
 export default async function SignupPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; ref?: string }>;
+  searchParams: Promise<{ error?: string; ref?: string; next?: string }>;
 }) {
-  const { error, ref } = await searchParams;
+  const { error, ref, next } = await searchParams;
   const referralCode = (ref ?? "").trim().toUpperCase();
+  // Only carry a safe, in-app relative path (open-redirect guard).
+  const safeNext =
+    typeof next === "string" && next.startsWith("/") && !next.startsWith("//")
+      ? next
+      : "";
 
   return (
     <div>
@@ -41,6 +46,7 @@ export default async function SignupPage({
         {referralCode ? (
           <input type="hidden" name="ref" value={referralCode} />
         ) : null}
+        {safeNext ? <input type="hidden" name="next" value={safeNext} /> : null}
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="First name" htmlFor="first_name">
             <Input
