@@ -36,6 +36,7 @@ const UPLOAD_MESSAGES: Record<string, string> = {
   "media-added": "Image uploaded.",
   "floorplan-added": "Floorplan added.",
   "document-added": "Document uploaded.",
+  "public-saved": "Public page saved.",
 };
 
 export default async function AdminProjectEditor({
