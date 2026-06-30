@@ -78,6 +78,18 @@ export async function submitLead(
     return { error: "Something went wrong. Please try again." };
   }
 
+  // LIQWD owns every lead. Ops always gets a copy — regardless of whether an
+  // agent is assigned to action it — so nothing routes away from our database.
+  await sendLeadOpsCopyEmail(admin, {
+    project_id,
+    lead_name,
+    lead_email,
+    lead_phone,
+    message,
+    assignedRealtorId,
+    referredById,
+  });
+
   // Alert the assigned realtor so they can follow up fast (no-op until Resend
   // is configured; never throws — must not affect the buyer's submission).
   if (assignedRealtorId) {
@@ -90,6 +102,80 @@ export async function submitLead(
       message,
     });
   }
+}
+
+/**
+ * Sends LIQWD ops a copy of EVERY lead (to LEADS_NOTIFY_EMAIL, default
+ * leads@getliqwd.com), noting who — if anyone — is set to action it. This is
+ * the ownership guarantee: assigned or not, every registered lead reaches us.
+ * Fire-and-forget; never throws.
+ */
+async function sendLeadOpsCopyEmail(
+  admin: ReturnType<typeof createAdminClient>,
+  opts: {
+    project_id: string;
+    lead_name: string;
+    lead_email: string;
+    lead_phone: string;
+    message: string;
+    assignedRealtorId: string | null;
+    referredById: string | null;
+  },
+) {
+  const to = process.env.LEADS_NOTIFY_EMAIL ?? "leads@getliqwd.com";
+
+  const { data: project } = await admin
+    .from("projects")
+    .select("project_name")
+    .eq("id", opts.project_id)
+    .maybeSingle();
+  const projectName = (project?.project_name as string | undefined) ?? "a project";
+
+  // Who's actioning it (the agent still acts; we just keep the copy).
+  let routedTo = "Admin pool — unassigned (LIQWD to follow up).";
+  if (opts.assignedRealtorId) {
+    const { data: agent } = await admin
+      .from("profiles")
+      .select("first_name, last_name, email")
+      .eq("id", opts.assignedRealtorId)
+      .maybeSingle();
+    const name =
+      [agent?.first_name, agent?.last_name].filter(Boolean).join(" ") ||
+      (agent?.email as string | undefined) ||
+      "assigned agent";
+    const via = opts.referredById ? "via referral link" : "page steward";
+    routedTo =
+      `${esc(name)} (${via}) is actioning this lead` +
+      (agent?.email ? ` — ${esc(agent.email as string)}` : "") +
+      ". LIQWD retains the copy.";
+  }
+
+  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "https://liqwd.ca";
+  const details = [
+    `<strong>Project:</strong> ${esc(projectName)}`,
+    `<strong>Name:</strong> ${esc(opts.lead_name)}`,
+    `<strong>Email:</strong> ${esc(opts.lead_email)}`,
+    opts.lead_phone ? `<strong>Phone:</strong> ${esc(opts.lead_phone)}` : null,
+    opts.message ? `<strong>Message:</strong> ${esc(opts.message)}` : null,
+    `<strong>Routing:</strong> ${routedTo}`,
+  ]
+    .filter(Boolean)
+    .join("<br>");
+
+  await sendEmail({
+    to,
+    replyTo: opts.lead_email,
+    subject: `New lead (LIQWD copy): ${projectName}`,
+    html: brandedEmail({
+      heading: `New lead on ${esc(projectName)}`,
+      body:
+        "A buyer registered on a public project page. This copy is for LIQWD's " +
+        `records — every lead is ours.<br><br>${details}`,
+      ctaUrl: `${base}/dashboard/admin/leads`,
+      ctaLabel: "Open all leads",
+      footnote: "LIQWD internal notification.",
+    }),
+  });
 }
 
 function esc(s: string): string {
