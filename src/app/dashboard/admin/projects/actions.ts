@@ -1,7 +1,9 @@
 "use server";
 
+import { after } from "next/server";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { assertAdmin } from "@/lib/admin";
 import { maybeGenerateSeoOnPublish } from "@/lib/seo";
 
@@ -98,17 +100,21 @@ export async function bulkPublish(formData: FormData) {
     })
     .in("id", ids);
 
-  // Auto-fill empty SEO for the newly-published pages, bounded by the time
-  // budget. Pages that already have SEO are skipped without an AI call, so the
-  // budget only counts real generations.
-  let budget = BULK_SEO_LIMIT;
-  for (const id of ids) {
-    if (budget <= 0) break;
-    const generated = await maybeGenerateSeoOnPublish(id);
-    if (generated) budget -= 1;
-  }
-
   revalidatePath("/dashboard/admin/projects");
+
+  // SEO autofill is a series of slow LLM calls. Run them AFTER the response so
+  // the bulk publish returns immediately. Bounded by the same budget; pages
+  // that already have SEO are skipped without an AI call. Never throws.
+  after(async () => {
+    const adminDb = createAdminClient();
+    let budget = BULK_SEO_LIMIT;
+    for (const id of ids) {
+      if (budget <= 0) break;
+      const generated = await maybeGenerateSeoOnPublish(id, adminDb);
+      if (generated) budget -= 1;
+    }
+    revalidatePath("/dashboard/admin/projects");
+  });
 }
 
 /** Unpublishes many projects at once (admin-only). Leaves record_status as-is. */
