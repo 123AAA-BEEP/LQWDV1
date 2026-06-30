@@ -20,6 +20,7 @@ async function pendingCount(
 
 export default async function AdminOverview() {
   const [
+    newLeads,
     verifications,
     submissions,
     updates,
@@ -29,6 +30,7 @@ export default async function AdminOverview() {
     mediaCandidates,
     suggestions,
   ] = await Promise.all([
+    pendingCount("project_leads", ["new"]),
     pendingCount("verification_requests", ["pending"]),
     pendingCount("property_submissions", ["pending_review", "needs_changes"]),
     pendingCount("property_update_requests", ["pending_review", "needs_changes"]),
@@ -40,6 +42,11 @@ export default async function AdminOverview() {
   ]);
 
   const cards = [
+    {
+      label: "New leads",
+      count: newLeads,
+      href: "/dashboard/admin/leads",
+    },
     {
       label: "Pending verifications",
       count: verifications,
