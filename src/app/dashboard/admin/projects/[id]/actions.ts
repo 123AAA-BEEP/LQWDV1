@@ -1,7 +1,9 @@
 "use server";
 
+import { after } from "next/server";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { assertAdmin } from "@/lib/admin";
 import { maybeGenerateSeoOnPublish } from "@/lib/seo";
 
@@ -170,11 +172,16 @@ export async function publishProject(formData: FormData) {
     })
     .eq("id", projectId);
 
-  // Auto-fill any empty SEO fields now that the page is going live.
-  await maybeGenerateSeoOnPublish(projectId);
-
   revalidatePath(`/dashboard/admin/projects/${projectId}`);
   revalidatePath("/dashboard/admin/projects");
+
+  // SEO autofill is a slow LLM call (several seconds). Run it AFTER the
+  // response so publishing is instant. It only fills empty fields and never
+  // throws; the service-role client is used since the request is finished.
+  after(async () => {
+    await maybeGenerateSeoOnPublish(projectId, createAdminClient());
+    revalidatePath(`/dashboard/admin/projects/${projectId}`);
+  });
 }
 
 /** Unpublishes the public page (removes it from the public view). Admin-only. */

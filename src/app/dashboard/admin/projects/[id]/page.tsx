@@ -4,6 +4,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardBody } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { Badge } from "@/components/ui/badge";
 import { Field, Input, Textarea, Select } from "@/components/ui/field";
 import { Notice } from "@/components/ui/notice";
@@ -251,14 +252,14 @@ export default async function AdminProjectEditor({
           {isLive ? (
             <form action={unpublishProject}>
               <input type="hidden" name="project_id" value={id} />
-              <Button type="submit" variant="secondary">
+              <SubmitButton variant="secondary" pendingLabel="Unpublishing…">
                 Unpublish
-              </Button>
+              </SubmitButton>
             </form>
           ) : (
             <form action={publishProject}>
               <input type="hidden" name="project_id" value={id} />
-              <Button type="submit">Publish</Button>
+              <SubmitButton pendingLabel="Publishing…">Publish</SubmitButton>
             </form>
           )}
         </CardBody>
