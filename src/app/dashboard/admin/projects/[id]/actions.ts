@@ -1,6 +1,7 @@
 "use server";
 
 import { after } from "next/server";
+import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -99,7 +100,7 @@ export async function savePublicPage(formData: FormData) {
   const supabase = await createClient();
   await assertAdmin(supabase);
 
-  await supabase.from("public_project_pages").upsert(
+  const { error } = await supabase.from("public_project_pages").upsert(
     {
       project_id: projectId,
       slug,
@@ -120,6 +121,14 @@ export async function savePublicPage(formData: FormData) {
   );
 
   revalidatePath(`/dashboard/admin/projects/${projectId}`);
+  // Surface failures instead of silently no-op'ing (the old behaviour).
+  if (error) {
+    redirect(
+      `/dashboard/admin/projects/${projectId}?error=` +
+        encodeURIComponent(`Could not save the public page — ${error.message}`),
+    );
+  }
+  redirect(`/dashboard/admin/projects/${projectId}?message=public-saved`);
 }
 
 /**
