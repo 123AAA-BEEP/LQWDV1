@@ -415,7 +415,17 @@ function ActionCard({
               {cta}
             </ButtonLink>
           ) : (
-            <span className="text-xs font-medium text-slate-400">{lockedHint}</span>
+            <div className="space-y-1.5">
+              <span className="block text-xs font-medium text-slate-400">
+                {lockedHint}
+              </span>
+              <Link
+                href="/dashboard/verify"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-brand-700 hover:underline"
+              >
+                Get verified <ArrowRight className="size-3" aria-hidden />
+              </Link>
+            </div>
           )}
         </div>
       </CardBody>

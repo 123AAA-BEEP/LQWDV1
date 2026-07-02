@@ -71,10 +71,12 @@ export default async function EmailIntakePage() {
               <div key={r.id} className="space-y-1.5 px-5 py-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <Badge tone={TONE[r.action]}>{r.action}</Badge>
-                    {r.published ? <Badge tone="success">live</Badge> : null}
+                    <Badge tone={TONE[r.action]} className="capitalize">
+                      {r.action}
+                    </Badge>
+                    {r.published ? <Badge tone="success">Live</Badge> : null}
                     {r.confidence != null ? (
-                      <span className="text-xs text-slate-400">
+                      <span className="text-xs text-slate-500">
                         conf {r.confidence.toFixed(2)}
                       </span>
                     ) : null}

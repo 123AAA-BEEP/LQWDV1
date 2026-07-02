@@ -84,10 +84,14 @@ function ProjectCard({ p, featured = false }: { p: Row; featured?: boolean }) {
         <CardBody>
           <div className="flex flex-wrap items-center gap-2">
             {p.sales_status ? (
-              <Badge tone="brand">{p.sales_status.replace(/_/g, " ")}</Badge>
+              <Badge tone="brand" className="capitalize">
+                {p.sales_status.replace(/_/g, " ")}
+              </Badge>
             ) : null}
             {p.project_type ? (
-              <Badge tone="neutral">{p.project_type.replace(/_/g, " ")}</Badge>
+              <Badge tone="neutral" className="capitalize">
+                {p.project_type.replace(/_/g, " ")}
+              </Badge>
             ) : null}
           </div>
           <h2 className="mt-2 font-semibold text-ink">{p.project_name}</h2>
@@ -208,6 +212,7 @@ export default async function MarketplacePage({
             <div className="flex gap-2">
               <Input
                 name="q"
+                aria-label="Search by project, city, or builder"
                 placeholder="Search by project, city, or builder…"
                 defaultValue={q}
                 className="flex-1"
@@ -223,7 +228,7 @@ export default async function MarketplacePage({
             </div>
             <div className="flex flex-wrap gap-3">
               <div className="min-w-40 flex-1">
-                <Select name="city" defaultValue={cityFilter}>
+                <Select name="city" aria-label="City" defaultValue={cityFilter}>
                   <option value="">All cities</option>
                   {cities.map((c) => (
                     <option key={c} value={c}>
@@ -233,7 +238,11 @@ export default async function MarketplacePage({
                 </Select>
               </div>
               <div className="min-w-40 flex-1">
-                <Select name="type" defaultValue={typeFilter}>
+                <Select
+                  name="type"
+                  aria-label="Home type"
+                  defaultValue={typeFilter}
+                >
                   <option value="">All home types</option>
                   {TYPE_OPTIONS.map((o) => (
                     <option key={o.value} value={o.value}>
@@ -243,7 +252,11 @@ export default async function MarketplacePage({
                 </Select>
               </div>
               <div className="min-w-40 flex-1">
-                <Select name="status" defaultValue={statusFilter}>
+                <Select
+                  name="status"
+                  aria-label="Sales status"
+                  defaultValue={statusFilter}
+                >
                   <option value="">All statuses</option>
                   {STATUS_OPTIONS.map((o) => (
                     <option key={o.value} value={o.value}>
@@ -268,16 +281,19 @@ export default async function MarketplacePage({
               <span key={p.slug} className="flex items-center gap-2">
                 <Link
                   href={`/projects/${p.slug}`}
-                  className="text-slate-600 hover:text-ink hover:underline"
+                  className="font-medium text-brand-700 hover:text-brand-800 hover:underline"
                 >
                   {p.project_name}
                   {p.city ? (
-                    <span className="text-slate-400"> · {p.city}</span>
+                    <span className="font-normal text-slate-500">
+                      {" "}
+                      · {p.city}
+                    </span>
                   ) : null}
                 </Link>
                 {i < justAnnounced.length - 1 ? (
                   <span aria-hidden className="text-slate-300">
-                    |
+                    ·
                   </span>
                 ) : null}
               </span>

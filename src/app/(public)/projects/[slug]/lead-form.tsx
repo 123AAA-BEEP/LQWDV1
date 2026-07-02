@@ -24,7 +24,11 @@ export function LeadForm({
 
   if (status === "done") {
     return (
-      <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+      <div
+        role="status"
+        aria-live="polite"
+        className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800"
+      >
         Thanks — your request has been received. A representative will be in
         touch shortly.
       </div>
@@ -73,16 +77,31 @@ export function LeadForm({
         </legend>
         <div className="mt-1.5 flex gap-4 text-sm text-slate-600">
           <label className="flex items-center gap-1.5">
-            <input type="radio" name="is_realtor" value="no" defaultChecked className="size-4" />
+            <input
+              type="radio"
+              name="is_realtor"
+              value="no"
+              defaultChecked
+              className="size-4 accent-brand-600"
+            />
             No
           </label>
           <label className="flex items-center gap-1.5">
-            <input type="radio" name="is_realtor" value="yes" className="size-4" />
+            <input
+              type="radio"
+              name="is_realtor"
+              value="yes"
+              className="size-4 accent-brand-600"
+            />
             Yes
           </label>
         </div>
       </fieldset>
-      {error ? <p className="text-sm text-red-600">{error}</p> : null}
+      {error ? (
+        <p role="alert" className="text-sm text-red-600">
+          {error}
+        </p>
+      ) : null}
       <Button
         type="submit"
         className="w-full"
@@ -90,6 +109,10 @@ export function LeadForm({
       >
         {status === "sending" ? "Sending…" : ctaText}
       </Button>
+      <p className="text-xs leading-relaxed text-slate-500">
+        Your details go only to this project&apos;s representative — no spam,
+        ever.
+      </p>
     </form>
   );
 }

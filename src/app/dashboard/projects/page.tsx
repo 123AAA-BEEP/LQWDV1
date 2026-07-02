@@ -158,6 +158,7 @@ export default async function ProjectsPage({
         <div className="flex gap-2">
           <Input
             name="q"
+            aria-label="Search by project, city, or builder"
             placeholder="Search by project, city, or builder…"
             defaultValue={query}
             className="flex-1"
@@ -176,7 +177,7 @@ export default async function ProjectsPage({
 
         <div className="flex flex-wrap gap-3">
           <div className="min-w-36 flex-1">
-            <Select name="city" defaultValue={cityFilter}>
+            <Select name="city" aria-label="City" defaultValue={cityFilter}>
               <option value="">All cities</option>
               {cities.map((c) => (
                 <option key={c} value={c}>
@@ -186,7 +187,11 @@ export default async function ProjectsPage({
             </Select>
           </div>
           <div className="min-w-44 flex-1">
-            <Select name="sales_status" defaultValue={salesFilter}>
+            <Select
+              name="sales_status"
+              aria-label="Sales status"
+              defaultValue={salesFilter}
+            >
               <option value="">All sales statuses</option>
               {SALES_STATUS_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>
@@ -196,7 +201,11 @@ export default async function ProjectsPage({
             </Select>
           </div>
           <div className="min-w-52 flex-1">
-            <Select name="construction_status" defaultValue={constructionFilter}>
+            <Select
+              name="construction_status"
+              aria-label="Construction status"
+              defaultValue={constructionFilter}
+            >
               <option value="">All construction statuses</option>
               {CONSTRUCTION_STATUS_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>
@@ -210,10 +219,20 @@ export default async function ProjectsPage({
 
       {projects.length === 0 ? (
         <Card>
-          <CardBody className="text-center text-sm text-slate-500">
-            {hasActiveFilter
-              ? "No projects match the selected filters."
-              : "No projects yet. Check back soon."}
+          <CardBody className="space-y-3 text-center text-sm text-slate-500">
+            <p>
+              {hasActiveFilter
+                ? "No projects match the selected filters."
+                : "No projects yet. Check back soon."}
+            </p>
+            {hasActiveFilter ? (
+              <Link
+                href="/dashboard/projects"
+                className="inline-block font-medium text-brand-700 hover:underline"
+              >
+                Clear filters and show everything →
+              </Link>
+            ) : null}
           </CardBody>
         </Card>
       ) : (
@@ -239,17 +258,20 @@ export default async function ProjectsPage({
                         <Badge tone="warning">★ Featured</Badge>
                       ) : null}
                       {p.sales_status ? (
-                        <Badge tone="brand">
+                        <Badge tone="brand" className="capitalize">
                           {p.sales_status.replace(/_/g, " ")}
                         </Badge>
                       ) : null}
                       {p.construction_status ? (
-                        <Badge tone="neutral">
+                        <Badge tone="neutral" className="capitalize">
                           {p.construction_status.replace(/_/g, " ")}
                         </Badge>
                       ) : null}
-                      {p.record_status !== "published" ? (
-                        <Badge tone="neutral">{p.record_status}</Badge>
+                      {/* Internal workflow state — meaningful to admins only. */}
+                      {!restrictByStatus && p.record_status !== "published" ? (
+                        <Badge tone="neutral" className="capitalize">
+                          {p.record_status.replace(/_/g, " ")}
+                        </Badge>
                       ) : null}
                       {portalSet.has(p.id) ? (
                         <Badge tone="brand">Portal</Badge>
