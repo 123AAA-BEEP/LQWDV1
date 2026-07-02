@@ -14,7 +14,7 @@ const UA =
 
 const MAX_PAGES = 2;
 const MAX_PAGE_CHARS = 6000;
-const MAX_LINK_IMAGES = 2;
+const MAX_LINK_IMAGES = 4;
 const MAX_IMAGE_BYTES = 6 * 1024 * 1024;
 const IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp", "image/gif"];
 

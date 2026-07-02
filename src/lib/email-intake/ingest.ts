@@ -5,6 +5,7 @@ import { findExistingProjectFuzzy } from "@/lib/projects-dedup";
 import { maybeGenerateSeoOnPublish } from "@/lib/seo";
 import { pingIndexNow } from "@/lib/indexnow";
 import { researchProject, type ResearchResult } from "./research";
+import { attachGalleryAndHero } from "./media";
 import type { ExtractedProject, InboundImage } from "./extract";
 
 type Admin = ReturnType<typeof createAdminClient>;
@@ -24,26 +25,6 @@ function normType(v: string | null): string | null {
   if (!v) return null;
   const t = v.toLowerCase().replace(/[\s-]+/g, "_");
   return PROJECT_TYPES.includes(t) ? t : null;
-}
-
-/** Uploads one image to project-media and returns its public URL (best-effort). */
-async function uploadHero(
-  admin: Admin,
-  projectId: string,
-  img: InboundImage,
-): Promise<string | null> {
-  try {
-    const ext = img.media_type.split("/")[1]?.replace("jpeg", "jpg") ?? "jpg";
-    const path = `email-intake/${projectId}/${Date.now()}.${ext}`;
-    const bytes = Buffer.from(img.data, "base64");
-    const { error } = await admin.storage
-      .from("project-media")
-      .upload(path, bytes, { contentType: img.media_type, upsert: true });
-    if (error) return null;
-    return admin.storage.from("project-media").getPublicUrl(path).data.publicUrl;
-  } catch {
-    return null;
-  }
 }
 
 /** Activates/creates the public page and flips the project to published. */
@@ -219,9 +200,19 @@ export async function ingestExtractedProject(
       if (Object.keys(patch).length) {
         await admin.from("projects").update(patch).eq("id", match.id);
       }
-      if (!cur.hero_image_url && ctx.images[0]) {
-        const url = await uploadHero(admin, match.id, ctx.images[0]);
-        if (url) await admin.from("projects").update({ hero_image_url: url }).eq("id", match.id);
+      // Add gallery imagery (and a smart hero if missing) when the project has
+      // no media yet — matched updates enrich, never duplicate.
+      if (ctx.images.length > 0) {
+        const { count: mediaCount } = await admin
+          .from("project_media")
+          .select("id", { count: "exact", head: true })
+          .eq("project_id", match.id);
+        if ((mediaCount ?? 0) === 0) {
+          await attachGalleryAndHero(admin, match.id, ctx.images, {
+            setHero: !cur.hero_image_url,
+            projectName: match.project_name,
+          });
+        }
       }
       if (ex.broker_portal_url)
         await attachPortal(admin, match.id, ex.broker_portal_url, ex.broker_portal_name);
@@ -290,9 +281,12 @@ export async function ingestExtractedProject(
     if (insErr || !created) throw new Error(insErr?.message ?? "insert failed");
     const projectId = created.id as string;
 
-    if (ctx.images[0]) {
-      const url = await uploadHero(admin, projectId, ctx.images[0]);
-      if (url) await admin.from("projects").update({ hero_image_url: url }).eq("id", projectId);
+    // Gallery + vision-picked hero (a rendering beats the wordmark og:image).
+    if (ctx.images.length > 0) {
+      await attachGalleryAndHero(admin, projectId, ctx.images, {
+        setHero: true,
+        projectName: ex.project_name,
+      });
     }
     if (ex.broker_portal_url)
       await attachPortal(admin, projectId, ex.broker_portal_url, ex.broker_portal_name);
