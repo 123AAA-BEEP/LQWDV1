@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="public/brand/liqwd-banner.png" alt="LIQWD — The Ultimate Broker Portal for New Homes in Ontario" width="100%">
+</p>
+
 # LIQWD
 
 The ultimate broker portal for new homes in Ontario. Free for verified
@@ -63,6 +67,19 @@ src/
 │   └── types.ts             # schema-aligned TS types
 └── proxy.ts                 # auth session refresh + /dashboard route guard
 ```
+
+## Brand assets
+
+Logo and banner files live in [`public/brand/`](./public/brand). All SVGs are
+self-contained (letterforms outlined from Geist, the site typeface) and use the
+design tokens from `src/app/globals.css`.
+
+| File | Use |
+|------|-----|
+| `liqwd-logo.svg` | Horizontal lockup (ink + teal dot) for light backgrounds |
+| `liqwd-logo-white.svg` | Lockup for dark backgrounds |
+| `liqwd-mark.svg` | Square app-icon / avatar mark |
+| `liqwd-banner.svg` / `liqwd-banner.png` | 1200×630 social / Open Graph banner |
 
 ## Security model
 

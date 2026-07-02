@@ -19,6 +19,28 @@ export const metadata: Metadata = {
   },
   description:
     "LIQWD is the Ultimate Broker Portal for new homes in Ontario. Free for verified realtors. Built in Canada.",
+  openGraph: {
+    siteName: "LIQWD",
+    title: "LIQWD — The Ultimate Broker Portal for New Homes in Ontario",
+    description:
+      "Free for verified realtors. Built in Canada. One portal for new-home inventory in Ontario.",
+    type: "website",
+    images: [
+      {
+        url: "/brand/liqwd-banner.png",
+        width: 1200,
+        height: 630,
+        alt: "LIQWD — The Ultimate Broker Portal for New Homes in Ontario",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "LIQWD — The Ultimate Broker Portal for New Homes in Ontario",
+    description:
+      "Free for verified realtors. Built in Canada. One portal for new-home inventory in Ontario.",
+    images: ["/brand/liqwd-banner.png"],
+  },
 };
 
 export default function RootLayout({
