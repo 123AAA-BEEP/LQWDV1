@@ -12,15 +12,26 @@ export default async function LoginPage({
     message?: string;
     redirect?: string;
     role?: string;
+    claim?: string;
   }>;
 }) {
-  const { error, message, redirect, role } = await searchParams;
+  const { error, message, redirect, role, claim } = await searchParams;
 
   return (
     <div>
       {message === "check-email" ? (
         <Notice tone="success" className="mb-6">
-          Check your email to confirm your account, then log in.
+          {claim === "1" ? (
+            <>
+              <span className="font-semibold">
+                One more step — check your email.
+              </span>{" "}
+              Click the confirmation link we just sent and you&apos;ll land right
+              back on your listing, ready to claim.
+            </>
+          ) : (
+            "Check your email to confirm your account, then log in."
+          )}
         </Notice>
       ) : null}
       {error ? (

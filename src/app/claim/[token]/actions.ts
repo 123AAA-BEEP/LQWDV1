@@ -78,7 +78,7 @@ export async function claimListing(formData: FormData) {
   if (!listing) redirect("/claim/invalid");
   if (listing.claimed_by_profile_id) redirect("/claim/invalid"); // already claimed
 
-  const { error } = await admin
+  const { data: claimedRows, error } = await admin
     .from("off_market_listings")
     .update({
       realtor_id: user.id,
@@ -89,9 +89,12 @@ export async function claimListing(formData: FormData) {
       ...contactSnapshot(profile as Profile, user.email ?? null),
     })
     .eq("id", listing.id)
-    .is("claimed_by_profile_id", null); // guard against a concurrent claim
+    .is("claimed_by_profile_id", null) // guard against a concurrent claim
+    .select("id");
 
   if (error) redirect(`/claim/${token}?error=save`);
+  // Zero rows means a concurrent claim won the race — don't show false success.
+  if (!claimedRows || claimedRows.length === 0) redirect("/claim/invalid");
 
   redirect(approved ? "/claim/done" : "/claim/done?held=1");
 }

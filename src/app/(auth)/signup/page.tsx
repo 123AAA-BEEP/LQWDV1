@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { Field, Input, Select } from "@/components/ui/field";
 import { Notice } from "@/components/ui/notice";
 import { TITLE_LABELS } from "@/lib/types";
@@ -20,9 +20,21 @@ export default async function SignupPage({
     typeof next === "string" && next.startsWith("/") && !next.startsWith("//")
       ? next
       : "";
+  const claiming = safeNext.startsWith("/claim/");
 
   return (
     <div>
+      {claiming ? (
+        <div className="mb-6 rounded-lg border border-brand-200 bg-brand-50 px-4 py-3">
+          <p className="text-sm font-semibold text-brand-800">
+            Step 1 — create your free account
+          </p>
+          <p className="mt-0.5 text-sm text-brand-700">
+            Then you&apos;ll be taken straight back to claim your listing.
+          </p>
+        </div>
+      ) : null}
+
       <h1 className="text-2xl font-semibold tracking-tight text-ink">
         Create your LIQWD account
       </h1>
@@ -129,14 +141,21 @@ export default async function SignupPage({
           />
         </Field>
 
-        <Button type="submit" className="w-full">
+        <SubmitButton className="w-full" pendingLabel="Creating your account…">
           Sign up free
-        </Button>
+        </SubmitButton>
       </form>
 
       <p className="mt-4 text-sm text-slate-500">
         Already have an account?{" "}
-        <Link href="/login" className="text-brand-700 hover:underline">
+        <Link
+          href={
+            safeNext
+              ? `/login?redirect=${encodeURIComponent(safeNext)}`
+              : "/login"
+          }
+          className="text-brand-700 hover:underline"
+        >
           Log in
         </Link>
       </p>

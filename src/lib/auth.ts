@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { linkReferralOnSignup } from "@/lib/rewards";
@@ -54,11 +55,14 @@ export async function ensureProfile(
 
   if (inserted) {
     // First profile load == the invited agent has a session (i.e. confirmed
-    // their account). Link the referral and pay the signup reward to both
-    // parties. Server-side, idempotent, and safe when no code was used.
-    await linkReferralOnSignup(inserted.id, str("referral_code_used"));
-    // Internal alert: a new agent just registered (pending verification).
-    await notifyNewRealtorRegistration(inserted as Profile);
+    // their account). Link the referral + fire the internal alert AFTER the
+    // response — neither should delay the user's first page render (the claim
+    // page bootstraps profiles inline). Both are idempotent / fire-and-forget.
+    const referralCode = str("referral_code_used");
+    after(async () => {
+      await linkReferralOnSignup(inserted.id, referralCode);
+      await notifyNewRealtorRegistration(inserted as Profile);
+    });
     return inserted as Profile;
   }
 

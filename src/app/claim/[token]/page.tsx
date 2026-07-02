@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ensureProfile, isAdmin, isApproved } from "@/lib/auth";
 import { Button, ButtonLink } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { Notice } from "@/components/ui/notice";
 import {
   POST_KIND_LABELS,
@@ -42,6 +43,16 @@ function InvalidLink() {
       <p className="mt-2 text-slate-500">
         The link may be incomplete, expired, or the listing may already have been
         claimed. If you think this is a mistake, reply to the email we sent you.
+      </p>
+      <p className="mt-4 text-sm text-slate-500">
+        Already claimed it yourself? It&apos;s safe in your account —{" "}
+        <Link
+          href="/login?redirect=/dashboard/off-market"
+          className="font-medium text-brand-700 hover:underline"
+        >
+          log in to view it
+        </Link>
+        .
       </p>
     </Shell>
   );
@@ -128,15 +139,27 @@ export default async function ClaimPage({
           Something went wrong claiming the listing. Please try again.
         </Notice>
       ) : null}
+      {error === "role" ? (
+        <Notice tone="warning" className="mt-4">
+          Only agent accounts can claim listings. Sign out below and use your
+          agent account.
+        </Notice>
+      ) : null}
 
       {preview}
+
+      {/* The whole journey, up front — no surprises. */}
+      <p className="mt-4 text-center text-xs text-slate-400">
+        1. Create your free account &nbsp;·&nbsp; 2. Claim this listing
+        &nbsp;·&nbsp; 3. Quick RECO check — then it&apos;s live under your name
+      </p>
 
       {canClaim ? (
         <form action={claimListing} className="mt-6 space-y-2">
           <input type="hidden" name="token" value={token} />
-          <Button type="submit" className="w-full">
+          <SubmitButton className="w-full" pendingLabel="Claiming your listing…">
             This is my listing — claim{heldUntilVerified ? "" : " & publish"}
-          </Button>
+          </SubmitButton>
           {heldUntilVerified ? (
             <p className="text-center text-xs text-slate-500">
               You&apos;ll claim it now; it goes live once your RECO verification
@@ -152,6 +175,7 @@ export default async function ClaimPage({
             account.
           </Notice>
           <form action="/auth/signout" method="post">
+            <input type="hidden" name="next" value={`/claim/${token}`} />
             <Button type="submit" variant="secondary" className="w-full">
               Sign out
             </Button>
@@ -160,7 +184,7 @@ export default async function ClaimPage({
       ) : (
         <div className="mt-6 space-y-3">
           <ButtonLink href={`/signup?next=/claim/${token}`} className="w-full">
-            Verify &amp; create my free account
+            Create my free account &amp; claim — 2 minutes
           </ButtonLink>
           <p className="text-center text-sm text-slate-500">
             Already on LIQWD?{" "}

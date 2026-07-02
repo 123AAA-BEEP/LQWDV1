@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { Field, Input } from "@/components/ui/field";
 import { cn } from "@/lib/cn";
 import { signIn } from "@/app/(auth)/actions";
@@ -31,9 +31,21 @@ export function LoginTabs({
 }) {
   const [role, setRole] = useState<Role>(defaultRole);
   const copy = COPY[role];
+  const claiming = redirect.startsWith("/claim/");
 
   return (
     <div>
+      {claiming ? (
+        <div className="mb-6 rounded-lg border border-brand-200 bg-brand-50 px-4 py-3">
+          <p className="text-sm font-semibold text-brand-800">
+            Log in to claim your listing
+          </p>
+          <p className="mt-0.5 text-sm text-brand-700">
+            You&apos;ll be taken straight back to your claim after logging in.
+          </p>
+        </div>
+      ) : null}
+
       <h1 className="text-2xl font-semibold tracking-tight text-ink">Log in to LIQWD</h1>
       <p className="mt-1 text-sm text-slate-500">{copy.sub}</p>
 
@@ -76,17 +88,25 @@ export function LoginTabs({
             autoComplete="current-password"
           />
         </Field>
-        <Button type="submit" className="w-full">
+        <SubmitButton className="w-full" pendingLabel="Logging in…">
           Log in
-        </Button>
+        </SubmitButton>
       </form>
 
       <div className="mt-4 flex items-center justify-between text-sm">
         <Link href="/forgot-password" className="text-brand-700 hover:underline">
           Forgot password?
         </Link>
-        <Link href={copy.signupHref} className="text-brand-700 hover:underline">
-          {copy.signupLabel}
+        {/* Keep the claim context when they realise they need an account. */}
+        <Link
+          href={
+            claiming
+              ? `/signup?next=${encodeURIComponent(redirect)}`
+              : copy.signupHref
+          }
+          className="text-brand-700 hover:underline"
+        >
+          {claiming ? "Create an account & claim" : copy.signupLabel}
         </Link>
       </div>
     </div>

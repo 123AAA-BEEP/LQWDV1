@@ -83,7 +83,12 @@ export async function signUp(formData: FormData) {
   if (data.session) {
     redirect(next);
   }
-  redirect("/login?message=check-email");
+  // Carry the destination so a manual login from the check-email screen still
+  // lands where the signup was headed; claim flows get claim-aware guidance.
+  const params = new URLSearchParams({ message: "check-email" });
+  if (next.startsWith("/claim/")) params.set("claim", "1");
+  if (next !== "/dashboard") params.set("redirect", next);
+  redirect(`/login?${params.toString()}`);
 }
 
 export async function requestPasswordReset(formData: FormData) {

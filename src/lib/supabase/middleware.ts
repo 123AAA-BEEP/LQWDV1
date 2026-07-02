@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { safeRelativePath } from "@/lib/safe-redirect";
 
 /**
  * Refreshes the Supabase auth session on every request and guards the
@@ -43,14 +44,21 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Keep authenticated users out of the auth screens.
+  // Keep authenticated users out of the auth screens — but honour a safe
+  // in-app destination (e.g. a claim link) instead of stranding them on the
+  // dashboard with the context stripped.
   if (
     user &&
     (pathname === "/login" || pathname === "/signup")
   ) {
+    const target = safeRelativePath(
+      request.nextUrl.searchParams.get("redirect") ??
+        request.nextUrl.searchParams.get("next"),
+    );
     const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
-    url.search = "";
+    const [targetPath, targetQuery] = target.split("?");
+    url.pathname = targetPath;
+    url.search = targetQuery ? `?${targetQuery}` : "";
     return NextResponse.redirect(url);
   }
 
