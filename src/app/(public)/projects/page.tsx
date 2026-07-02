@@ -66,6 +66,8 @@ function ProjectCard({ p, featured = false }: { p: Row; featured?: boolean }) {
             <img
               src={p.hero_image_url}
               alt={p.project_name}
+              loading="lazy"
+              decoding="async"
               className="h-full w-full object-cover"
             />
           ) : (
@@ -120,31 +122,7 @@ export default async function MarketplacePage({
   const statusFilter = status ?? "";
 
   const supabase = await createClient();
-
-  const { data: cityRows } = await supabase
-    .from("public_projects_view")
-    .select("city")
-    .not("city", "is", null)
-    .order("city", { ascending: true });
-  const cities = [...new Set((cityRows ?? []).map((r) => r.city as string))];
-
   const hasFilter = Boolean(q || cityFilter || typeFilter || statusFilter);
-
-  // Featured strip — only on the unfiltered browse (a curated highlight, not
-  // search results). Capped at 3 so it's always one clean desktop row (shows
-  // 1–3 depending on how many are featured). Any extra featured/sponsored
-  // listings pepper into the results grid below (floated to top, badged).
-  let featured: Row[] = [];
-  if (!hasFilter) {
-    const { data: fData } = await supabase
-      .from("public_projects_view")
-      .select(SELECT)
-      .or("is_featured.eq.true,is_advertiser.eq.true")
-      .order("featured_rank", { ascending: true, nullsFirst: false })
-      .order("published_at", { ascending: false })
-      .limit(3);
-    featured = (fData as Row[] | null) ?? [];
-  }
 
   // Main results — featured/sponsored float to the top of the grid too (so they
   // mix into results as the catalog grows), then newest first.
@@ -165,7 +143,36 @@ export default async function MarketplacePage({
   if (typeFilter) req = req.eq("project_type", typeFilter);
   if (statusFilter) req = req.eq("sales_status", statusFilter);
 
-  const { data } = await req;
+  // One parallel wave instead of four sequential round-trips (faster TTFB).
+  // Featured strip runs only on the unfiltered browse (a curated highlight,
+  // not search results) — capped at 3 for one clean desktop row.
+  const [{ data: cityRows }, { data }, featuredRes, newestRes] =
+    await Promise.all([
+      supabase
+        .from("public_projects_view")
+        .select("city")
+        .not("city", "is", null)
+        .order("city", { ascending: true }),
+      req,
+      hasFilter
+        ? Promise.resolve(null)
+        : supabase
+            .from("public_projects_view")
+            .select(SELECT)
+            .or("is_featured.eq.true,is_advertiser.eq.true")
+            .order("featured_rank", { ascending: true, nullsFirst: false })
+            .order("published_at", { ascending: false })
+            .limit(3),
+      hasFilter
+        ? Promise.resolve(null)
+        : supabase
+            .from("public_projects_view")
+            .select("slug, project_name, city, published_at")
+            .order("published_at", { ascending: false })
+            .limit(6),
+    ]);
+  const cities = [...new Set((cityRows ?? []).map((r) => r.city as string))];
+  const featured: Row[] = ((featuredRes?.data ?? null) as Row[] | null) ?? [];
   const projects = (data as Row[] | null) ?? [];
 
   // Don't repeat the featured strip's cards in the grid below it.
@@ -177,19 +184,11 @@ export default async function MarketplacePage({
   // "Just announced" — the newest pages, as plain crawlable links right below
   // the hero. This is the crawl path search engines follow to find brand-new
   // project pages fast (and where return visitors check for fresh releases).
-  let justAnnounced: { slug: string; project_name: string; city: string | null }[] = [];
-  if (!hasFilter) {
-    const { data: newest } = await supabase
-      .from("public_projects_view")
-      .select("slug, project_name, city, published_at")
-      .order("published_at", { ascending: false })
-      .limit(6);
-    justAnnounced = ((newest ?? []) as {
-      slug: string;
-      project_name: string;
-      city: string | null;
-    }[]);
-  }
+  const justAnnounced = ((newestRes?.data ?? []) as {
+    slug: string;
+    project_name: string;
+    city: string | null;
+  }[]);
 
   return (
     <div>
