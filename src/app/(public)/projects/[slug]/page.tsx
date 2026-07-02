@@ -248,7 +248,6 @@ export default async function PublicProjectPage({
   const project = await getProject(slug);
   if (!project) notFound();
 
-  const realtor = await getRealtorCard(project.assigned_realtor_profile_id);
   const priceBand = formatPriceBand(
     project.price_from_public,
     project.price_to_public,
@@ -256,18 +255,17 @@ export default async function PublicProjectPage({
   const location = [project.neighbourhood, project.city, project.province]
     .filter(Boolean)
     .join(", ");
-  const moreFromBuilder = await getMoreFromBuilder(
-    project.builder_name,
-    project.project_id,
-  );
-  const nearby = await getNearbyProjects(project.city, [
-    project.project_id,
-    ...moreFromBuilder.map((m) => m.project_id),
+  // One round-trip wave instead of four sequential ones — faster first paint.
+  const [realtor, moreFromBuilder, galleryAll, nearbyRaw] = await Promise.all([
+    getRealtorCard(project.assigned_realtor_profile_id),
+    getMoreFromBuilder(project.builder_name, project.project_id),
+    getGallery(project.project_id),
+    getNearbyProjects(project.city, [project.project_id]),
   ]);
+  const builderIds = new Set(moreFromBuilder.map((m) => m.project_id));
+  const nearby = nearbyRaw.filter((n) => !builderIds.has(n.project_id));
   // Gallery: everything public except a duplicate of the hero itself.
-  const gallery = (await getGallery(project.project_id)).filter(
-    (g) => g.url !== project.hero_image_url,
-  );
+  const gallery = galleryAll.filter((g) => g.url !== project.hero_image_url);
   const intro =
     project.section_intro ??
     project.page_description ??
@@ -322,6 +320,7 @@ export default async function PublicProjectPage({
             <img
               src={project.hero_image_url}
               alt={project.hero_image_alt ?? project.project_name}
+              fetchPriority="high"
               className="relative mx-auto h-full object-contain"
             />
             {/* Status chips */}
@@ -575,6 +574,8 @@ function MiniGrid({
                   <img
                     src={m.hero_image_url}
                     alt={m.project_name}
+                    loading="lazy"
+                    decoding="async"
                     className="h-full w-full object-cover"
                   />
                 ) : null}

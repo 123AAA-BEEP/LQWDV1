@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useFormStatus } from "react-dom";
 import type { ComponentProps } from "react";
 import { cn } from "@/lib/cn";
 
@@ -39,15 +42,40 @@ export function buttonClasses(
 ) {
   return cn(base, variants[variant], sizes[size], className);
 }
-const classes = buttonClasses;
 
+/**
+ * Every submit Button is pending-aware for free: while the surrounding form's
+ * server action runs, the button disables itself and shows a spinner — no
+ * frozen screens, no double-submits, anywhere on the platform. (useFormStatus
+ * reads the nearest parent <form>; outside a form it's simply never pending.)
+ */
 export function Button({
   variant = "primary",
   size = "md",
   className,
+  children,
+  disabled,
+  type,
   ...props
 }: ComponentProps<"button"> & { variant?: Variant; size?: Size }) {
-  return <button className={classes(variant, size, className)} {...props} />;
+  const { pending } = useFormStatus();
+  const busy = pending && type === "submit";
+  return (
+    <button
+      type={type}
+      className={buttonClasses(variant, size, className)}
+      disabled={disabled || busy}
+      {...props}
+    >
+      {busy ? (
+        <span
+          aria-hidden
+          className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent"
+        />
+      ) : null}
+      {children}
+    </button>
+  );
 }
 
 export function ButtonLink({
@@ -56,5 +84,5 @@ export function ButtonLink({
   className,
   ...props
 }: ComponentProps<typeof Link> & { variant?: Variant; size?: Size }) {
-  return <Link className={classes(variant, size, className)} {...props} />;
+  return <Link className={buttonClasses(variant, size, className)} {...props} />;
 }
