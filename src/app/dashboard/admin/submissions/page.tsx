@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Card, CardBody } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { FlashNotice } from "@/components/ui/flash-notice";
 import { Notice } from "@/components/ui/notice";
 import { Textarea } from "@/components/ui/field";
 import { SUBMISSION_STATUS } from "@/lib/status";
@@ -117,7 +118,12 @@ function DiffRow({
   );
 }
 
-export default async function SubmissionsQueue() {
+export default async function SubmissionsQueue({
+  searchParams,
+}: {
+  searchParams: Promise<{ flash?: string; flash_tone?: string }>;
+}) {
+  const sp = await searchParams;
   const supabase = await createClient();
 
   const [{ data: open }, { data: decided }] = await Promise.all([
@@ -156,6 +162,7 @@ export default async function SubmissionsQueue() {
 
   return (
     <div className="space-y-8">
+      <FlashNotice searchParams={sp} />
       <section className="space-y-3">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
           To review ({openRows.length})

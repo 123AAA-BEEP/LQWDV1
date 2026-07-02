@@ -234,7 +234,17 @@ export function ProjectUploads({
                           </button>
                         </form>
                       )}
-                      <form action={deleteProjectMedia}>
+                      <form
+                        action={deleteProjectMedia}
+                        onSubmit={(e) => {
+                          if (
+                            !window.confirm(
+                              "Delete this image? If it's on the public page it disappears immediately. This can't be undone.",
+                            )
+                          )
+                            e.preventDefault();
+                        }}
+                      >
                         <input
                           type="hidden"
                           name="project_id"
@@ -306,7 +316,17 @@ export function ProjectUploads({
                         .join(" · ") || "—"}
                     </p>
                   </div>
-                  <form action={deleteFloorplan}>
+                  <form
+                    action={deleteFloorplan}
+                    onSubmit={(e) => {
+                      if (
+                        !window.confirm(
+                          "Delete this floorplan? This can't be undone.",
+                        )
+                      )
+                        e.preventDefault();
+                    }}
+                  >
                     <input
                       type="hidden"
                       name="project_id"
@@ -399,7 +419,17 @@ export function ProjectUploads({
                         Open
                       </a>
                     ) : null}
-                    <form action={deleteDocument}>
+                    <form
+                      action={deleteDocument}
+                      onSubmit={(e) => {
+                        if (
+                          !window.confirm(
+                            "Delete this document? This can't be undone.",
+                          )
+                        )
+                          e.preventDefault();
+                      }}
+                    >
                       <input
                         type="hidden"
                         name="project_id"

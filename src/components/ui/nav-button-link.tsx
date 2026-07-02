@@ -1,10 +1,7 @@
 "use client";
 
 import Link, { useLinkStatus } from "next/link";
-import { buttonClasses } from "./button";
-
-type Variant = "primary" | "secondary" | "ghost" | "danger";
-type Size = "sm" | "md" | "lg";
+import { buttonClasses, type Variant, type Size } from "./button";
 
 /** Must live INSIDE the Link to read its navigation status. */
 function LabelWithStatus({

@@ -1,6 +1,7 @@
 import { requireUserProfile, isAdmin } from "@/lib/auth";
 import { AdminNav } from "@/components/admin/admin-nav";
 import { NoAccess } from "@/components/admin/no-access";
+import { getAdminQueueCounts } from "@/lib/admin-counts";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +21,10 @@ export default async function AdminLayout({
     );
   }
 
+  // Live pending counts on every tab so admins see where work is waiting
+  // without opening each queue. Head-only count queries, run in parallel.
+  const counts = await getAdminQueueCounts();
+
   return (
     <div className="space-y-6">
       <div>
@@ -31,7 +36,7 @@ export default async function AdminLayout({
           projects.
         </p>
       </div>
-      <AdminNav />
+      <AdminNav counts={counts} />
       {children}
     </div>
   );

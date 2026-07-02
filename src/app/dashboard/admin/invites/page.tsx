@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Card, CardBody } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ConfirmButton } from "@/components/ui/confirm-button";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { Notice } from "@/components/ui/notice";
 import { isEmailConfigured } from "@/lib/email";
@@ -95,16 +96,34 @@ export default async function InvitesPage() {
             </form>
             {counts.draft > 0 ? (
               <form action={approveAllDrafts}>
-                <SubmitButton variant="secondary" size="sm" pendingLabel="Approving…">
+                <ConfirmButton
+                  type="submit"
+                  variant="secondary"
+                  size="sm"
+                  title="Approve all drafts?"
+                  message={`This marks all ${counts.draft} draft invite${
+                    counts.draft === 1 ? "" : "s"
+                  } as approved and ready to send — same as reviewing and approving each one individually.`}
+                  confirmLabel="Approve all"
+                >
                   Approve all drafts
-                </SubmitButton>
+                </ConfirmButton>
               </form>
             ) : null}
             {counts.approved > 0 ? (
               <form action={sendApprovedBatch}>
-                <SubmitButton size="sm" pendingLabel="Sending batch…">
+                <ConfirmButton
+                  type="submit"
+                  size="sm"
+                  title="Send this batch?"
+                  message={`This emails ${Math.min(
+                    counts.approved,
+                    20,
+                  )} agents their claim links right now. Sends can't be recalled.`}
+                  confirmLabel="Send batch"
+                >
                   Send next {Math.min(counts.approved, 20)} approved
-                </SubmitButton>
+                </ConfirmButton>
               </form>
             ) : null}
           </div>

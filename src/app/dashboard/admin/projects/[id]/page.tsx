@@ -230,8 +230,32 @@ export default async function AdminProjectEditor({
       ) : null}
       {error ? <Notice tone="error">{error}</Notice> : null}
 
+      {/* Section jump-nav — this editor is long; give admins a map. */}
+      <nav
+        aria-label="Editor sections"
+        className="sticky top-0 z-10 -mx-1 flex flex-wrap gap-1.5 border-b border-slate-200 bg-white/95 px-1 py-2 text-xs font-medium backdrop-blur"
+      >
+        {[
+          ["#publish", "Publish"],
+          ["#canonical", "Canonical"],
+          ["#commission", "Commission"],
+          ["#rental", "Rental terms"],
+          ["#portals", "Portals"],
+          ["#public-content", "Public page"],
+          ["#uploads", "Uploads"],
+        ].map(([href, label]) => (
+          <a
+            key={href}
+            href={href}
+            className="rounded-full border border-slate-200 px-2.5 py-1 text-slate-600 hover:border-brand-300 hover:text-brand-700"
+          >
+            {label}
+          </a>
+        ))}
+      </nav>
+
       {/* Publish controls */}
-      <Card>
+      <Card id="publish" className="scroll-mt-14">
         <CardBody className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h3 className="font-semibold text-ink">Public page</h3>
@@ -267,7 +291,7 @@ export default async function AdminProjectEditor({
       </Card>
 
       {/* Canonical fields */}
-      <Card>
+      <Card id="canonical" className="scroll-mt-14">
         <CardBody>
           <h3 className="font-semibold text-ink">Canonical project</h3>
           <form action={updateProject} className="mt-4 space-y-4">
@@ -440,7 +464,7 @@ export default async function AdminProjectEditor({
       </Card>
 
       {/* Broker-only commission & negotiability */}
-      <Card>
+      <Card id="commission" className="scroll-mt-14">
         <CardBody>
           <div className="flex items-center justify-between">
             <h3 className="font-semibold text-ink">Commission &amp; negotiability</h3>
@@ -534,7 +558,7 @@ export default async function AdminProjectEditor({
       </Card>
 
       {/* Rental referral terms (PBR) */}
-      <Card>
+      <Card id="rental" className="scroll-mt-14">
         <CardBody>
           <div className="flex items-center justify-between">
             <h3 className="font-semibold text-ink">Rental referral terms (PBR)</h3>
@@ -689,7 +713,7 @@ export default async function AdminProjectEditor({
       </Card>
 
       {/* Broker portals */}
-      <Card>
+      <Card id="portals" className="scroll-mt-14">
         <CardBody>
           <div className="flex items-center justify-between">
             <h3 className="font-semibold text-ink">Broker portals</h3>
@@ -767,7 +791,7 @@ export default async function AdminProjectEditor({
                       <span className="truncate">{p.portal_name}</span>
                       {p.is_primary ? <Badge tone="brand">Primary</Badge> : null}
                       {p.is_featured ? (
-                        <Badge tone="warning">Featured</Badge>
+                        <Badge tone="featured">Featured</Badge>
                       ) : null}
                     </p>
                     <p className="truncate text-xs text-slate-400">
@@ -860,7 +884,7 @@ export default async function AdminProjectEditor({
       </Card>
 
       {/* Public, SEO-safe page fields */}
-      <Card>
+      <Card id="public-content" className="scroll-mt-14">
         <CardBody>
           <h3 className="font-semibold text-ink">Public page content</h3>
           <p className="mt-1 text-sm text-slate-500">
@@ -920,6 +944,7 @@ export default async function AdminProjectEditor({
         </CardBody>
       </Card>
 
+      <div id="uploads" className="scroll-mt-14">
       <ProjectUploads
         projectId={id}
         heroUrl={project.hero_image_url ?? null}
@@ -942,6 +967,7 @@ export default async function AdminProjectEditor({
           path: d.file_url as string,
         }))}
       />
+      </div>
     </div>
   );
 }

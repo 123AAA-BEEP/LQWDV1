@@ -3,7 +3,9 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardBody } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { ConfirmButton } from "@/components/ui/confirm-button";
 import { Badge } from "@/components/ui/badge";
+import { FlashNotice } from "@/components/ui/flash-notice";
 import { Input, Select } from "@/components/ui/field";
 import { cn } from "@/lib/cn";
 import { LEAD_STATUSES, LEAD_STATUS_META, leadStatusMeta } from "@/lib/leads";
@@ -52,9 +54,15 @@ const VIEWS = [
 export default async function AdminLeadsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ view?: string; q?: string }>;
+  searchParams: Promise<{
+    view?: string;
+    q?: string;
+    flash?: string;
+    flash_tone?: string;
+  }>;
 }) {
-  const { view: rawView, q: rawQ } = await searchParams;
+  const sp = await searchParams;
+  const { view: rawView, q: rawQ } = sp;
   const view = ["pool", "assigned"].includes(rawView ?? "") ? rawView! : "";
   const q = (rawQ ?? "").trim().toLowerCase();
 
@@ -118,6 +126,7 @@ export default async function AdminLeadsPage({
 
   return (
     <div className="space-y-6">
+      <FlashNotice searchParams={sp} />
       <div>
         <h2 className="text-lg font-semibold text-ink">Leads</h2>
         <p className="mt-1 text-sm text-slate-500">
@@ -282,9 +291,18 @@ export default async function AdminLeadsPage({
                     {l.assigned_realtor_profile_id ? (
                       <form action={pullLeadToAdmin}>
                         <input type="hidden" name="lead_id" value={l.id} />
-                        <Button type="submit" size="sm" variant="ghost">
+                        <ConfirmButton
+                          type="submit"
+                          size="sm"
+                          variant="ghost"
+                          title="Pull this lead to the admin pool?"
+                          message={`This unassigns ${
+                            assigned ? profName(assigned) : "the agent"
+                          } — LIQWD takes over the follow-up. The agent isn't notified.`}
+                          confirmLabel="Pull to pool"
+                        >
                           Pull to admin pool
-                        </Button>
+                        </ConfirmButton>
                       </form>
                     ) : null}
                   </div>

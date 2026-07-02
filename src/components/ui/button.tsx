@@ -5,14 +5,14 @@ import { useFormStatus } from "react-dom";
 import type { ComponentProps } from "react";
 import { cn } from "@/lib/cn";
 
-type Variant =
+export type Variant =
   | "primary"
   | "secondary"
   | "ghost"
   | "danger"
   | "white"
   | "outlineLight";
-type Size = "sm" | "md" | "lg";
+export type Size = "sm" | "md" | "lg";
 
 const base =
   "inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:pointer-events-none whitespace-nowrap";

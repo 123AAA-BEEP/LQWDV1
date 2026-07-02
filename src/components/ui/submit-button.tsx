@@ -1,10 +1,7 @@
 "use client";
 
 import { useFormStatus } from "react-dom";
-import { Button } from "./button";
-
-type Variant = "primary" | "secondary" | "ghost" | "danger";
-type Size = "sm" | "md" | "lg";
+import { Button, type Variant, type Size } from "./button";
 
 /** Submit button that shows a pending state while a Server Action runs. */
 export function SubmitButton({

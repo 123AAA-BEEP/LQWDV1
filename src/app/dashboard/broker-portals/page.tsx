@@ -266,7 +266,7 @@ export default async function BrokerPortals({
                           <span className="truncate font-semibold text-ink">
                             {p.portal_name}
                           </span>
-                          <Badge tone="warning">Sponsored</Badge>
+                          <Badge tone="featured">Sponsored</Badge>
                         </div>
                         <p className="truncate text-sm text-slate-500">
                           {p.project.project_name}
