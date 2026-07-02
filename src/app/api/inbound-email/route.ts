@@ -5,6 +5,10 @@ import {
   type InboundImage,
 } from "@/lib/email-intake/extract";
 import { ingestExtractedProject } from "@/lib/email-intake/ingest";
+import {
+  extractCandidateUrls,
+  fetchLinkContext,
+} from "@/lib/email-intake/fetch-links";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -69,9 +73,28 @@ export async function POST(request: Request) {
   after(async () => {
     const admin = createAdminClient();
     try {
-      const ex = await extractProjectFromEmail({ subject, text, html, images });
+      // Hot-drop support: a forwarded email is often just a link to a thin
+      // landing page. Follow up to two links, feed their text to the extractor,
+      // and pull their hero renderings for the vision pass + hero upload.
+      const linkCtx = await fetchLinkContext(extractCandidateUrls(text, html));
+      const mergedText = [
+        text ?? "",
+        ...linkCtx.pages.map(
+          (p) => `\n\n--- CONTENT FETCHED FROM LINK ${p.url} ---\n${p.text}`,
+        ),
+      ]
+        .join("")
+        .trim() || null;
+      const mergedImages = [...images, ...linkCtx.images].slice(0, MAX_IMAGES);
+
+      const ex = await extractProjectFromEmail({
+        subject,
+        text: mergedText,
+        html,
+        images: mergedImages,
+      });
       const result = ex
-        ? await ingestExtractedProject(ex, { from, subject, images })
+        ? await ingestExtractedProject(ex, { from, subject, images: mergedImages })
         : {
             action: "error" as const,
             project_id: null,
@@ -82,9 +105,9 @@ export async function POST(request: Request) {
       await admin.from("email_intake_log").insert({
         from_email: from,
         subject,
-        raw_text: text,
+        raw_text: mergedText,
         raw_html: html,
-        attachment_count: images.length,
+        attachment_count: mergedImages.length,
         extracted: ex ?? null,
         confidence: ex?.confidence ?? null,
         action: result.action,
