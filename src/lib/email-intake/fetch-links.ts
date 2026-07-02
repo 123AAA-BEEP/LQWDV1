@@ -61,21 +61,41 @@ function stripHtml(html: string): string {
     .trim();
 }
 
-/** Hero-image candidates from a fetched page, in preference order. */
+/** Hero-image candidates from a fetched page, in preference order. Modern
+ *  landing pages hide their renderings in lazy-load attrs, srcset, and CSS
+ *  backgrounds — the wordmark og:image is often the ONLY plain <img>. */
 function imageUrls(html: string, baseUrl: string): string[] {
   const urls: string[] = [];
   const push = (raw: string | undefined) => {
     if (!raw) return;
+    const cleaned = raw.trim();
+    if (!cleaned || cleaned.startsWith("data:")) return;
+    if (/\.svg($|\?)/i.test(cleaned)) return; // vector logos, never heroes
     try {
-      urls.push(new URL(raw, baseUrl).toString());
+      urls.push(new URL(cleaned, baseUrl).toString());
     } catch {
       /* ignore */
     }
   };
+  // Highest-signal first: social preview images.
   push(html.match(/property=["']og:image["'][^>]*content=["']([^"']+)["']/i)?.[1]);
   push(html.match(/content=["']([^"']+)["'][^>]*property=["']og:image["']/i)?.[1]);
   push(html.match(/name=["']twitter:image["'][^>]*content=["']([^"']+)["']/i)?.[1]);
-  for (const m of html.matchAll(/<img[^>]+src=["']([^"']+)["']/gi)) push(m[1]);
+  // Plain + lazy-loaded <img> sources.
+  for (const m of html.matchAll(
+    /<img[^>]+(?:src|data-src|data-lazy-src|data-original)=["']([^"']+)["']/gi,
+  ))
+    push(m[1]);
+  // srcset: take the last (largest) candidate of each.
+  for (const m of html.matchAll(/(?:srcset|data-srcset)=["']([^"']+)["']/gi)) {
+    const candidates = m[1].split(",").map((s) => s.trim().split(/\s+/)[0]);
+    push(candidates[candidates.length - 1]);
+  }
+  // CSS background images (inline styles + stylesheets in the document).
+  for (const m of html.matchAll(
+    /background(?:-image)?\s*:[^;"'}]*url\(\s*['"]?([^'")]+)['"]?\s*\)/gi,
+  ))
+    push(m[1]);
   return [...new Set(urls)];
 }
 
