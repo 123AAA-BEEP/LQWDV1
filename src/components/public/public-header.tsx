@@ -12,8 +12,9 @@ export function PublicHeader() {
           </span>
           <span aria-hidden className="size-1.5 rounded-full bg-brand-500" />
         </Link>
-        <nav className="flex items-center gap-4 text-sm font-medium text-slate-600 sm:gap-6">
-          <Link href="/projects" className="hover:text-ink">
+        <nav className="flex items-center gap-4 text-sm font-medium sm:gap-6">
+          {/* The marketplace's own action leads; cross-links stay quiet. */}
+          <Link href="/projects" className="font-semibold text-ink">
             New homes
           </Link>
           <Link
@@ -23,7 +24,7 @@ export function PublicHeader() {
             For developers
           </Link>
           <Link href="/" className="text-slate-500 hover:text-ink">
-            For agents →
+            For agents
           </Link>
         </nav>
       </div>

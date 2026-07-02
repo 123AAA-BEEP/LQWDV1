@@ -1,8 +1,10 @@
 import type { ComponentProps, ReactNode } from "react";
 import { cn } from "@/lib/cn";
 
+// No `focus-visible:outline-none` here — controls must inherit the global 2px
+// brand focus ring (globals.css) so keyboard focus is clearly visible.
 const controlClasses =
-  "w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-brand-600 focus-visible:outline-none";
+  "w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-brand-600";
 
 export function Label({ className, ...props }: ComponentProps<"label">) {
   return (

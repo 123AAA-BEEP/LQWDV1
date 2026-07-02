@@ -284,23 +284,29 @@ export default async function PublicProjectPage({
         />
       ))}
       {/* Breadcrumb — mirrors the BreadcrumbList JSON-LD */}
-      <nav aria-label="Breadcrumb" className="mb-4 text-sm text-slate-400">
-        <Link href="/projects" className="hover:text-slate-600 hover:underline">
+      <nav aria-label="Breadcrumb" className="mb-4 text-sm text-slate-500">
+        <Link href="/projects" className="hover:text-ink hover:underline">
           New homes
         </Link>
         {project.city ? (
           <>
-            <span className="mx-1.5">/</span>
+            <span aria-hidden className="mx-1.5 text-slate-300">
+              /
+            </span>
             <Link
               href={`/projects?city=${encodeURIComponent(project.city)}`}
-              className="hover:text-slate-600 hover:underline"
+              className="hover:text-ink hover:underline"
             >
               {project.city}
             </Link>
           </>
         ) : null}
-        <span className="mx-1.5">/</span>
-        <span className="text-slate-600">{project.project_name}</span>
+        <span aria-hidden className="mx-1.5 text-slate-300">
+          /
+        </span>
+        <span aria-current="page" className="font-medium text-slate-700">
+          {project.project_name}
+        </span>
       </nav>
 
       {/* Hero — letterboxed, never cropped: the full image renders via
@@ -356,7 +362,7 @@ export default async function PublicProjectPage({
               {project.builder_name}
             </p>
           ) : null}
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight text-ink">
+          <h1 className="mt-1 text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
             {project.project_name}
           </h1>
           {location ? (
@@ -484,7 +490,7 @@ export default async function PublicProjectPage({
           <Card id="request-info" className="scroll-mt-24 border-slate-300 shadow-md">
             <CardBody>
               <h2 className="text-lg font-semibold text-ink">
-                Get the price list &amp; floor plans
+                Request pricing &amp; availability
               </h2>
               <p className="mt-1 text-sm text-slate-500">
                 First access to pricing, floorplans, and availability — before
@@ -504,7 +510,7 @@ export default async function PublicProjectPage({
           {realtor ? (
             <Card>
               <CardBody>
-                <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
                   Your representative
                 </p>
                 <p className="mt-2 font-semibold text-ink">
@@ -597,7 +603,7 @@ function MiniGrid({
 function Fact({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-xl bg-slate-50 p-4">
-      <dt className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">
+      <dt className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">
         {label}
       </dt>
       <dd className="mt-1.5 font-semibold leading-snug text-ink">{value}</dd>

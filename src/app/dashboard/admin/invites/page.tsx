@@ -140,7 +140,9 @@ export default async function InvitesPage() {
                         : ""}
                     </p>
                   </div>
-                  <Badge tone={TONE[inv.status]}>{inv.status}</Badge>
+                  <Badge tone={TONE[inv.status]} className="capitalize">
+                    {inv.status}
+                  </Badge>
                 </div>
 
                 <p className="text-sm text-slate-700">

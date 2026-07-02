@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { ensureProfile, isAdmin, isApproved } from "@/lib/auth";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { SubmitButton } from "@/components/ui/submit-button";
+import { Badge } from "@/components/ui/badge";
 import { Notice } from "@/components/ui/notice";
 import {
   POST_KIND_LABELS,
@@ -94,17 +95,9 @@ export default async function ClaimPage({
 
   const preview = (
     <div className="mt-6 rounded-xl border border-slate-200 bg-white p-5">
-      <div className="flex flex-wrap gap-1.5 text-xs">
-        {kindLabel ? (
-          <span className="rounded-full bg-brand-50 px-2 py-0.5 font-medium text-brand-700">
-            {kindLabel}
-          </span>
-        ) : null}
-        {statusLabel ? (
-          <span className="rounded-full bg-slate-100 px-2 py-0.5 font-medium text-slate-600">
-            {statusLabel}
-          </span>
-        ) : null}
+      <div className="flex flex-wrap gap-1.5">
+        {kindLabel ? <Badge tone="brand">{kindLabel}</Badge> : null}
+        {statusLabel ? <Badge tone="neutral">{statusLabel}</Badge> : null}
       </div>
       <h2 className="mt-2 text-lg font-semibold text-ink">{listing.title}</h2>
       {where ? <p className="mt-0.5 text-sm text-slate-500">{where}</p> : null}
