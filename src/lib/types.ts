@@ -164,6 +164,8 @@ export interface PublicProject {
   latitude: number | null;
   longitude: number | null;
   project_type: string | null;
+  sales_status: string | null;
+  hero_image_alt: string | null;
   section_faq: { question: string; answer: string }[] | null;
   section_buying: string | null;
   page_updated_at: string | null;

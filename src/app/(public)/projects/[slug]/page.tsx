@@ -285,18 +285,67 @@ export default async function PublicProjectPage({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(block) }}
         />
       ))}
-      {/* Hero */}
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
+      {/* Breadcrumb — mirrors the BreadcrumbList JSON-LD */}
+      <nav aria-label="Breadcrumb" className="mb-4 text-sm text-slate-400">
+        <Link href="/projects" className="hover:text-slate-600 hover:underline">
+          New homes
+        </Link>
+        {project.city ? (
+          <>
+            <span className="mx-1.5">/</span>
+            <Link
+              href={`/projects?city=${encodeURIComponent(project.city)}`}
+              className="hover:text-slate-600 hover:underline"
+            >
+              {project.city}
+            </Link>
+          </>
+        ) : null}
+        <span className="mx-1.5">/</span>
+        <span className="text-slate-600">{project.project_name}</span>
+      </nav>
+
+      {/* Hero — letterboxed, never cropped: the full image renders via
+          object-contain over a blurred, zoomed copy of itself, so portrait
+          renderings and wide photos both look deliberate. */}
+      <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
         {project.hero_image_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={project.hero_image_url}
-            alt={project.project_name}
-            className="h-72 w-full object-cover sm:h-96"
-          />
+          <div className="relative h-80 sm:h-[28rem]">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={project.hero_image_url}
+              alt=""
+              aria-hidden
+              className="absolute inset-0 h-full w-full scale-110 object-cover opacity-50 blur-2xl"
+            />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={project.hero_image_url}
+              alt={project.hero_image_alt ?? project.project_name}
+              className="relative mx-auto h-full object-contain"
+            />
+            {/* Status chips */}
+            <div className="absolute left-4 top-4 flex flex-wrap gap-1.5">
+              {project.sales_status ? (
+                <span className="rounded-full bg-ink/85 px-3 py-1 text-xs font-semibold capitalize text-white backdrop-blur">
+                  {project.sales_status.replace(/_/g, " ")}
+                </span>
+              ) : null}
+              {project.project_type ? (
+                <span className="rounded-full bg-white/85 px-3 py-1 text-xs font-semibold capitalize text-slate-700 backdrop-blur">
+                  {project.project_type.replace(/_/g, " ")}
+                </span>
+              ) : null}
+            </div>
+            {priceBand ? (
+              <div className="absolute bottom-4 right-4 rounded-full bg-white/90 px-4 py-1.5 text-sm font-semibold text-ink shadow-sm backdrop-blur">
+                {priceBand}
+              </div>
+            ) : null}
+          </div>
         ) : (
-          <div className="flex h-72 items-center justify-center text-slate-400 sm:h-96">
-            No image available
+          <div className="flex h-80 items-center justify-center text-slate-400 sm:h-[28rem]">
+            Renderings coming soon
           </div>
         )}
       </div>
@@ -352,20 +401,23 @@ export default async function PublicProjectPage({
                 Gallery
               </h2>
               <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
-                {gallery.map((g) => (
+                {gallery.map((g, i) => (
                   <a
                     key={g.url}
                     href={g.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group overflow-hidden rounded-xl border border-slate-200 bg-slate-100"
+                    className={`group overflow-hidden rounded-xl border border-slate-200 bg-slate-100 ${
+                      i === 0 && gallery.length > 2 ? "col-span-2 row-span-2" : ""
+                    }`}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={g.url}
                       alt={g.alt_text ?? project.project_name}
                       loading="lazy"
-                      className="aspect-[4/3] w-full object-cover transition-transform duration-200 group-hover:scale-[1.03]"
+                      className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-[1.03]"
+                      style={{ aspectRatio: i === 0 && gallery.length > 2 ? undefined : "4 / 3" }}
                     />
                   </a>
                 ))}
@@ -428,9 +480,9 @@ export default async function PublicProjectPage({
           ) : null}
         </div>
 
-        {/* Sidebar: lead form + realtor card */}
-        <div className="space-y-6">
-          <Card id="request-info" className="scroll-mt-24">
+        {/* Sidebar: lead form + realtor card (follows the scroll on desktop) */}
+        <div className="space-y-6 lg:sticky lg:top-6 lg:self-start">
+          <Card id="request-info" className="scroll-mt-24 border-slate-300 shadow-md">
             <CardBody>
               <h2 className="text-lg font-semibold text-ink">
                 Get the price list &amp; floor plans
@@ -543,11 +595,11 @@ function MiniGrid({
 
 function Fact({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-slate-200 p-3">
-      <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">
+    <div className="rounded-xl bg-slate-50 p-4">
+      <dt className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">
         {label}
       </dt>
-      <dd className="mt-1 text-sm font-medium text-slate-800">{value}</dd>
+      <dd className="mt-1.5 font-semibold leading-snug text-ink">{value}</dd>
     </div>
   );
 }
