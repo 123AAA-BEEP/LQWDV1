@@ -34,7 +34,11 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  return NextResponse.redirect(
-    `${origin}/login?error=${encodeURIComponent("Authentication link is invalid or expired.")}`,
-  );
+  // Keep the destination (e.g. a claim page) so a manual login after an
+  // expired/reused link still returns the user where they were headed.
+  const failParams = new URLSearchParams({
+    error: "Authentication link is invalid or expired.",
+  });
+  if (next !== "/dashboard") failParams.set("redirect", next);
+  return NextResponse.redirect(`${origin}/login?${failParams.toString()}`);
 }

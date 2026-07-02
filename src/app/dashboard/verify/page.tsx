@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { ShieldCheck, Upload } from "lucide-react";
 import { requireUserProfile } from "@/lib/auth";
-import { Button } from "@/components/ui/button";
+import { createClient } from "@/lib/supabase/server";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { Card, CardBody } from "@/components/ui/card";
 import { Field, Input, Textarea } from "@/components/ui/field";
@@ -29,9 +29,23 @@ export default async function VerifyPage({
   searchParams: Promise<{ error?: string; message?: string; reco?: string }>;
 }) {
   const { error, message, reco } = await searchParams;
-  const { profile } = await requireUserProfile();
+  const { userId, profile } = await requireUserProfile();
   const status = profile.verification_status;
   const recoNotice = reco ? RECO_NOTICE[reco] : undefined;
+
+  // Off-market listings they claimed that are waiting on this verification
+  // (owners can read their own held rows — migration 0050).
+  let heldTitles: string[] = [];
+  if (status !== "approved") {
+    const supabase = await createClient();
+    const { data: held } = await supabase
+      .from("off_market_listings")
+      .select("title")
+      .eq("claimed_by_profile_id", userId)
+      .eq("status", "pending_claim")
+      .limit(3);
+    heldTitles = ((held ?? []) as { title: string }[]).map((h) => h.title);
+  }
 
   return (
     <div className="space-y-6">
@@ -43,6 +57,18 @@ export default async function VerifyPage({
           {VERIFICATION_LABELS[status]}
         </Badge>
       </div>
+
+      {heldTitles.length > 0 ? (
+        <div className="rounded-lg border border-brand-200 bg-brand-50 px-4 py-3">
+          <p className="text-sm font-semibold text-brand-800">
+            Your claimed listing{heldTitles.length > 1 ? "s go" : " goes"} live
+            the moment you&apos;re verified
+          </p>
+          <p className="mt-0.5 truncate text-sm text-brand-700">
+            {heldTitles.join(" · ")}
+          </p>
+        </div>
+      ) : null}
 
       {status === "approved" ? (
         <Notice tone="success">
@@ -56,7 +82,11 @@ export default async function VerifyPage({
       ) : null}
       {message === "submitted" ? (
         <Notice tone="success">
-          Your verification request was submitted. We’ll review it shortly.
+          Submitted — we typically review within a day, and we&apos;ll email you
+          the moment you&apos;re approved.
+          {heldTitles.length > 0
+            ? " Your claimed listing goes live automatically on approval."
+            : ""}
         </Notice>
       ) : null}
       {recoNotice ? <Notice tone={recoNotice.tone}>{recoNotice.msg}</Notice> : null}
@@ -136,9 +166,9 @@ export default async function VerifyPage({
                 <Field label="Notes (optional)" htmlFor="notes">
                   <Textarea id="notes" name="notes" />
                 </Field>
-                <Button type="submit" variant="secondary">
+                <SubmitButton variant="secondary" pendingLabel="Submitting for review…">
                   {status === "rejected" ? "Resubmit for review" : "Submit for manual review"}
-                </Button>
+                </SubmitButton>
               </form>
             </CardBody>
           </Card>

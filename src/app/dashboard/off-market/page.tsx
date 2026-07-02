@@ -42,11 +42,43 @@ export default async function OffMarketPage({
   const canPost = isAdmin(profile) || (profile.role === "realtor" && isApproved(profile));
   const canView = canPost;
   if (!canView) {
+    // Unverified agents can't browse the board, but if they CLAIMED a listing
+    // they must see it's safely reserved (owners read own rows via RLS).
+    const supabaseGated = await createClient();
+    const { data: heldData } = await supabaseGated
+      .from("off_market_listings")
+      .select("id, title")
+      .eq("claimed_by_profile_id", userId)
+      .eq("status", "pending_claim");
+    const held = (heldData ?? []) as { id: string; title: string }[];
+
     return (
       <div className="space-y-6">
         <h1 className="text-2xl font-semibold tracking-tight text-ink">
           Off-Market
         </h1>
+        {held.length > 0 ? (
+          <div className="rounded-lg border border-brand-200 bg-brand-50 px-4 py-3">
+            <p className="text-sm font-semibold text-brand-800">
+              Your claimed listing{held.length > 1 ? "s are" : " is"} reserved
+              under your name
+            </p>
+            <p className="mt-0.5 text-sm text-brand-700">
+              {held.map((h) => h.title).join(" · ")}
+            </p>
+            <p className="mt-1.5 text-sm text-brand-700">
+              {held.length > 1 ? "They go" : "It goes"} live the moment your
+              verification is approved —{" "}
+              <Link
+                href="/dashboard/verify"
+                className="font-semibold underline"
+              >
+                finish verification
+              </Link>
+              .
+            </p>
+          </div>
+        ) : null}
         <VerificationRequired />
       </div>
     );

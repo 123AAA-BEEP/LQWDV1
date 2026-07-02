@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { assertAdmin } from "@/lib/admin";
 import { awardReferralVerificationBonus } from "@/lib/rewards";
 import { sendAgentVerifiedEmail } from "@/lib/email";
+import { publishHeldListingsFor } from "@/lib/off-market";
 
 type Decision = "approved" | "rejected" | "suspended";
 
@@ -48,11 +49,7 @@ export async function decideVerification(formData: FormData) {
     await sendVerificationApprovedEmail(supabase, profileId);
     // Publish any off-market listings this agent claimed before being verified
     // (held dark until now). Admin RLS permits the update.
-    await supabase
-      .from("off_market_listings")
-      .update({ status: "published" })
-      .eq("claimed_by_profile_id", profileId)
-      .eq("status", "pending_claim");
+    await publishHeldListingsFor(supabase, profileId);
   }
 
   revalidatePath("/dashboard/admin/verifications");

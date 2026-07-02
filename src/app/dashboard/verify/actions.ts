@@ -15,6 +15,7 @@ import {
   recoCertificateApproves,
   type RecoExtract,
 } from "@/lib/reco";
+import { publishHeldListingsFor } from "@/lib/off-market";
 
 const ACCEPTED = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
 const MAX_BYTES = 4_000_000; // stay under Vercel's server-action body limit
@@ -79,6 +80,10 @@ export async function verifyRecoCertificate(formData: FormData) {
 
   // Never report success if the write didn't persist.
   if (updErr || !updated) verifyRedirect("saveerror");
+
+  // Publish any off-market listings they claimed while unverified — instant
+  // approval must complete the claim funnel exactly like admin review does.
+  await publishHeldListingsFor(admin, userId);
 
   // Invalidate every dashboard segment so the new approved state ungates
   // Projects, the sidebar, etc. immediately (no hard refresh needed).
