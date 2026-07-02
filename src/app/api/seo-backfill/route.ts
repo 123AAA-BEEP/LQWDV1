@@ -24,7 +24,10 @@ export async function GET(request: Request) {
     return new Response("forbidden", { status: 403 });
   }
 
-  const limit = Math.min(Math.max(Number(url.searchParams.get("limit")) || 2, 1), 4);
+  // ONE generation per pass: a single Opus call runs 30-60s, and the function
+  // itself is capped at 60s — two per pass guaranteed a gateway timeout that
+  // killed the auto-refresh chain. Progress comes from continuation, not batch.
+  const limit = Math.min(Math.max(Number(url.searchParams.get("limit")) || 1, 1), 2);
   const ui = url.searchParams.get("ui") === "1";
   const admin = createAdminClient();
 
@@ -52,12 +55,25 @@ export async function GET(request: Request) {
     published = new Set(((projs ?? []) as { id: string }[]).map((p) => p.id));
   }
   const queue = candidateIds.filter((c) => published.has(c.id));
-  const batch = queue.slice(0, limit);
 
-  const results: { slug: string; generated: boolean }[] = [];
+  // Random pick instead of head-of-queue: if one page's generation keeps
+  // running long, it can't block the whole chain — the next pass moves on.
+  const shuffled = [...queue].sort(() => Math.random() - 0.5);
+  const batch = shuffled.slice(0, limit);
+
+  const results: { slug: string; generated: boolean; note?: string }[] = [];
   for (const item of batch) {
-    const generated = await maybeGenerateSeoOnPublish(item.id, admin);
-    results.push({ slug: item.slug, generated });
+    // Soft 48s guard: abandon a slow generation before the platform kills the
+    // whole request, so the response (and the refresh chain) always lands.
+    const generated = await Promise.race<boolean | "slow">([
+      maybeGenerateSeoOnPublish(item.id, admin),
+      new Promise<"slow">((r) => setTimeout(() => r("slow"), 48_000)),
+    ]);
+    results.push(
+      generated === "slow"
+        ? { slug: item.slug, generated: false, note: "slow — will retry" }
+        : { slug: item.slug, generated },
+    );
   }
 
   // Freshness ping for the pages that just gained content.
@@ -75,7 +91,10 @@ export async function GET(request: Request) {
     url.searchParams.get("key") ?? "",
   )}&mode=run&ui=1&limit=${limit}`;
   const rows = results
-    .map((r) => `<tr><td>${r.slug}</td><td>${r.generated ? "✍️ generated" : "already complete"}</td></tr>`)
+    .map(
+      (r) =>
+        `<tr><td>${r.slug}</td><td>${r.note ?? (r.generated ? "✍️ generated" : "already complete")}</td></tr>`,
+    )
     .join("");
   const html = `<!doctype html><html><head><title>SEO backfill</title>
 ${!done ? `<meta http-equiv="refresh" content="1; url=${selfUrl}">` : ""}
