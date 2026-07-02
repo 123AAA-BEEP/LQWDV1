@@ -76,6 +76,7 @@ export async function bulkPublish(formData: FormData) {
       project_id: p.id,
       slug: p.slug,
       is_active: true,
+      indexable: true,
       published_at: now,
     }));
   if (toInsert.length > 0) {

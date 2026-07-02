@@ -169,6 +169,7 @@ export async function publishProject(formData: FormData) {
       project_id: projectId,
       slug: project.slug,
       is_active: true,
+      indexable: true,
       published_at: now,
     });
   }
