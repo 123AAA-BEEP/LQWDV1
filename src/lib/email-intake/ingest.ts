@@ -81,7 +81,9 @@ async function publishAdmin(admin: Admin, projectId: string, slug: string) {
   const key = process.env.INBOUND_EMAIL_SECRET;
   if (key) {
     await Promise.race([
-      fetch(`${base}/api/seo-backfill?key=${encodeURIComponent(key)}&limit=1`).catch(() => null),
+      fetch(
+        `${base}/api/seo-backfill?key=${encodeURIComponent(key)}&limit=1&project=${encodeURIComponent(projectId)}`,
+      ).catch(() => null),
       new Promise((r) => setTimeout(r, 1_500)),
     ]);
   } else {

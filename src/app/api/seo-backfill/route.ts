@@ -29,6 +29,9 @@ export async function GET(request: Request) {
   // killed the auto-refresh chain. Progress comes from continuation, not batch.
   const limit = Math.min(Math.max(Number(url.searchParams.get("limit")) || 1, 1), 2);
   const ui = url.searchParams.get("ui") === "1";
+  // Optional priority target — intake-published pages pass their project id so
+  // a fresh hot-drop page gets its content first, not a random queue pick.
+  const priorityProject = url.searchParams.get("project");
   const admin = createAdminClient();
 
   // Candidates: active pages of published projects missing any AI field.
@@ -58,7 +61,12 @@ export async function GET(request: Request) {
 
   // Random pick instead of head-of-queue: if one page's generation keeps
   // running long, it can't block the whole chain — the next pass moves on.
+  // A ?project= target (fresh intake publish) always jumps the queue.
   const shuffled = [...queue].sort(() => Math.random() - 0.5);
+  if (priorityProject) {
+    const i = shuffled.findIndex((c) => c.id === priorityProject);
+    if (i > 0) shuffled.unshift(...shuffled.splice(i, 1));
+  }
   const batch = shuffled.slice(0, limit);
 
   const results: { slug: string; generated: boolean; note?: string }[] = [];
