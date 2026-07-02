@@ -60,9 +60,13 @@ async function publishAdmin(admin: Admin, projectId: string, slug: string) {
       .update({ is_active: true, published_at: now })
       .eq("project_id", projectId);
   } else {
-    await admin
-      .from("public_project_pages")
-      .insert({ project_id: projectId, slug, is_active: true, published_at: now });
+    await admin.from("public_project_pages").insert({
+      project_id: projectId,
+      slug,
+      is_active: true,
+      indexable: true,
+      published_at: now,
+    });
   }
   await admin
     .from("projects")
