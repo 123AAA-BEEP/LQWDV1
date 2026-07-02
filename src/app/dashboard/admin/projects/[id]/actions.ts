@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { assertAdmin } from "@/lib/admin";
 import { maybeGenerateSeoOnPublish } from "@/lib/seo";
+import { pingIndexNow } from "@/lib/indexnow";
 
 function num(v: FormDataEntryValue | null): number | null {
   const s = String(v ?? "").trim();
@@ -187,9 +188,11 @@ export async function publishProject(formData: FormData) {
   // SEO autofill is a slow LLM call (several seconds). Run it AFTER the
   // response so publishing is instant. It only fills empty fields and never
   // throws; the service-role client is used since the request is finished.
+  // Then ping IndexNow so search engines hear about the page immediately.
   after(async () => {
     await maybeGenerateSeoOnPublish(projectId, createAdminClient());
     revalidatePath(`/dashboard/admin/projects/${projectId}`);
+    await pingIndexNow([`/projects/${project.slug}`, "/projects", "/sitemap.xml"]);
   });
 }
 

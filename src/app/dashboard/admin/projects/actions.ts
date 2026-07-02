@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { assertAdmin } from "@/lib/admin";
 import { maybeGenerateSeoOnPublish } from "@/lib/seo";
+import { pingIndexNow } from "@/lib/indexnow";
 
 // record_status values an admin may set in bulk from the Projects list.
 const BULK_STATUSES = new Set(["draft", "approved", "archived"]);
@@ -114,6 +115,12 @@ export async function bulkPublish(formData: FormData) {
       if (generated) budget -= 1;
     }
     revalidatePath("/dashboard/admin/projects");
+    // Tell search engines about every page that just went live.
+    await pingIndexNow([
+      ...(projects ?? []).map((p) => `/projects/${p.slug}`),
+      "/projects",
+      "/sitemap.xml",
+    ]);
   });
 }
 

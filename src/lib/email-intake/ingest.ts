@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { slugify } from "@/lib/slug";
 import { findExistingProjectFuzzy } from "@/lib/projects-dedup";
 import { maybeGenerateSeoOnPublish } from "@/lib/seo";
+import { pingIndexNow } from "@/lib/indexnow";
 import type { ExtractedProject, InboundImage } from "./extract";
 
 type Admin = ReturnType<typeof createAdminClient>;
@@ -71,6 +72,8 @@ async function publishAdmin(admin: Admin, projectId: string, slug: string) {
     })
     .eq("id", projectId);
   await maybeGenerateSeoOnPublish(projectId, admin);
+  // First-to-market: tell search engines the moment the page exists.
+  await pingIndexNow([`/projects/${slug}`, "/projects", "/sitemap.xml"]);
 }
 
 /** Adds a broker portal if the project doesn't already have one with that URL. */

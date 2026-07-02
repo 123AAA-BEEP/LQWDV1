@@ -11,6 +11,11 @@ export interface SeoFieldsValue {
   section_amenities: string;
   section_getting_around: string;
   section_developer: string;
+  /** 5–8 Q&As rendered on-page + emitted as schema.org FAQPage. Optional so
+   *  the admin editor's text-field form keeps compiling untouched. */
+  section_faq?: { question: string; answer: string }[];
+  /** "Buying pre-construction here" educational block (process, not promises). */
+  section_buying?: string;
 }
 
 const PROJECT_SELECT =
@@ -40,6 +45,10 @@ const FIELD_DESCRIPTIONS = {
     "A short paragraph on getting around. Name the REAL nearby transit from the supplied list (GO stations, subway/LRT stations, regional bus) and the major highways that genuinely serve this city/area. Use stable, well-known infrastructure; never invent route numbers, station names not in the list, or precise travel times.",
   section_developer:
     "A short, non-promotional paragraph about the builder — their focus and reputation in the GTA/Ontario. If the builder isn't well known, keep it general and factual; never fabricate awards, project counts, or years in business.",
+  section_faq:
+    "5 to 8 question-and-answer pairs a buyer or investor would actually search for about THIS project (e.g. starting price, home types, occupancy timing, location/transit, the builder, how to register). Answer strictly from the supplied facts; when a specific isn't in the facts (e.g. deposit structure), answer with accurate GENERAL Ontario pre-construction guidance and say details will be confirmed by the builder. Plain, direct answers of 2–4 sentences. Never invent prices, dates, or counts.",
+  section_buying:
+    "A short educational section (2–3 paragraphs, blank-line separated) titled toward 'buying pre-construction here': how the process typically works in Ontario — registering for first access, deposit structures being staged over time, the 10-day cooling-off period for new condos (only mention if this IS a condo), interim occupancy vs final closing, and why buying early in a release can matter. General, accurate, non-promissory education — no invented numbers, no financial advice, no guarantees of appreciation.",
 } as const;
 
 interface SeoPromptSettings {
@@ -103,7 +112,7 @@ export async function generateSeoFields(
     const client = new Anthropic();
     const message = await client.messages.create({
       model: "claude-opus-4-8",
-      max_tokens: 1024,
+      max_tokens: 3000,
       system,
       tools: [
         {
@@ -156,6 +165,22 @@ export async function generateSeoFields(
                 type: "string",
                 description: FIELD_DESCRIPTIONS.section_developer,
               },
+              section_faq: {
+                type: "array",
+                description: FIELD_DESCRIPTIONS.section_faq,
+                items: {
+                  type: "object",
+                  properties: {
+                    question: { type: "string" },
+                    answer: { type: "string" },
+                  },
+                  required: ["question", "answer"],
+                },
+              },
+              section_buying: {
+                type: "string",
+                description: FIELD_DESCRIPTIONS.section_buying,
+              },
             },
             required: [
               "seo_title",
@@ -166,6 +191,8 @@ export async function generateSeoFields(
               "section_amenities",
               "section_getting_around",
               "section_developer",
+              "section_faq",
+              "section_buying",
             ],
             additionalProperties: false,
           },
@@ -191,6 +218,20 @@ export async function generateSeoFields(
     const out = block.input as Record<string, unknown>;
     const str = (k: string) =>
       typeof out[k] === "string" ? (out[k] as string) : "";
+    // Sanitize the FAQ: keep only well-formed, non-empty Q&A pairs (max 8).
+    const faq = Array.isArray(out.section_faq)
+      ? (out.section_faq as unknown[])
+          .filter(
+            (f): f is { question: string; answer: string } =>
+              !!f &&
+              typeof f === "object" &&
+              typeof (f as Record<string, unknown>).question === "string" &&
+              typeof (f as Record<string, unknown>).answer === "string" &&
+              !!(f as Record<string, string>).question.trim() &&
+              !!(f as Record<string, string>).answer.trim(),
+          )
+          .slice(0, 8)
+      : [];
     return {
       seo_title: str("seo_title"),
       seo_meta_description: str("seo_meta_description"),
@@ -200,6 +241,8 @@ export async function generateSeoFields(
       section_amenities: str("section_amenities"),
       section_getting_around: str("section_getting_around"),
       section_developer: str("section_developer"),
+      section_faq: faq,
+      section_buying: str("section_buying"),
     };
   } catch {
     return null;
@@ -222,11 +265,14 @@ export async function maybeGenerateSeoOnPublish(
     const { data: page } = await supabase
       .from("public_project_pages")
       .select(
-        "seo_title, seo_meta_description, page_summary, page_description, section_intro, section_amenities, section_getting_around, section_developer",
+        "seo_title, seo_meta_description, page_summary, page_description, section_intro, section_amenities, section_getting_around, section_developer, section_faq, section_buying",
       )
       .eq("project_id", projectId)
       .maybeSingle();
     if (!page) return false;
+
+    const hasFaq =
+      Array.isArray(page.section_faq) && page.section_faq.length > 0;
 
     // Already fully populated — nothing to do (no AI call).
     if (
@@ -237,7 +283,9 @@ export async function maybeGenerateSeoOnPublish(
       page.section_intro &&
       page.section_amenities &&
       page.section_getting_around &&
-      page.section_developer
+      page.section_developer &&
+      hasFaq &&
+      page.section_buying
     ) {
       return false;
     }
@@ -245,7 +293,7 @@ export async function maybeGenerateSeoOnPublish(
     const gen = await generateSeoFields(projectId, supabase);
     if (!gen) return false;
 
-    const update: Record<string, string> = {};
+    const update: Record<string, unknown> = {};
     if (!page.seo_title) update.seo_title = gen.seo_title;
     if (!page.seo_meta_description)
       update.seo_meta_description = gen.seo_meta_description;
@@ -258,6 +306,10 @@ export async function maybeGenerateSeoOnPublish(
       update.section_getting_around = gen.section_getting_around;
     if (!page.section_developer)
       update.section_developer = gen.section_developer;
+    if (!hasFaq && gen.section_faq && gen.section_faq.length > 0)
+      update.section_faq = gen.section_faq;
+    if (!page.section_buying && gen.section_buying)
+      update.section_buying = gen.section_buying;
 
     if (Object.keys(update).length > 0) {
       await supabase
