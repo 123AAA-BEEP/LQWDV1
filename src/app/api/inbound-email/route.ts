@@ -9,6 +9,7 @@ import {
   extractCandidateUrls,
   fetchLinkContext,
 } from "@/lib/email-intake/fetch-links";
+import { sendEmail, brandedEmail } from "@/lib/email";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -115,7 +116,19 @@ export async function POST(request: Request) {
         published: result.published,
         notes: result.notes,
       });
+
+      // The owner asked to be pinged whenever an intake CAN'T go live on its
+      // own (no geography / no corroboration / error) so a human can finish it.
+      if (!result.published) {
+        await sendIntakeReviewPing({
+          subject,
+          action: result.action,
+          notes: result.notes,
+          projectId: result.project_id,
+        });
+      }
     } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
       await admin.from("email_intake_log").insert({
         from_email: from,
         subject,
@@ -123,7 +136,13 @@ export async function POST(request: Request) {
         raw_html: html,
         attachment_count: images.length,
         action: "error",
-        notes: e instanceof Error ? e.message : String(e),
+        notes: message,
+      });
+      await sendIntakeReviewPing({
+        subject,
+        action: "error",
+        notes: message,
+        projectId: null,
       });
     }
   });
@@ -131,5 +150,47 @@ export async function POST(request: Request) {
   return new Response(JSON.stringify({ ok: true }), {
     status: 200,
     headers: { "Content-Type": "application/json" },
+  });
+}
+
+function escHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+/**
+ * Ops alert when an intake lands as anything short of published — the email
+ * came in hot but the machine couldn't finish the job (usually: no reliable
+ * geography). Fire-and-forget; never blocks the pipeline.
+ */
+async function sendIntakeReviewPing(opts: {
+  subject: string | null;
+  action: string;
+  notes: string;
+  projectId: string | null;
+}) {
+  const to = process.env.LEADS_NOTIFY_EMAIL ?? "leads@getliqwd.com";
+  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "https://liqwd.ca";
+  const ctaUrl = opts.projectId
+    ? `${base}/dashboard/admin/projects/${opts.projectId}`
+    : `${base}/dashboard/admin/email-intake`;
+
+  await sendEmail({
+    to,
+    subject: `Intake needs review (${opts.action}): ${opts.subject ?? "no subject"}`,
+    html: brandedEmail({
+      heading: "An intake email couldn't auto-publish",
+      body:
+        `<strong>Email:</strong> ${escHtml(opts.subject ?? "(no subject)")}<br>` +
+        `<strong>Outcome:</strong> ${escHtml(opts.action)}<br>` +
+        `<strong>Why:</strong> ${escHtml(opts.notes)}<br><br>` +
+        "Add the missing details (usually the city/address) and publish when ready.",
+      ctaUrl,
+      ctaLabel: opts.projectId ? "Open the draft" : "Open the intake log",
+      footnote: "LIQWD internal notification.",
+    }),
   });
 }

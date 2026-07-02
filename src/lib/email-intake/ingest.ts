@@ -4,6 +4,7 @@ import { slugify } from "@/lib/slug";
 import { findExistingProjectFuzzy } from "@/lib/projects-dedup";
 import { maybeGenerateSeoOnPublish } from "@/lib/seo";
 import { pingIndexNow } from "@/lib/indexnow";
+import { researchProject, type ResearchResult } from "./research";
 import type { ExtractedProject, InboundImage } from "./extract";
 
 type Admin = ReturnType<typeof createAdminClient>;
@@ -71,7 +72,22 @@ async function publishAdmin(admin: Admin, projectId: string, slug: string) {
       published_at: now,
     })
     .eq("id", projectId);
-  await maybeGenerateSeoOnPublish(projectId, admin);
+
+  // SEO generation is a 30-60s LLM call and the intake webhook lives inside a
+  // hard 60s budget (now shared with the web-research pass). Hand it to the
+  // backfill endpoint, which runs as its own function with its own budget —
+  // the 1.5s race just gives the request time to leave the socket.
+  const base = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://liqwd.ca").replace(/\/+$/, "");
+  const key = process.env.INBOUND_EMAIL_SECRET;
+  if (key) {
+    await Promise.race([
+      fetch(`${base}/api/seo-backfill?key=${encodeURIComponent(key)}&limit=1`).catch(() => null),
+      new Promise((r) => setTimeout(r, 1_500)),
+    ]);
+  } else {
+    await maybeGenerateSeoOnPublish(projectId, admin);
+  }
+
   // First-to-market: tell search engines the moment the page exists.
   await pingIndexNow([`/projects/${slug}`, "/projects", "/sitemap.xml"]);
 }
@@ -213,27 +229,55 @@ export async function ingestExtractedProject(
       };
     }
 
-    // ---- CREATE a new draft, then auto-publish if confident ----------------
+    // ---- CREATE: research thin drops, then auto-publish when geography holds
+    // Hot-drop rule: geography is the publish gate, not raw email confidence.
+    // When the email is thin (no city/address or low confidence), cross-
+    // reference the open web (builder site, UrbanToronto, Urbanation, BBH…)
+    // to pin the address and corroborate the project.
+    let research: ResearchResult | null = null;
+    const thin =
+      !ex.city || !ex.address_full || ex.confidence < PUBLISH_CONFIDENCE;
+    if (thin) {
+      research = await researchProject(ex);
+    }
+    const merged = {
+      city: ex.city ?? research?.city ?? null,
+      address_full: ex.address_full ?? research?.address_full ?? null,
+      builder_name: ex.builder_name ?? research?.builder_name ?? null,
+      project_type: ex.project_type ?? research?.project_type ?? null,
+      price_from: ex.price_from ?? research?.price_from ?? null,
+      bedrooms_summary: ex.bedrooms_summary ?? research?.bedrooms_summary ?? null,
+      occupancy_estimate_text:
+        ex.occupancy_estimate_text ?? research?.occupancy_estimate_text ?? null,
+    };
+    const researchNote = research
+      ? research.found
+        ? ` | web-research: corroborated (${research.confidence.toFixed(2)}) via ${research.sources.slice(0, 3).join(", ") || "sources"}`
+        : " | web-research: could not corroborate"
+      : "";
+
     const slug = slugify(ex.project_name);
     const { data: created, error: insErr } = await admin
       .from("projects")
       .insert({
         slug,
         project_name: ex.project_name,
-        builder_name: ex.builder_name,
-        builder_names_raw: ex.builder_name,
-        city: ex.city ?? "Unknown",
-        address_full: ex.address_full,
-        project_type: normType(ex.project_type),
-        price_from_public: ex.price_from,
+        builder_name: merged.builder_name,
+        builder_names_raw: merged.builder_name,
+        city: merged.city ?? "Unknown",
+        address_full: merged.address_full,
+        project_type: normType(merged.project_type),
+        price_from_public: merged.price_from,
         price_to_public: ex.price_to,
-        bedrooms_summary: ex.bedrooms_summary,
-        occupancy_estimate_text: ex.occupancy_estimate_text,
+        bedrooms_summary: merged.bedrooms_summary,
+        occupancy_estimate_text: merged.occupancy_estimate_text,
         record_status: "draft",
         external_source: "email_intake",
         external_source_url: ex.contact_email ? `mailto:${ex.contact_email}` : null,
-        import_notes: provenance,
-        description_ai_draft: ex.incentives,
+        import_notes: provenance + researchNote,
+        description_ai_draft: [ex.incentives, research?.facts_summary]
+          .filter(Boolean)
+          .join("\n\n") || null,
       })
       .select("id")
       .single();
@@ -248,23 +292,32 @@ export async function ingestExtractedProject(
       await attachPortal(admin, projectId, ex.broker_portal_url, ex.broker_portal_name);
     await attachCommission(admin, projectId, ex.commission_summary, ex.commission_percent);
 
-    const canPublish = ex.confidence >= PUBLISH_CONFIDENCE && Boolean(ex.city);
+    // Publish when we have geography AND either a confident extraction or an
+    // independent web corroboration. Draft (+ ops ping upstream) otherwise.
+    const canPublish =
+      Boolean(merged.city) &&
+      (ex.confidence >= PUBLISH_CONFIDENCE || research?.found === true);
     if (canPublish) {
       await publishAdmin(admin, projectId, slug);
       return {
         action: "created",
         project_id: projectId,
         published: true,
-        notes: `Created + published “${ex.project_name}” (confidence ${ex.confidence.toFixed(2)}).`,
+        notes: `Created + published “${ex.project_name}” (confidence ${ex.confidence.toFixed(2)}${
+          research?.found
+            ? `; corroborated by web research: ${research.sources.slice(0, 2).join(", ") || "sources"}`
+            : ""
+        }).`,
       };
     }
+    const draftReason = !merged.city
+      ? "no geographical location — email and web research both came up empty"
+      : `confidence ${ex.confidence.toFixed(2)} below ${PUBLISH_CONFIDENCE} and web research couldn't corroborate the project`;
     return {
       action: "draft",
       project_id: projectId,
       published: false,
-      notes: `Created as draft “${ex.project_name}” — ${
-        ex.city ? `confidence ${ex.confidence.toFixed(2)} below ${PUBLISH_CONFIDENCE}` : "no city extracted"
-      }; review before publishing.`,
+      notes: `Created as draft “${ex.project_name}” — ${draftReason}; needs your review.`,
     };
   } catch (e) {
     return {
