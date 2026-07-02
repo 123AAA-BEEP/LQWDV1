@@ -76,8 +76,14 @@ export async function POST(request: Request) {
     try {
       // Hot-drop support: a forwarded email is often just a link to a thin
       // landing page. Follow up to two links, feed their text to the extractor,
-      // and pull their hero renderings for the vision pass + hero upload.
-      const linkCtx = await fetchLinkContext(extractCandidateUrls(text, html));
+      // and pull their hero renderings for the vision pass + gallery. Raced at
+      // 22s so slow sites can't eat the webhook's 60s budget.
+      const linkCtx = await Promise.race([
+        fetchLinkContext(extractCandidateUrls(text, html)),
+        new Promise<{ pages: never[]; images: never[] }>((r) =>
+          setTimeout(() => r({ pages: [], images: [] }), 22_000),
+        ),
+      ]);
       const mergedText = [
         text ?? "",
         ...linkCtx.pages.map(

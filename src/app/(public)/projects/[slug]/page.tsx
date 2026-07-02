@@ -67,6 +67,25 @@ async function getMoreFromBuilder(
   return (data as MiniProject[] | null) ?? [];
 }
 
+interface GalleryImage {
+  url: string;
+  alt_text: string | null;
+  media_type: string | null;
+}
+
+/** Public gallery images (renderings, photos, floor plans) for the project. */
+async function getGallery(projectId: string): Promise<GalleryImage[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("project_media")
+    .select("url, alt_text, media_type")
+    .eq("project_id", projectId)
+    .eq("is_public", true)
+    .order("sort_order", { ascending: true })
+    .limit(12);
+  return (data as GalleryImage[] | null) ?? [];
+}
+
 /** Nearby published projects (same city) — the internal-link mesh Google
  *  follows to discover new pages, and where visitors go next. */
 async function getNearbyProjects(
@@ -126,9 +145,12 @@ export async function generateMetadata({
 }
 
 /** schema.org structured data: the residence + offer, breadcrumbs, and FAQ. */
-function jsonLd(project: PublicProject): object[] {
+function jsonLd(project: PublicProject, galleryUrls: string[] = []): object[] {
   const pageUrl = `${SITE_URL}/projects/${project.slug}`;
   const blocks: object[] = [];
+  const allImages = [project.hero_image_url, ...galleryUrls].filter(
+    (u): u is string => Boolean(u),
+  );
 
   const residence: Record<string, unknown> = {
     "@context": "https://schema.org",
@@ -138,7 +160,7 @@ function jsonLd(project: PublicProject): object[] {
     url: pageUrl,
     description:
       project.seo_meta_description ?? project.page_summary ?? undefined,
-    image: project.hero_image_url ?? undefined,
+    image: allImages.length ? allImages : undefined,
     address: {
       "@type": "PostalAddress",
       addressLocality: project.city ?? undefined,
@@ -242,6 +264,10 @@ export default async function PublicProjectPage({
     project.project_id,
     ...moreFromBuilder.map((m) => m.project_id),
   ]);
+  // Gallery: everything public except a duplicate of the hero itself.
+  const gallery = (await getGallery(project.project_id)).filter(
+    (g) => g.url !== project.hero_image_url,
+  );
   const intro =
     project.section_intro ??
     project.page_description ??
@@ -252,7 +278,7 @@ export default async function PublicProjectPage({
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 pb-24 lg:pb-10">
       {/* Structured data for rich results + AI search */}
-      {jsonLd(project).map((block, i) => (
+      {jsonLd(project, gallery.map((g) => g.url)).map((block, i) => (
         <script
           key={i}
           type="application/ld+json"
@@ -318,6 +344,34 @@ export default async function PublicProjectPage({
               />
             ) : null}
           </dl>
+
+          {/* Gallery — renderings, photos, floor plans */}
+          {gallery.length > 0 ? (
+            <section className="mt-8">
+              <h2 className="text-xl font-semibold tracking-tight text-ink">
+                Gallery
+              </h2>
+              <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {gallery.map((g) => (
+                  <a
+                    key={g.url}
+                    href={g.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group overflow-hidden rounded-xl border border-slate-200 bg-slate-100"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={g.url}
+                      alt={g.alt_text ?? project.project_name}
+                      loading="lazy"
+                      className="aspect-[4/3] w-full object-cover transition-transform duration-200 group-hover:scale-[1.03]"
+                    />
+                  </a>
+                ))}
+              </div>
+            </section>
+          ) : null}
 
           <Section title="Local amenities" text={project.section_amenities} />
           <Section
