@@ -33,6 +33,7 @@ export async function submitLead(
   const ref = String(formData.get("ref") ?? "")
     .trim()
     .toUpperCase();
+  const isRealtor = String(formData.get("is_realtor") ?? "") === "yes";
 
   if (!project_id || !lead_name || !lead_email) {
     return { error: "Please provide your name and email." };
@@ -71,6 +72,7 @@ export async function submitLead(
     lead_email,
     lead_phone: lead_phone || null,
     message: message || null,
+    is_realtor: isRealtor,
     status: "new",
   });
 
@@ -89,6 +91,12 @@ export async function submitLead(
     assignedRealtorId,
     referredById,
   });
+
+  // An agent registering on a public page is a recruitment lead: respond to
+  // their inquiry with the free-account pitch (agents get leads like this one).
+  if (isRealtor) {
+    await sendRealtorRecruitEmail(admin, { project_id, lead_name, lead_email });
+  }
 
   // Alert the assigned realtor so they can follow up fast (no-op until Resend
   // is configured; never throws — must not affect the buyer's submission).
@@ -184,6 +192,46 @@ function esc(s: string): string {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+}
+
+/**
+ * Recruitment reply when the person registering identified as an agent: they
+ * asked about a project, so respond with what LIQWD does for agents — free
+ * buyer leads on pages exactly like the one they used. Fire-and-forget.
+ */
+async function sendRealtorRecruitEmail(
+  admin: ReturnType<typeof createAdminClient>,
+  opts: { project_id: string; lead_name: string; lead_email: string },
+) {
+  const { data: project } = await admin
+    .from("projects")
+    .select("project_name")
+    .eq("id", opts.project_id)
+    .maybeSingle();
+  const projectName =
+    (project?.project_name as string | undefined) ?? "this project";
+  const firstName = opts.lead_name.trim().split(/\s+/)[0] || "there";
+  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "https://liqwd.ca";
+
+  await sendEmail({
+    to: opts.lead_email,
+    replyTo: process.env.LEADS_NOTIFY_EMAIL ?? "leads@getliqwd.com",
+    subject: `Agents get buyer leads from pages like ${projectName} — free`,
+    html: brandedEmail({
+      heading: `Hi ${esc(firstName)} — saw you registered for ${esc(projectName)}`,
+      body:
+        "Since you're an agent: LIQWD routes <strong>buyer leads from project pages " +
+        "exactly like this one</strong> to verified agents — free. Claim a project " +
+        "page and its inquiries go to you, with commission details and broker " +
+        "portals for every development in one place.<br><br>" +
+        "It takes two minutes: create your free account, verify your RECO once, " +
+        "and you're in the network.",
+      ctaUrl: `${base}/signup`,
+      ctaLabel: "Create my free agent account",
+      footnote:
+        "You're receiving this one-time note because you registered on a LIQWD project page and told us you're an agent. No further emails unless you sign up.",
+    }),
+  });
 }
 
 /**

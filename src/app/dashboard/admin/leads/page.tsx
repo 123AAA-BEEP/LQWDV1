@@ -21,6 +21,7 @@ interface Lead {
   lead_email: string;
   lead_phone: string | null;
   message: string | null;
+  is_realtor: boolean | null;
   status: string | null;
   created_at: string;
 }
@@ -63,7 +64,7 @@ export default async function AdminLeadsPage({
   const { data: leadData } = await supabase
     .from("project_leads")
     .select(
-      "id, project_id, assigned_realtor_profile_id, referred_by_profile_id, lead_name, lead_email, lead_phone, message, status, created_at",
+      "id, project_id, assigned_realtor_profile_id, referred_by_profile_id, lead_name, lead_email, lead_phone, message, is_realtor, status, created_at",
     )
     .order("created_at", { ascending: false })
     .limit(500);
@@ -191,7 +192,14 @@ export default async function AdminLeadsPage({
                   {/* Top line: name + status */}
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div>
-                      <p className="font-semibold text-slate-800">{l.lead_name}</p>
+                      <p className="font-semibold text-slate-800">
+                        {l.lead_name}
+                        {l.is_realtor ? (
+                          <Badge tone="brand" className="ml-2 align-middle">
+                            Agent — recruit
+                          </Badge>
+                        ) : null}
+                      </p>
                       <p className="text-xs text-slate-400">
                         {new Date(l.created_at).toLocaleString("en-CA")}
                         {project ? (

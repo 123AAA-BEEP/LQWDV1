@@ -67,6 +67,21 @@ export function LeadForm({
       <Field label="Message (optional)" htmlFor="message">
         <Textarea id="message" name="message" />
       </Field>
+      <fieldset>
+        <legend className="text-sm font-medium text-slate-700">
+          Are you a real estate agent?
+        </legend>
+        <div className="mt-1.5 flex gap-4 text-sm text-slate-600">
+          <label className="flex items-center gap-1.5">
+            <input type="radio" name="is_realtor" value="no" defaultChecked className="size-4" />
+            No
+          </label>
+          <label className="flex items-center gap-1.5">
+            <input type="radio" name="is_realtor" value="yes" className="size-4" />
+            Yes
+          </label>
+        </div>
+      </fieldset>
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
       <Button
         type="submit"
