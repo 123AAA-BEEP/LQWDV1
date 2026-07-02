@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Card, CardBody } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge, verificationBadgeTone } from "@/components/ui/badge";
+import { Input } from "@/components/ui/field";
 import { VERIFICATION_LABELS, type VerificationStatus } from "@/lib/types";
 import { setRealtorTier } from "./actions";
 
@@ -20,11 +21,18 @@ interface Row {
   verification_status: VerificationStatus;
 }
 
-export default async function RealtorsAdminPage() {
+export default async function RealtorsAdminPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
+  const { q: rawQ } = await searchParams;
+  const q = (rawQ ?? "").trim();
+
   const supabase = await createClient();
   // Every realtor account — approved first, then newest — so an admin can open
   // any agent and review their full intake (contact, RECO #, status, etc.).
-  const { data } = await supabase
+  let request = supabase
     .from("profiles")
     .select(
       "id, first_name, last_name, email, brokerage_name, realtor_tier, verification_status",
@@ -32,6 +40,12 @@ export default async function RealtorsAdminPage() {
     .eq("role", "realtor")
     .order("verification_status", { ascending: true })
     .order("created_at", { ascending: false });
+  if (q) {
+    request = request.or(
+      `first_name.ilike.%${q}%,last_name.ilike.%${q}%,email.ilike.%${q}%,brokerage_name.ilike.%${q}%`,
+    );
+  }
+  const { data } = await request;
 
   const rows = (data as unknown as Row[]) ?? [];
 
@@ -48,10 +62,31 @@ export default async function RealtorsAdminPage() {
         </p>
       </div>
 
+      <form method="get" className="flex gap-2">
+        <Input
+          name="q"
+          aria-label="Search realtors by name, email, or brokerage"
+          placeholder="Search by name, email, or brokerage…"
+          defaultValue={q}
+          className="max-w-md flex-1"
+        />
+        <Button type="submit" variant="secondary">
+          Search
+        </Button>
+        {q ? (
+          <Link
+            href="/dashboard/admin/realtors"
+            className="self-center text-sm font-medium text-brand-700 hover:underline"
+          >
+            Clear
+          </Link>
+        ) : null}
+      </form>
+
       {rows.length === 0 ? (
         <Card>
           <CardBody className="text-center text-sm text-slate-500">
-            No realtors yet.
+            {q ? `No realtors match “${q}”.` : "No realtors yet."}
           </CardBody>
         </Card>
       ) : (

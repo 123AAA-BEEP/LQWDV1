@@ -29,6 +29,31 @@ export function Select({ className, ...props }: ComponentProps<"select">) {
   return <select className={cn(controlClasses, className)} {...props} />;
 }
 
+/** The one checkbox style: brand accent + visible focus, everywhere. */
+export function Checkbox({ className, ...props }: ComponentProps<"input">) {
+  return (
+    <input
+      type="checkbox"
+      className={cn(
+        "size-4 shrink-0 rounded border-slate-300 accent-brand-600",
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
+/** The one radio style — pairs with Checkbox. */
+export function Radio({ className, ...props }: ComponentProps<"input">) {
+  return (
+    <input
+      type="radio"
+      className={cn("size-4 shrink-0 accent-brand-600", className)}
+      {...props}
+    />
+  );
+}
+
 export function Field({
   label,
   htmlFor,

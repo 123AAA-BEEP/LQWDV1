@@ -23,7 +23,12 @@ const TABS = [
   { href: "/dashboard/admin/settings", label: "Settings" },
 ];
 
-export function AdminNav() {
+export function AdminNav({
+  counts = {},
+}: {
+  /** Pending-work count per tab href (see lib/admin-counts) — 0 hides the badge. */
+  counts?: Record<string, number>;
+}) {
   const pathname = usePathname();
   return (
     <nav className="flex flex-wrap gap-1 border-b border-slate-200">
@@ -31,18 +36,27 @@ export function AdminNav() {
         const active = tab.exact
           ? pathname === tab.href
           : pathname.startsWith(tab.href);
+        const pending = counts[tab.href] ?? 0;
         return (
           <Link
             key={tab.href}
             href={tab.href}
             className={cn(
-              "-mb-px border-b-2 px-3 py-2 text-sm font-medium",
+              "-mb-px inline-flex items-center gap-1.5 border-b-2 px-3 py-2 text-sm font-medium",
               active
                 ? "border-brand-600 text-ink"
                 : "border-transparent text-slate-500 hover:text-slate-800",
             )}
           >
             {tab.label}
+            {pending > 0 ? (
+              <span
+                aria-label={`${pending} pending`}
+                className="inline-flex min-w-[1.15rem] items-center justify-center rounded-full bg-brand-600 px-1 text-[10px] font-semibold leading-4 text-white"
+              >
+                {pending > 99 ? "99+" : pending}
+              </span>
+            ) : null}
           </Link>
         );
       })}

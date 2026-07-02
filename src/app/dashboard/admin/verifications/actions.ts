@@ -6,6 +6,7 @@ import { assertAdmin } from "@/lib/admin";
 import { awardReferralVerificationBonus } from "@/lib/rewards";
 import { sendAgentVerifiedEmail } from "@/lib/email";
 import { publishHeldListingsFor } from "@/lib/off-market";
+import { redirectWithFlash } from "@/lib/flash";
 
 type Decision = "approved" | "rejected" | "suspended";
 
@@ -54,6 +55,15 @@ export async function decideVerification(formData: FormData) {
 
   revalidatePath("/dashboard/admin/verifications");
   revalidatePath("/dashboard/admin");
+  redirectWithFlash(
+    "/dashboard/admin/verifications",
+    decision === "approved"
+      ? "Agent approved — broker access unlocked and any held listings published."
+      : decision === "rejected"
+        ? "Verification rejected."
+        : "Agent suspended.",
+    decision === "approved" ? "success" : "info",
+  );
 }
 
 /**

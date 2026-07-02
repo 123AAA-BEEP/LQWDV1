@@ -2,7 +2,13 @@ import type { ComponentProps } from "react";
 import { cn } from "@/lib/cn";
 import type { VerificationStatus } from "@/lib/types";
 
-type Tone = "neutral" | "success" | "warning" | "danger" | "brand";
+type Tone =
+  | "neutral"
+  | "success"
+  | "warning"
+  | "danger"
+  | "brand"
+  | "featured";
 
 const tones: Record<Tone, string> = {
   neutral: "bg-slate-100 text-slate-700",
@@ -10,6 +16,9 @@ const tones: Record<Tone, string> = {
   warning: "bg-amber-100 text-amber-800",
   danger: "bg-red-100 text-red-800",
   brand: "bg-brand-100 text-brand-800",
+  // Promotional highlight (Featured / Sponsored / Wanted) — solid gold so it
+  // never reads as the soft-amber "warning" status tone.
+  featured: "bg-amber-500 text-white",
 };
 
 export function Badge({

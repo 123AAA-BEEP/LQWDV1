@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Field, Input, Textarea } from "@/components/ui/field";
+import { Field, Input, Radio, Textarea } from "@/components/ui/field";
 import { submitLead } from "./actions";
 
 export function LeadForm({
@@ -77,22 +77,11 @@ export function LeadForm({
         </legend>
         <div className="mt-1.5 flex gap-4 text-sm text-slate-600">
           <label className="flex items-center gap-1.5">
-            <input
-              type="radio"
-              name="is_realtor"
-              value="no"
-              defaultChecked
-              className="size-4 accent-brand-600"
-            />
+            <Radio name="is_realtor" value="no" defaultChecked />
             No
           </label>
           <label className="flex items-center gap-1.5">
-            <input
-              type="radio"
-              name="is_realtor"
-              value="yes"
-              className="size-4 accent-brand-600"
-            />
+            <Radio name="is_realtor" value="yes" />
             Yes
           </label>
         </div>

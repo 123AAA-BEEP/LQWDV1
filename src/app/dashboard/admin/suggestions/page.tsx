@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Card, CardBody } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { FlashNotice } from "@/components/ui/flash-notice";
 import { Field, Select, Textarea } from "@/components/ui/field";
 import {
   SUGGESTION_STATUS,
@@ -46,7 +47,12 @@ function submitterName(r: Row): string {
   );
 }
 
-export default async function SuggestionsQueue() {
+export default async function SuggestionsQueue({
+  searchParams,
+}: {
+  searchParams: Promise<{ flash?: string; flash_tone?: string }>;
+}) {
+  const sp = await searchParams;
   const supabase = await createClient();
   const select =
     "id, category, title, body, status, open_to_collaborate, contact_ok, public_response, admin_notes, created_at, submitter:profiles!submitted_by_profile_id(first_name,last_name,email)";
@@ -70,6 +76,7 @@ export default async function SuggestionsQueue() {
 
   return (
     <div className="space-y-8">
+      <FlashNotice searchParams={sp} />
       <section className="space-y-3">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
           Open ideas ({openRows.length})

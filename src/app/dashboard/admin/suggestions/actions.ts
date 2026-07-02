@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { assertAdmin } from "@/lib/admin";
+import { redirectWithFlash } from "@/lib/flash";
+import { SUGGESTION_STATUS, type SuggestionStatus } from "@/lib/status";
 
 const STATUSES = [
   "new",
@@ -42,4 +44,10 @@ export async function setSuggestionStatus(formData: FormData) {
 
   revalidatePath("/dashboard/admin/suggestions");
   revalidatePath("/dashboard/admin");
+  redirectWithFlash(
+    "/dashboard/admin/suggestions",
+    `Suggestion marked "${SUGGESTION_STATUS[status as SuggestionStatus].label}"${
+      publicResponse ? " — your response is visible to the submitter" : ""
+    }.`,
+  );
 }

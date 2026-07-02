@@ -255,7 +255,7 @@ export default async function ProjectsPage({
                   <CardBody>
                     <div className="flex flex-wrap items-center gap-2">
                       {p.is_featured ? (
-                        <Badge tone="warning">★ Featured</Badge>
+                        <Badge tone="featured">★ Featured</Badge>
                       ) : null}
                       {p.sales_status ? (
                         <Badge tone="brand" className="capitalize">

@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardBody } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { ConfirmButton } from "@/components/ui/confirm-button";
 import { Badge, verificationBadgeTone } from "@/components/ui/badge";
+import { FlashNotice } from "@/components/ui/flash-notice";
 import { VERIFICATION_LABELS } from "@/lib/types";
 import type { VerificationStatus } from "@/lib/types";
 import { decideVerification } from "./actions";
@@ -33,7 +35,12 @@ function fullName(r: Row): string {
   return name || r.requester?.email || "Unknown user";
 }
 
-export default async function VerificationsQueue() {
+export default async function VerificationsQueue({
+  searchParams,
+}: {
+  searchParams: Promise<{ flash?: string; flash_tone?: string }>;
+}) {
+  const sp = await searchParams;
   const supabase = await createClient();
   const select =
     "id, profile_id, status, reco_registration_number, brokerage_name_submitted, notes, created_at, reviewed_at, requester:profiles!profile_id(first_name,last_name,email)";
@@ -76,6 +83,7 @@ export default async function VerificationsQueue() {
 
   return (
     <div className="space-y-8">
+      <FlashNotice searchParams={sp} />
       <section className="space-y-3">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
           Pending ({totalPending})
@@ -246,6 +254,9 @@ function DecisionButton({
   label: string;
   variant: "primary" | "secondary" | "danger";
 }) {
+  // Approve is the happy path; negative decisions lock the agent out, so they
+  // get a confirmation gate.
+  const needsConfirm = decision !== "approved";
   return (
     <form action={decideVerification}>
       {requestId ? (
@@ -253,9 +264,26 @@ function DecisionButton({
       ) : null}
       <input type="hidden" name="profile_id" value={profileId} />
       <input type="hidden" name="decision" value={decision} />
-      <Button type="submit" size="sm" variant={variant}>
-        {label}
-      </Button>
+      {needsConfirm ? (
+        <ConfirmButton
+          type="submit"
+          size="sm"
+          variant={variant}
+          title={`${label} this agent?`}
+          message={
+            decision === "suspended"
+              ? "Suspending immediately locks the agent out of broker tools and hides any published listings held by their account."
+              : "Rejecting keeps the agent unverified — they'll stay locked out of broker tools until they resubmit and are approved."
+          }
+          confirmLabel={`Yes, ${label.toLowerCase()}`}
+        >
+          {label}
+        </ConfirmButton>
+      ) : (
+        <Button type="submit" size="sm" variant={variant}>
+          {label}
+        </Button>
+      )}
     </form>
   );
 }

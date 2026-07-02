@@ -6,6 +6,7 @@ import { assertAdmin } from "@/lib/admin";
 import { slugify } from "@/lib/slug";
 import { findExistingProject } from "@/lib/projects-dedup";
 import { rewardSubmissionApproved } from "@/lib/rewards";
+import { redirectWithFlash } from "@/lib/flash";
 
 /**
  * Approves a submission: creates a DRAFT canonical project from the submitted
@@ -81,6 +82,12 @@ export async function approveSubmission(formData: FormData) {
 
   revalidatePath("/dashboard/admin/submissions");
   revalidatePath("/dashboard/admin");
+  redirectWithFlash(
+    "/dashboard/admin/submissions",
+    mergedNote
+      ? "Approved — linked to an existing project (duplicate name + city), no new project created."
+      : "Approved — a draft project was created; enrich and publish it from the Projects tab.",
+  );
 }
 
 /** Rejects or requests changes on a submission, with optional admin notes. */
@@ -107,4 +114,11 @@ export async function setSubmissionStatus(formData: FormData) {
 
   revalidatePath("/dashboard/admin/submissions");
   revalidatePath("/dashboard/admin");
+  redirectWithFlash(
+    "/dashboard/admin/submissions",
+    status === "rejected"
+      ? "Submission rejected."
+      : "Changes requested — the submitter sees your notes.",
+    "info",
+  );
 }

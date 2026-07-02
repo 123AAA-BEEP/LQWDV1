@@ -1,91 +1,70 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
 import { Card, CardBody } from "@/components/ui/card";
+import { getAdminQueueCounts } from "@/lib/admin-counts";
 
 export const metadata: Metadata = { title: "Admin overview" };
 export const dynamic = "force-dynamic";
 
-async function pendingCount(
-  table: string,
-  statuses: string[],
-): Promise<number> {
-  const supabase = await createClient();
-  const { count } = await supabase
-    .from(table)
-    .select("id", { count: "exact", head: true })
-    .in("status", statuses);
-  return count ?? 0;
-}
-
 export default async function AdminOverview() {
-  const [
-    newLeads,
-    verifications,
-    submissions,
-    updates,
-    proposals,
-    rfpResponses,
-    rentalReferrals,
-    mediaCandidates,
-    suggestions,
-  ] = await Promise.all([
-    pendingCount("project_leads", ["new"]),
-    pendingCount("verification_requests", ["pending"]),
-    pendingCount("property_submissions", ["pending_review", "needs_changes"]),
-    pendingCount("property_update_requests", ["pending_review", "needs_changes"]),
-    pendingCount("project_proposals", ["submitted", "under_review"]),
-    pendingCount("deal_rfp_proposals", ["submitted"]),
-    pendingCount("rental_referrals", ["new", "received", "in_progress"]),
-    pendingCount("project_media_candidates", ["pending"]),
-    pendingCount("platform_suggestions", ["new"]),
-  ]);
+  // Same counts source as the nav badges, so the two never disagree.
+  const counts = await getAdminQueueCounts();
 
   const cards = [
     {
       label: "New leads",
-      count: newLeads,
+      count: counts["/dashboard/admin/leads"],
       href: "/dashboard/admin/leads",
     },
     {
+      label: "Invite drafts to review",
+      count: counts["/dashboard/admin/invites"],
+      href: "/dashboard/admin/invites",
+    },
+    {
       label: "Pending verifications",
-      count: verifications,
+      count: counts["/dashboard/admin/verifications"],
       href: "/dashboard/admin/verifications",
     },
     {
       label: "Submissions to review",
-      count: submissions,
+      count: counts["/dashboard/admin/submissions"],
       href: "/dashboard/admin/submissions",
     },
     {
       label: "Update requests",
-      count: updates,
+      count: counts["/dashboard/admin/updates"],
       href: "/dashboard/admin/updates",
     },
     {
       label: "Proposals to review",
-      count: proposals,
+      count: counts["/dashboard/admin/proposals"],
       href: "/dashboard/admin/proposals",
     },
     {
       label: "RFP responses",
-      count: rfpResponses,
+      count: counts["/dashboard/admin/rfps"],
       href: "/dashboard/admin/rfps",
     },
     {
       label: "Rental referrals",
-      count: rentalReferrals,
+      count: counts["/dashboard/admin/referrals"],
       href: "/dashboard/admin/referrals",
     },
     {
       label: "Media candidates",
-      count: mediaCandidates,
+      count: counts["/dashboard/admin/media-candidates"],
       href: "/dashboard/admin/media-candidates",
     },
     {
       label: "New suggestions",
-      count: suggestions,
+      count: counts["/dashboard/admin/suggestions"],
       href: "/dashboard/admin/suggestions",
+    },
+    {
+      label: "Email intake errors",
+      count: counts["/dashboard/admin/email-intake"],
+      href: "/dashboard/admin/email-intake",
     },
   ];
 

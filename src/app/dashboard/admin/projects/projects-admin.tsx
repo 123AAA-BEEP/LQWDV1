@@ -5,8 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Card, CardBody } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Select } from "@/components/ui/field";
+import { ConfirmButton } from "@/components/ui/confirm-button";
+import { Select, Checkbox } from "@/components/ui/field";
 import { RECORD_STATUS } from "@/lib/status";
 import type { RecordStatus } from "@/lib/status";
 import { bulkSetProjectStatus, bulkPublish, bulkUnpublish } from "./actions";
@@ -90,12 +90,7 @@ export function ProjectsAdmin({
       <Card>
         <CardBody className="flex flex-wrap items-center gap-3">
           <label className="flex items-center gap-2 text-sm text-slate-600">
-            <input
-              type="checkbox"
-              checked={allSelected}
-              onChange={toggleAll}
-              className="size-4 rounded border-slate-300"
-            />
+            <Checkbox checked={allSelected} onChange={toggleAll} />
             Select all ({rows.length})
           </label>
           <span className="text-sm text-slate-400">
@@ -113,14 +108,27 @@ export function ProjectsAdmin({
                 </option>
               ))}
             </Select>
-            <Button
+            <ConfirmButton
               type="button"
               size="sm"
-              onClick={apply}
               disabled={busy || selected.size === 0}
+              title="Apply bulk action"
+              message={`${
+                BULK_OPTIONS.find((o) => o.value === status)?.label ?? status
+              } ${selected.size} selected project${
+                selected.size === 1 ? "" : "s"
+              }? ${
+                status === "unpublish" || status === "archived"
+                  ? "This pulls them off the public site immediately."
+                  : status === "publish"
+                    ? "This puts them on the public site immediately."
+                    : "You can change status again at any time."
+              }`}
+              confirmLabel={busy ? "Applying…" : "Yes, apply"}
+              onConfirm={apply}
             >
               {busy ? "Applying…" : "Apply"}
-            </Button>
+            </ConfirmButton>
           </div>
         </CardBody>
       </Card>
@@ -132,11 +140,9 @@ export function ProjectsAdmin({
               key={p.id}
               className="flex items-center gap-3 px-5 py-4 hover:bg-slate-50"
             >
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={selected.has(p.id)}
                 onChange={() => toggle(p.id)}
-                className="size-4 shrink-0 rounded border-slate-300"
                 aria-label={`Select ${p.project_name}`}
               />
               <Link
