@@ -174,6 +174,23 @@ export default async function MarketplacePage({
     ? projects.filter((p) => !stripIds.has(p.project_id))
     : projects;
 
+  // "Just announced" — the newest pages, as plain crawlable links right below
+  // the hero. This is the crawl path search engines follow to find brand-new
+  // project pages fast (and where return visitors check for fresh releases).
+  let justAnnounced: { slug: string; project_name: string; city: string | null }[] = [];
+  if (!hasFilter) {
+    const { data: newest } = await supabase
+      .from("public_projects_view")
+      .select("slug, project_name, city, published_at")
+      .order("published_at", { ascending: false })
+      .limit(6);
+    justAnnounced = ((newest ?? []) as {
+      slug: string;
+      project_name: string;
+      city: string | null;
+    }[]);
+  }
+
   return (
     <div>
       {/* Hero */}
@@ -240,6 +257,35 @@ export default async function MarketplacePage({
           </form>
         </div>
       </section>
+
+      {/* Just announced — crawlable freshness strip */}
+      {justAnnounced.length > 0 ? (
+        <section className="border-b border-slate-200 bg-white">
+          <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-2 gap-y-1 px-6 py-3 text-sm">
+            <span className="font-semibold uppercase tracking-wide text-brand-700">
+              Just announced:
+            </span>
+            {justAnnounced.map((p, i) => (
+              <span key={p.slug} className="flex items-center gap-2">
+                <Link
+                  href={`/projects/${p.slug}`}
+                  className="text-slate-600 hover:text-ink hover:underline"
+                >
+                  {p.project_name}
+                  {p.city ? (
+                    <span className="text-slate-400"> · {p.city}</span>
+                  ) : null}
+                </Link>
+                {i < justAnnounced.length - 1 ? (
+                  <span aria-hidden className="text-slate-300">
+                    |
+                  </span>
+                ) : null}
+              </span>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       {/* Featured */}
       {featured.length > 0 ? (

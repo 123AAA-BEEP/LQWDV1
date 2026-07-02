@@ -158,6 +158,15 @@ export interface PublicProject {
   section_getting_around: string | null;
   section_developer: string | null;
   neighbourhood_features: NeighbourhoodFeatures | null;
+  // SEO expansion (migration 0051)
+  indexable: boolean | null;
+  published_at: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  project_type: string | null;
+  section_faq: { question: string; answer: string }[] | null;
+  section_buying: string | null;
+  page_updated_at: string | null;
 }
 
 /** A single nearby place from the OSM-sourced neighbourhood enrichment. */
