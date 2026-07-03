@@ -48,7 +48,25 @@ Used by the hero-sourcing pipeline (`candidatePageUrls` in `src/lib/hero-sourcin
 - Also useful via `WebSearch`: condonow, newinhomes.com, livabl.com, condoroyalty,
   therealtybulls, condoroyalty, homebaba, buzzbuzzhome.
 
-### 3. Bulk import provenance (already in the DB)
+### 3. Discovery engine (automated — Admin → Discovery)
+"Addresses lead, names trigger." Tables: `discovery_watch` (address-first),
+`discovery_signals` (name-bearing), `discovery_builders` (known universe).
+Daily cron `/api/cron/discovery`; manual/probe runs via
+`/api/discovery/sweep?key=…&source=…[&probe=1][&ui=1]`.
+- **Toronto Open Data — Development Applications** (CKAN, weekly): OPA /
+  rezoning / site-plan applications → watchlist rows with address, units,
+  storeys, months-to-years before marketing exists.
+- **UrbanToronto database** — `https://urbantoronto.ca/database/projects`
+  (daily): name + address + developer + storeys/units per project. The
+  cross-reference starting gun: a UT name matching a watched address publishes
+  immediately through the intake pipeline (research → SEO → IndexNow).
+- **BILD member directory** — `https://bildgta.ca` (weekly): the GTA
+  builder/developer census → `discovery_builders`; also seeded from our own
+  `projects.builder_name`. A known builder boosts signal confidence.
+- **Meta ads**: no public API for Canadian housing ads — forward ad creatives
+  to the intake inbox (the Summerhill flow); they ride the same pipeline.
+
+### 4. Bulk import provenance (already in the DB)
 - **Altus** inventory — the ~1,145-project bulk import. Dedup key is the Altus
   inventory # (stored in admin-only `import_notes`). Same name+city can be
   legitimately separate phases — don't blind-dedup.
