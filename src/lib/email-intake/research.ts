@@ -69,11 +69,20 @@ export async function researchProject(
             description: "condo | townhouse | single_family | mixed | other",
           },
           price_from: { type: ["number", "null"], description: "Starting price in CAD, only if stated by a source" },
-          bedrooms_summary: { type: ["string", "null"] },
-          occupancy_estimate_text: { type: ["string", "null"] },
+          bedrooms_summary: {
+            type: ["string", "null"],
+            description:
+              "Renders VERBATIM on the consumer page. Clean fact only, e.g. '1–3 bedroom suites, 486–1,253 sq ft'. NEVER name a website/source and never mention that sources disagree — reconcile into one clean statement.",
+          },
+          occupancy_estimate_text: {
+            type: ["string", "null"],
+            description:
+              "Renders VERBATIM on the consumer page. e.g. 'Estimated completion 2027' — or '2027–2028 (estimated)' when sources differ. NEVER name sources or narrate conflicts; citations belong in the sources array.",
+          },
           facts_summary: {
             type: ["string", "null"],
-            description: "2-4 sentences of verified facts about the project, with no speculation",
+            description:
+              "2-4 sentences of verified facts about the project, with no speculation and no source names in the prose (URLs go in the sources array).",
           },
           sources: {
             type: "array",
@@ -97,6 +106,11 @@ export async function researchProject(
         "and report ONLY facts a source actually states. Top priorities: the CITY and street " +
         "address, then builder, home type, pricing, occupancy. If you cannot corroborate the " +
         "project at all, report found=false. Never guess or fill gaps from intuition.\n\n" +
+        "IMPORTANT: bedrooms_summary and occupancy_estimate_text render word-for-word on the " +
+        "public consumer page. Write them as clean, neutral facts. Never name the websites you " +
+        "found them on and never describe disagreements between sources in those fields — when " +
+        "sources differ, reconcile to a range (e.g. 'Estimated completion 2027–2028'). Source " +
+        "URLs go only in the sources array.\n\n" +
         `What we have:\n${known}\n\nWhen done, call emit_research exactly once.`,
     },
   ];

@@ -19,13 +19,15 @@ export interface SeoFieldsValue {
 }
 
 const PROJECT_SELECT =
-  "project_name, builder_name, city, municipality, neighbourhood, province, address_full, intersection_primary, intersection_secondary, latitude, longitude, project_type, sales_status, construction_status, ownership_type, price_from_public, price_to_public, price_currency, occupancy_estimate_text, total_units, storeys, bedrooms_summary, size_range_sqft_min, size_range_sqft_max, description_short, description_long";
+  "project_name, builder_name, city, municipality, neighbourhood, province, address_full, intersection_primary, intersection_secondary, latitude, longitude, project_type, sales_status, construction_status, ownership_type, price_from_public, price_to_public, price_currency, occupancy_estimate_text, total_units, storeys, bedrooms_summary, size_range_sqft_min, size_range_sqft_max, description_short, description_long, listing_type, price_period";
 
 const SYSTEM =
   "You are an expert SEO copywriter for a Canadian new-home / pre-construction real estate marketing site. " +
   "Write accurate, public-safe copy using the supplied project facts, a supplied list of REAL nearby places (hospitals, shopping, schools, post-secondary, transit, groceries, parks, and points of interest, each with a distance), and well-known, stable facts about the city/neighbourhood such as the major highways and GO/transit lines that serve the area. " +
   "Never invent prices, dates, unit counts, awards, place names, schools, or distances that aren't in the supplied facts or the nearby-places list; you MAY name any place that appears in that list, and should prefer the closest, most notable ones. When you lack a specific, stay at the neighbourhood/area level. " +
   "Weave in the city/neighbourhood and builder naturally for local SEO. Vary your sentence openings — do NOT start multiple sections the same way, and do NOT lead every section with the project name or with 'Located in'. " +
+  "Never name the websites or aggregators facts were sourced from, and never mention disagreements between sources — state the reconciled fact plainly. " +
+  "RENTALS: when listing_type is 'for_rent', this is a purpose-built rental building — write for RENTERS. Prices are MONTHLY RENTS (say 'from $X/month', never a purchase price). Use leasing language (now leasing, move-in dates, suites), make section_buying about how leasing a new building works in Ontario (applications, what's typically included, lease terms, standard lease form) instead of buying pre-construction, and make the FAQ renter questions (rent range, move-in timing, pets/parking only if in facts, how to book a tour). " +
   "Write like a knowledgeable local journalist: concrete, human, specific. No hype clichés, no ALL CAPS, no emojis. Canadian spelling.";
 
 // Baseline per-field guidance. Admin-configured instructions (from

@@ -169,7 +169,27 @@ export interface PublicProject {
   section_faq: { question: string; answer: string }[] | null;
   section_buying: string | null;
   page_updated_at: string | null;
+  // Rentals lane (migration 0055)
+  listing_type: string | null; // for_sale | for_rent | mixed_use
+  price_period: string | null; // total | monthly
 }
+
+/** Purpose-built rental (or monthly-priced) — renders the rent-flavored UI. */
+export function isRentalListing(p: {
+  listing_type?: string | null;
+  price_period?: string | null;
+}): boolean {
+  return p.listing_type === "for_rent" || p.price_period === "monthly";
+}
+
+/** Rental-appropriate labels for the shared sales_status vocabulary. */
+export const RENTAL_STATUS_LABELS: Record<string, string> = {
+  coming_soon: "Coming soon",
+  selling: "Now leasing",
+  paused: "Paused",
+  sold_out: "Fully leased",
+  completed: "Completed",
+};
 
 /** A single nearby place from the OSM-sourced neighbourhood enrichment. */
 export interface NeighbourhoodFeature {
@@ -304,6 +324,7 @@ export function isMandateVerified(
 export function formatPriceBand(
   from: number | null,
   to: number | null,
+  opts?: { monthly?: boolean },
 ): string | null {
   const fmt = (n: number) =>
     new Intl.NumberFormat("en-CA", {
@@ -311,9 +332,10 @@ export function formatPriceBand(
       currency: "CAD",
       maximumFractionDigits: 0,
     }).format(n);
-  if (from && to) return `${fmt(from)} – ${fmt(to)}`;
-  if (from) return `From ${fmt(from)}`;
-  if (to) return `Up to ${fmt(to)}`;
+  const mo = opts?.monthly ? "/mo" : "";
+  if (from && to) return `${fmt(from)} – ${fmt(to)}${mo}`;
+  if (from) return `From ${fmt(from)}${mo}`;
+  if (to) return `Up to ${fmt(to)}${mo}`;
   return null;
 }
 
