@@ -119,6 +119,20 @@ export const PERMIT_SOURCES: PermitSource[] = [
     defaultCity: "Hamilton",
     applications: true,
   },
+  {
+    key: "austin",
+    label: "Austin permits",
+    kind: "socrata",
+    resource: "https://data.austintexas.gov/resource/3syk-w9eu.json",
+    defaultCity: "Austin",
+  },
+  {
+    key: "dallas",
+    label: "Dallas permits",
+    kind: "socrata",
+    resource: "https://www.dallasopendata.com/resource/e7gq-4sah.json",
+    defaultCity: "Dallas",
+  },
 ];
 
 export function permitSource(key: string): PermitSource | null {

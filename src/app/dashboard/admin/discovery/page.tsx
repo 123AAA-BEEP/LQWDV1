@@ -143,7 +143,7 @@ export default async function DiscoveryPage({
           [
             ["urbantoronto", "Sweep UrbanToronto"],
             ["skyrisecities", "Sweep SkyriseCities (BC + AB)"],
-            ["newsfeeds", "Sweep news feeds (Miami, FL, LA, Nashville)"],
+            ["newsfeeds", "Sweep news feeds (Miami, FL, LA, Austin, Nashville)"],
             ["toronto", "Sweep Toronto planning data"],
             ["vancouver", "Sweep Vancouver permits"],
             ["permits", "Sweep permits & applications (Miami-Dade, Nashville, LA, Calgary, Edmonton, Mississauga, Hamilton)"],

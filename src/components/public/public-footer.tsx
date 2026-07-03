@@ -15,7 +15,7 @@ export function PublicFooter() {
           </div>
           <p className="mt-2 max-w-xs text-sm leading-relaxed text-slate-400">
             New construction homes across Canada &amp; the U.S. — Ontario, BC,
-            Alberta, Florida, Tennessee, and California.
+            Alberta, Florida, Tennessee, Texas, and California.
           </p>
         </div>
         <nav className="flex items-center gap-6 text-sm text-slate-300">

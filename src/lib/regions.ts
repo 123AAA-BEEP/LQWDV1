@@ -11,6 +11,7 @@ export type RegionKey =
   | "alberta"
   | "florida"
   | "tennessee"
+  | "texas"
   | "california";
 export type EmailLaw = "casl" | "can_spam";
 
@@ -154,6 +155,29 @@ export const REGIONS: Record<RegionKey, Region> = {
       marketLine: "new construction in Nashville & Tennessee",
     },
   },
+  texas: {
+    key: "texas",
+    label: "Texas",
+    country: "US",
+    provinceValues: ["tx", "texas"],
+    regulator: {
+      name: "Texas Real Estate Commission",
+      shortName: "TREC",
+      licenseLabel: "Texas real estate license #",
+      licenseHint:
+        "Your Texas (TREC) license number, verifiable on TREC's License Holder Search.",
+      registerUrl: "https://www.trec.texas.gov/apps/license-holder-search/",
+    },
+    emailLaw: "can_spam",
+    buyingNotes:
+      "Texas: buyers of new condominiums from a developer must receive a condominium information statement and may cancel within 6 days of receiving it under the Texas Uniform Condominium Act (Property Code §82.156).",
+    voice: {
+      audienceLine: "Free for licensed Texas agents",
+      microcopy:
+        "No referral fees. No brokerage change. Texas (TREC) license verification required.",
+      marketLine: "new construction in Austin, DFW & Texas",
+    },
+  },
   california: {
     key: "california",
     label: "California",
@@ -196,6 +220,7 @@ export function visitorRegionKey(h: {
   }
   if (country === "US") {
     if (region === "TN") return "tennessee";
+    if (region === "TX") return "texas";
     if (region === "CA") return "california";
     return "florida";
   }
