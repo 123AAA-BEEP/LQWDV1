@@ -3,6 +3,8 @@ import Anthropic from "@anthropic-ai/sdk";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { maybeGenerateSeoOnPublish } from "@/lib/seo";
 import { slugify } from "@/lib/slug";
+import { primaryBuilderName } from "@/lib/types";
+import { builderNorm } from "@/lib/discovery/normalize";
 import { fetchLinkContext } from "@/lib/email-intake/fetch-links";
 import { attachGalleryAndHero } from "@/lib/email-intake/media";
 
@@ -205,6 +207,36 @@ async function sourceVerifiedHero(
 const SKIP_MARKER = "auto-pipeline: no rendering";
 
 /**
+ * Floor of the hero ladder: the BUILDER's own website. When the project's
+ * pages yield nothing, the builder homepage usually carries a flagship
+ * rendering, a lifestyle shot, or at minimum their logo — any of which beats
+ * an empty tile. Website comes from the discovery builder registry.
+ */
+async function builderSiteUrl(
+  supabase: ReturnType<typeof createAdminClient>,
+  builderName: string | null,
+): Promise<string | null> {
+  const primary = primaryBuilderName(builderName);
+  if (!primary) return null;
+  const norm = builderNorm(primary);
+  if (!norm) return null;
+  const { data } = await supabase
+    .from("discovery_builders")
+    .select("website")
+    .eq("name_norm", norm)
+    .not("website", "is", null)
+    .maybeSingle();
+  if (data?.website) return data.website;
+  const { data: fuzzy } = await supabase
+    .from("discovery_builders")
+    .select("website")
+    .ilike("name_norm", `${norm.slice(0, 24)}%`)
+    .not("website", "is", null)
+    .limit(1);
+  return (fuzzy?.[0] as { website: string } | undefined)?.website ?? null;
+}
+
+/**
  * The pages we ALREADY KNOW carry this project's imagery: its own website,
  * the web-research source URLs (recorded in import_notes at ingest), and its
  * broker portals. Ordered own-site-first; one page per host.
@@ -244,13 +276,16 @@ async function knownPageUrls(
 }
 
 /**
- * Hero + GALLERY backfill for pages that are live without imagery. Two paths,
- * in order:
+ * Hero + GALLERY backfill for pages that are live without imagery. Three
+ * paths, in order:
  *  1. Known pages — fetch the project's own site / research sources / portals,
  *     download their images, vision-classify (promo creatives excluded), and
- *     attach a gallery + best hero. Region-agnostic: works anywhere research
- *     found the project.
- *  2. Legacy aggregator guesses (gta-homes/condonow/…) — Ontario fallback.
+ *     attach a gallery + best hero via the ladder (rendering > lifestyle >
+ *     project logo). Region-agnostic.
+ *  2. Legacy aggregator guesses (gta-homes/condonow/…) — Ontario fallback,
+ *     renderings only.
+ *  3. Builder's own website (from the discovery builder registry) — flagship
+ *     rendering, lifestyle shot, or at minimum the builder's logo.
  * Never touches publish state — the page is live either way.
  */
 export async function sourceHeroForMissing(
@@ -297,7 +332,9 @@ export async function sourceHeroForMissing(
           await supabase
             .from("projects")
             .update({
-              hero_image_alt: `Rendering of ${p.project_name}`,
+              // The ladder may have picked a lifestyle shot or logo, so the
+              // alt stays neutral rather than claiming "Rendering of …".
+              hero_image_alt: p.project_name,
               import_notes: `${p.import_notes ?? ""} [auto-pipeline ${stamp}: hero + gallery from known pages.]`,
               updated_at: new Date().toISOString(),
             })
@@ -329,16 +366,57 @@ export async function sourceHeroForMissing(
         })
         .eq("id", p.id);
       results.push({ id: p.id, name: p.project_name, published: true, kind: src.kind, reason: src.reason });
-    } else {
-      await supabase
-        .from("projects")
-        .update({
-          import_notes: `${p.import_notes ?? ""} [${SKIP_MARKER} ${stamp}: ${src.reason}]`,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", p.id);
-      results.push({ id: p.id, name: p.project_name, published: false, reason: src.reason });
+      continue;
     }
+
+    // Path 3 (floor): the builder's own website — flagship rendering,
+    // lifestyle shot, or at minimum their logo, via the same vision ladder.
+    const builderPage = await builderSiteUrl(supabase, p.builder_name);
+    if (builderPage) {
+      try {
+        const { images } = await fetchLinkContext([builderPage]);
+        if (images.length > 0) {
+          await attachGalleryAndHero(supabase, p.id, images, {
+            setHero: true,
+            projectName: p.project_name,
+          });
+        }
+        const { data: after } = await supabase
+          .from("projects")
+          .select("hero_image_url")
+          .eq("id", p.id)
+          .maybeSingle();
+        if (after?.hero_image_url) {
+          await supabase
+            .from("projects")
+            .update({
+              hero_image_alt: p.project_name,
+              import_notes: `${p.import_notes ?? ""} [auto-pipeline ${stamp}: hero from builder site (${builderPage}).]`,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", p.id);
+          results.push({
+            id: p.id,
+            name: p.project_name,
+            published: true,
+            kind: "builder_site",
+            reason: `sourced from builder site`,
+          });
+          continue;
+        }
+      } catch {
+        /* fall through to the skip marker */
+      }
+    }
+
+    await supabase
+      .from("projects")
+      .update({
+        import_notes: `${p.import_notes ?? ""} [${SKIP_MARKER} ${stamp}: ${src.reason}]`,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", p.id);
+    results.push({ id: p.id, name: p.project_name, published: false, reason: src.reason });
   }
   return results;
 }

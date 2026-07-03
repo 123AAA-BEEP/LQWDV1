@@ -17,16 +17,27 @@ const MAX_GALLERY = 6;
 /** Total wall-clock for classification — the webhook budget is shared. */
 const CLASSIFY_DEADLINE_MS = 14_000;
 
-/** Lower = better hero. Logos/text never become heroes. */
+/** Lower = better hero. */
 const HERO_RANK: Record<string, number> = {
   exterior_rendering: 0,
   aerial_rendering: 1,
   photo_building: 2,
   interior_rendering: 3,
 };
+/**
+ * Second-tier heroes — used only when nothing in HERO_RANK exists. A page
+ * with a real lifestyle/amenity shot (or, at the floor, the project's own
+ * logo) still beats the "renderings coming soon" placeholder. Headshots
+ * never qualify.
+ */
+const HERO_RANK_FALLBACK: Record<string, number> = {
+  lifestyle_amenity: 0,
+  logo_or_text: 1,
+};
 /** Kinds worth showing in the public gallery (floor plans help buyers). */
 const GALLERY_KINDS = new Set([
   ...Object.keys(HERO_RANK),
+  "lifestyle_amenity",
   "floor_plan",
   "site_map",
   "unclassified",
@@ -63,12 +74,15 @@ async function classifyBase64(
                     "interior_rendering",
                     "aerial_rendering",
                     "photo_building",
+                    "lifestyle_amenity",
                     "floor_plan",
                     "site_map",
                     "logo_or_text",
-                    "person_or_lifestyle",
+                    "person_headshot",
                     "other",
                   ],
+                  description:
+                    "lifestyle_amenity = amenity/pool/gym/lobby/streetscape/neighbourhood imagery (people incidental); person_headshot = a portrait/agent photo where a person IS the subject.",
                 },
                 has_promo_text: {
                   type: "boolean",
@@ -138,8 +152,9 @@ async function upload(
 
 /**
  * Uploads intake images to the public gallery and (optionally) sets the best
- * one as the project hero. Never throws; skips logos/lifestyle shots; falls
- * back to first-image-as-hero when classification can't finish in budget.
+ * one as the project hero via the ladder (rendering > lifestyle > logo).
+ * Never throws; skips headshots + promo creatives; falls back to
+ * first-image-as-hero when classification can't finish in budget.
  */
 export async function attachGalleryAndHero(
   admin: Admin,
@@ -162,12 +177,19 @@ export async function attachGalleryAndHero(
     classified.push({ img, kind: c.kind, promo: c.promo });
   }
 
-  // Hero: best-ranked hero-suitable image; fallback to the first image when
-  // nothing classified as hero-worthy. Never a logo/text image — and never a
-  // promo creative: commission/incentive overlays are broker-only material.
+  // Hero ladder: rendering/photo > lifestyle/amenity > project logo >
+  // unclassified first image. Headshots never; promo creatives (commission/
+  // incentive overlays) never — those are broker-only material.
   let hero: Classified | undefined = classified
     .filter((c) => c.kind in HERO_RANK && !c.promo)
     .sort((a, b) => HERO_RANK[a.kind] - HERO_RANK[b.kind])[0];
+  if (!hero) {
+    hero = classified
+      .filter((c) => c.kind in HERO_RANK_FALLBACK && !c.promo)
+      .sort(
+        (a, b) => HERO_RANK_FALLBACK[a.kind] - HERO_RANK_FALLBACK[b.kind],
+      )[0];
+  }
   if (!hero) {
     hero = classified.find(
       (c) => (c.kind === "unclassified" || c.kind === "other") && !c.promo,
