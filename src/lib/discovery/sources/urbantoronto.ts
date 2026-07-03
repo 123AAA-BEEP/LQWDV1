@@ -89,7 +89,7 @@ interface ParsedProject {
 }
 
 const CITY_RE =
-  /\b(Toronto|Mississauga|Vaughan|Brampton|Markham|Richmond Hill|Oakville|Burlington|Hamilton|Milton|Pickering|Ajax|Whitby|Oshawa|Etobicoke|North York|Scarborough|Barrie|Kitchener|Waterloo|Guelph|Newmarket|Aurora|Caledon|Ottawa|London|Vancouver|Burnaby|Surrey|Richmond|Coquitlam|Port Coquitlam|Port Moody|New Westminster|North Vancouver|West Vancouver|Langley|Abbotsford|Victoria|Kelowna|Nanaimo)\b/;
+  /\b(Toronto|Mississauga|Vaughan|Brampton|Markham|Richmond Hill|Oakville|Burlington|Hamilton|Milton|Pickering|Ajax|Whitby|Oshawa|Etobicoke|North York|Scarborough|Barrie|Kitchener|Waterloo|Guelph|Newmarket|Aurora|Caledon|Ottawa|London|Vancouver|Burnaby|Surrey|Richmond|Coquitlam|Port Coquitlam|Port Moody|New Westminster|North Vancouver|West Vancouver|Langley|Abbotsford|Victoria|Kelowna|Nanaimo|Calgary|Edmonton|Airdrie|Cochrane|Okotoks|Leduc|St\. Albert|Sherwood Park|Red Deer)\b/;
 
 function parseProjectPage(html: string): ParsedProject | null {
   const title =

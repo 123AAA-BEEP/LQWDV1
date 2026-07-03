@@ -20,6 +20,20 @@ import {
   probeBild,
   seedBuildersFromProjects,
 } from "@/lib/discovery/sources/builders";
+import {
+  NEWS_FEEDS,
+  sweepNewsFeed,
+  sweepAllNewsFeeds,
+  probeNewsFeed,
+  sweepUrbanPlanet,
+  probeUrbanPlanet,
+} from "@/lib/discovery/sources/newsfeeds";
+import {
+  permitSource,
+  sweepPermits,
+  sweepAllPermits,
+  probePermits,
+} from "@/lib/discovery/sources/permits";
 import { igniteSignal, type IgniteOutcome } from "@/lib/discovery/go";
 import type { SignalRow } from "@/lib/discovery/match";
 
@@ -28,7 +42,14 @@ export const maxDuration = 300;
 
 /**
  * Discovery engine runner.
- *   ?source=urbantoronto|toronto|bild|seed-builders|all   which feed to sweep
+ *   ?source=…            which feed to sweep:
+ *     urbantoronto | skyrisecities | toronto | vancouver      (ON/BC/AB)
+ *     bild | seed-builders                                    (builder registry)
+ *     thenextmiami | floridayimby | urbanizela | urbanplanet  (news signals)
+ *     newsfeeds                                               (all news feeds)
+ *     miamidade | nashville | lapermits | calgary | edmonton  (permit watches)
+ *     permits                                                 (all permit feeds)
+ *     all                                                     (daily set)
  *   ?probe=1[&url=...]   fetch + return the raw source shape (parser tuning)
  *   ?ignite=0            sweep only, skip publishing new signals
  *   ?ui=1                self-refreshing HTML runner for manual use
@@ -116,7 +137,13 @@ export async function GET(req: Request) {
               ? await probeBild(probeUrl)
               : source === "skyrisecities"
                 ? await probeUrbanToronto(probeUrl ?? SKYRISE_INDEX)
-                : await probeUrbanToronto(probeUrl);
+                : source === "urbanplanet"
+                  ? await probeUrbanPlanet(probeUrl)
+                  : NEWS_FEEDS.some((f) => f.tag === source)
+                    ? await probeNewsFeed(source, probeUrl)
+                    : permitSource(source)
+                      ? await probePermits(source)
+                      : await probeUrbanToronto(probeUrl);
       return NextResponse.json({ probe: source, result: out });
     }
 
@@ -151,6 +178,30 @@ export async function GET(req: Request) {
       sweeps.push(
         await seedBuildersFromProjects(admin).catch((e) => err("seed_builders", e)),
       );
+    }
+
+    // News feeds (name-bearing signals) — individually, or all at once.
+    const feed = NEWS_FEEDS.find((f) => f.tag === source);
+    if (feed) {
+      sweeps.push(await sweepNewsFeed(admin, feed).catch((e) => err(feed.tag, e)));
+    }
+    if (source === "urbanplanet" || source === "newsfeeds" || source === "all") {
+      sweeps.push(
+        await sweepUrbanPlanet(admin).catch((e) => err("urbanplanet_nashville", e)),
+      );
+    }
+    if (source === "newsfeeds" || source === "all") {
+      sweeps.push(...(await sweepAllNewsFeeds(admin)));
+    }
+
+    // Permit feeds (address watches) — individually, or all at once.
+    if (permitSource(source)) {
+      sweeps.push(
+        await sweepPermits(admin, source).catch((e) => err(`${source}_permits`, e)),
+      );
+    }
+    if (source === "permits") {
+      sweeps.push(...(await sweepAllPermits(admin)));
     }
 
     // Ignition: every new signal goes through match → ingest → publish/draft.

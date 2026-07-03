@@ -142,9 +142,11 @@ export default async function DiscoveryPage({
         {(
           [
             ["urbantoronto", "Sweep UrbanToronto"],
-            ["skyrisecities", "Sweep SkyriseCities (BC)"],
+            ["skyrisecities", "Sweep SkyriseCities (BC + AB)"],
+            ["newsfeeds", "Sweep news feeds (Miami, FL, LA, Nashville)"],
             ["toronto", "Sweep Toronto planning data"],
             ["vancouver", "Sweep Vancouver permits"],
+            ["permits", "Sweep permits (Miami-Dade, Nashville, LA, Calgary, Edmonton)"],
             ["seed-builders", "Seed builders from projects"],
             ["bild", "Sweep BILD directory"],
           ] as const
