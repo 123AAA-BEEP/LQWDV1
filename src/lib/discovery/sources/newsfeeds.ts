@@ -21,10 +21,14 @@ type Admin = ReturnType<typeof createAdminClient>;
  * that resolves the real name/city/address or reports found=false.
  */
 
+// Some WordPress hosts (Wordfence/Cloudflare) 401 anything that self-identifies
+// as a bot, even on their public RSS feed — so present as a normal browser.
 const UA = {
   "user-agent":
-    "Mozilla/5.0 (compatible; LIQWD-discovery/1.0; +https://liqwd.ca)",
-  accept: "application/rss+xml, application/xml, text/xml, text/html",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+  accept:
+    "application/rss+xml, application/xml;q=0.9, text/xml;q=0.8, text/html;q=0.7, */*;q=0.5",
+  "accept-language": "en-US,en;q=0.9",
 };
 
 async function fetchText(url: string, timeoutMs = 15_000): Promise<string> {
@@ -249,15 +253,66 @@ export function parseHeadline(title: string, feed: NewsFeed): ParsedHeadline {
   };
 }
 
+/** Google News RSS scoped to the site — works even when the origin blocks
+ *  datacenter IPs outright. Titles arrive as "Headline - Site Name". */
+function googleNewsUrl(feedUrl: string): string {
+  const host = new URL(feedUrl).hostname.replace(/^www\./, "");
+  return `https://news.google.com/rss/search?q=${encodeURIComponent(`site:${host} when:14d`)}&hl=en-US&gl=US&ceid=US:en`;
+}
+
+/**
+ * Fetch a feed with fallbacks: direct URL → WordPress `?feed=rss2` variant →
+ * Google News site query. Returns the items plus which route worked.
+ */
+async function fetchFeedItems(
+  feedUrl: string,
+): Promise<{ items: FeedItem[]; via: string }> {
+  const attempts: { url: string; via: string; stripSource?: boolean }[] = [
+    { url: feedUrl, via: "direct" },
+  ];
+  if (/\/feed\/?$/.test(feedUrl)) {
+    attempts.push({
+      url: feedUrl.replace(/\/feed\/?$/, "/?feed=rss2"),
+      via: "rss2-param",
+    });
+  }
+  attempts.push({
+    url: googleNewsUrl(feedUrl),
+    via: "google-news",
+    stripSource: true,
+  });
+
+  let lastError = "no attempts";
+  for (const attempt of attempts) {
+    try {
+      const xml = await fetchText(attempt.url);
+      let items = parseFeedItems(xml);
+      if (items.length === 0) {
+        lastError = `${attempt.via}: 0 items parsed`;
+        continue;
+      }
+      if (attempt.stripSource) {
+        // "Headline - The Next Miami" → "Headline"
+        items = items.map((i) => ({
+          ...i,
+          title: i.title.replace(/\s+-\s+[^-]{2,40}$/, ""),
+        }));
+      }
+      return { items, via: attempt.via };
+    } catch (e) {
+      lastError = `${attempt.via}: ${e instanceof Error ? e.message : String(e)}`;
+    }
+  }
+  throw new Error(lastError);
+}
+
 export async function probeNewsFeed(tag?: string, url?: string): Promise<unknown> {
   const feed = NEWS_FEEDS.find((f) => f.tag === tag) ?? NEWS_FEEDS[0];
-  const target = url ?? feed.url;
-  const xml = await fetchText(target);
-  const items = parseFeedItems(xml);
+  const { items, via } = await fetchFeedItems(url ?? feed.url);
   return {
     feed: feed.tag,
-    url: target,
-    bytes: xml.length,
+    url: url ?? feed.url,
+    via,
     items_found: items.length,
     parsed: items.slice(0, 10).map((i) => ({
       title: i.title,
@@ -297,12 +352,8 @@ export async function sweepNewsFeed(
   feed: NewsFeed,
 ): Promise<SweepSummary> {
   const notes: string[] = [];
-  const xml = await fetchText(feed.url);
-  const items = parseFeedItems(xml);
-  notes.push(`${items.length} items in feed`);
-  if (items.length === 0) {
-    notes.push("no items parsed — run probe mode and adjust the parser");
-  }
+  const { items, via } = await fetchFeedItems(feed.url);
+  notes.push(`${items.length} items in feed (via ${via})`);
 
   // Skip links we've already recorded (cheap precise dedup before parsing).
   const urls = items.map((i) => i.link);

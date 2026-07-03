@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, Fraunces } from "next/font/google";
+import { Geist, Geist_Mono, Inter_Tight } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
@@ -13,13 +13,12 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-// Editorial display serif for consumer/marketing headlines — the visual
-// signature that separates LIQWD from default-font territory. Dashboards
-// stay in Geist for density.
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
+// Display face for consumer/marketing headlines: a contemporary grotesque
+// cut for large sizes (tight apertures, negative tracking) — modern-proptech
+// voice, clearly distinct from Geist body text. Dashboards stay in Geist.
+const interTight = Inter_Tight({
+  variable: "--font-inter-tight",
   subsets: ["latin"],
-  axes: ["opsz"],
 });
 
 export const metadata: Metadata = {
@@ -47,7 +46,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${interTight.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         {children}

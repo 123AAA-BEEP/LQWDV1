@@ -20,19 +20,20 @@
   --color-ink: #0b1220;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  --font-display: var(--font-fraunces), Georgia, "Times New Roman", serif;
+  --font-display: var(--font-inter-tight), var(--font-geist-sans),
+    ui-sans-serif, system-ui, sans-serif;
 }
 
 /*
- * Editorial display type on consumer + marketing surfaces (the .display-type
- * wrapper lives on those route-group layouts). Dashboards stay in Geist.
- * Small utility headings (uppercase kickers, card titles) opt out by being
- * h3+ or by the :not() guard on tracked-uppercase kickers.
+ * Contemporary display type on consumer + marketing surfaces (the
+ * .display-type wrapper lives on those route-group layouts): a grotesque cut
+ * for large sizes, set heavy with negative tracking. Dashboards stay in
+ * Geist. Uppercase kickers and .font-sans elements opt out automatically.
  */
 .display-type :where(h1, h2):not(.font-sans):not([class*="uppercase"]) {
   font-family: var(--font-display);
-  letter-spacing: -0.015em;
-  font-weight: 600;
+  letter-spacing: -0.025em;
+  font-weight: 650;
 }
 
 html {
