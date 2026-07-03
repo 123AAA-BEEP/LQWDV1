@@ -8,6 +8,7 @@ import {
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { VerificationBanner } from "@/components/dashboard/verification-banner";
 import { RecoExpiryBanner } from "@/components/dashboard/reco-expiry-banner";
+import { ToastProvider } from "@/components/ui/toast";
 import { Badge, verificationBadgeTone } from "@/components/ui/badge";
 import { ProBadge, UltraBadge } from "@/components/dashboard/tier-ui";
 import { VERIFICATION_LABELS } from "@/lib/types";
@@ -48,6 +49,7 @@ export default async function DashboardLayout({
   );
 
   return (
+    <ToastProvider>
     <div className="flex min-h-full flex-col lg:flex-row">
       <Sidebar
         name={name}
@@ -80,5 +82,6 @@ export default async function DashboardLayout({
         </div>
       </div>
     </div>
+    </ToastProvider>
   );
 }

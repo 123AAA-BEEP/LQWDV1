@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { BookOpen, CheckCircle2 } from "lucide-react";
 import { Card, CardBody } from "@/components/ui/card";
+import { Eyebrow, SectionHeading } from "@/components/ui/heading";
+import { OnboardingTrail } from "@/components/dashboard/onboarding/trail";
 import {
   AGENT_CONCERNS,
   QUICK_FACTS_FIELDS,
@@ -27,14 +29,8 @@ function Section({
   return (
     <section className="space-y-4">
       <div>
-        {kicker ? (
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-600">
-            {kicker}
-          </p>
-        ) : null}
-        <h2 className="mt-1 text-xl font-semibold tracking-tight text-ink">
-          {title}
-        </h2>
+        {kicker ? <Eyebrow className="text-brand-600">{kicker}</Eyebrow> : null}
+        <SectionHeading className="mt-1">{title}</SectionHeading>
       </div>
       {children}
     </section>
@@ -44,6 +40,8 @@ function Section({
 export default function PlaybookPage() {
   return (
     <div className="max-w-3xl space-y-10">
+      <OnboardingTrail current="playbook" />
+
       {/* Header */}
       <div className="flex items-start gap-3">
         <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600 ring-1 ring-inset ring-brand-100">

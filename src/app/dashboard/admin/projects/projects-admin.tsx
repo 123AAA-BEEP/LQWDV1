@@ -7,6 +7,7 @@ import { Card, CardBody } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmButton } from "@/components/ui/confirm-button";
 import { Select, Checkbox } from "@/components/ui/field";
+import { useToast } from "@/components/ui/toast";
 import { RECORD_STATUS } from "@/lib/status";
 import type { RecordStatus } from "@/lib/status";
 import { bulkSetProjectStatus, bulkPublish, bulkUnpublish } from "./actions";
@@ -36,6 +37,7 @@ export function ProjectsAdmin({
   searching?: boolean;
 }) {
   const router = useRouter();
+  const toast = useToast();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [status, setStatus] = useState("approved");
   const [busy, setBusy] = useState(false);
@@ -58,17 +60,27 @@ export function ProjectsAdmin({
   async function apply() {
     if (selected.size === 0) return;
     setBusy(true);
+    const count = selected.size;
+    const label =
+      BULK_OPTIONS.find((o) => o.value === status)?.label ?? status;
     const fd = new FormData();
     selected.forEach((id) => fd.append("ids", id));
-    if (status === "publish") {
-      await bulkPublish(fd);
-    } else if (status === "unpublish") {
-      await bulkUnpublish(fd);
-    } else {
-      fd.set("status", status);
-      await bulkSetProjectStatus(fd);
+    try {
+      if (status === "publish") {
+        await bulkPublish(fd);
+      } else if (status === "unpublish") {
+        await bulkUnpublish(fd);
+      } else {
+        fd.set("status", status);
+        await bulkSetProjectStatus(fd);
+      }
+      toast(
+        `${label} applied to ${count} project${count === 1 ? "" : "s"}.`,
+      );
+      setSelected(new Set());
+    } catch {
+      toast(`Couldn't apply "${label}" — try again.`, "error");
     }
-    setSelected(new Set());
     setBusy(false);
     router.refresh();
   }
