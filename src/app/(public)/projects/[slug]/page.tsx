@@ -7,6 +7,7 @@ import { formatPriceBand, isRentalListing, RENTAL_STATUS_LABELS } from "@/lib/ty
 import type { PublicProject, RealtorCard } from "@/lib/types";
 import { TITLE_LABELS } from "@/lib/types";
 import { regionForProvince } from "@/lib/regions";
+import { plainSlug } from "@/lib/slug";
 import {
   NeighbourhoodBlock,
   hasNeighbourhood,
@@ -311,7 +312,7 @@ export default async function PublicProjectPage({
               /
             </span>
             <Link
-              href={`/projects?city=${encodeURIComponent(project.city)}`}
+              href={`/new-homes/${plainSlug(project.city)}`}
               className="hover:text-ink hover:underline"
             >
               {project.city}

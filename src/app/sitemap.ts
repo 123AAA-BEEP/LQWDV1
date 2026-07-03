@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { REGION_KEYS, regionSlug } from "@/lib/regions";
+import { plainSlug } from "@/lib/slug";
 
 // Listings are published/updated over time, so build the sitemap per request
 // rather than freezing it at build time.
@@ -26,6 +27,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   let projectRoutes: MetadataRoute.Sitemap = [];
+  let cityRoutes: MetadataRoute.Sitemap = [];
   try {
     const supabase = await createClient();
     // public_projects_view already filters to active, public_page_enabled,
@@ -33,8 +35,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // `indexable` flag so noindex pages stay out of the sitemap.
     const { data } = await supabase
       .from("public_projects_view")
-      .select("slug, published_at, page_updated_at, indexable")
+      .select("slug, published_at, page_updated_at, indexable, city")
       .limit(5000);
+
+    // Programmatic city hubs — one per city with at least one live page.
+    const cities = [
+      ...new Set(
+        ((data ?? []) as { city: string | null }[])
+          .map((r) => r.city)
+          .filter((c): c is string => Boolean(c)),
+      ),
+    ];
+    cityRoutes = cities.map((c) => ({
+      url: `${SITE_URL}/new-homes/${plainSlug(c)}`,
+      changeFrequency: "daily" as const,
+      priority: 0.8,
+    }));
     projectRoutes = (
       (data ?? []) as {
         slug: string | null;
@@ -59,5 +75,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // If the data layer is unavailable, still return the static routes.
   }
 
-  return [...staticRoutes, ...projectRoutes];
+  return [...staticRoutes, ...cityRoutes, ...projectRoutes];
 }
