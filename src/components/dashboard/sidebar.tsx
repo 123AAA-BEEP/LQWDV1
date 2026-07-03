@@ -62,15 +62,26 @@ const HOME: NavItem = {
   exact: true,
 };
 
-// ---- Realtor: grouped by intent (earn / explore / manage) -------------------
+// ---- Realtor: grouped by intent (start / earn / explore / manage) ----------
 const REALTOR_SECTIONS: NavSection[] = [
+  {
+    // One home for onboarding — previously split across Earn and Account.
+    accent: "brand",
+    label: "Start here",
+    description: "Set up & learn the ropes",
+    icon: Rocket,
+    items: [
+      { href: "/dashboard/start", label: "Get started", icon: Rocket },
+      { href: "/dashboard/get-free-leads", label: "Get free leads", icon: Magnet },
+      { href: "/dashboard/learn", label: "Playbook", icon: BookOpen },
+    ],
+  },
   {
     accent: "emerald",
     label: "Earn",
     description: "Commissions, referrals & rewards",
     icon: Coins,
     items: [
-      { href: "/dashboard/get-free-leads", label: "Get free leads", icon: Magnet },
       {
         href: "/dashboard/off-market",
         label: "Off-Market",
@@ -100,8 +111,6 @@ const REALTOR_SECTIONS: NavSection[] = [
     description: "Profile, submissions & updates",
     icon: Settings2,
     items: [
-      { href: "/dashboard/start", label: "Get started", icon: Rocket },
-      { href: "/dashboard/learn", label: "Playbook", icon: BookOpen },
       { href: "/dashboard/submit", label: "Submit project", icon: PlusCircle },
       { href: "/dashboard/updates", label: "Update Requests", icon: Bell },
       { href: "/dashboard/profile", label: "Profile", icon: UserCircle },

@@ -1,12 +1,13 @@
 /**
  * Color-coded section accents shared by the dashboard sidebar and home, so the
  * intent buckets read as distinct zones at a glance:
- *   emerald = make money / transact   ·  amber = promote / spotlight
- *   sky     = explore / research      ·  slate = account / manage
+ *   brand   = start here / onboarding  ·  emerald = make money / transact
+ *   amber   = promote / spotlight      ·  sky     = explore / research
+ *   slate   = account / manage
  *
  * Class strings are literal so Tailwind's scanner keeps them.
  */
-export type SectionAccent = "emerald" | "sky" | "amber" | "slate";
+export type SectionAccent = "brand" | "emerald" | "sky" | "amber" | "slate";
 
 export const SECTION_ACCENT: Record<
   SectionAccent,
@@ -19,6 +20,14 @@ export const SECTION_ACCENT: Record<
     dotBg: string; // small accent dot / home header
   }
 > = {
+  brand: {
+    zone: "bg-brand-50/60 ring-brand-100",
+    header: "text-brand-700",
+    chip: "bg-brand-100 text-brand-700",
+    activeItem: "bg-brand-100 text-brand-900",
+    activeIcon: "text-brand-600",
+    dotBg: "bg-brand-500",
+  },
   emerald: {
     zone: "bg-emerald-50/60 ring-emerald-100",
     header: "text-emerald-700",

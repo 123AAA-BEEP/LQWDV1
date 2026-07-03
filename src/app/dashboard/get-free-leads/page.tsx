@@ -12,7 +12,9 @@ import {
 import { requireUserProfile, isApproved } from "@/lib/auth";
 import { Card, CardBody } from "@/components/ui/card";
 import { ButtonLink } from "@/components/ui/button";
+import { Eyebrow } from "@/components/ui/heading";
 import { Notice } from "@/components/ui/notice";
+import { OnboardingTrail } from "@/components/dashboard/onboarding/trail";
 
 export const metadata: Metadata = { title: "Get free leads" };
 
@@ -38,6 +40,8 @@ export default async function GetFreeLeadsPage() {
 
   return (
     <div className="max-w-4xl space-y-8">
+      <OnboardingTrail current="leads" />
+
       {/* Header */}
       <div className="flex items-start gap-3">
         <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600 ring-1 ring-inset ring-brand-100">
@@ -92,9 +96,7 @@ export default async function GetFreeLeadsPage() {
 
       {/* How it works */}
       <section>
-        <h2 className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
-          How free leads work
-        </h2>
+        <Eyebrow as="h2">How free leads work</Eyebrow>
         <ol className="mt-4 grid gap-4 sm:grid-cols-3">
           {STEPS.map((step, i) => (
             <li key={step.title}>
@@ -118,9 +120,7 @@ export default async function GetFreeLeadsPage() {
 
       {/* Other ways to get set up */}
       <section>
-        <h2 className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
-          Other ways to get set up
-        </h2>
+        <Eyebrow as="h2">Other ways to get set up</Eyebrow>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <SetupCard
             icon={FilePenLine}

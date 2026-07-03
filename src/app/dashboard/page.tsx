@@ -44,6 +44,7 @@ import { SECTION_ACCENT, type SectionAccent } from "@/lib/section-accents";
 import { GetStartedBanner } from "@/components/dashboard/onboarding/get-started-banner";
 import { PlaybookCallout } from "@/components/dashboard/playbook-callout";
 import { LeadPathStatus } from "@/components/dashboard/lead-path-status";
+import { NextStepCard } from "@/components/dashboard/next-step-card";
 
 export const metadata: Metadata = { title: "Dashboard" };
 export const dynamic = "force-dynamic";
@@ -86,6 +87,18 @@ export default async function DashboardHome() {
   let matchedPages = 0;
   let buyerInquiries = 0;
   let recent: RailProject[] = [];
+
+  // Unverified: has the agent already submitted their RECO check? Drives the
+  // "your next step" hero (verify now vs. under review).
+  let hasSubmittedVerification = false;
+  if (!approved) {
+    const { count } = await supabase
+      .from("verification_requests")
+      .select("id", { count: "exact", head: true })
+      .eq("profile_id", profile.id)
+      .eq("status", "pending");
+    hasSubmittedVerification = (count ?? 0) > 0;
+  }
 
   if (approved) {
     const [pc, ntw, cityRows, matched, leads, rec] = await Promise.all([
@@ -153,7 +166,12 @@ export default async function DashboardHome() {
           matchedPages={matchedPages}
           buyerInquiries={buyerInquiries}
         />
-      ) : null}
+      ) : (
+        <NextStepCard
+          status={profile.verification_status}
+          hasSubmitted={hasSubmittedVerification}
+        />
+      )}
 
       <GetStartedBanner />
 
