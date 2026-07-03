@@ -121,14 +121,19 @@ export default async function MarketplacePage({
     type?: string;
     status?: string;
     region?: string;
+    page?: string;
   }>;
 }) {
-  const { q: rawQ, city, type, status, region } = await searchParams;
+  const { q: rawQ, city, type, status, region, page } = await searchParams;
   const q = (rawQ ?? "").trim();
   const cityFilter = (city ?? "").trim();
   const typeFilter = type ?? "";
   const statusFilter = status ?? "";
   const regionFilter = isRegionKey(region ?? "") ? (region as string) : "";
+  // Cumulative pagination: page N renders the first N pages, so "Load more"
+  // appends to the grid (scroll preserved) and every state is a crawlable URL.
+  const PAGE_SIZE = 24;
+  const pageNum = Math.min(Math.max(parseInt(page ?? "1", 10) || 1, 1), 50);
 
   // Geo suggestion (never a gate): visitors see a one-tap chip for their own
   // market when they aren't already filtering.
@@ -143,14 +148,14 @@ export default async function MarketplacePage({
   // mix into results as the catalog grows), then newest first.
   let req = supabase
     .from("public_projects_view")
-    .select(SELECT)
+    .select(SELECT, { count: "exact" })
     // Rentals live on /rentals — the buy browse stays for-sale only.
     .or("listing_type.is.null,listing_type.neq.for_rent")
     .order("featured_rank", { ascending: true, nullsFirst: false })
     .order("is_advertiser", { ascending: false })
     .order("is_featured", { ascending: false })
     .order("published_at", { ascending: false })
-    .limit(60);
+    .range(0, pageNum * PAGE_SIZE - 1);
   if (q) {
     req = req.or(
       `project_name.ilike.%${q}%,city.ilike.%${q}%,builder_name.ilike.%${q}%`,
@@ -171,7 +176,7 @@ export default async function MarketplacePage({
   // One parallel wave instead of four sequential round-trips (faster TTFB).
   // Featured strip runs only on the unfiltered browse (a curated highlight,
   // not search results) — capped at 3 for one clean desktop row.
-  const [{ data: cityRows }, { data }, featuredRes, newestRes] =
+  const [{ data: cityRows }, mainRes, featuredRes, newestRes] =
     await Promise.all([
       supabase
         .from("public_projects_view")
@@ -200,7 +205,20 @@ export default async function MarketplacePage({
     ]);
   const cities = [...new Set((cityRows ?? []).map((r) => r.city as string))];
   const featured: Row[] = ((featuredRes?.data ?? null) as Row[] | null) ?? [];
-  const projects = (data as Row[] | null) ?? [];
+  const projects = (mainRes.data as Row[] | null) ?? [];
+  const totalCount = mainRes.count ?? projects.length;
+  const hasMore = projects.length < totalCount;
+
+  // "Load more" = same URL with page+1 — filters preserved, crawlable, and
+  // scroll={false} keeps the visitor where they were so it feels continuous.
+  const nextParams = new URLSearchParams();
+  if (q) nextParams.set("q", q);
+  if (cityFilter) nextParams.set("city", cityFilter);
+  if (typeFilter) nextParams.set("type", typeFilter);
+  if (statusFilter) nextParams.set("status", statusFilter);
+  if (regionFilter) nextParams.set("region", regionFilter);
+  nextParams.set("page", String(pageNum + 1));
+  const loadMoreHref = `/projects?${nextParams.toString()}`;
 
   // Don't repeat the featured strip's cards in the grid below it.
   const stripIds = new Set(featured.map((f) => f.project_id));
@@ -386,8 +404,9 @@ export default async function MarketplacePage({
       {/* Grid */}
       <section className="mx-auto max-w-6xl px-6 py-10">
         <p className="mb-6 text-sm text-slate-500">
-          {projects.length} development{projects.length === 1 ? "" : "s"}
-          {hasFilter ? " match your search" : " available"}.
+          Showing {projects.length} of {totalCount} development
+          {totalCount === 1 ? "" : "s"}
+          {hasFilter ? " matching your search" : ""}.
         </p>
 
         {gridProjects.length === 0 ? (
@@ -407,6 +426,14 @@ export default async function MarketplacePage({
             ))}
           </div>
         )}
+
+        {hasMore ? (
+          <div className="mt-10 text-center">
+            <ButtonLink href={loadMoreHref} scroll={false} variant="secondary">
+              Load more ({totalCount - projects.length} remaining)
+            </ButtonLink>
+          </div>
+        ) : null}
       </section>
     </div>
   );

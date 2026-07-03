@@ -86,23 +86,27 @@ function RentalCard({ p }: { p: Row }) {
 export default async function RentalsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; city?: string }>;
+  searchParams: Promise<{ q?: string; city?: string; page?: string }>;
 }) {
-  const { q: rawQ, city } = await searchParams;
+  const { q: rawQ, city, page } = await searchParams;
   const q = (rawQ ?? "").trim();
   const cityFilter = (city ?? "").trim();
   const hasFilter = Boolean(q || cityFilter);
+  // Cumulative pagination: page N renders the first N pages, so "Load more"
+  // appends to the grid (scroll preserved) and every state is a crawlable URL.
+  const PAGE_SIZE = 24;
+  const pageNum = Math.min(Math.max(parseInt(page ?? "1", 10) || 1, 1), 50);
 
   const supabase = await createClient();
 
   let req = supabase
     .from("public_projects_view")
-    .select(SELECT)
+    .select(SELECT, { count: "exact" })
     .eq("listing_type", "for_rent")
     .order("featured_rank", { ascending: true, nullsFirst: false })
     .order("is_featured", { ascending: false })
     .order("published_at", { ascending: false })
-    .limit(60);
+    .range(0, pageNum * PAGE_SIZE - 1);
   if (q) {
     req = req.or(
       `project_name.ilike.%${q}%,city.ilike.%${q}%,builder_name.ilike.%${q}%`,
@@ -110,7 +114,7 @@ export default async function RentalsPage({
   }
   if (cityFilter) req = req.eq("city", cityFilter);
 
-  const [{ data: cityRows }, { data }] = await Promise.all([
+  const [{ data: cityRows }, { data, count }] = await Promise.all([
     supabase
       .from("public_projects_view")
       .select("city")
@@ -121,6 +125,14 @@ export default async function RentalsPage({
   ]);
   const cities = [...new Set((cityRows ?? []).map((r) => r.city as string))];
   const rentals = (data as Row[] | null) ?? [];
+  const totalCount = count ?? rentals.length;
+  const hasMore = rentals.length < totalCount;
+
+  const nextParams = new URLSearchParams();
+  if (q) nextParams.set("q", q);
+  if (cityFilter) nextParams.set("city", cityFilter);
+  nextParams.set("page", String(pageNum + 1));
+  const loadMoreHref = `/rentals?${nextParams.toString()}`;
 
   return (
     <div>
@@ -168,8 +180,9 @@ export default async function RentalsPage({
       {/* Grid */}
       <section className="mx-auto max-w-6xl px-6 py-10">
         <p className="mb-6 text-sm text-slate-500">
-          {rentals.length} rental building{rentals.length === 1 ? "" : "s"}
-          {hasFilter ? " match your search" : " available"}.
+          Showing {rentals.length} of {totalCount} rental building
+          {totalCount === 1 ? "" : "s"}
+          {hasFilter ? " matching your search" : ""}.
         </p>
 
         {rentals.length === 0 ? (
@@ -198,6 +211,14 @@ export default async function RentalsPage({
             ))}
           </div>
         )}
+
+        {hasMore ? (
+          <div className="mt-10 text-center">
+            <ButtonLink href={loadMoreHref} scroll={false} variant="secondary">
+              Load more ({totalCount - rentals.length} remaining)
+            </ButtonLink>
+          </div>
+        ) : null}
       </section>
     </div>
   );
