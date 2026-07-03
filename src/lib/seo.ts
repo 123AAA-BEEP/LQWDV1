@@ -22,7 +22,7 @@ const PROJECT_SELECT =
   "project_name, builder_name, city, municipality, neighbourhood, province, address_full, intersection_primary, intersection_secondary, latitude, longitude, project_type, sales_status, construction_status, ownership_type, price_from_public, price_to_public, price_currency, occupancy_estimate_text, total_units, storeys, bedrooms_summary, size_range_sqft_min, size_range_sqft_max, description_short, description_long, listing_type, price_period";
 
 const SYSTEM =
-  "You are an expert SEO copywriter for a Canadian new-home / pre-construction real estate marketing site. " +
+  "You are an expert SEO copywriter for a new-home / pre-construction real estate marketing site covering Canada (Ontario, British Columbia) and Florida. Use the project's province/state to pick the right jurisdiction for any legal or process facts. " +
   "Write accurate, public-safe copy using the supplied project facts, a supplied list of REAL nearby places (hospitals, shopping, schools, post-secondary, transit, groceries, parks, and points of interest, each with a distance), and well-known, stable facts about the city/neighbourhood such as the major highways and GO/transit lines that serve the area. " +
   "Never invent prices, dates, unit counts, awards, place names, schools, or distances that aren't in the supplied facts or the nearby-places list; you MAY name any place that appears in that list, and should prefer the closest, most notable ones. When you lack a specific, stay at the neighbourhood/area level. " +
   "Weave in the city/neighbourhood and builder naturally for local SEO. Vary your sentence openings — do NOT start multiple sections the same way, and do NOT lead every section with the project name or with 'Located in'. " +
@@ -46,11 +46,11 @@ const FIELD_DESCRIPTIONS = {
   section_getting_around:
     "A short paragraph on getting around. Name the REAL nearby transit from the supplied list (GO stations, subway/LRT stations, regional bus) and the major highways that genuinely serve this city/area. Use stable, well-known infrastructure; never invent route numbers, station names not in the list, or precise travel times.",
   section_developer:
-    "A short, non-promotional paragraph about the builder — their focus and reputation in the GTA/Ontario. If the builder isn't well known, keep it general and factual; never fabricate awards, project counts, or years in business.",
+    "A short, non-promotional paragraph about the builder — their focus and reputation in the project's region. If the builder isn't well known, keep it general and factual; never fabricate awards, project counts, or years in business.",
   section_faq:
     "5 to 8 question-and-answer pairs a buyer or investor would actually search for about THIS project (e.g. starting price, home types, occupancy timing, location/transit, the builder, how to register). Answer strictly from the supplied facts; when a specific isn't in the facts (e.g. deposit structure), answer with accurate GENERAL Ontario pre-construction guidance and say details will be confirmed by the builder. Plain, direct answers of 2–4 sentences. Never invent prices, dates, or counts.",
   section_buying:
-    "A short educational section (2–3 paragraphs, blank-line separated) titled toward 'buying pre-construction here': how the process typically works in Ontario — registering for first access, deposit structures being staged over time, the 10-day cooling-off period for new condos (only mention if this IS a condo), interim occupancy vs final closing, and why buying early in a release can matter. General, accurate, non-promissory education — no invented numbers, no financial advice, no guarantees of appreciation.",
+    "A short educational section (2–3 paragraphs, blank-line separated) titled toward 'buying pre-construction here': registering for first access, deposit structures staged over time, interim occupancy vs final closing, and why buying early in a release can matter. Cite ONLY the buyer-protection rule for THIS project's jurisdiction: Ontario → 10-day cooling-off period for new condos under the Condominium Act (condos only); British Columbia → 7-day rescission right for development units under REDMA; Florida → 15-day rescission period for new condos under FS 718.503 (condos only). General, accurate, non-promissory education — no invented numbers, no financial advice, no guarantees of appreciation.",
 } as const;
 
 interface SeoPromptSettings {

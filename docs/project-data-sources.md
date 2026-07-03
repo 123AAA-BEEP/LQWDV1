@@ -66,6 +66,17 @@ Daily cron `/api/cron/discovery`; manual/probe runs via
 - **Meta ads**: no public API for Canadian housing ads — forward ad creatives
   to the intake inbox (the Summerhill flow); they ride the same pipeline.
 
+#### Expansion sources (BC + Florida — adapters to come, sweeps manual for now)
+- **BC**: SkyriseCities Vancouver database (UrbanToronto's sister platform —
+  the UT adapter accepts a custom index URL), urbanYVR, City of Vancouver
+  development applications (shapeyourcity.ca + open data), BCFSA disclosure
+  filings for new developments (REDMA).
+- **Florida (Miami)**: developer sites, Miami-Dade County permit/open data,
+  The Real Deal South Florida, condo aggregators (CondoBlackBook etc.).
+  Compliance note: US recipients fall under CAN-SPAM (see
+  `src/lib/email-compliance.ts`); FL licence checks via the DBPR register
+  (see `src/lib/regions.ts`).
+
 ### 4. Bulk import provenance (already in the DB)
 - **Altus** inventory — the ~1,145-project bulk import. Dedup key is the Altus
   inventory # (stored in admin-only `import_notes`). Same name+city can be

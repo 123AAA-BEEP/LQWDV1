@@ -6,6 +6,7 @@ import { Card, CardBody } from "@/components/ui/card";
 import { formatPriceBand, isRentalListing, RENTAL_STATUS_LABELS } from "@/lib/types";
 import type { PublicProject, RealtorCard } from "@/lib/types";
 import { TITLE_LABELS } from "@/lib/types";
+import { regionForProvince } from "@/lib/regions";
 import {
   NeighbourhoodBlock,
   hasNeighbourhood,
@@ -166,7 +167,7 @@ function jsonLd(project: PublicProject, galleryUrls: string[] = []): object[] {
       "@type": "PostalAddress",
       addressLocality: project.city ?? undefined,
       addressRegion: project.province ?? "ON",
-      addressCountry: "CA",
+      addressCountry: regionForProvince(project.province)?.country ?? "CA",
     },
   };
   if (project.latitude && project.longitude) {

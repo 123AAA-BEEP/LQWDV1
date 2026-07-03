@@ -8,9 +8,9 @@ import { Button, ButtonLink } from "@/components/ui/button";
 import { formatPriceBand } from "@/lib/types";
 
 export const metadata: Metadata = {
-  title: "New & Pre-Construction Homes in Ontario | LIQWD",
+  title: "New & Pre-Construction Homes in Ontario, BC & Florida | LIQWD",
   description:
-    "Browse new and pre-construction home developments across Ontario — condos, towns, and single-family homes.",
+    "Browse new and pre-construction home developments across Ontario, British Columbia, and Florida — condos, towns, and single-family homes.",
 };
 export const dynamic = "force-dynamic";
 
@@ -204,7 +204,7 @@ export default async function MarketplacePage({
       <section className="border-b border-slate-200 bg-white">
         <div className="mx-auto max-w-6xl px-6 pb-10 pt-14 sm:pt-20">
           <h1 className="max-w-3xl text-balance text-4xl font-semibold tracking-tight text-ink sm:text-5xl">
-            New &amp; pre-construction homes in Ontario
+            New &amp; pre-construction homes in Ontario, BC &amp; Florida
           </h1>
           <p className="mt-4 max-w-2xl text-lg text-slate-600">
             Explore active condo, townhome, and single-family developments — and

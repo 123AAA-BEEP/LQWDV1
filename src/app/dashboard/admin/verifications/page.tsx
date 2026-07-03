@@ -7,6 +7,7 @@ import { Badge, verificationBadgeTone } from "@/components/ui/badge";
 import { FlashNotice } from "@/components/ui/flash-notice";
 import { VERIFICATION_LABELS } from "@/lib/types";
 import type { VerificationStatus } from "@/lib/types";
+import { regionOrDefault } from "@/lib/regions";
 import { decideVerification } from "./actions";
 
 export const metadata: Metadata = { title: "Verification queue" };
@@ -17,6 +18,7 @@ interface Row {
   profile_id: string;
   status: VerificationStatus;
   reco_registration_number: string;
+  license_region: string | null;
   brokerage_name_submitted: string | null;
   notes: string | null;
   created_at: string;
@@ -43,7 +45,7 @@ export default async function VerificationsQueue({
   const sp = await searchParams;
   const supabase = await createClient();
   const select =
-    "id, profile_id, status, reco_registration_number, brokerage_name_submitted, notes, created_at, reviewed_at, requester:profiles!profile_id(first_name,last_name,email)";
+    "id, profile_id, status, reco_registration_number, license_region, brokerage_name_submitted, notes, created_at, reviewed_at, requester:profiles!profile_id(first_name,last_name,email)";
 
   const [{ data: pending }, { data: recent }] = await Promise.all([
     supabase
@@ -113,10 +115,19 @@ export default async function VerificationsQueue({
                 <dl className="grid gap-2 text-sm sm:grid-cols-2">
                   <div>
                     <dt className="text-xs uppercase text-slate-400">
-                      RECO #
+                      {regionOrDefault(r.license_region).regulator.shortName} # ·{" "}
+                      {regionOrDefault(r.license_region).label}
                     </dt>
                     <dd className="text-slate-800">
-                      {r.reco_registration_number}
+                      {r.reco_registration_number}{" "}
+                      <a
+                        href={regionOrDefault(r.license_region).regulator.registerUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-xs font-medium text-brand-700 hover:underline"
+                      >
+                        Check register ↗
+                      </a>
                     </dd>
                   </div>
                   <div>

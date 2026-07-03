@@ -2,9 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { assertAdmin } from "@/lib/admin";
 import { sendEmail, brandedEmail } from "@/lib/email";
 import { claimUrlFor } from "@/lib/off-market";
+import { complianceFootnote, suppressedAmong } from "@/lib/email-compliance";
 
 const PAGE = "/dashboard/admin/invites";
 /** Max sends per click — the throttle. Click once a day for a slow warm-up. */
@@ -25,6 +27,7 @@ function firstName(name: string | null): string {
 /** Renders one agent's invite (what you preview is exactly what sends). */
 function renderInvite(opts: {
   agent_name: string | null;
+  claim_email: string;
   listings: { title: string; claim_token: string }[];
 }): { subject: string; body_html: string } {
   const n = opts.listings.length;
@@ -56,9 +59,16 @@ function renderInvite(opts: {
   const body_html = brandedEmail({
     heading: `Your listing${n === 1 ? "" : "s"} — waiting to go live`,
     body,
+    // CASL footer: sender identification + mailing address + instant
+    // unsubscribe, with the consent basis stated (their published listing).
     footnote:
-      "Alex Karczewski · LIQWD · liqwd.ca — You're receiving this one-time note because you publicly " +
-      'listed these properties. Reply "remove" to opt out of any future contact.',
+      "Alex Karczewski · " +
+      complianceFootnote({
+        law: "casl",
+        email: opts.claim_email,
+        consentContext:
+          "You're receiving this one-time note because you publicly listed these properties.",
+      }),
   });
 
   return { subject, body_html };
@@ -112,6 +122,7 @@ export async function generateInviteDrafts() {
     if (decided.has(email)) continue;
     const { subject, body_html } = renderInvite({
       agent_name: rows[0].realtor_name,
+      claim_email: email,
       listings: rows.map((r) => ({ title: r.title, claim_token: r.claim_token })),
     });
     const { error } = await supabase.from("off_market_invites").upsert(
@@ -186,7 +197,22 @@ export async function sendApprovedBatch() {
     body_html: string;
   }[];
 
+  // Global do-not-email check — anyone who unsubscribed or replied "remove"
+  // (via ANY campaign) is skipped permanently, never failed-and-retried.
+  const admin = createAdminClient();
+  const suppressed = await suppressedAmong(
+    admin,
+    batch.map((b) => b.claim_email),
+  );
+
   for (const invite of batch) {
+    if (suppressed.has(invite.claim_email.toLowerCase())) {
+      await supabase
+        .from("off_market_invites")
+        .update({ status: "skipped", error: "suppressed (unsubscribed)" })
+        .eq("id", invite.id);
+      continue;
+    }
     const ok = await sendEmail({
       to: invite.claim_email,
       subject: invite.subject,

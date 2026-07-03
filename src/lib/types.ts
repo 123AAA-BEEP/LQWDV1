@@ -42,6 +42,8 @@ export interface Profile {
   reco_expiry: string | null;
   reco_verified_at: string | null;
   reco_verification_method: "certificate" | "manual" | null;
+  /** Which regulator licensed this agent (regions.ts) — default 'ontario'. */
+  license_region: string | null;
   verification_status: VerificationStatus;
   realtor_tier: RealtorTier;
   plan: Plan;

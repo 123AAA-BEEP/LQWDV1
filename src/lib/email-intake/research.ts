@@ -17,6 +17,7 @@ export interface ResearchResult {
   confidence: number;
   address_full: string | null;
   city: string | null;
+  province_or_state: string | null;
   builder_name: string | null;
   project_type: string | null;
   price_from: number | null;
@@ -62,7 +63,14 @@ export async function researchProject(
           },
           confidence: { type: "number", description: "0..1" },
           address_full: { type: ["string", "null"] },
-          city: { type: ["string", "null"], description: "City in Ontario, e.g. 'Burlington'" },
+          city: {
+            type: ["string", "null"],
+            description: "City, e.g. 'Burlington', 'Vancouver', 'Miami'",
+          },
+          province_or_state: {
+            type: ["string", "null"],
+            description: "Province or state, e.g. 'Ontario', 'British Columbia', 'Florida'",
+          },
           builder_name: { type: ["string", "null"] },
           project_type: {
             type: ["string", "null"],
@@ -100,12 +108,14 @@ export async function researchProject(
     {
       role: "user",
       content:
-        "A new pre-construction real-estate project in Ontario, Canada was just announced " +
-        "and we only have thin details from a marketing email. Cross-reference it on the web " +
-        "— the builder's own site, UrbanToronto, Urbanation, BuzzBuzzHome, condos.ca, local news — " +
-        "and report ONLY facts a source actually states. Top priorities: the CITY and street " +
-        "address, then builder, home type, pricing, occupancy. If you cannot corroborate the " +
-        "project at all, report found=false. Never guess or fill gaps from intuition.\n\n" +
+        "A new pre-construction real-estate project was just announced (our markets: Ontario, " +
+        "British Columbia, and Florida) and we only have thin details from a marketing email. " +
+        "Cross-reference it on the web — the builder's own site, UrbanToronto/SkyriseCities, " +
+        "Urbanation, BuzzBuzzHome, condos.ca, local news (for Florida: the developer's site, " +
+        "The Real Deal, condo aggregators) — and report ONLY facts a source actually states. " +
+        "Top priorities: the CITY and PROVINCE/STATE and street address, then builder, home " +
+        "type, pricing, occupancy. If you cannot corroborate the project at all, report " +
+        "found=false. Never guess or fill gaps from intuition.\n\n" +
         "IMPORTANT: bedrooms_summary and occupancy_estimate_text render word-for-word on the " +
         "public consumer page. Write them as clean, neutral facts. Never name the websites you " +
         "found them on and never describe disagreements between sources in those fields — when " +
@@ -150,6 +160,7 @@ export async function researchProject(
           confidence: Math.min(Math.max(num("confidence") ?? 0, 0), 1),
           address_full: str("address_full"),
           city: str("city"),
+          province_or_state: str("province_or_state"),
           builder_name: str("builder_name"),
           project_type: str("project_type"),
           price_from: num("price_from"),
