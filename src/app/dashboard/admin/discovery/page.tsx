@@ -5,7 +5,13 @@ import { Card, CardBody } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonClasses } from "@/components/ui/button";
 import { FlashNotice } from "@/components/ui/flash-notice";
-import { igniteSignalAction, dismissSignal, dismissWatch } from "./actions";
+import { Field, Input, Textarea } from "@/components/ui/field";
+import {
+  igniteSignalAction,
+  dismissSignal,
+  dismissWatch,
+  addManualSignals,
+} from "./actions";
 
 export const metadata: Metadata = { title: "Discovery" };
 export const dynamic = "force-dynamic";
@@ -160,6 +166,37 @@ export default async function DiscoveryPage({
           </p>
         ) : null}
       </div>
+
+      {/* Bulk manual intake — paste a list of project names */}
+      <Card>
+        <CardBody>
+          <h3 className="font-semibold text-ink">Queue a list of projects</h3>
+          <p className="mt-1 text-sm text-slate-500">
+            Paste project names, one per line (up to 200). Add{" "}
+            <span className="font-mono text-xs">| City</span> after a name to
+            override the default city. Each becomes a signal: ignition
+            researches it on the web, pins the address, and publishes when
+            geography confirms — drafts + a ping when it can&apos;t.
+          </p>
+          <form action={addManualSignals} className="mt-4 space-y-3">
+            <Field label="Project names" htmlFor="names">
+              <Textarea
+                id="names"
+                name="names"
+                required
+                className="min-h-40 font-mono text-xs"
+                placeholder={"The Perigon\nMercedes-Benz Places | Miami\nFive Park | Miami Beach"}
+              />
+            </Field>
+            <div className="flex flex-wrap items-end gap-3">
+              <Field label="Default city" htmlFor="city">
+                <Input id="city" name="city" placeholder="Miami" className="w-48" />
+              </Field>
+              <Button type="submit">Queue signals</Button>
+            </div>
+          </form>
+        </CardBody>
+      </Card>
 
       {/* Signals */}
       <section className="space-y-3">

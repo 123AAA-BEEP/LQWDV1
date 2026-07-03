@@ -14,7 +14,7 @@ import { submitVerification, verifyRecoCertificate } from "./actions";
 export const metadata: Metadata = { title: "Verification" };
 
 const RECO_NOTICE: Record<string, { tone: "success" | "warning" | "error" | "info"; msg: string }> = {
-  approved: { tone: "success", msg: "Verified! We matched your RECO certificate and unlocked your account." },
+  approved: { tone: "success", msg: "Verified! We confirmed your licence and unlocked your account." },
   nomatch: { tone: "warning", msg: "We couldn't confidently match that certificate to your profile. Make sure your name and RECO number match the document, or submit below for manual review." },
   unavailable: { tone: "info", msg: "Instant verification is temporarily unavailable. Submit below and we'll review it manually." },
   saveerror: { tone: "error", msg: "We matched your certificate but couldn't save your verification. Please try again in a moment — if it keeps happening, contact support." },

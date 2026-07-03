@@ -7,6 +7,8 @@ import { awardReferralVerificationBonus } from "@/lib/rewards";
 import { sendAgentVerifiedEmail } from "@/lib/email";
 import { publishHeldListingsFor } from "@/lib/off-market";
 import { redirectWithFlash } from "@/lib/flash";
+import { registerCheck } from "@/lib/license-check";
+import { isRegionKey } from "@/lib/regions";
 
 type Decision = "approved" | "rejected" | "suspended";
 
@@ -63,6 +65,47 @@ export async function decideVerification(formData: FormData) {
         ? "Verification rejected."
         : "Agent suspended.",
     decision === "approved" ? "success" : "info",
+  );
+}
+
+/**
+ * One-click register check from the queue (BC / Florida): fetches the
+ * regulator's public register and appends the verdict to the request notes so
+ * the admin can approve with evidence — or trust it and approve immediately.
+ */
+export async function runRegisterCheck(formData: FormData) {
+  const requestId = String(formData.get("request_id") ?? "");
+  const regionRaw = String(formData.get("license_region") ?? "");
+  const license = String(formData.get("license_number") ?? "").trim();
+  const name = String(formData.get("agent_name") ?? "").trim() || null;
+  if (!requestId || !license || !isRegionKey(regionRaw)) return;
+
+  const supabase = await createClient();
+  await assertAdmin(supabase);
+
+  const check = await registerCheck(regionRaw, license, name);
+
+  const { data: cur } = await supabase
+    .from("verification_requests")
+    .select("notes")
+    .eq("id", requestId)
+    .maybeSingle();
+  await supabase
+    .from("verification_requests")
+    .update({
+      notes: [cur?.notes ?? null, `[register check] ${check.detail}`]
+        .filter(Boolean)
+        .join("\n"),
+    })
+    .eq("id", requestId);
+
+  revalidatePath("/dashboard/admin/verifications");
+  redirectWithFlash(
+    "/dashboard/admin/verifications",
+    check.active_match
+      ? `Register check PASSED: ${check.detail} Safe to approve.`
+      : `Register check: ${check.detail}`,
+    check.active_match ? "success" : "info",
   );
 }
 

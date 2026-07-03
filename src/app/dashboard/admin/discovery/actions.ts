@@ -36,6 +36,51 @@ export async function igniteSignalAction(formData: FormData) {
   );
 }
 
+/**
+ * Bulk manual intake: paste project names (one per line, optionally
+ * "Name | City" to override the default city) and each becomes a discovery
+ * signal. Ignition then researches, geolocates, and publishes them through
+ * the standard pipeline — built for "here's a ton of Miami project names".
+ */
+export async function addManualSignals(formData: FormData) {
+  const rawList = String(formData.get("names") ?? "");
+  const defaultCity = String(formData.get("city") ?? "").trim() || null;
+  const supabase = await createClient();
+  await assertAdmin(supabase);
+
+  const admin = createAdminClient();
+  const lines = rawList
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter((l) => l.length >= 3 && l.length <= 140)
+    .slice(0, 200);
+
+  let added = 0;
+  let dupes = 0;
+  for (const line of lines) {
+    const [name, cityOverride] = line.split("|").map((s) => s.trim());
+    if (!name) continue;
+    const { error } = await admin.from("discovery_signals").insert({
+      source: "manual",
+      project_name: name,
+      city: cityOverride || defaultCity,
+    });
+    if (error) {
+      if (/duplicate key/i.test(error.message)) dupes++;
+    } else {
+      added++;
+    }
+  }
+
+  revalidatePath("/dashboard/admin/discovery");
+  redirectWithFlash(
+    "/dashboard/admin/discovery",
+    `${added} signal${added === 1 ? "" : "s"} queued${
+      dupes ? ` (${dupes} duplicate${dupes === 1 ? "" : "s"} skipped)` : ""
+    } — run the sweep runner or Ignite them individually; each gets researched, geolocated, and published when geography confirms.`,
+  );
+}
+
 /** Hide a signal that isn't a real project (admin-only). */
 export async function dismissSignal(formData: FormData) {
   const id = String(formData.get("signal_id") ?? "");
