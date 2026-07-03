@@ -158,7 +158,9 @@ export async function registerCheck(
               status_text: null,
               matched_name: null,
               detail:
-                "Ontario uses the RECO certificate instant-verify path, not a register fetch.",
+                region === "ontario"
+                  ? "Ontario uses the RECO certificate instant-verify path, not a register fetch."
+                  : "No automated register adapter for this regulator yet — verify on the public register manually.",
             };
     return { region, license, ...result };
   } catch (e) {

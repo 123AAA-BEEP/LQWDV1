@@ -5,7 +5,7 @@
  * SEO writer is allowed to cite per jurisdiction.
  */
 
-export type RegionKey = "ontario" | "british_columbia" | "florida";
+export type RegionKey = "ontario" | "british_columbia" | "alberta" | "florida";
 export type EmailLaw = "casl" | "can_spam";
 
 export interface Region {
@@ -79,6 +79,29 @@ export const REGIONS: Record<RegionKey, Region> = {
       marketLine: "new homes & presales in BC",
     },
   },
+  alberta: {
+    key: "alberta",
+    label: "Alberta",
+    country: "CA",
+    provinceValues: ["ab", "alberta"],
+    regulator: {
+      name: "Real Estate Council of Alberta",
+      shortName: "RECA",
+      licenseLabel: "RECA licence #",
+      licenseHint:
+        "Your RECA real-estate licence number (searchable on RECA's Find a Licensee).",
+      registerUrl: "https://www.reca.ca/consumers/find-licensed-professional/",
+    },
+    emailLaw: "casl",
+    buyingNotes:
+      "Alberta: new condominium purchases from a developer include a 10-day rescission period under the Condominium Property Act (condos only); the New Home Buyer Protection Act requires warranty coverage on new homes.",
+    voice: {
+      audienceLine: "Free for verified Alberta realtors",
+      microcopy:
+        "No referral fees. No brokerage change. RECA licence verification required.",
+      marketLine: "new homes in Alberta",
+    },
+  },
   florida: {
     key: "florida",
     label: "Florida",
@@ -114,9 +137,23 @@ export function visitorRegionKey(h: {
 }): RegionKey | null {
   const country = (h.get("x-vercel-ip-country") ?? "").toUpperCase();
   const region = (h.get("x-vercel-ip-country-region") ?? "").toUpperCase();
-  if (country === "CA") return region === "BC" ? "british_columbia" : "ontario";
+  if (country === "CA") {
+    if (region === "BC") return "british_columbia";
+    if (region === "AB") return "alberta";
+    return "ontario";
+  }
   if (country === "US") return "florida";
   return null;
+}
+
+/** URL slug for the /agents/[region] landing pages. */
+export function regionSlug(key: RegionKey): string {
+  return key.replace(/_/g, "-");
+}
+
+export function regionFromSlug(slug: string): Region | null {
+  const key = slug.replace(/-/g, "_");
+  return isRegionKey(key) ? REGIONS[key] : null;
 }
 
 export const REGION_KEYS = Object.keys(REGIONS) as RegionKey[];

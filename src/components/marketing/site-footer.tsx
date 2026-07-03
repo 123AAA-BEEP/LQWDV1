@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BRAND, DISCLAIMER } from "@/lib/brand";
+import { REGIONS, REGION_KEYS, regionSlug } from "@/lib/regions";
 
 export function SiteFooter() {
   return (
@@ -13,8 +14,18 @@ export function SiteFooter() {
             <span aria-hidden className="size-1 rounded-full bg-brand-500" />
           </div>
           <p className="mt-2 max-w-xs text-sm leading-relaxed text-slate-500">
-            The Ultimate Broker Portal for new homes in Ontario. Built in
-            Canada.
+            The Ultimate Broker Portal for new homes. Built in Canada.
+          </p>
+          <p className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-sm text-slate-500">
+            {REGION_KEYS.map((k) => (
+              <Link
+                key={k}
+                href={`/agents/${regionSlug(k)}`}
+                className="hover:text-ink hover:underline"
+              >
+                {REGIONS[k].label}
+              </Link>
+            ))}
           </p>
         </div>
         <nav className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-slate-600">
@@ -43,8 +54,8 @@ export function SiteFooter() {
             © {new Date().getFullYear()} {BRAND.name}. All rights reserved.
           </span>
           <span>
-            RECO verification required. Not affiliated with or endorsed by
-            RECO.
+            Licence verification required (RECO / BCFSA / RECA / FL DBPR). Not
+            affiliated with or endorsed by any regulator.
           </span>
         </div>
       </div>
