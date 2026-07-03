@@ -10,7 +10,8 @@ export type RegionKey =
   | "british_columbia"
   | "alberta"
   | "florida"
-  | "tennessee";
+  | "tennessee"
+  | "california";
 export type EmailLaw = "casl" | "can_spam";
 
 export interface Region {
@@ -153,6 +154,29 @@ export const REGIONS: Record<RegionKey, Region> = {
       marketLine: "new construction in Nashville & Tennessee",
     },
   },
+  california: {
+    key: "california",
+    label: "California",
+    country: "US",
+    provinceValues: ["ca", "california"],
+    regulator: {
+      name: "California Department of Real Estate",
+      shortName: "DRE",
+      licenseLabel: "California DRE license #",
+      licenseHint:
+        "Your California DRE license number (verifiable on the DRE public license lookup).",
+      registerUrl: "https://www2.dre.ca.gov/PublicASP/pplinfo.asp",
+    },
+    emailLaw: "can_spam",
+    buyingNotes:
+      "California: new subdivisions and condominium projects are sold under a Final Public Report issued by the California DRE, which buyers must receive before entering a binding purchase agreement.",
+    voice: {
+      audienceLine: "Free for licensed California agents",
+      microcopy:
+        "No referral fees. No brokerage change. California DRE license verification required.",
+      marketLine: "new construction in Los Angeles & California",
+    },
+  },
 };
 
 /**
@@ -170,7 +194,11 @@ export function visitorRegionKey(h: {
     if (region === "AB") return "alberta";
     return "ontario";
   }
-  if (country === "US") return region === "TN" ? "tennessee" : "florida";
+  if (country === "US") {
+    if (region === "TN") return "tennessee";
+    if (region === "CA") return "california";
+    return "florida";
+  }
   return null;
 }
 

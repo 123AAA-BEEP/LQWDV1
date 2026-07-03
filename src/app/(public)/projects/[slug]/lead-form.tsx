@@ -125,7 +125,11 @@ export function LeadForm({
       </Button>
       <p className="text-xs leading-relaxed text-slate-500">
         Your details go only to this project&apos;s representative — no spam,
-        ever.
+        ever. See our{" "}
+        <a href="/privacy" className="underline hover:text-slate-700">
+          privacy policy
+        </a>{" "}
+        for how we handle your information.
       </p>
     </form>
   );
