@@ -9,7 +9,12 @@ import {
 import {
   sweepUrbanToronto,
   probeUrbanToronto,
+  SKYRISE_INDEX,
 } from "@/lib/discovery/sources/urbantoronto";
+import {
+  sweepVancouver,
+  probeVancouver,
+} from "@/lib/discovery/sources/vancouver";
 import {
   sweepBild,
   probeBild,
@@ -96,9 +101,13 @@ export async function GET(req: Request) {
       const out =
         source === "toronto"
           ? await probeToronto()
-          : source === "bild"
-            ? await probeBild(probeUrl)
-            : await probeUrbanToronto(probeUrl);
+          : source === "vancouver"
+            ? await probeVancouver()
+            : source === "bild"
+              ? await probeBild(probeUrl)
+              : source === "skyrisecities"
+                ? await probeUrbanToronto(probeUrl ?? SKYRISE_INDEX)
+                : await probeUrbanToronto(probeUrl);
       return NextResponse.json({ probe: source, result: out });
     }
 
@@ -111,6 +120,19 @@ export async function GET(req: Request) {
     if (source === "urbantoronto" || source === "all") {
       sweeps.push(
         await sweepUrbanToronto(admin).catch((e) => err("urbantoronto", e)),
+      );
+    }
+    if (source === "skyrisecities" || source === "all") {
+      sweeps.push(
+        await sweepUrbanToronto(admin, {
+          indexUrl: SKYRISE_INDEX,
+          sourceTag: "skyrisecities",
+        }).catch((e) => err("skyrisecities", e)),
+      );
+    }
+    if (source === "vancouver" || source === "all") {
+      sweeps.push(
+        await sweepVancouver(admin).catch((e) => err("vancouver_opendata", e)),
       );
     }
     if (source === "bild") {

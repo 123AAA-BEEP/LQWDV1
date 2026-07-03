@@ -142,7 +142,9 @@ export default async function DiscoveryPage({
         {(
           [
             ["urbantoronto", "Sweep UrbanToronto"],
+            ["skyrisecities", "Sweep SkyriseCities (BC)"],
             ["toronto", "Sweep Toronto planning data"],
+            ["vancouver", "Sweep Vancouver permits"],
             ["seed-builders", "Seed builders from projects"],
             ["bild", "Sweep BILD directory"],
           ] as const
