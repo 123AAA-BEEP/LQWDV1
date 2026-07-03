@@ -254,6 +254,7 @@ export async function ingestExtractedProject(
     }
     const merged = {
       city: ex.city ?? research?.city ?? null,
+      province: research?.province_or_state ?? null,
       address_full: ex.address_full ?? research?.address_full ?? null,
       builder_name: ex.builder_name ?? research?.builder_name ?? null,
       project_type: ex.project_type ?? research?.project_type ?? null,
@@ -277,6 +278,7 @@ export async function ingestExtractedProject(
         builder_name: merged.builder_name,
         builder_names_raw: merged.builder_name,
         city: merged.city ?? "Unknown",
+        ...(merged.province ? { province: merged.province } : {}),
         address_full: merged.address_full,
         project_type: normType(merged.project_type),
         price_from_public: merged.price_from,

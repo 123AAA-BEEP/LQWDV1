@@ -3,6 +3,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { resolveLeadSteward } from "@/lib/rewards";
 import { sendEmail, brandedEmail } from "@/lib/email";
+import { complianceFootnote, suppressedAmong } from "@/lib/email-compliance";
 
 /**
  * Public lead capture. Runs server-side with the service-role client so lead
@@ -226,6 +227,10 @@ async function sendRealtorRecruitEmail(
   const firstName = opts.lead_name.trim().split(/\s+/)[0] || "there";
   const base = process.env.NEXT_PUBLIC_SITE_URL ?? "https://liqwd.ca";
 
+  // Never recruit an address on the global do-not-email list.
+  const suppressed = await suppressedAmong(admin, [opts.lead_email]);
+  if (suppressed.has(opts.lead_email.toLowerCase())) return;
+
   await sendEmail({
     to: opts.lead_email,
     replyTo: process.env.LEADS_NOTIFY_EMAIL ?? "leads@getliqwd.com",
@@ -237,12 +242,16 @@ async function sendRealtorRecruitEmail(
         "exactly like this one</strong> to verified agents — free. Claim a project " +
         "page and its inquiries go to you, with commission details and broker " +
         "portals for every development in one place.<br><br>" +
-        "It takes two minutes: create your free account, verify your RECO once, " +
+        "It takes two minutes: create your free account, verify your licence once, " +
         "and you're in the network.",
       ctaUrl: `${base}/signup`,
       ctaLabel: "Create my free agent account",
-      footnote:
-        "You're receiving this one-time note because you registered on a LIQWD project page and told us you're an agent. No further emails unless you sign up.",
+      footnote: complianceFootnote({
+        law: "casl",
+        email: opts.lead_email,
+        consentContext:
+          "You're receiving this one-time note because you registered on a LIQWD project page and told us you're an agent.",
+      }),
     }),
   });
 }

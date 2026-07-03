@@ -16,6 +16,7 @@ import {
   type RecoExtract,
 } from "@/lib/reco";
 import { publishHeldListingsFor } from "@/lib/off-market";
+import { isRegionKey } from "@/lib/regions";
 
 const ACCEPTED = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
 const MAX_BYTES = 4_000_000; // stay under Vercel's server-action body limit
@@ -107,9 +108,11 @@ export async function submitVerification(formData: FormData) {
   const reco = String(formData.get("reco_registration_number") ?? "").trim();
   const brokerage = String(formData.get("brokerage_name_submitted") ?? "").trim();
   const notes = String(formData.get("notes") ?? "").trim();
+  const regionRaw = String(formData.get("license_region") ?? "");
+  const region = isRegionKey(regionRaw) ? regionRaw : "ontario";
 
   if (!reco) {
-    redirect("/dashboard/verify?error=" + encodeURIComponent("RECO registration number is required."));
+    redirect("/dashboard/verify?error=" + encodeURIComponent("Your licence / registration number is required."));
   }
 
   const { profile, userId } = await requireUserProfile();
@@ -118,6 +121,7 @@ export async function submitVerification(formData: FormData) {
   const { error } = await supabase.from("verification_requests").insert({
     profile_id: userId,
     reco_registration_number: reco,
+    license_region: region,
     brokerage_name_submitted: brokerage || null,
     notes: notes || null,
     status: "pending",
@@ -127,11 +131,12 @@ export async function submitVerification(formData: FormData) {
     redirect("/dashboard/verify?error=" + encodeURIComponent("Could not submit. Please try again."));
   }
 
-  // Reflect the RECO number on the profile and ensure status is pending.
+  // Reflect the licence number + region on the profile; status stays pending.
   await supabase
     .from("profiles")
     .update({
       reco_registration_number: reco,
+      license_region: region,
       verification_status: "pending",
     })
     .eq("id", userId);

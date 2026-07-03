@@ -4,10 +4,11 @@ import { requireUserProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { Card, CardBody } from "@/components/ui/card";
-import { Field, Input, Textarea } from "@/components/ui/field";
+import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { Notice } from "@/components/ui/notice";
 import { Badge, verificationBadgeTone } from "@/components/ui/badge";
 import { VERIFICATION_LABELS } from "@/lib/types";
+import { REGIONS, REGION_KEYS, regionOrDefault } from "@/lib/regions";
 import { submitVerification, verifyRecoCertificate } from "./actions";
 
 export const metadata: Metadata = { title: "Verification" };
@@ -51,7 +52,7 @@ export default async function VerifyPage({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold tracking-tight text-ink">
-          RECO verification
+          Licence verification
         </h1>
         <Badge tone={verificationBadgeTone(status)}>
           {VERIFICATION_LABELS[status]}
@@ -102,13 +103,19 @@ export default async function VerifyPage({
                   <ShieldCheck className="size-5 text-brand-600" strokeWidth={1.75} aria-hidden />
                 </span>
                 <div>
-                  <h2 className="font-semibold text-ink">Verify instantly</h2>
+                  <h2 className="font-semibold text-ink">
+                    Verify instantly{" "}
+                    <span className="text-sm font-normal text-slate-400">
+                      (Ontario / RECO)
+                    </span>
+                  </h2>
                   <p className="mt-1 text-sm text-slate-500">
                     Upload your RECO registration certificate and we’ll verify
                     you automatically — usually in seconds. We read the document
                     to confirm your name, registration number, and status, then{" "}
                     <span className="font-medium text-slate-600">delete the file</span>.
-                    We never store it.
+                    We never store it. Licensed in BC or Florida? Use manual
+                    review below — it&apos;s usually same-day.
                   </p>
                 </div>
               </div>
@@ -140,15 +147,36 @@ export default async function VerifyPage({
             <span className="h-px flex-1 bg-slate-200" />
           </div>
 
-          {/* Manual path — enter RECO number, admin reviews */}
+          {/* Manual path — enter licence details, admin checks the register */}
           <Card>
             <CardBody>
               <p className="text-sm text-slate-500">
-                No certificate handy? Enter your RECO registration details and
-                we’ll review them manually.
+                Enter your licence details and we&apos;ll verify them against
+                your regulator&apos;s public register — RECO (Ontario), BCFSA
+                (British Columbia), or Florida DBPR.
               </p>
               <form action={submitVerification} className="mt-5 space-y-4">
-                <Field label="RECO registration number" htmlFor="reco_registration_number">
+                <Field
+                  label="Where are you licensed?"
+                  htmlFor="license_region"
+                >
+                  <Select
+                    id="license_region"
+                    name="license_region"
+                    defaultValue={regionOrDefault(profile.license_region).key}
+                  >
+                    {REGION_KEYS.map((k) => (
+                      <option key={k} value={k}>
+                        {REGIONS[k].label} — {REGIONS[k].regulator.shortName}
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+                <Field
+                  label="Licence / registration number"
+                  htmlFor="reco_registration_number"
+                  hint="RECO registration # (Ontario) · BCFSA licence # (BC) · DBPR license #, e.g. SL1234567 (Florida)"
+                >
                   <Input
                     id="reco_registration_number"
                     name="reco_registration_number"
