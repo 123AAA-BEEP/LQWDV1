@@ -70,6 +70,14 @@ export async function GET(req: Request) {
     .limit(4);
   const outcomes: IgniteOutcome[] = [];
   for (const s of (data ?? []) as SignalRow[]) {
+    // Atomic claim — never double-ingest a signal a manual runner grabbed.
+    const { data: claimed } = await admin
+      .from("discovery_signals")
+      .update({ status: "processing" })
+      .eq("id", s.id)
+      .eq("status", "new")
+      .select("id");
+    if (!claimed || claimed.length === 0) continue;
     outcomes.push(await igniteSignal(admin, s));
   }
 
