@@ -3,6 +3,8 @@ import Anthropic from "@anthropic-ai/sdk";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { maybeGenerateSeoOnPublish } from "@/lib/seo";
 import { slugify } from "@/lib/slug";
+import { fetchLinkContext } from "@/lib/email-intake/fetch-links";
+import { attachGalleryAndHero } from "@/lib/email-intake/media";
 
 /**
  * Hands-off, high-quality hero sourcing.
@@ -203,9 +205,52 @@ async function sourceVerifiedHero(
 const SKIP_MARKER = "auto-pipeline: no rendering";
 
 /**
- * Hero backfill for pages that are ALREADY live without a hero (email-intake
- * publishes on facts; imagery can lag). Sources + vision-verifies a hero for
- * one specific project, or drains a small batch of published-no-hero pages.
+ * The pages we ALREADY KNOW carry this project's imagery: its own website,
+ * the web-research source URLs (recorded in import_notes at ingest), and its
+ * broker portals. Ordered own-site-first; one page per host.
+ */
+async function knownPageUrls(
+  supabase: ReturnType<typeof createAdminClient>,
+  project: { id: string; import_notes: string | null },
+  websiteUrl: string | null,
+): Promise<string[]> {
+  const urls: string[] = [];
+  if (websiteUrl) urls.push(websiteUrl);
+  for (const m of (project.import_notes ?? "").matchAll(/https?:\/\/[^\s,\])]+/g)) {
+    urls.push(m[0]);
+  }
+  const { data: portals } = await supabase
+    .from("project_broker_portals")
+    .select("url")
+    .eq("project_id", project.id)
+    .not("url", "is", null)
+    .limit(2);
+  for (const p of (portals ?? []) as { url: string }[]) urls.push(p.url);
+
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const raw of urls) {
+    try {
+      const u = new URL(raw);
+      if (/liqwd\.ca|getliqwd\.com/i.test(u.hostname)) continue;
+      if (seen.has(u.hostname)) continue;
+      seen.add(u.hostname);
+      out.push(u.toString());
+    } catch {
+      /* not a URL */
+    }
+  }
+  return out.slice(0, 3);
+}
+
+/**
+ * Hero + GALLERY backfill for pages that are live without imagery. Two paths,
+ * in order:
+ *  1. Known pages — fetch the project's own site / research sources / portals,
+ *     download their images, vision-classify (promo creatives excluded), and
+ *     attach a gallery + best hero. Region-agnostic: works anywhere research
+ *     found the project.
+ *  2. Legacy aggregator guesses (gta-homes/condonow/…) — Ontario fallback.
  * Never touches publish state — the page is live either way.
  */
 export async function sourceHeroForMissing(
@@ -217,18 +262,62 @@ export async function sourceHeroForMissing(
 
   let q = supabase
     .from("projects")
-    .select("id, project_name, city, builder_name, import_notes")
+    .select("id, project_name, city, builder_name, import_notes, website_url")
     .is("hero_image_url", null)
     .not("import_notes", "ilike", `%${SKIP_MARKER}%`)
     .limit(projectId ? 1 : limit);
   q = projectId ? q.eq("id", projectId) : q.eq("record_status", "published");
   const { data } = await q;
 
-  const rows = (data ?? []) as (ProjectRow & { import_notes: string | null })[];
+  const rows = (data ?? []) as (ProjectRow & {
+    import_notes: string | null;
+    website_url: string | null;
+  })[];
   const results: SourcingResult[] = [];
   for (const p of rows) {
-    const src = await sourceVerifiedHero(p);
     const stamp = new Date().toISOString().slice(0, 10);
+
+    // Path 1: mine the pages we already know about (any region).
+    const pages = await knownPageUrls(supabase, p, p.website_url);
+    if (pages.length > 0) {
+      try {
+        const { images } = await fetchLinkContext(pages);
+        if (images.length > 0) {
+          await attachGalleryAndHero(supabase, p.id, images, {
+            setHero: true,
+            projectName: p.project_name,
+          });
+        }
+        const { data: after } = await supabase
+          .from("projects")
+          .select("hero_image_url")
+          .eq("id", p.id)
+          .maybeSingle();
+        if (after?.hero_image_url) {
+          await supabase
+            .from("projects")
+            .update({
+              hero_image_alt: `Rendering of ${p.project_name}`,
+              import_notes: `${p.import_notes ?? ""} [auto-pipeline ${stamp}: hero + gallery from known pages.]`,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", p.id);
+          results.push({
+            id: p.id,
+            name: p.project_name,
+            published: true,
+            kind: "known_pages",
+            reason: `sourced from ${pages.length} known page(s)`,
+          });
+          continue;
+        }
+      } catch {
+        /* fall through to the aggregator path */
+      }
+    }
+
+    // Path 2: legacy Ontario aggregator guesses.
+    const src = await sourceVerifiedHero(p);
     if (src.ok && src.heroUrl) {
       await supabase
         .from("projects")

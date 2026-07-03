@@ -25,6 +25,21 @@ export async function igniteSignalAction(formData: FormData) {
     .maybeSingle();
   if (!data) return;
 
+  // Atomic claim — don't double-ingest if a runner is already on it.
+  const { data: claimed } = await admin
+    .from("discovery_signals")
+    .update({ status: "processing" })
+    .eq("id", id)
+    .in("status", ["new", "error"])
+    .select("id");
+  if (!claimed || claimed.length === 0) {
+    redirectWithFlash(
+      "/dashboard/admin/discovery",
+      "That signal is already being processed by a runner.",
+      "info",
+    );
+  }
+
   const outcome = await igniteSignal(admin, data as SignalRow);
   revalidatePath("/dashboard/admin/discovery");
   redirectWithFlash(

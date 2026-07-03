@@ -56,6 +56,15 @@ async function igniteNewSignals(
     .limit(cap);
   const outcomes: IgniteOutcome[] = [];
   for (const s of (data ?? []) as SignalRow[]) {
+    // Atomic claim: concurrent runners (cron + a manual tab) must never
+    // double-ingest the same signal — first to flip new→processing wins.
+    const { data: claimed } = await admin
+      .from("discovery_signals")
+      .update({ status: "processing" })
+      .eq("id", s.id)
+      .eq("status", "new")
+      .select("id");
+    if (!claimed || claimed.length === 0) continue;
     outcomes.push(await igniteSignal(admin, s));
   }
   return outcomes;
