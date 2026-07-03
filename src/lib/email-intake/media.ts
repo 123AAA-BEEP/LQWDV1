@@ -14,7 +14,8 @@ type Admin = ReturnType<typeof createAdminClient>;
 
 const VISION_MODEL = "claude-opus-4-8";
 const MAX_GALLERY = 6;
-/** Total wall-clock for classification — the webhook budget is shared. */
+/** Default classification wall-clock — the webhook budget is shared. Backfill
+ *  callers (no webhook cap) pass a longer deadline via opts. */
 const CLASSIFY_DEADLINE_MS = 14_000;
 
 /** Lower = better hero. */
@@ -53,6 +54,7 @@ interface Classified {
 
 async function classifyBase64(
   img: InboundImage,
+  context?: { projectName?: string; city?: string | null },
 ): Promise<{ kind: string; promo: boolean }> {
   try {
     const anthropic = new Anthropic();
@@ -79,10 +81,11 @@ async function classifyBase64(
                     "site_map",
                     "logo_or_text",
                     "person_headshot",
+                    "vehicle_or_product",
                     "other",
                   ],
                   description:
-                    "lifestyle_amenity = amenity/pool/gym/lobby/streetscape/neighbourhood imagery (people incidental); person_headshot = a portrait/agent photo where a person IS the subject.",
+                    "lifestyle_amenity = amenity/pool/gym/lobby/streetscape/neighbourhood imagery (people incidental); person_headshot = a portrait/agent photo where a person IS the subject; vehicle_or_product = a car, boat, watch, furniture piece or other product IS the subject (brand-partnership sites are full of these — they are NOT property imagery).",
                 },
                 has_promo_text: {
                   type: "boolean",
@@ -109,7 +112,12 @@ async function classifyBase64(
               },
               {
                 type: "text",
-                text: "Classify this new-home project marketing image. Flag overlaid offer text — commission/incentive creatives are agent-facing and can't be shown to the public.",
+                text:
+                  `Classify this candidate image for the new-home project` +
+                  (context?.projectName
+                    ? ` "${context.projectName}"${context.city ? ` in ${context.city}` : ""}`
+                    : "") +
+                  `. It must depict the PROPERTY (building, suites, amenities) to be usable — a car, product, or unrelated brand shot is vehicle_or_product/other even if it appears on the project's website. Flag overlaid offer text — commission/incentive creatives are agent-facing and can't be shown to the public.`,
               },
             ],
           },
@@ -160,26 +168,45 @@ export async function attachGalleryAndHero(
   admin: Admin,
   projectId: string,
   images: InboundImage[],
-  opts: { setHero: boolean; projectName: string },
+  opts: {
+    setHero: boolean;
+    projectName: string;
+    city?: string | null;
+    /**
+     * Strict mode (scraped-page backfills): only a positively-classified
+     * image can become the hero — never an unclassified/other leftover.
+     * Scraped pages carry unrelated imagery (brand-partnership car shots,
+     * ads), so "first image" is not a safe guess there. Email attachments
+     * keep the lenient fallback.
+     */
+    strictHero?: boolean;
+    /** Classification wall-clock; backfill callers pass a longer one. */
+    classifyDeadlineMs?: number;
+  },
 ): Promise<void> {
   const batch = images.slice(0, MAX_GALLERY);
   if (batch.length === 0) return;
 
   // Classify within a shared deadline; leftovers stay "unclassified".
+  const deadline = opts.classifyDeadlineMs ?? CLASSIFY_DEADLINE_MS;
   const startedAt = Date.now();
   const classified: Classified[] = [];
   for (const img of batch) {
-    if (Date.now() - startedAt > CLASSIFY_DEADLINE_MS) {
+    if (Date.now() - startedAt > deadline) {
       classified.push({ img, kind: "unclassified", promo: false });
       continue;
     }
-    const c = await classifyBase64(img);
+    const c = await classifyBase64(img, {
+      projectName: opts.projectName,
+      city: opts.city,
+    });
     classified.push({ img, kind: c.kind, promo: c.promo });
   }
 
   // Hero ladder: rendering/photo > lifestyle/amenity > project logo >
-  // unclassified first image. Headshots never; promo creatives (commission/
-  // incentive overlays) never — those are broker-only material.
+  // (lenient mode only) unclassified first image. Headshots and vehicle/
+  // product shots never; promo creatives (commission/incentive overlays)
+  // never — those are broker-only material.
   let hero: Classified | undefined = classified
     .filter((c) => c.kind in HERO_RANK && !c.promo)
     .sort((a, b) => HERO_RANK[a.kind] - HERO_RANK[b.kind])[0];
@@ -190,7 +217,7 @@ export async function attachGalleryAndHero(
         (a, b) => HERO_RANK_FALLBACK[a.kind] - HERO_RANK_FALLBACK[b.kind],
       )[0];
   }
-  if (!hero) {
+  if (!hero && !opts.strictHero) {
     hero = classified.find(
       (c) => (c.kind === "unclassified" || c.kind === "other") && !c.promo,
     );
@@ -200,8 +227,13 @@ export async function attachGalleryAndHero(
   let sort = 0;
   for (const c of classified) {
     const isHero = c === hero;
-    // Promo creatives never reach the public gallery at all.
-    const inGallery = !c.promo && (GALLERY_KINDS.has(c.kind) || isHero);
+    // Promo creatives never reach the public gallery at all; in strict mode
+    // unclassified scraped images don't either (they're unvetted).
+    const inGallery =
+      !c.promo &&
+      ((GALLERY_KINDS.has(c.kind) &&
+        !(opts.strictHero && c.kind === "unclassified")) ||
+        isHero);
     if (!inGallery) continue;
     const url = await upload(admin, projectId, c.img);
     if (!url) continue;

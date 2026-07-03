@@ -17,8 +17,10 @@ import {
 } from "@/lib/discovery/sources/vancouver";
 import {
   sweepBild,
+  sweepAllDirectories,
   probeBild,
   seedBuildersFromProjects,
+  BUILDER_DIRECTORIES,
 } from "@/lib/discovery/sources/builders";
 import {
   NEWS_FEEDS,
@@ -173,6 +175,18 @@ export async function GET(req: Request) {
     }
     if (source === "bild") {
       sweeps.push(await sweepBild(admin).catch((e) => err("bild", e)));
+    }
+    // A single association directory by tag, or the whole set.
+    const dir = BUILDER_DIRECTORIES.find((d) => d.tag === source);
+    if (dir && source !== "bild") {
+      sweeps.push(
+        await sweepBild(admin, { url: dir.url, tag: dir.tag }).catch((e) =>
+          err(dir.tag, e),
+        ),
+      );
+    }
+    if (source === "builder-dirs") {
+      sweeps.push(...(await sweepAllDirectories(admin)));
     }
     if (source === "seed-builders") {
       sweeps.push(

@@ -7,7 +7,7 @@ import {
 } from "@/lib/discovery/sources/urbantoronto";
 import { sweepVancouver } from "@/lib/discovery/sources/vancouver";
 import {
-  sweepBild,
+  sweepAllDirectories,
   seedBuildersFromProjects,
 } from "@/lib/discovery/sources/builders";
 import {
@@ -31,7 +31,8 @@ export const maxDuration = 300;
  * UrbanPlanet Nashville) — and ignite anything new.
  * Tuesdays: also refresh every address watchlist (Toronto + Vancouver +
  * Miami-Dade, Nashville, LA, Calgary, Edmonton permits).
- * Wednesdays: also refresh the builder registry (projects seed + BILD).
+ * Wednesdays: also refresh the builder registry (projects seed + every
+ * association directory — BILD plus its state/metro HBA equivalents).
  * Query-string-free by design — cron paths stay plain.
  */
 export async function GET(req: Request) {
@@ -68,7 +69,8 @@ export async function GET(req: Request) {
     sweeps.push(
       await seedBuildersFromProjects(admin).catch((e) => fail("seed_builders", e)),
     );
-    sweeps.push(await sweepBild(admin).catch((e) => fail("bild", e)));
+    // Every association directory (BILD + its equivalent in each market).
+    sweeps.push(...(await sweepAllDirectories(admin)));
   }
 
   // Drain up to a handful of new signals per day (each may cost a research pass).

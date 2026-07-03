@@ -321,6 +321,9 @@ export async function sourceHeroForMissing(
           await attachGalleryAndHero(supabase, p.id, images, {
             setHero: true,
             projectName: p.project_name,
+            city: p.city,
+            strictHero: true,
+            classifyDeadlineMs: 60_000,
           });
         }
         const { data: after } = await supabase
@@ -379,6 +382,9 @@ export async function sourceHeroForMissing(
           await attachGalleryAndHero(supabase, p.id, images, {
             setHero: true,
             projectName: p.project_name,
+            city: p.city,
+            strictHero: true,
+            classifyDeadlineMs: 60_000,
           });
         }
         const { data: after } = await supabase
