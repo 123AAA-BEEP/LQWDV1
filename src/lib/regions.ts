@@ -5,7 +5,12 @@
  * SEO writer is allowed to cite per jurisdiction.
  */
 
-export type RegionKey = "ontario" | "british_columbia" | "alberta" | "florida";
+export type RegionKey =
+  | "ontario"
+  | "british_columbia"
+  | "alberta"
+  | "florida"
+  | "tennessee";
 export type EmailLaw = "casl" | "can_spam";
 
 export interface Region {
@@ -125,6 +130,29 @@ export const REGIONS: Record<RegionKey, Region> = {
       marketLine: "new construction in Florida",
     },
   },
+  tennessee: {
+    key: "tennessee",
+    label: "Tennessee",
+    country: "US",
+    provinceValues: ["tn", "tennessee"],
+    regulator: {
+      name: "Tennessee Real Estate Commission",
+      shortName: "TREC",
+      licenseLabel: "Tennessee real estate license #",
+      licenseHint:
+        "Your Tennessee (TREC) license number, verifiable at verify.tn.gov.",
+      registerUrl: "https://verify.tn.gov/",
+    },
+    emailLaw: "can_spam",
+    buyingNotes:
+      "Tennessee: buyers of new condominiums from a developer must receive a public offering statement and may cancel within 15 days of receiving it under the Tennessee Condominium Act.",
+    voice: {
+      audienceLine: "Free for licensed Tennessee agents",
+      microcopy:
+        "No referral fees. No brokerage change. Tennessee (TREC) license verification required.",
+      marketLine: "new construction in Nashville & Tennessee",
+    },
+  },
 };
 
 /**
@@ -142,7 +170,7 @@ export function visitorRegionKey(h: {
     if (region === "AB") return "alberta";
     return "ontario";
   }
-  if (country === "US") return "florida";
+  if (country === "US") return region === "TN" ? "tennessee" : "florida";
   return null;
 }
 

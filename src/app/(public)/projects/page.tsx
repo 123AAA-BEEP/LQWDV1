@@ -3,6 +3,7 @@ import Link from "next/link";
 import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { REGIONS, isRegionKey, visitorRegionKey } from "@/lib/regions";
+import { plainSlug } from "@/lib/slug";
 import { Card, CardBody } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input, Select } from "@/components/ui/field";
@@ -358,6 +359,26 @@ export default async function MarketplacePage({
                 <ProjectCard key={p.project_id} p={p} featured />
               ))}
             </div>
+          </div>
+        </section>
+      ) : null}
+
+      {/* Browse by city — crawlable entry points into the city hubs */}
+      {!hasFilter && cities.length > 0 ? (
+        <section className="border-b border-slate-200 bg-white">
+          <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-2 gap-y-1.5 px-6 py-3 text-sm">
+            <span className="font-semibold uppercase tracking-wide text-slate-500">
+              Browse by city:
+            </span>
+            {cities.slice(0, 14).map((c) => (
+              <Link
+                key={c}
+                href={`/new-homes/${plainSlug(c)}`}
+                className="rounded-full border border-slate-200 px-2.5 py-0.5 text-slate-600 hover:border-brand-300 hover:text-brand-700"
+              >
+                {c}
+              </Link>
+            ))}
           </div>
         </section>
       ) : null}
