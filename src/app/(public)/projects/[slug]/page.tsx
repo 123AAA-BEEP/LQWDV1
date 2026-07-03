@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardBody } from "@/components/ui/card";
-import { formatPriceBand } from "@/lib/types";
+import { formatPriceBand, isRentalListing, RENTAL_STATUS_LABELS } from "@/lib/types";
 import type { PublicProject, RealtorCard } from "@/lib/types";
 import { TITLE_LABELS } from "@/lib/types";
 import {
@@ -147,6 +147,7 @@ export async function generateMetadata({
 /** schema.org structured data: the residence + offer, breadcrumbs, and FAQ. */
 function jsonLd(project: PublicProject, galleryUrls: string[] = []): object[] {
   const pageUrl = `${SITE_URL}/projects/${project.slug}`;
+  const rental = isRentalListing(project);
   const blocks: object[] = [];
   const allImages = [project.hero_image_url, ...galleryUrls].filter(
     (u): u is string => Boolean(u),
@@ -178,7 +179,10 @@ function jsonLd(project: PublicProject, galleryUrls: string[] = []): object[] {
   if (project.total_units) residence.numberOfAccommodationUnits = project.total_units;
   blocks.push(residence);
 
-  if (project.price_from_public) {
+  // Sale offers use Product/AggregateOffer (PreOrder). Rental pricing is
+  // monthly — sale-offer schema would mislead crawlers, so rentals skip it
+  // (the ApartmentComplex block above still carries the entity).
+  if (project.price_from_public && !rental) {
     blocks.push({
       "@context": "https://schema.org",
       "@type": "Product",
@@ -203,7 +207,12 @@ function jsonLd(project: PublicProject, galleryUrls: string[] = []): object[] {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "New homes", item: `${SITE_URL}/projects` },
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: rental ? "New rentals" : "New homes",
+        item: rental ? `${SITE_URL}/rentals` : `${SITE_URL}/projects`,
+      },
       ...(project.city
         ? [{
             "@type": "ListItem",
@@ -248,9 +257,11 @@ export default async function PublicProjectPage({
   const project = await getProject(slug);
   if (!project) notFound();
 
+  const rental = isRentalListing(project);
   const priceBand = formatPriceBand(
     project.price_from_public,
     project.price_to_public,
+    { monthly: rental },
   );
   const location = [project.neighbourhood, project.city, project.province]
     .filter(Boolean)
@@ -271,7 +282,9 @@ export default async function PublicProjectPage({
     project.page_description ??
     project.description_long;
   const faq = project.section_faq ?? [];
-  const ctaLabel = project.custom_cta_text ?? "Get price list & floor plans";
+  const ctaLabel =
+    project.custom_cta_text ??
+    (rental ? "Check availability & pricing" : "Get price list & floor plans");
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 pb-24 lg:pb-10">
@@ -285,8 +298,11 @@ export default async function PublicProjectPage({
       ))}
       {/* Breadcrumb — mirrors the BreadcrumbList JSON-LD */}
       <nav aria-label="Breadcrumb" className="mb-4 text-sm text-slate-500">
-        <Link href="/projects" className="hover:text-ink hover:underline">
-          New homes
+        <Link
+          href={rental ? "/rentals" : "/projects"}
+          className="hover:text-ink hover:underline"
+        >
+          {rental ? "New rentals" : "New homes"}
         </Link>
         {project.city ? (
           <>
@@ -333,7 +349,15 @@ export default async function PublicProjectPage({
             <div className="absolute left-4 top-4 flex flex-wrap gap-1.5">
               {project.sales_status ? (
                 <span className="rounded-full bg-ink/85 px-3 py-1 text-xs font-semibold capitalize text-white backdrop-blur">
-                  {project.sales_status.replace(/_/g, " ")}
+                  {rental
+                    ? (RENTAL_STATUS_LABELS[project.sales_status] ??
+                      project.sales_status.replace(/_/g, " "))
+                    : project.sales_status.replace(/_/g, " ")}
+                </span>
+              ) : null}
+              {rental ? (
+                <span className="rounded-full bg-white/85 px-3 py-1 text-xs font-semibold text-slate-700 backdrop-blur">
+                  Rental
                 </span>
               ) : null}
               {project.project_type ? (
@@ -377,7 +401,7 @@ export default async function PublicProjectPage({
           {/* Public-safe facts */}
           <dl className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3">
             {priceBand ? (
-              <Fact label="Pricing" value={priceBand} />
+              <Fact label={rental ? "Rent" : "Pricing"} value={priceBand} />
             ) : null}
             {project.occupancy_estimate_text ? (
               <Fact label="Occupancy" value={project.occupancy_estimate_text} />
@@ -448,7 +472,11 @@ export default async function PublicProjectPage({
             text={project.section_developer}
           />
           <Section
-            title={`Buying pre-construction at ${project.project_name}`}
+            title={
+              rental
+                ? `Leasing at ${project.project_name}`
+                : `Buying pre-construction at ${project.project_name}`
+            }
             text={project.section_buying}
           />
 
@@ -490,11 +518,12 @@ export default async function PublicProjectPage({
           <Card id="request-info" className="scroll-mt-24 border-slate-300 shadow-md">
             <CardBody>
               <h2 className="text-lg font-semibold text-ink">
-                Request pricing &amp; availability
+                {rental ? "Check availability" : "Request pricing & availability"}
               </h2>
               <p className="mt-1 text-sm text-slate-500">
-                First access to pricing, floorplans, and availability — before
-                the public.
+                {rental
+                  ? "First access to suites, rents, and move-in dates."
+                  : "First access to pricing, floorplans, and availability — before the public."}
               </p>
               <div className="mt-4">
                 <LeadForm
@@ -502,6 +531,7 @@ export default async function PublicProjectPage({
                   publicPageId={project.public_page_id}
                   ctaText={ctaLabel}
                   refCode={ref}
+                  rental={rental}
                 />
               </div>
             </CardBody>

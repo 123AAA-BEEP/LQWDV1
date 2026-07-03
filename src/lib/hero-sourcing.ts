@@ -203,6 +203,58 @@ async function sourceVerifiedHero(
 const SKIP_MARKER = "auto-pipeline: no rendering";
 
 /**
+ * Hero backfill for pages that are ALREADY live without a hero (email-intake
+ * publishes on facts; imagery can lag). Sources + vision-verifies a hero for
+ * one specific project, or drains a small batch of published-no-hero pages.
+ * Never touches publish state — the page is live either way.
+ */
+export async function sourceHeroForMissing(
+  projectId?: string,
+  limit = 2,
+): Promise<SourcingResult[]> {
+  if (!process.env.ANTHROPIC_API_KEY) return [];
+  const supabase = createAdminClient();
+
+  let q = supabase
+    .from("projects")
+    .select("id, project_name, city, builder_name, import_notes")
+    .is("hero_image_url", null)
+    .not("import_notes", "ilike", `%${SKIP_MARKER}%`)
+    .limit(projectId ? 1 : limit);
+  q = projectId ? q.eq("id", projectId) : q.eq("record_status", "published");
+  const { data } = await q;
+
+  const rows = (data ?? []) as (ProjectRow & { import_notes: string | null })[];
+  const results: SourcingResult[] = [];
+  for (const p of rows) {
+    const src = await sourceVerifiedHero(p);
+    const stamp = new Date().toISOString().slice(0, 10);
+    if (src.ok && src.heroUrl) {
+      await supabase
+        .from("projects")
+        .update({
+          hero_image_url: src.heroUrl,
+          hero_image_alt: `Rendering of ${p.project_name}`,
+          import_notes: `${p.import_notes ?? ""} [auto-pipeline ${stamp}: hero backfilled (${src.kind}).]`,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", p.id);
+      results.push({ id: p.id, name: p.project_name, published: true, kind: src.kind, reason: src.reason });
+    } else {
+      await supabase
+        .from("projects")
+        .update({
+          import_notes: `${p.import_notes ?? ""} [${SKIP_MARKER} ${stamp}: ${src.reason}]`,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", p.id);
+      results.push({ id: p.id, name: p.project_name, published: false, reason: src.reason });
+    }
+  }
+  return results;
+}
+
+/**
  * Sources + vision-verifies + publishes up to `limit` draft projects.
  * Safe to run unattended (cron) or on-demand (admin). Returns per-project
  * outcomes.

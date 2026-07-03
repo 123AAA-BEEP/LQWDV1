@@ -27,7 +27,20 @@ export async function submitLead(
   const lead_name = String(formData.get("lead_name") ?? "").trim();
   const lead_email = String(formData.get("lead_email") ?? "").trim();
   const lead_phone = String(formData.get("lead_phone") ?? "").trim();
-  const message = String(formData.get("message") ?? "").trim();
+  let message = String(formData.get("message") ?? "").trim();
+  // Rental forms carry renter intent (move-in window, beds) — fold it into the
+  // message so it reaches whoever works the lead, no schema change needed.
+  const moveIn = String(formData.get("move_in") ?? "").trim();
+  const beds = String(formData.get("beds") ?? "").trim();
+  const renterIntent = [
+    moveIn ? `Move-in: ${moveIn}` : null,
+    beds ? `Looking for: ${beds}` : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+  if (renterIntent) {
+    message = message ? `${renterIntent}\n\n${message}` : renterIntent;
+  }
   // Referral codes are uppercase alphanumerics; normalise so a pasted/lowercased
   // link still attributes correctly.
   const ref = String(formData.get("ref") ?? "")

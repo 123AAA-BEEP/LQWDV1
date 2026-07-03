@@ -35,15 +35,20 @@ const GALLERY_KINDS = new Set([
 interface Classified {
   img: InboundImage;
   kind: string;
+  /** Overlaid offer/marketing text (commission %, bonuses, price banners) —
+   *  these are agent-facing creatives and must NEVER reach the public page. */
+  promo: boolean;
 }
 
-async function classifyBase64(img: InboundImage): Promise<string> {
+async function classifyBase64(
+  img: InboundImage,
+): Promise<{ kind: string; promo: boolean }> {
   try {
     const anthropic = new Anthropic();
     const res = await anthropic.messages.create(
       {
         model: VISION_MODEL,
-        max_tokens: 128,
+        max_tokens: 160,
         tools: [
           {
             name: "classify",
@@ -65,8 +70,13 @@ async function classifyBase64(img: InboundImage): Promise<string> {
                     "other",
                   ],
                 },
+                has_promo_text: {
+                  type: "boolean",
+                  description:
+                    "true if the image has ANY overlaid offer/marketing text — commission percentages, broker/agent incentives, deposit structures, bonus offers, price banners, 'VIP launch' text, etc. A plain project-name watermark does not count.",
+                },
               },
-              required: ["kind"],
+              required: ["kind", "has_promo_text"],
             },
           },
         ],
@@ -83,7 +93,10 @@ async function classifyBase64(img: InboundImage): Promise<string> {
                   data: img.data,
                 },
               },
-              { type: "text", text: "Classify this new-home project marketing image." },
+              {
+                type: "text",
+                text: "Classify this new-home project marketing image. Flag overlaid offer text — commission/incentive creatives are agent-facing and can't be shown to the public.",
+              },
             ],
           },
         ],
@@ -91,11 +104,16 @@ async function classifyBase64(img: InboundImage): Promise<string> {
       { timeout: 8_000 },
     );
     const block = res.content.find((b) => b.type === "tool_use");
-    return block && block.type === "tool_use"
-      ? String((block.input as Record<string, unknown>).kind ?? "other")
-      : "other";
+    if (block && block.type === "tool_use") {
+      const input = block.input as Record<string, unknown>;
+      return {
+        kind: String(input.kind ?? "other"),
+        promo: Boolean(input.has_promo_text),
+      };
+    }
+    return { kind: "other", promo: false };
   } catch {
-    return "unclassified";
+    return { kind: "unclassified", promo: false };
   }
 }
 
@@ -137,26 +155,31 @@ export async function attachGalleryAndHero(
   const classified: Classified[] = [];
   for (const img of batch) {
     if (Date.now() - startedAt > CLASSIFY_DEADLINE_MS) {
-      classified.push({ img, kind: "unclassified" });
+      classified.push({ img, kind: "unclassified", promo: false });
       continue;
     }
-    classified.push({ img, kind: await classifyBase64(img) });
+    const c = await classifyBase64(img);
+    classified.push({ img, kind: c.kind, promo: c.promo });
   }
 
   // Hero: best-ranked hero-suitable image; fallback to the first image when
-  // nothing classified as hero-worthy (never a known logo/text image).
+  // nothing classified as hero-worthy. Never a logo/text image — and never a
+  // promo creative: commission/incentive overlays are broker-only material.
   let hero: Classified | undefined = classified
-    .filter((c) => c.kind in HERO_RANK)
+    .filter((c) => c.kind in HERO_RANK && !c.promo)
     .sort((a, b) => HERO_RANK[a.kind] - HERO_RANK[b.kind])[0];
   if (!hero) {
-    hero = classified.find((c) => c.kind === "unclassified" || c.kind === "other");
+    hero = classified.find(
+      (c) => (c.kind === "unclassified" || c.kind === "other") && !c.promo,
+    );
   }
 
   let heroUrl: string | null = null;
   let sort = 0;
   for (const c of classified) {
     const isHero = c === hero;
-    const inGallery = GALLERY_KINDS.has(c.kind) || isHero;
+    // Promo creatives never reach the public gallery at all.
+    const inGallery = !c.promo && (GALLERY_KINDS.has(c.kind) || isHero);
     if (!inGallery) continue;
     const url = await upload(admin, projectId, c.img);
     if (!url) continue;

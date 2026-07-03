@@ -71,6 +71,21 @@ async function publishAdmin(admin: Admin, projectId: string, slug: string) {
       ).catch(() => null),
       new Promise((r) => setTimeout(r, 1_500)),
     ]);
+    // No hero (intake had no usable imagery)? Hand hero-sourcing the page the
+    // same way — its own function, its own budget, publish already done.
+    const { data: h } = await admin
+      .from("projects")
+      .select("hero_image_url")
+      .eq("id", projectId)
+      .maybeSingle();
+    if (!h?.hero_image_url) {
+      await Promise.race([
+        fetch(
+          `${base}/api/hero-backfill?key=${encodeURIComponent(key)}&project=${encodeURIComponent(projectId)}`,
+        ).catch(() => null),
+        new Promise((r) => setTimeout(r, 1_500)),
+      ]);
+    }
   } else {
     await maybeGenerateSeoOnPublish(projectId, admin);
   }

@@ -133,6 +133,8 @@ export default async function MarketplacePage({
   let req = supabase
     .from("public_projects_view")
     .select(SELECT)
+    // Rentals live on /rentals — the buy browse stays for-sale only.
+    .or("listing_type.is.null,listing_type.neq.for_rent")
     .order("featured_rank", { ascending: true, nullsFirst: false })
     .order("is_advertiser", { ascending: false })
     .order("is_featured", { ascending: false })
@@ -164,6 +166,7 @@ export default async function MarketplacePage({
             .from("public_projects_view")
             .select(SELECT)
             .or("is_featured.eq.true,is_advertiser.eq.true")
+            .or("listing_type.is.null,listing_type.neq.for_rent")
             .order("featured_rank", { ascending: true, nullsFirst: false })
             .order("published_at", { ascending: false })
             .limit(3),
@@ -172,6 +175,7 @@ export default async function MarketplacePage({
         : supabase
             .from("public_projects_view")
             .select("slug, project_name, city, published_at")
+            .or("listing_type.is.null,listing_type.neq.for_rent")
             .order("published_at", { ascending: false })
             .limit(6),
     ]);

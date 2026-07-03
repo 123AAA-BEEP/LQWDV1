@@ -13,9 +13,12 @@ export function PublicHeader() {
           <span aria-hidden className="size-1.5 rounded-full bg-brand-500" />
         </Link>
         <nav className="flex items-center gap-4 text-sm font-medium sm:gap-6">
-          {/* The marketplace's own action leads; cross-links stay quiet. */}
+          {/* The marketplace's own actions lead; cross-links stay quiet. */}
           <Link href="/projects" className="font-semibold text-ink">
             New homes
+          </Link>
+          <Link href="/rentals" className="text-slate-500 hover:text-ink">
+            Rentals
           </Link>
           <Link
             href="/developers"

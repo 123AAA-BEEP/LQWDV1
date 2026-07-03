@@ -121,17 +121,25 @@ export async function igniteSignal(
       .eq("id", watch.id);
   }
 
-  // 4. Enrich the project with planning specifics the marketing may not carry.
-  if (result.project_id && watch && (watch.units || watch.storeys)) {
+  // 4. Enrich the project with planning specifics the marketing may not carry
+  //    — and flag purpose-built rentals so they land in the rentals lane.
+  const PBR_RE = /purpose[\s-]?built rental|rental (apartment|building|tower|units)|\bPBR\b/i;
+  const isRental =
+    PBR_RE.test(watch?.description ?? "") || PBR_RE.test(String(raw.status ?? ""));
+  if (result.project_id && (watch?.units || watch?.storeys || isRental)) {
     const { data: cur } = await admin
       .from("projects")
-      .select("total_units, storeys")
+      .select("total_units, storeys, listing_type")
       .eq("id", result.project_id)
       .maybeSingle();
     if (cur) {
-      const patch: Record<string, number> = {};
-      if (cur.total_units == null && watch.units) patch.total_units = watch.units;
-      if (cur.storeys == null && watch.storeys) patch.storeys = watch.storeys;
+      const patch: Record<string, unknown> = {};
+      if (cur.total_units == null && watch?.units) patch.total_units = watch.units;
+      if (cur.storeys == null && watch?.storeys) patch.storeys = watch.storeys;
+      if (isRental && cur.listing_type !== "for_rent") {
+        patch.listing_type = "for_rent";
+        patch.price_period = "monthly";
+      }
       if (Object.keys(patch).length) {
         await admin.from("projects").update(patch).eq("id", result.project_id);
       }
