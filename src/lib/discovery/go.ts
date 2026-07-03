@@ -2,6 +2,7 @@ import "server-only";
 import type { createAdminClient } from "@/lib/supabase/admin";
 import { ingestExtractedProject } from "@/lib/email-intake/ingest";
 import type { ExtractedProject } from "@/lib/email-intake/extract";
+import { regionForProvince } from "@/lib/regions";
 import { matchSignalToWatch, isKnownBuilder, type SignalRow, type WatchRow } from "./match";
 
 type Admin = ReturnType<typeof createAdminClient>;
@@ -44,7 +45,13 @@ export async function igniteSignal(
     storeys?: number | null;
     units?: number | null;
     status?: string | null;
+    price_from?: number | null;
+    price_to?: number | null;
+    year?: number | null;
+    neighbourhood?: string | null;
   };
+  const num = (v: unknown) =>
+    typeof v === "number" && Number.isFinite(v) && v > 0 ? v : null;
   const builder = signal.builder_name ?? watch?.developer_name ?? null;
   const knownBuilder = await isKnownBuilder(admin, builder);
 
@@ -69,10 +76,10 @@ export async function igniteSignal(
     project_type: null,
     city,
     address_full: address,
-    price_from: null,
-    price_to: null,
+    price_from: num(raw.price_from),
+    price_to: num(raw.price_to),
     bedrooms_summary: null,
-    occupancy_estimate_text: null,
+    occupancy_estimate_text: raw.year ? `Estimated completion ${raw.year}` : null,
     incentives: null,
     commission_summary: null,
     commission_percent: null,
@@ -121,24 +128,34 @@ export async function igniteSignal(
       .eq("id", watch.id);
   }
 
-  // 4. Enrich the project with planning specifics the marketing may not carry
-  //    — and flag purpose-built rentals so they land in the rentals lane.
+  // 4. Enrich the project with specifics the marketing may not carry (from
+  //    the planning match OR the signal itself), flag purpose-built rentals,
+  //    and set USD pricing for US-region projects.
   const PBR_RE = /purpose[\s-]?built rental|rental (apartment|building|tower|units)|\bPBR\b/i;
   const isRental =
     PBR_RE.test(watch?.description ?? "") || PBR_RE.test(String(raw.status ?? ""));
-  if (result.project_id && (watch?.units || watch?.storeys || isRental)) {
+  const units = watch?.units ?? num(raw.units);
+  const storeys = watch?.storeys ?? num(raw.storeys);
+  if (result.project_id) {
     const { data: cur } = await admin
       .from("projects")
-      .select("total_units, storeys, listing_type")
+      .select("total_units, storeys, listing_type, province, price_currency")
       .eq("id", result.project_id)
       .maybeSingle();
     if (cur) {
       const patch: Record<string, unknown> = {};
-      if (cur.total_units == null && watch?.units) patch.total_units = watch.units;
-      if (cur.storeys == null && watch?.storeys) patch.storeys = watch.storeys;
+      if (cur.total_units == null && units) patch.total_units = units;
+      if (cur.storeys == null && storeys) patch.storeys = storeys;
       if (isRental && cur.listing_type !== "for_rent") {
         patch.listing_type = "for_rent";
         patch.price_period = "monthly";
+      }
+      // US-region projects price in USD (JSON-LD carries the currency).
+      if (
+        regionForProvince(cur.province)?.country === "US" &&
+        cur.price_currency !== "USD"
+      ) {
+        patch.price_currency = "USD";
       }
       if (Object.keys(patch).length) {
         await admin.from("projects").update(patch).eq("id", result.project_id);
