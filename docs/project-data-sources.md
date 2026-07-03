@@ -66,11 +66,13 @@ Daily cron `/api/cron/discovery`; manual/probe runs via
 - **Meta ads**: no public API for Canadian housing ads — forward ad creatives
   to the intake inbox (the Summerhill flow); they ride the same pipeline.
 
-#### Expansion sources (BC + Florida — adapters to come, sweeps manual for now)
-- **BC**: SkyriseCities Vancouver database (UrbanToronto's sister platform —
-  the UT adapter accepts a custom index URL), urbanYVR, City of Vancouver
-  development applications (shapeyourcity.ca + open data), BCFSA disclosure
-  filings for new developments (REDMA).
+#### Expansion sources
+- **BC (live)**: SkyriseCities database sweep (daily, `source=skyrisecities` —
+  reuses the UT adapter) and City of Vancouver open-data building permits
+  (`source=vancouver`, weekly — New Building + multi-unit residential →
+  watchlist). Also worth mining manually: urbanYVR, shapeyourcity.ca, BCFSA
+  REDMA disclosure filings, and presale aggregators (vancouvernewcondos.com,
+  mikestewart.ca/presales).
 - **Florida (Miami)**: developer sites, Miami-Dade County permit/open data,
   The Real Deal South Florida, condo aggregators (CondoBlackBook etc.).
   Compliance note: US recipients fall under CAN-SPAM (see

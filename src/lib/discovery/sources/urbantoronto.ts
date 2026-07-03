@@ -89,7 +89,7 @@ interface ParsedProject {
 }
 
 const CITY_RE =
-  /\b(Toronto|Mississauga|Vaughan|Brampton|Markham|Richmond Hill|Oakville|Burlington|Hamilton|Milton|Pickering|Ajax|Whitby|Oshawa|Etobicoke|North York|Scarborough|Barrie|Kitchener|Waterloo|Guelph|Newmarket|Aurora|Caledon|Ottawa|London)\b/;
+  /\b(Toronto|Mississauga|Vaughan|Brampton|Markham|Richmond Hill|Oakville|Burlington|Hamilton|Milton|Pickering|Ajax|Whitby|Oshawa|Etobicoke|North York|Scarborough|Barrie|Kitchener|Waterloo|Guelph|Newmarket|Aurora|Caledon|Ottawa|London|Vancouver|Burnaby|Surrey|Richmond|Coquitlam|Port Coquitlam|Port Moody|New Westminster|North Vancouver|West Vancouver|Langley|Abbotsford|Victoria|Kelowna|Nanaimo)\b/;
 
 function parseProjectPage(html: string): ParsedProject | null {
   const title =
@@ -132,14 +132,17 @@ function parseProjectPage(html: string): ParsedProject | null {
 /**
  * Sweep: read the database index, visit up to `maxPages` project pages we have
  * no signal for yet, and insert each as a discovery signal.
+ * SkyriseCities (UrbanToronto's sister platform, same database structure)
+ * covers Vancouver/BC — pass its index URL + sourceTag to sweep it.
  */
 export async function sweepUrbanToronto(
   admin: Admin,
-  opts: { indexUrl?: string; maxPages?: number } = {},
+  opts: { indexUrl?: string; maxPages?: number; sourceTag?: string } = {},
 ): Promise<SweepSummary> {
   const notes: string[] = [];
   const indexUrl = opts.indexUrl ?? DEFAULT_INDEX;
   const maxPages = opts.maxPages ?? 6;
+  const sourceTag = opts.sourceTag ?? "urbantoronto";
 
   const html = await fetchText(indexUrl);
   const links = projectLinks(html, indexUrl);
@@ -154,7 +157,7 @@ export async function sweepUrbanToronto(
     ? await admin
         .from("discovery_signals")
         .select("source_url")
-        .eq("source", "urbantoronto")
+        .eq("source", sourceTag)
         .in("source_url", urls)
     : { data: [] as { source_url: string }[] };
   const knownSet = new Set(
@@ -172,7 +175,7 @@ export async function sweepUrbanToronto(
         continue;
       }
       const { error } = await admin.from("discovery_signals").insert({
-        source: "urbantoronto",
+        source: sourceTag,
         source_url: link.url,
         project_name: parsed.name,
         builder_name: parsed.developer,
@@ -198,13 +201,16 @@ export async function sweepUrbanToronto(
   }
 
   return {
-    source: "urbantoronto",
+    source: sourceTag,
     scanned: fresh.length,
     added,
     updated: 0,
     notes,
   };
 }
+
+/** SkyriseCities (Vancouver/BC) — same platform, different index. */
+export const SKYRISE_INDEX = "https://skyrisecities.com/database/projects";
 
 /** cityNorm re-export spot-used by the matcher for UT-city comparisons. */
 export { cityNorm };
