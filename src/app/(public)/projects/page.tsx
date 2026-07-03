@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
+import { REGIONS, isRegionKey, visitorRegionKey } from "@/lib/regions";
 import { Card, CardBody } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input, Select } from "@/components/ui/field";
@@ -117,16 +119,24 @@ export default async function MarketplacePage({
     city?: string;
     type?: string;
     status?: string;
+    region?: string;
   }>;
 }) {
-  const { q: rawQ, city, type, status } = await searchParams;
+  const { q: rawQ, city, type, status, region } = await searchParams;
   const q = (rawQ ?? "").trim();
   const cityFilter = (city ?? "").trim();
   const typeFilter = type ?? "";
   const statusFilter = status ?? "";
+  const regionFilter = isRegionKey(region ?? "") ? (region as string) : "";
+
+  // Geo suggestion (never a gate): visitors see a one-tap chip for their own
+  // market when they aren't already filtering.
+  const visitorKey = visitorRegionKey(await headers());
 
   const supabase = await createClient();
-  const hasFilter = Boolean(q || cityFilter || typeFilter || statusFilter);
+  const hasFilter = Boolean(
+    q || cityFilter || typeFilter || statusFilter || regionFilter,
+  );
 
   // Main results — featured/sponsored float to the top of the grid too (so they
   // mix into results as the catalog grows), then newest first.
@@ -148,6 +158,14 @@ export default async function MarketplacePage({
   if (cityFilter) req = req.eq("city", cityFilter);
   if (typeFilter) req = req.eq("project_type", typeFilter);
   if (statusFilter) req = req.eq("sales_status", statusFilter);
+  if (regionFilter && isRegionKey(regionFilter)) {
+    // Province values vary by source ("ON" vs "Ontario") — match any form.
+    req = req.or(
+      REGIONS[regionFilter].provinceValues
+        .map((v) => `province.ilike.${v}`)
+        .join(","),
+    );
+  }
 
   // One parallel wave instead of four sequential round-trips (faster TTFB).
   // Featured strip runs only on the unfiltered browse (a curated highlight,
@@ -211,6 +229,23 @@ export default async function MarketplacePage({
             connect with a representative for pricing, floorplans, and
             availability.
           </p>
+
+          {visitorKey && !hasFilter ? (
+            <Link
+              href={`/projects?region=${visitorKey}`}
+              className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-brand-200 bg-brand-50 px-3.5 py-1.5 text-sm font-medium text-brand-800 hover:bg-brand-100"
+            >
+              <span aria-hidden>📍</span> See {REGIONS[visitorKey].voice.marketLine} →
+            </Link>
+          ) : null}
+          {regionFilter && isRegionKey(regionFilter) ? (
+            <p className="mt-4 text-sm font-medium text-brand-700">
+              Showing {REGIONS[regionFilter].label} —{" "}
+              <Link href="/projects" className="underline hover:text-brand-800">
+                show all markets
+              </Link>
+            </p>
+          ) : null}
 
           <form method="get" className="mt-8 space-y-3">
             <div className="flex gap-2">

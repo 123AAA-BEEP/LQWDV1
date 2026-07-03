@@ -1,5 +1,7 @@
 import { type ReactNode, Fragment } from "react";
+import { headers } from "next/headers";
 import { ButtonLink } from "@/components/ui/button";
+import { REGIONS, visitorRegionKey } from "@/lib/regions";
 import { LogoMarquee } from "@/components/marketing/logo-marquee";
 import { DashboardMock } from "@/components/marketing/dashboard-mock";
 import { ProjectPageMock } from "@/components/marketing/project-page-mock";
@@ -95,7 +97,12 @@ function FeatureSection({
   );
 }
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  // Geo-personalized voice: an agent in BC or Florida sees their market and
+  // regulator, not Ontario's. Personalization only — nothing is gated, and
+  // unknown locations get the Ontario default.
+  const region = REGIONS[visitorRegionKey(await headers()) ?? "ontario"];
+
   return (
     <>
       {/* Hero */}
@@ -109,7 +116,7 @@ export default function LandingPage() {
             <div>
               <p className="flex items-center gap-3 text-xs font-medium uppercase tracking-[0.2em] text-slate-500">
                 <span aria-hidden className="h-px w-8 bg-brand-500" />
-                {HERO.supporting}
+                {region.voice.audienceLine}
               </p>
               <h1 className="mt-6 text-balance text-4xl font-semibold leading-[1.05] tracking-tight text-ink sm:text-5xl lg:text-6xl">
                 {HERO.headline}
@@ -123,7 +130,9 @@ export default function LandingPage() {
                   {HERO.primaryCta}
                 </ButtonLink>
               </div>
-              <p className="mt-4 text-sm text-slate-500">{HERO.microcopy}</p>
+              <p className="mt-4 text-sm text-slate-500">
+                {region.voice.microcopy}
+              </p>
             </div>
 
             {/* Skyline shot with the coded dashboard mock pasted over it — the
