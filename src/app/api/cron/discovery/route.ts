@@ -10,6 +10,11 @@ import {
   sweepBild,
   seedBuildersFromProjects,
 } from "@/lib/discovery/sources/builders";
+import {
+  sweepAllNewsFeeds,
+  sweepUrbanPlanet,
+} from "@/lib/discovery/sources/newsfeeds";
+import { sweepAllPermits } from "@/lib/discovery/sources/permits";
 import { igniteSignal, type IgniteOutcome } from "@/lib/discovery/go";
 import { sendEmail } from "@/lib/email";
 import type { SignalRow } from "@/lib/discovery/match";
@@ -21,9 +26,11 @@ export const maxDuration = 300;
  * Hands-off discovery cron (scheduled daily in vercel.json — Vercel sends
  * `Authorization: Bearer ${CRON_SECRET}`).
  *
- * Every day: sweep UrbanToronto + SkyriseCities/BC (name signals) and ignite
- * anything new.
- * Tuesdays: also refresh the Toronto + Vancouver address watchlists.
+ * Every day: sweep the name-signal feeds — UrbanToronto + SkyriseCities
+ * (ON/BC/AB) plus the news feeds (The Next Miami, Florida YIMBY, Urbanize LA,
+ * UrbanPlanet Nashville) — and ignite anything new.
+ * Tuesdays: also refresh every address watchlist (Toronto + Vancouver +
+ * Miami-Dade, Nashville, LA, Calgary, Edmonton permits).
  * Wednesdays: also refresh the builder registry (projects seed + BILD).
  * Query-string-free by design — cron paths stay plain.
  */
@@ -46,11 +53,16 @@ export async function GET(req: Request) {
       sourceTag: "skyrisecities",
     }).catch((e) => fail("skyrisecities", e)),
   );
+  sweeps.push(...(await sweepAllNewsFeeds(admin)));
+  sweeps.push(
+    await sweepUrbanPlanet(admin).catch((e) => fail("urbanplanet_nashville", e)),
+  );
   if (day === 2) {
     sweeps.push(await sweepToronto(admin).catch((e) => fail("toronto_opendata", e)));
     sweeps.push(
       await sweepVancouver(admin).catch((e) => fail("vancouver_opendata", e)),
     );
+    sweeps.push(...(await sweepAllPermits(admin)));
   }
   if (day === 3) {
     sweeps.push(
