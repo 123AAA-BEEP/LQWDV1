@@ -10,10 +10,11 @@ type Admin = ReturnType<typeof createAdminClient>;
  *
  * 1. `seedBuildersFromProjects` — the free, instant one: every distinct
  *    builder_name already in our 1,100+ projects becomes a registry row.
- * 2. `sweepBild` — BILD (bildgta.ca) is the GTA developer/builder industry
- *    association; its public member directory is the closest thing to a
- *    census of who builds here. Parsed defensively with a probe mode, same
- *    as the other adapters.
+ * 2. `sweepBild` — a home-builder association member directory. BILD
+ *    (bildgta.ca) is the GTA original; BUILDER_DIRECTORIES lists its
+ *    equivalent in every market (state/metro HBAs), all parsed with the same
+ *    defensive heuristics + probe mode. The registry powers builder-name
+ *    cross-referencing at ignition AND the builder-site hero floor.
  */
 const UA = {
   "user-agent":
@@ -22,6 +23,36 @@ const UA = {
 };
 
 const DEFAULT_BILD_URL = "https://bildgta.ca/member-directory/";
+
+export interface BuilderDirectory {
+  /** discovery_builders.source tag + runner param. */
+  tag: string;
+  label: string;
+  url: string;
+}
+
+/**
+ * The BILD-equivalents: state/metro home-builder association member
+ * directories across every market. URLs follow the common association-site
+ * convention and are probe-tunable (`?probe=1&source=bild&url=…`) — a miss
+ * just reports "nothing matched" in the sweep notes.
+ * (NAHB's national Find-a-Builder sits behind a search form — the state and
+ * metro affiliates below are the scrapeable census.)
+ */
+export const BUILDER_DIRECTORIES: BuilderDirectory[] = [
+  { tag: "bild", label: "BILD (GTA)", url: DEFAULT_BILD_URL },
+  { tag: "bild_alberta", label: "BILD Alberta", url: "https://bildalberta.ca/membership-directory/" },
+  { tag: "bild_calgary", label: "BILD Calgary Region", url: "https://bildcr.com/member-directory/" },
+  { tag: "chba_bc", label: "CHBA British Columbia", url: "https://www.chbabc.org/member-directory/" },
+  { tag: "fhba", label: "Florida Home Builders Association", url: "https://www.fhba.com/member-directory/" },
+  { tag: "basf", label: "Builders Association of South Florida", url: "https://www.basfonline.org/member-directory/" },
+  { tag: "tab", label: "Texas Association of Builders", url: "https://www.texasbuilders.org/member-directory/" },
+  { tag: "dallas_ba", label: "Dallas Builders Association", url: "https://dallasbuilders.org/member-directory/" },
+  { tag: "austin_hba", label: "HBA of Greater Austin", url: "https://www.hbaaustin.com/member-directory/" },
+  { tag: "ghba", label: "Greater Houston Builders Association", url: "https://www.ghba.org/member-directory/" },
+  { tag: "hba_mt", label: "HBA of Middle Tennessee", url: "https://www.hbamt.org/member-directory/" },
+  { tag: "biasc", label: "Building Industry Association of Southern California", url: "https://biasc.org/member-directory/" },
+];
 
 async function fetchText(url: string, timeoutMs = 15_000): Promise<string> {
   const res = await fetch(url, {
@@ -131,10 +162,12 @@ const NOISE_RE =
 
 export async function sweepBild(
   admin: Admin,
-  opts: { url?: string } = {},
+  opts: { url?: string; tag?: string } = {},
 ): Promise<SweepSummary> {
   const notes: string[] = [];
   const target = opts.url ?? DEFAULT_BILD_URL;
+  const tag = opts.tag ?? "bild";
+  const homeHost = new URL(target).hostname.replace(/^www\./, "");
   const html = await fetchText(target, 20_000);
 
   const candidates = new Map<string, string | null>(); // name -> website
@@ -146,8 +179,10 @@ export async function sweepBild(
     if (!text || text.length < 4 || text.length > 90) continue;
     if (NOISE_RE.test(text) || NOISE_RE.test(href)) continue;
     if (!BUILDERISH_RE.test(text)) continue;
+    // A member's website is an external link — the directory's own pages
+    // (whatever its host) are never websites.
     const external =
-      /^https?:\/\//i.test(href) && !/bildgta\.ca/i.test(href) ? href : null;
+      /^https?:\/\//i.test(href) && !href.includes(homeHost) ? href : null;
     if (!candidates.has(text)) candidates.set(text, external);
   }
   // Headings too (directories often render names as h3/h4 without links).
@@ -165,14 +200,31 @@ export async function sweepBild(
 
   let added = 0;
   for (const [name, website] of candidates) {
-    if ((await upsertBuilder(admin, name, "bild", website)) === "added") added++;
+    if ((await upsertBuilder(admin, name, tag, website)) === "added") added++;
   }
 
   return {
-    source: "bild",
+    source: tag,
     scanned: candidates.size,
     added,
     updated: 0,
     notes,
   };
+}
+
+/** Sweep every association directory (Wednesday cron leg + "builder-dirs"). */
+export async function sweepAllDirectories(admin: Admin): Promise<SweepSummary[]> {
+  const out: SweepSummary[] = [];
+  for (const dir of BUILDER_DIRECTORIES) {
+    out.push(
+      await sweepBild(admin, { url: dir.url, tag: dir.tag }).catch((e) => ({
+        source: dir.tag,
+        scanned: 0,
+        added: 0,
+        updated: 0,
+        notes: [`ERROR: ${e instanceof Error ? e.message : String(e)}`],
+      })),
+    );
+  }
+  return out;
 }
