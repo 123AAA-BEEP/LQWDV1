@@ -14,12 +14,16 @@ export function PublicFooter() {
             <span aria-hidden className="size-1 rounded-full bg-brand-500" />
           </div>
           <p className="mt-2 max-w-xs text-sm leading-relaxed text-slate-500">
-            New and pre-construction homes across Ontario.
+            New construction homes across Canada &amp; the U.S. — Ontario, BC,
+            Alberta, Florida, Tennessee, and California.
           </p>
         </div>
         <nav className="flex items-center gap-6 text-sm text-slate-600">
           <Link href="/projects" className="hover:text-ink">
             New homes
+          </Link>
+          <Link href="/rentals" className="hover:text-ink">
+            Rentals
           </Link>
           <Link href="/" className="hover:text-ink">
             For agents

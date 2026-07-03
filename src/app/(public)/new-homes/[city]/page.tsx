@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardBody } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { ButtonLink } from "@/components/ui/button";
 import { plainSlug } from "@/lib/slug";
 import { formatPriceBand } from "@/lib/types";
 import { regionForProvince } from "@/lib/regions";
@@ -64,29 +65,47 @@ export async function generateMetadata({
 
 export default async function CityHubPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ city: string }>;
+  searchParams: Promise<{ page?: string }>;
 }) {
   const { city: slug } = await params;
+  const { page } = await searchParams;
   const city = await resolveCity(slug);
   if (!city) notFound();
 
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("public_projects_view")
-    .select(
-      "slug, project_name, builder_name, city, province, project_type, sales_status, price_from_public, price_to_public, hero_image_url, listing_type",
-    )
-    .eq("city", city)
-    .order("is_featured", { ascending: false })
-    .order("published_at", { ascending: false })
-    .limit(60);
-  const all = ((data ?? []) as Row[]);
-  const forSale = all.filter((p) => p.listing_type !== "for_rent");
-  const rentals = all.filter((p) => p.listing_type === "for_rent");
-  if (all.length === 0) notFound();
+  // Cumulative pagination: page N renders the first N pages, so "Load more"
+  // appends to the grid and every state stays a crawlable URL (Toronto alone
+  // exceeds any fixed cap).
+  const PAGE_SIZE = 24;
+  const pageNum = Math.min(Math.max(parseInt(page ?? "1", 10) || 1, 1), 50);
 
-  const province = all[0].province;
+  const supabase = await createClient();
+  const [saleRes, rentalRes] = await Promise.all([
+    supabase
+      .from("public_projects_view")
+      .select(
+        "slug, project_name, builder_name, city, province, project_type, sales_status, price_from_public, price_to_public, hero_image_url, listing_type",
+        { count: "exact" },
+      )
+      .eq("city", city)
+      .or("listing_type.is.null,listing_type.neq.for_rent")
+      .order("is_featured", { ascending: false })
+      .order("published_at", { ascending: false })
+      .range(0, pageNum * PAGE_SIZE - 1),
+    supabase
+      .from("public_projects_view")
+      .select("slug", { count: "exact", head: true })
+      .eq("city", city)
+      .eq("listing_type", "for_rent"),
+  ]);
+  const forSale = ((saleRes.data ?? []) as Row[]);
+  const saleCount = saleRes.count ?? forSale.length;
+  const rentalCount = rentalRes.count ?? 0;
+  if (forSale.length === 0 && rentalCount === 0) notFound();
+
+  const province = forSale[0]?.province ?? null;
   const regionLabel = regionForProvince(province)?.label ?? province ?? "";
 
   const itemList = {
@@ -124,8 +143,7 @@ export default async function CityHubPage({
         New homes &amp; pre-construction in {city}
       </h1>
       <p className="mt-4 max-w-2xl text-lg text-slate-600">
-        {forSale.length} active development{forSale.length === 1 ? "" : "s"} in{" "}
-        {city}
+        {saleCount} active development{saleCount === 1 ? "" : "s"} in {city}
         {regionLabel ? `, ${regionLabel}` : ""} — get pricing, floor plans, and
         first access before the public.
       </p>
@@ -179,14 +197,26 @@ export default async function CityHubPage({
         })}
       </div>
 
-      {rentals.length > 0 ? (
+      {forSale.length < saleCount ? (
+        <div className="mt-10 text-center">
+          <ButtonLink
+            href={`/new-homes/${slug}?page=${pageNum + 1}`}
+            scroll={false}
+            variant="secondary"
+          >
+            Load more ({saleCount - forSale.length} remaining)
+          </ButtonLink>
+        </div>
+      ) : null}
+
+      {rentalCount > 0 ? (
         <p className="mt-10 text-sm text-slate-600">
           Also in {city}:{" "}
           <Link
             href={`/rentals?city=${encodeURIComponent(city)}`}
             className="font-medium text-brand-700 hover:underline"
           >
-            {rentals.length} new rental building{rentals.length === 1 ? "" : "s"} →
+            {rentalCount} new rental building{rentalCount === 1 ? "" : "s"} →
           </Link>
         </p>
       ) : null}
