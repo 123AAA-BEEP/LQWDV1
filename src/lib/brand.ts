@@ -12,7 +12,8 @@ export const BRAND = {
 } as const;
 
 export const HERO = {
-  headline: "Get free new-home buyer leads",
+  // U+2011 non-breaking hyphen: "new-home" must never split across lines.
+  headline: "Get free new‑home buyer leads",
   subheadline: "without switching brokerages.",
   supporting: "Free for verified Ontario realtors",
   body: "Upload or update eligible new-home projects, get matched to public project pages, and receive buyer inquiries when those pages generate interest.",

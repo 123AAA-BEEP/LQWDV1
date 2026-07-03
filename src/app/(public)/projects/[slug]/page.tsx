@@ -3,7 +3,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardBody } from "@/components/ui/card";
-import { formatPriceBand, isRentalListing, RENTAL_STATUS_LABELS } from "@/lib/types";
+import {
+  formatPriceBand,
+  isRentalListing,
+  primaryBuilderName,
+  RENTAL_STATUS_LABELS,
+} from "@/lib/types";
+import { ImagePlaceholder } from "@/components/public/image-placeholder";
 import type { PublicProject, RealtorCard } from "@/lib/types";
 import { TITLE_LABELS } from "@/lib/types";
 import { regionForProvince } from "@/lib/regions";
@@ -375,8 +381,8 @@ export default async function PublicProjectPage({
             ) : null}
           </div>
         ) : (
-          <div className="flex h-80 items-center justify-center text-slate-400 sm:h-[28rem]">
-            Renderings coming soon
+          <div className="h-80 sm:h-[28rem]">
+            <ImagePlaceholder name={project.project_name} />
           </div>
         )}
       </div>
@@ -385,7 +391,7 @@ export default async function PublicProjectPage({
         <div className="lg:col-span-2">
           {project.builder_name ? (
             <p className="text-sm font-medium text-brand-700">
-              {project.builder_name}
+              {primaryBuilderName(project.builder_name)}
             </p>
           ) : null}
           <h1 className="mt-1 text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
@@ -401,7 +407,7 @@ export default async function PublicProjectPage({
           {intro ? <Prose text={intro} className="mt-4" /> : null}
 
           {/* Public-safe facts */}
-          <dl className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3">
+          <dl className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-[repeat(auto-fit,minmax(170px,1fr))]">
             {priceBand ? (
               <Fact label={rental ? "Rent" : "Pricing"} value={priceBand} />
             ) : null}
@@ -470,7 +476,7 @@ export default async function PublicProjectPage({
             </section>
           ) : null}
           <Section
-            title={`About ${project.builder_name ?? "the developer"}`}
+            title={`About ${primaryBuilderName(project.builder_name) ?? "the developer"}`}
             text={project.section_developer}
           />
           <Section
@@ -566,7 +572,7 @@ export default async function PublicProjectPage({
 
       {moreFromBuilder.length > 0 ? (
         <MiniGrid
-          title={`More from ${project.builder_name}`}
+          title={`More from ${primaryBuilderName(project.builder_name)}`}
           projects={moreFromBuilder}
         />
       ) : null}

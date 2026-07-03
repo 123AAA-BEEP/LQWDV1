@@ -317,7 +317,7 @@ export default async function LandingPage() {
       <FeatureSection
         index="03"
         eyebrow="What you get"
-        heading="One portal for new-home inventory"
+        heading="One portal for new‑home inventory"
         image={SECTION_IMAGES.inventory}
       >
         <p className="text-pretty text-lg leading-relaxed text-slate-600">

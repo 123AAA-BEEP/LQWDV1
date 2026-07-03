@@ -3,19 +3,19 @@ import Link from "next/link";
 import { headers } from "next/headers";
 import { MapPin, Star } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { ImagePlaceholder } from "@/components/public/image-placeholder";
+import { CardImage } from "@/components/public/card-image";
 import { REGIONS, isRegionKey, visitorRegionKey } from "@/lib/regions";
 import { plainSlug } from "@/lib/slug";
 import { Card, CardBody } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input, Select } from "@/components/ui/field";
 import { Button, ButtonLink } from "@/components/ui/button";
-import { formatPriceBand } from "@/lib/types";
+import { formatPriceBand, primaryBuilderName } from "@/lib/types";
 
 export const metadata: Metadata = {
-  title: "New & Pre-Construction Homes in Ontario, BC & Florida | LIQWD",
+  title: "New & Pre-Construction Homes for Sale | LIQWD",
   description:
-    "Browse new and pre-construction home developments across Ontario, British Columbia, and Florida — condos, towns, and single-family homes.",
+    "Browse new and pre-construction developments across Ontario, BC, Alberta, Florida, Tennessee, and California — condos, towns, and single-family homes.",
 };
 export const dynamic = "force-dynamic";
 
@@ -57,6 +57,7 @@ const isFeatured = (p: Row) => Boolean(p.is_featured || p.is_advertiser);
 
 function ProjectCard({ p, featured = false }: { p: Row; featured?: boolean }) {
   const band = formatPriceBand(p.price_from_public, p.price_to_public);
+  const builder = primaryBuilderName(p.builder_name);
   const location = [p.neighbourhood, p.city, p.province].filter(Boolean).join(", ");
   return (
     <Link href={`/projects/${p.slug}`} className="group block h-full">
@@ -66,18 +67,12 @@ function ProjectCard({ p, featured = false }: { p: Row; featured?: boolean }) {
         }`}
       >
         <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
-          {p.hero_image_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={p.hero_image_url}
-              alt={p.project_name}
-              loading="lazy"
-              decoding="async"
-              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-            />
-          ) : (
-            <ImagePlaceholder name={p.project_name} />
-          )}
+          <CardImage
+            src={p.hero_image_url}
+            alt={p.project_name}
+            name={p.project_name}
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+          />
           {featured ? (
             <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-amber-500/95 px-2 py-0.5 text-xs font-semibold text-white shadow-sm">
               <Star aria-hidden className="size-3 fill-current" /> Featured
@@ -97,10 +92,12 @@ function ProjectCard({ p, featured = false }: { p: Row; featured?: boolean }) {
               </Badge>
             ) : null}
           </div>
-          <h2 className="mt-2 font-semibold text-ink">{p.project_name}</h2>
-          {p.builder_name || location ? (
-            <p className="text-sm text-slate-500">
-              {[p.builder_name, location].filter(Boolean).join(" · ")}
+          <h2 className="mt-2 line-clamp-2 font-semibold text-ink">
+            {p.project_name}
+          </h2>
+          {builder || location ? (
+            <p className="line-clamp-1 text-sm text-slate-500">
+              {[builder, location].filter(Boolean).join(" · ")}
             </p>
           ) : null}
           {band ? (
@@ -241,7 +238,7 @@ export default async function MarketplacePage({
       <section className="border-b border-slate-200 bg-white">
         <div className="mx-auto max-w-6xl px-6 pb-10 pt-14 sm:pt-20">
           <h1 className="max-w-3xl text-balance text-4xl font-semibold tracking-tight text-ink sm:text-5xl">
-            New &amp; pre-construction homes in Ontario, BC &amp; Florida
+            New &amp; pre-construction homes, from Toronto to Miami
           </h1>
           <p className="mt-4 max-w-2xl text-lg text-slate-600">
             Explore active condo, townhome, and single-family developments — and

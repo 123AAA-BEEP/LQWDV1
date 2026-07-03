@@ -5,9 +5,9 @@ import { createClient } from "@/lib/supabase/server";
 import { Card, CardBody } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
-import { ImagePlaceholder } from "@/components/public/image-placeholder";
+import { CardImage } from "@/components/public/card-image";
 import { plainSlug } from "@/lib/slug";
-import { formatPriceBand } from "@/lib/types";
+import { formatPriceBand, primaryBuilderName } from "@/lib/types";
 import { regionForProvince } from "@/lib/regions";
 
 export const dynamic = "force-dynamic";
@@ -156,18 +156,12 @@ export default async function CityHubPage({
             <Link key={p.slug} href={`/projects/${p.slug}`} className="group block h-full">
               <Card className="h-full overflow-hidden transition-all duration-300 group-hover:-translate-y-0.5 group-hover:shadow-lg">
                 <div className="aspect-[4/3] overflow-hidden bg-slate-100">
-                  {p.hero_image_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={p.hero_image_url}
-                      alt={p.project_name}
-                      loading="lazy"
-                      decoding="async"
-                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-                    />
-                  ) : (
-                    <ImagePlaceholder name={p.project_name} />
-                  )}
+                  <CardImage
+                    src={p.hero_image_url}
+                    alt={p.project_name}
+                    name={p.project_name}
+                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                  />
                 </div>
                 <CardBody>
                   <div className="flex flex-wrap items-center gap-2">
@@ -182,9 +176,13 @@ export default async function CityHubPage({
                       </Badge>
                     ) : null}
                   </div>
-                  <h2 className="mt-2 font-semibold text-ink">{p.project_name}</h2>
+                  <h2 className="mt-2 line-clamp-2 font-semibold text-ink">
+                    {p.project_name}
+                  </h2>
                   {p.builder_name ? (
-                    <p className="text-sm text-slate-500">{p.builder_name}</p>
+                    <p className="line-clamp-1 text-sm text-slate-500">
+                      {primaryBuilderName(p.builder_name)}
+                    </p>
                   ) : null}
                   {band ? (
                     <p className="mt-2 text-sm font-medium text-slate-700">{band}</p>

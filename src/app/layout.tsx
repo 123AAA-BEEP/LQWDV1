@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     template: "%s · LIQWD",
   },
   description:
-    "LIQWD is the Ultimate Broker Portal for new homes across Ontario, BC & Florida. Free for verified agents. Built in Canada.",
+    "LIQWD is the Ultimate Broker Portal for new homes across Canada & the U.S. Free for verified agents. Built in Canada.",
 };
 
 export const viewport: Viewport = {

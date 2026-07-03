@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "LIQWD — The Ultimate Broker Portal for New Homes",
     short_name: "LIQWD",
     description:
-      "New-home and pre-construction projects across Ontario, BC & Florida — free buyer leads for verified agents.",
+      "New-home and pre-construction projects across Canada & the U.S. — free buyer leads for verified agents.",
     start_url: "/",
     display: "standalone",
     background_color: "#ffffff",
