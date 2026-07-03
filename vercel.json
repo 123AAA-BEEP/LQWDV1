@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/source-heroes",
       "schedule": "17 8 * * 1"
+    },
+    {
+      "path": "/api/cron/discovery",
+      "schedule": "23 9 * * *"
     }
   ]
 }
