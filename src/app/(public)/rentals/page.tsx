@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { ImagePlaceholder } from "@/components/public/image-placeholder";
 import { Card, CardBody } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input, Select } from "@/components/ui/field";
@@ -40,8 +41,8 @@ function RentalCard({ p }: { p: Row }) {
     .filter(Boolean)
     .join(", ");
   return (
-    <Link href={`/projects/${p.slug}`}>
-      <Card className="h-full overflow-hidden transition-shadow hover:shadow-md">
+    <Link href={`/projects/${p.slug}`} className="group block h-full">
+      <Card className="h-full overflow-hidden transition-all duration-300 group-hover:-translate-y-0.5 group-hover:shadow-lg">
         <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
           {p.hero_image_url ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -50,12 +51,10 @@ function RentalCard({ p }: { p: Row }) {
               alt={p.project_name}
               loading="lazy"
               decoding="async"
-              className="h-full w-full object-cover"
+              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
             />
           ) : (
-            <div className="flex h-full items-center justify-center text-sm text-slate-400">
-              No image
-            </div>
+            <ImagePlaceholder name={p.project_name} />
           )}
         </div>
         <CardBody>
@@ -177,8 +176,9 @@ export default async function RentalsPage({
         </div>
       </section>
 
-      {/* Grid */}
-      <section className="mx-auto max-w-6xl px-6 py-10">
+      {/* Grid — soft wash so the white cards read as objects, not wallpaper */}
+      <section className="border-t border-slate-100 bg-slate-50/70">
+        <div className="mx-auto max-w-6xl px-6 py-10">
         <p className="mb-6 text-sm text-slate-500">
           Showing {rentals.length} of {totalCount} rental building
           {totalCount === 1 ? "" : "s"}
@@ -219,6 +219,7 @@ export default async function RentalsPage({
             </ButtonLink>
           </div>
         ) : null}
+        </div>
       </section>
     </div>
   );

@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { headers } from "next/headers";
+import { MapPin, Star } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { ImagePlaceholder } from "@/components/public/image-placeholder";
 import { REGIONS, isRegionKey, visitorRegionKey } from "@/lib/regions";
 import { plainSlug } from "@/lib/slug";
 import { Card, CardBody } from "@/components/ui/card";
@@ -57,9 +59,9 @@ function ProjectCard({ p, featured = false }: { p: Row; featured?: boolean }) {
   const band = formatPriceBand(p.price_from_public, p.price_to_public);
   const location = [p.neighbourhood, p.city, p.province].filter(Boolean).join(", ");
   return (
-    <Link href={`/projects/${p.slug}`}>
+    <Link href={`/projects/${p.slug}`} className="group block h-full">
       <Card
-        className={`h-full overflow-hidden transition-shadow hover:shadow-md ${
+        className={`h-full overflow-hidden transition-all duration-300 group-hover:-translate-y-0.5 group-hover:shadow-lg ${
           featured ? "ring-1 ring-amber-300" : ""
         }`}
       >
@@ -71,16 +73,14 @@ function ProjectCard({ p, featured = false }: { p: Row; featured?: boolean }) {
               alt={p.project_name}
               loading="lazy"
               decoding="async"
-              className="h-full w-full object-cover"
+              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
             />
           ) : (
-            <div className="flex h-full items-center justify-center text-sm text-slate-400">
-              No image
-            </div>
+            <ImagePlaceholder name={p.project_name} />
           )}
           {featured ? (
             <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-amber-500/95 px-2 py-0.5 text-xs font-semibold text-white shadow-sm">
-              <span aria-hidden>★</span> Featured
+              <Star aria-hidden className="size-3 fill-current" /> Featured
             </span>
           ) : null}
         </div>
@@ -254,7 +254,8 @@ export default async function MarketplacePage({
               href={`/projects?region=${visitorKey}`}
               className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-brand-200 bg-brand-50 px-3.5 py-1.5 text-sm font-medium text-brand-800 hover:bg-brand-100"
             >
-              <span aria-hidden>📍</span> See {REGIONS[visitorKey].voice.marketLine} →
+              <MapPin aria-hidden className="size-3.5" /> See{" "}
+              {REGIONS[visitorKey].voice.marketLine} →
             </Link>
           ) : null}
           {regionFilter && isRegionKey(regionFilter) ? (
@@ -365,9 +366,10 @@ export default async function MarketplacePage({
         <section className="border-b border-slate-200 bg-gradient-to-b from-amber-50/50 to-white">
           <div className="mx-auto max-w-6xl px-6 py-10">
             <div className="mb-5 flex items-center gap-2">
-              <span aria-hidden className="text-amber-500">
-                ★
-              </span>
+              <Star
+                aria-hidden
+                className="size-4 fill-amber-500 text-amber-500"
+              />
               <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-amber-700">
                 Featured developments
               </h2>
@@ -401,8 +403,9 @@ export default async function MarketplacePage({
         </section>
       ) : null}
 
-      {/* Grid */}
-      <section className="mx-auto max-w-6xl px-6 py-10">
+      {/* Grid — soft wash so the white cards read as objects, not wallpaper */}
+      <section className="border-t border-slate-100 bg-slate-50/70">
+        <div className="mx-auto max-w-6xl px-6 py-10">
         <p className="mb-6 text-sm text-slate-500">
           Showing {projects.length} of {totalCount} development
           {totalCount === 1 ? "" : "s"}
@@ -434,6 +437,7 @@ export default async function MarketplacePage({
             </ButtonLink>
           </div>
         ) : null}
+        </div>
       </section>
     </div>
   );
