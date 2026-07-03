@@ -17,6 +17,7 @@ import {
 } from "@/lib/reco";
 import { publishHeldListingsFor } from "@/lib/off-market";
 import { isRegionKey } from "@/lib/regions";
+import { registerCheck, type RegisterCheck } from "@/lib/license-check";
 
 const ACCEPTED = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
 const MAX_BYTES = 4_000_000; // stay under Vercel's server-action body limit
@@ -118,12 +119,29 @@ export async function submitVerification(formData: FormData) {
   const { profile, userId } = await requireUserProfile();
   const supabase = await createClient();
 
+  // BC / Florida: check the regulator's public register right now. A clean
+  // active + name match auto-approves — same trust bar as the Ontario
+  // certificate path. Anything unclear falls through to manual review with
+  // the check result attached for the admin.
+  let check: RegisterCheck | null = null;
+  if (region !== "ontario") {
+    const name =
+      [profile.first_name, profile.last_name].filter(Boolean).join(" ") || null;
+    check = await Promise.race([
+      registerCheck(region, reco, name),
+      new Promise<null>((r) => setTimeout(() => r(null), 14_000)),
+    ]);
+  }
+
   const { error } = await supabase.from("verification_requests").insert({
     profile_id: userId,
     reco_registration_number: reco,
     license_region: region,
     brokerage_name_submitted: brokerage || null,
-    notes: notes || null,
+    notes:
+      [notes || null, check ? `[register check] ${check.detail}` : null]
+        .filter(Boolean)
+        .join("\n") || null,
     status: "pending",
   });
 
@@ -140,6 +158,34 @@ export async function submitVerification(formData: FormData) {
       verification_status: "pending",
     })
     .eq("id", userId);
+
+  // Confident register match → instant approval, identical to the RECO path.
+  if (check?.active_match) {
+    const admin = createAdminClient();
+    const { data: approved } = await admin
+      .from("profiles")
+      .update({
+        verification_status: "approved",
+        reco_verified_at: new Date().toISOString(),
+        reco_verification_method: "manual",
+      })
+      .eq("id", userId)
+      .select("id")
+      .maybeSingle();
+    if (approved) {
+      await admin
+        .from("verification_requests")
+        .update({ status: "approved", reviewed_at: new Date().toISOString() })
+        .eq("profile_id", userId)
+        .eq("status", "pending");
+      await publishHeldListingsFor(admin, userId);
+      revalidatePath("/dashboard", "layout");
+      if (profile.email) {
+        await sendAgentVerifiedEmail(profile.email, profile.first_name);
+      }
+      verifyRedirect("approved");
+    }
+  }
 
   // Immediate "received — under review" acknowledgment to the agent, plus an
   // ops alert to leads@getliqwd.com so the team can manually verify right away.

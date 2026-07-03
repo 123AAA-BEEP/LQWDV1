@@ -8,7 +8,7 @@ import { FlashNotice } from "@/components/ui/flash-notice";
 import { VERIFICATION_LABELS } from "@/lib/types";
 import type { VerificationStatus } from "@/lib/types";
 import { regionOrDefault } from "@/lib/regions";
-import { decideVerification } from "./actions";
+import { decideVerification, runRegisterCheck } from "./actions";
 
 export const metadata: Metadata = { title: "Verification queue" };
 export const dynamic = "force-dynamic";
@@ -148,6 +148,25 @@ export default async function VerificationsQueue({
                   ) : null}
                 </dl>
                 <div className="flex flex-wrap gap-2">
+                  {regionOrDefault(r.license_region).key !== "ontario" ? (
+                    <form action={runRegisterCheck}>
+                      <input type="hidden" name="request_id" value={r.id} />
+                      <input
+                        type="hidden"
+                        name="license_region"
+                        value={regionOrDefault(r.license_region).key}
+                      />
+                      <input
+                        type="hidden"
+                        name="license_number"
+                        value={r.reco_registration_number}
+                      />
+                      <input type="hidden" name="agent_name" value={fullName(r)} />
+                      <Button type="submit" size="sm" variant="secondary">
+                        Auto-check register
+                      </Button>
+                    </form>
+                  ) : null}
                   <DecisionButton
                     requestId={r.id}
                     profileId={r.profile_id}
