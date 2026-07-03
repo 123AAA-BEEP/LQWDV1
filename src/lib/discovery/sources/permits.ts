@@ -51,10 +51,20 @@ export interface PermitSource {
   key: string;
   label: string;
   kind: "socrata" | "arcgis";
-  /** Socrata: full resource URL. ArcGIS: the item id (service resolved live). */
+  /**
+   * Socrata: full resource URL. ArcGIS: an item id (service resolved via the
+   * sharing API) or a Hub slug like "mississauga::building-permits" (resolved
+   * via the Hub datasets API).
+   */
   resource: string;
   /** City stamped when no per-row municipality field exists. */
   defaultCity: string | null;
+  /**
+   * Development-application feeds (OPA/rezoning/site plan) speak in
+   * "proposed", not "new construction" — relax the new-build keyword gate and
+   * accept storey-scale as a size signal. Permit feeds leave this unset.
+   */
+  applications?: boolean;
 }
 
 export const PERMIT_SOURCES: PermitSource[] = [
@@ -93,6 +103,22 @@ export const PERMIT_SOURCES: PermitSource[] = [
     resource: "https://data.edmonton.ca/resource/24uj-dj8v.json",
     defaultCity: "Edmonton",
   },
+  {
+    key: "mississauga",
+    label: "Mississauga development applications",
+    kind: "arcgis",
+    resource: "mississauga::active-development-applications",
+    defaultCity: "Mississauga",
+    applications: true,
+  },
+  {
+    key: "hamilton",
+    label: "Hamilton development applications",
+    kind: "arcgis",
+    resource: "hamilton::development-applications-1",
+    defaultCity: "Hamilton",
+    applications: true,
+  },
 ];
 
 export function permitSource(key: string): PermitSource | null {
@@ -127,11 +153,25 @@ interface ArcgisLayerMeta {
   fields?: { name: string; type: string }[];
 }
 
-async function arcgisLayerUrl(itemId: string): Promise<string> {
+async function arcgisLayerUrl(resource: string): Promise<string> {
+  // Hub slug ("org::dataset-name") → resolve through the Hub datasets API.
+  if (resource.includes("::")) {
+    const hub = await json<{
+      data?: { attributes?: { url?: string; server?: { url?: string } } }[];
+    }>(
+      `https://opendata.arcgis.com/api/v3/datasets?filter[slug]=${encodeURIComponent(resource)}&fields[datasets]=url,server`,
+    );
+    const attrs = hub.data?.[0]?.attributes;
+    const url = attrs?.url ?? attrs?.server?.url;
+    if (!url) throw new Error(`no service url for Hub slug ${resource}`);
+    // attributes.url is usually the layer itself; a bare service gets /0.
+    return /\/\d+$/.test(url) ? url : `${url.replace(/\/+$/, "")}/0`;
+  }
+  // Item id → resolve through the ArcGIS sharing API.
   const meta = await json<{ url?: string }>(
-    `https://www.arcgis.com/sharing/rest/content/items/${itemId}?f=json`,
+    `https://www.arcgis.com/sharing/rest/content/items/${resource}?f=json`,
   );
-  if (!meta.url) throw new Error(`no service url on ArcGIS item ${itemId}`);
+  if (!meta.url) throw new Error(`no service url on ArcGIS item ${resource}`);
   return `${meta.url.replace(/\/+$/, "")}/0`;
 }
 
@@ -166,23 +206,28 @@ async function arcgisRecords(
 
 const REF_FIELDS = [
   "permitnum", "permit_number", "permit_no", "permitnbr", "permit_", "permit",
-  "process_number", "casenumber", "case_number", "pcis_permit_no", "objectid", "id",
+  "process_number", "casenumber", "case_number", "pcis_permit_no",
+  "applicationnumber", "application_number", "app_number", "file_number",
+  "folder_number", "objectid", "id",
 ];
 const ADDRESS_FIELDS = [
   "originaladdress", "original_address", "address", "full_address",
   "site_address", "primary_address", "address_construction", "job_address",
   "location_address", "stname", "location_1_address", "propaddr",
+  "civic_address", "location", "address1", "prop_address",
 ];
 const DESC_FIELDS = [
   "description", "job_description", "work_description", "proposeduse",
   "projectname", "project_name", "scopeofwork", "scope_of_work", "purpose",
-  "permit_type_description", "use_description",
+  "permit_type_description", "use_description", "proposal",
+  "application_description", "project_description", "devproposal",
 ];
 const TYPE_FIELDS = [
   "permitclass", "permit_class", "permitclassmapped", "permittype",
   "permit_type", "permit_subtype", "permit_sub_type", "building_type",
   "job_category", "work_type", "worktype", "workclass", "work_class",
   "typeofwork", "occupancy", "use_type", "residential_or_commercial",
+  "applicationtype", "application_type", "app_type", "type",
 ];
 const UNITS_FIELDS = [
   "housingunits", "units_added", "units", "numberofunits", "number_of_units",
@@ -262,9 +307,10 @@ export async function sweepPermits(
     const unitsRaw = pick(rec, UNITS_FIELDS);
     const hay = `${description ?? ""} ${type ?? ""}`;
 
-    // Gate 1: must read as residential new construction.
+    // Gate 1: must read as residential; permit feeds additionally require
+    // new-construction wording (applications speak in "proposed" instead).
     if (!RESIDENTIAL_RE.test(hay)) continue;
-    if (!NEW_RE.test(hay)) continue;
+    if (!src.applications && !NEW_RE.test(hay)) continue;
 
     // Gate 2: scale — single homes and small infill aren't lead-worthy.
     const unitsParsed =
@@ -277,9 +323,12 @@ export async function sweepPermits(
       : descUnits
         ? Number(descUnits[1])
         : null;
-    if (!((units ?? 0) >= 8 || MULTI_RE.test(hay))) continue;
-
     const storeys = description?.match(/(\d{1,3})[\s-]*stor(?:y|ey|ies)/i);
+    const scaleOk =
+      (units ?? 0) >= 8 ||
+      MULTI_RE.test(hay) ||
+      (src.applications && Number(storeys?.[1] ?? 0) >= 4);
+    if (!scaleOk) continue;
     const rowCity = pick(rec, CITY_FIELDS);
     rows.push({
       source_ref: ref,

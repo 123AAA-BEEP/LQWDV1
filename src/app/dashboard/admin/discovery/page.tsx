@@ -146,7 +146,7 @@ export default async function DiscoveryPage({
             ["newsfeeds", "Sweep news feeds (Miami, FL, LA, Nashville)"],
             ["toronto", "Sweep Toronto planning data"],
             ["vancouver", "Sweep Vancouver permits"],
-            ["permits", "Sweep permits (Miami-Dade, Nashville, LA, Calgary, Edmonton)"],
+            ["permits", "Sweep permits & applications (Miami-Dade, Nashville, LA, Calgary, Edmonton, Mississauga, Hamilton)"],
             ["seed-builders", "Seed builders from projects"],
             ["bild", "Sweep BILD directory"],
           ] as const
