@@ -322,6 +322,20 @@ export function isMandateVerified(
   );
 }
 
+/**
+ * Display form of a builder attribution. Imported data often carries the full
+ * credit line — "Genton Development Company (in partnership with Four
+ * Seasons; architecture by CallisonRTKL)" — which wrecks cards and headings.
+ * Surfaces show the primary name; the data keeps the full attribution.
+ */
+export function primaryBuilderName(
+  raw: string | null | undefined,
+): string | null {
+  if (!raw) return null;
+  const cut = raw.split(/\s*[(;]/)[0].trim().replace(/,+$/, "");
+  return cut || raw.trim();
+}
+
 /** Format a CAD price band like "From $599,000" / "$599,000 – $1,250,000". */
 export function formatPriceBand(
   from: number | null,
