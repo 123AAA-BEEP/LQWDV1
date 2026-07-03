@@ -25,6 +25,12 @@ export interface Region {
   emailLaw: EmailLaw;
   /** True, stable buyer-protection facts the SEO generator may cite. */
   buyingNotes: string;
+  /** Geo-personalized marketing voice (landing hero, signup nudges). */
+  voice: {
+    audienceLine: string; // hero eyebrow, e.g. "Free for verified Ontario realtors"
+    microcopy: string; // hero microcopy incl. the regulator
+    marketLine: string; // "new homes in Ontario" phrasing
+  };
 }
 
 export const REGIONS: Record<RegionKey, Region> = {
@@ -43,6 +49,12 @@ export const REGIONS: Record<RegionKey, Region> = {
     emailLaw: "casl",
     buyingNotes:
       "Ontario: new condominium purchases include a 10-day cooling-off period under the Condominium Act (condos only); deposits are typically staged; interim occupancy precedes final closing.",
+    voice: {
+      audienceLine: "Free for verified Ontario realtors",
+      microcopy:
+        "No referral fees. No brokerage change. RECO verification required.",
+      marketLine: "new homes in Ontario",
+    },
   },
   british_columbia: {
     key: "british_columbia",
@@ -60,6 +72,12 @@ export const REGIONS: Record<RegionKey, Region> = {
     emailLaw: "casl",
     buyingNotes:
       "British Columbia: buyers of development units (pre-construction) have a 7-day rescission right under the Real Estate Development Marketing Act (REDMA) after receiving the disclosure statement.",
+    voice: {
+      audienceLine: "Free for verified BC realtors",
+      microcopy:
+        "No referral fees. No brokerage change. BCFSA licence verification required.",
+      marketLine: "new homes & presales in BC",
+    },
   },
   florida: {
     key: "florida",
@@ -77,8 +95,29 @@ export const REGIONS: Record<RegionKey, Region> = {
     emailLaw: "can_spam",
     buyingNotes:
       "Florida: buyers of new condominiums from a developer have a 15-day rescission period under Florida Statutes §718.503 after signing and receiving the condominium documents.",
+    voice: {
+      audienceLine: "Free for licensed Florida agents",
+      microcopy:
+        "No referral fees. No brokerage change. Florida DBPR license verification required.",
+      marketLine: "new construction in Florida",
+    },
   },
 };
+
+/**
+ * Best-guess region for the current visitor from Vercel's geo headers —
+ * personalization only, never a gate. All of Canada outside BC defaults to
+ * Ontario (home market); all US traffic to Florida (our US market).
+ */
+export function visitorRegionKey(h: {
+  get(name: string): string | null;
+}): RegionKey | null {
+  const country = (h.get("x-vercel-ip-country") ?? "").toUpperCase();
+  const region = (h.get("x-vercel-ip-country-region") ?? "").toUpperCase();
+  if (country === "CA") return region === "BC" ? "british_columbia" : "ontario";
+  if (country === "US") return "florida";
+  return null;
+}
 
 export const REGION_KEYS = Object.keys(REGIONS) as RegionKey[];
 

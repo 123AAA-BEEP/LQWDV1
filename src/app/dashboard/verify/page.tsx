@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { ShieldCheck, Upload } from "lucide-react";
 import { requireUserProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -8,7 +9,12 @@ import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { Notice } from "@/components/ui/notice";
 import { Badge, verificationBadgeTone } from "@/components/ui/badge";
 import { VERIFICATION_LABELS } from "@/lib/types";
-import { REGIONS, REGION_KEYS, regionOrDefault } from "@/lib/regions";
+import {
+  REGIONS,
+  REGION_KEYS,
+  regionOrDefault,
+  visitorRegionKey,
+} from "@/lib/regions";
 import { submitVerification, verifyRecoCertificate } from "./actions";
 
 export const metadata: Metadata = { title: "Verification" };
@@ -163,7 +169,14 @@ export default async function VerifyPage({
                   <Select
                     id="license_region"
                     name="license_region"
-                    defaultValue={regionOrDefault(profile.license_region).key}
+                    defaultValue={
+                      // Profile default is 'ontario'; until the agent has
+                      // actually chosen, their location is the better guess.
+                      profile.license_region &&
+                      profile.license_region !== "ontario"
+                        ? regionOrDefault(profile.license_region).key
+                        : (visitorRegionKey(await headers()) ?? "ontario")
+                    }
                   >
                     {REGION_KEYS.map((k) => (
                       <option key={k} value={k}>
