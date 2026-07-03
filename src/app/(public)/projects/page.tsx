@@ -15,7 +15,7 @@ import { formatPriceBand, primaryBuilderName } from "@/lib/types";
 export const metadata: Metadata = {
   title: "New & Pre-Construction Homes for Sale | LIQWD",
   description:
-    "Browse new and pre-construction developments across Ontario, BC, Alberta, Florida, Tennessee, and California — condos, towns, and single-family homes.",
+    "Browse new and pre-construction developments across Ontario, BC, Alberta, Florida, Tennessee, Texas, and California — condos, towns, and single-family homes.",
 };
 export const dynamic = "force-dynamic";
 

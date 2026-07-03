@@ -109,7 +109,7 @@ export async function researchProject(
       role: "user",
       content:
         "A new pre-construction real-estate project was just announced (our markets: Ontario, " +
-        "British Columbia, Alberta, Florida, Tennessee, and California) and we only have thin details from a marketing email. " +
+        "British Columbia, Alberta, Florida, Tennessee, Texas, and California) and we only have thin details from a marketing email. " +
         "Cross-reference it on the web — the builder's own site, UrbanToronto/SkyriseCities, " +
         "Urbanation, BuzzBuzzHome, condos.ca, local news (for Florida: the developer's site, " +
         "The Real Deal, condo aggregators) — and report ONLY facts a source actually states. " +

@@ -125,6 +125,20 @@ const LA_HOODS: Record<string, string> = {
   "Boyle Heights": "Los Angeles",
 };
 
+const TX_CITY_RE =
+  /\b(Austin|Dallas|Fort Worth|Houston|San Antonio|Round Rock|Frisco|Plano|Arlington|Irving|The Woodlands|Katy|Georgetown|Cedar Park|Leander|New Braunfels|McKinney|Denton|Sugar Land|Pflugerville|Kyle|Buda)\b/;
+
+const TX_HOODS: Record<string, string> = {
+  "South Congress": "Austin",
+  "East Austin": "Austin",
+  "The Domain": "Austin",
+  "Rainey Street": "Austin",
+  "Mueller": "Austin",
+  "Deep Ellum": "Dallas",
+  "Uptown Dallas": "Dallas",
+  "Victory Park": "Dallas",
+};
+
 export const NEWS_FEEDS: NewsFeed[] = [
   {
     tag: "thenextmiami",
@@ -146,6 +160,13 @@ export const NEWS_FEEDS: NewsFeed[] = [
     defaultCity: "Los Angeles",
     cityRe: LA_CITY_RE,
     hoods: LA_HOODS,
+  },
+  {
+    tag: "urbanizeaustin",
+    url: "https://austin.urbanize.city/rss.xml",
+    defaultCity: "Austin",
+    cityRe: TX_CITY_RE,
+    hoods: TX_HOODS,
   },
 ];
 
