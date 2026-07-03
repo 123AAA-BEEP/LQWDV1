@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { createClient } from "@/lib/supabase/server";
+import { REGION_KEYS, regionSlug } from "@/lib/regions";
 
 // Listings are published/updated over time, so build the sitemap per request
 // rather than freezing it at build time.
@@ -14,6 +15,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/`, changeFrequency: "weekly", priority: 1 },
     { url: `${SITE_URL}/projects`, changeFrequency: "daily", priority: 0.9 },
     { url: `${SITE_URL}/rentals`, changeFrequency: "daily", priority: 0.8 },
+    ...REGION_KEYS.map((k) => ({
+      url: `${SITE_URL}/agents/${regionSlug(k)}`,
+      changeFrequency: "weekly" as const,
+      priority: 0.8,
+    })),
     { url: `${SITE_URL}/signup`, changeFrequency: "monthly", priority: 0.8 },
     { url: `${SITE_URL}/privacy`, changeFrequency: "yearly", priority: 0.2 },
     { url: `${SITE_URL}/terms`, changeFrequency: "yearly", priority: 0.2 },
