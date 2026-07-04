@@ -147,47 +147,78 @@ async function auditFacts(p: ProjectRow): Promise<FactAudit | null> {
   ];
 
   const anthropic = new Anthropic();
-  let res: Anthropic.Messages.Message;
+  const messages: Anthropic.Messages.MessageParam[] = [
+    {
+      role: "user",
+      content:
+        "Audit this live marketplace listing. Cross-reference the web and report whether it is a real, current new-construction residential development and whether our details match reality. When done, call emit_audit exactly once.\n\n" +
+        facts,
+    },
+  ];
+
+  const DEADLINE_MS = 60_000;
+  const startedAt = Date.now();
   try {
-    res = await anthropic.messages.create(
-      {
-        model: MODEL,
-        max_tokens: 2500,
-        system:
-          "You audit live listings on a new-construction home marketplace. Wrong or fabricated listings destroy buyer and agent trust. Verify against the open web (builder's own site first, then aggregators, news, municipal records). Report ONLY what sources state — never guess. A real company, neighbourhood, hotel, or decades-old building that got listed as a new development is CRITICAL. A real project with a wrong builder or stale price/status is ISSUES. Small stylistic differences (e.g. 'The Residences at X' vs 'X Residences', builder parent vs subsidiary) are MINOR — do not escalate them.",
-        tools,
-        tool_choice: { type: "auto" },
-        messages: [
-          {
-            role: "user",
-            content:
-              "Audit this live marketplace listing. Cross-reference the web and report whether it is a real, current new-construction residential development and whether our details match reality.\n\n" +
-              facts,
-          },
-        ],
-      },
-      { timeout: 90_000 },
-    );
+    // Server-tool turns can pause; continue until emit_audit or budget out
+    // (same loop shape as the intake research pass).
+    for (let round = 0; round < 4; round++) {
+      const remaining = DEADLINE_MS - (Date.now() - startedAt);
+      if (remaining < 5_000) return null;
+
+      const res = await anthropic.messages.create(
+        {
+          model: MODEL,
+          max_tokens: 2000,
+          system:
+            "You audit live listings on a new-construction home marketplace. Wrong or fabricated listings destroy buyer and agent trust. Verify against the open web (builder's own site first, then aggregators, news, municipal records). Report ONLY what sources state — never guess. A real company, neighbourhood, hotel, or decades-old building that got listed as a new development is CRITICAL. A real project with a wrong builder or stale price/status is ISSUES. Small stylistic differences (e.g. 'The Residences at X' vs 'X Residences', builder parent vs subsidiary) are MINOR — do not escalate them.",
+          tools,
+          messages,
+        },
+        { timeout: remaining },
+      );
+
+      const emit = res.content.find(
+        (b): b is Anthropic.Messages.ToolUseBlock =>
+          b.type === "tool_use" && b.name === "emit_audit",
+      );
+      if (emit) {
+        const out = emit.input as Record<string, unknown>;
+        const issues = Array.isArray(out.issues) ? (out.issues as AuditIssue[]) : [];
+        const verdict = ["ok", "issues", "critical"].includes(String(out.verdict))
+          ? (String(out.verdict) as FactAudit["verdict"])
+          : "issues";
+        return {
+          verdict,
+          exists: Boolean(out.exists),
+          is_new_construction: Boolean(out.is_new_construction),
+          confidence: typeof out.confidence === "number" ? out.confidence : 0,
+          issues,
+          summary: String(out.summary ?? ""),
+          sources: Array.isArray(out.sources)
+            ? (out.sources as unknown[])
+                .filter((s): s is string => typeof s === "string")
+                .slice(0, 8)
+            : [],
+        };
+      }
+
+      if (res.stop_reason === "pause_turn") {
+        messages.push({ role: "assistant", content: res.content });
+        continue;
+      }
+
+      // Finished without emitting — nudge once, then give up.
+      if (round === 0) {
+        messages.push({ role: "assistant", content: res.content });
+        messages.push({ role: "user", content: "Call emit_audit now with your verdict." });
+        continue;
+      }
+      return null;
+    }
+    return null;
   } catch {
     return null;
   }
-
-  const block = res.content.find((b) => b.type === "tool_use" && b.name === "emit_audit");
-  if (!block || block.type !== "tool_use") return null;
-  const out = block.input as Record<string, unknown>;
-  const issues = Array.isArray(out.issues) ? (out.issues as AuditIssue[]) : [];
-  const verdict = ["ok", "issues", "critical"].includes(String(out.verdict))
-    ? (String(out.verdict) as FactAudit["verdict"])
-    : "issues";
-  return {
-    verdict,
-    exists: Boolean(out.exists),
-    is_new_construction: Boolean(out.is_new_construction),
-    confidence: typeof out.confidence === "number" ? out.confidence : 0,
-    issues,
-    summary: String(out.summary ?? ""),
-    sources: Array.isArray(out.sources) ? (out.sources as string[]).slice(0, 8) : [],
-  };
 }
 
 /** Context-aware vision gate for one gallery image (mirrors the hero audit,
