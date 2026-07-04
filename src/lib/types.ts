@@ -145,6 +145,7 @@ export interface PublicProject {
   municipality: string | null;
   province: string | null;
   neighbourhood: string | null;
+  address_full: string | null;
   occupancy_estimate_text: string | null;
   total_units: number | null;
   storeys: number | null;
