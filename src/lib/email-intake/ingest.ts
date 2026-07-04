@@ -4,6 +4,7 @@ import { slugify } from "@/lib/slug";
 import { findExistingProjectFuzzy } from "@/lib/projects-dedup";
 import { maybeGenerateSeoOnPublish } from "@/lib/seo";
 import { pingIndexNow } from "@/lib/indexnow";
+import { regionForProvince } from "@/lib/regions";
 import { researchProject, type ResearchResult } from "./research";
 import { attachGalleryAndHero } from "./media";
 import type { ExtractedProject, InboundImage } from "./extract";
@@ -310,9 +311,16 @@ export async function ingestExtractedProject(
     await attachCommission(admin, projectId, ex.commission_summary, ex.commission_percent);
 
     // Publish when we have geography AND either a confident extraction or an
-    // independent web corroboration. Draft (+ ops ping upstream) otherwise.
+    // independent web corroboration — AND the geography is a market we
+    // operate in. A verified Atlanta or NYC project is real, but with no
+    // agents, no region LP, and no compliance voice there, it holds as a
+    // draft until we open that market. Unknown province keeps legacy
+    // city-only gating (Ontario email drops often skip research).
+    const inMarket =
+      !merged.province || regionForProvince(merged.province) != null;
     const canPublish =
       Boolean(merged.city) &&
+      inMarket &&
       (ex.confidence >= PUBLISH_CONFIDENCE || research?.found === true);
     if (canPublish) {
       await publishAdmin(admin, projectId, slug);
@@ -329,7 +337,9 @@ export async function ingestExtractedProject(
     }
     const draftReason = !merged.city
       ? "no geographical location — email and web research both came up empty"
-      : `confidence ${ex.confidence.toFixed(2)} below ${PUBLISH_CONFIDENCE} and web research couldn't corroborate the project`;
+      : !inMarket
+        ? `verified but out of market (${merged.province}) — held until we operate there`
+        : `confidence ${ex.confidence.toFixed(2)} below ${PUBLISH_CONFIDENCE} and web research couldn't corroborate the project`;
     return {
       action: "draft",
       project_id: projectId,
