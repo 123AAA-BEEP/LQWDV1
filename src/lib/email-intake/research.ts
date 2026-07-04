@@ -116,6 +116,11 @@ export async function researchProject(
         "Top priorities: the CITY and PROVINCE/STATE and street address, then builder, home " +
         "type, pricing, occupancy. If you cannot corroborate the project at all, report " +
         "found=false. Never guess or fill gaps from intuition.\n\n" +
+        "STRICT NAME CHECK: found=true requires that a residential development by THIS " +
+        "EXACT NAME exists. If the provided name is not plausibly a development's actual " +
+        "name (a slogan, email address, menu label, company name, or person), or the " +
+        "subject is not for-sale/rental housing (a stadium, office, campus, hotel with no " +
+        "residences), report found=false — even when the builder and city are real.\n\n" +
         "IMPORTANT: bedrooms_summary and occupancy_estimate_text render word-for-word on the " +
         "public consumer page. Write them as clean, neutral facts. Never name the websites you " +
         "found them on and never describe disagreements between sources in those fields — when " +

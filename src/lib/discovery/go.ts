@@ -4,6 +4,7 @@ import { ingestExtractedProject } from "@/lib/email-intake/ingest";
 import type { ExtractedProject } from "@/lib/email-intake/extract";
 import { regionForProvince } from "@/lib/regions";
 import { matchSignalToWatch, isKnownBuilder, type SignalRow, type WatchRow } from "./match";
+import { junkProjectName } from "./sources/portfolios";
 
 type Admin = ReturnType<typeof createAdminClient>;
 
@@ -27,6 +28,27 @@ export async function igniteSignal(
   admin: Admin,
   signal: SignalRow,
 ): Promise<IgniteOutcome> {
+  // 0. Name sanity — a slogan, email address, nav label, person, or
+  // non-residential subject can never become a project page, and research
+  // will happily "corroborate" one when the builder+city are real. Dismiss
+  // before spending anything. (Catches paste-lists and pre-hardening
+  // signals that never went through the portfolio parser.)
+  const junk = junkProjectName(signal.project_name ?? "");
+  if (junk) {
+    await admin
+      .from("discovery_signals")
+      .update({ status: "dismissed" })
+      .eq("id", signal.id);
+    return {
+      signal_id: signal.id,
+      action: "dismissed",
+      published: false,
+      project_id: null,
+      matched_watch: false,
+      notes: `“${signal.project_name}” dismissed pre-research: ${junk}.`,
+    };
+  }
+
   // 1. Cross-reference address ↔ watchlist.
   let watch: WatchRow | null = null;
   if (signal.matched_watch_id) {

@@ -109,7 +109,9 @@ export const PORTFOLIOS: Portfolio[] = [
   {
     tag: "jds",
     firm: "JDS Development Group",
-    url: "https://jdsdevelopment.com/",
+    // The paginated portfolio (per-project detail links), not the homepage —
+    // the homepage carries taglines and contact blocks that read as entries.
+    url: "https://jdsdevelopment.com/portfolio?page=1",
     kind: "developer",
     website: "https://jdsdevelopment.com",
   },
@@ -191,7 +193,35 @@ export const PORTFOLIOS: Portfolio[] = [
 const ARCHITECT_MAX_AGE_YEARS = 3;
 
 const NOISE_RE =
-  /^(home|about|contact|team|people|news|press|careers?|awards?|menu|search|login|privacy|terms( and conditions)?|conditions|projects?|portfolio|residential|commercial|hospitality|mixed[\s-]?use|luxury condominiums?|condominiums?|all|filter|next|prev(ious)?|back|view (all|more)|read more|learn more|explore|category|architecture|interiors?|planning|share|instagram|facebook|linkedin|twitter|investors?|safety protocols?|(live )?construction cams?|floor ?plans?|gallery|videos?|brochures?|register( now)?|amenities|features|availability|location|neighbou?rhoods?|virtual tours?|schedule a (visit|tour)|book (a )?(visit|tour))$/i;
+  /^(home|about|contact|team|people|news|press|careers?|awards?|menu|search|login|privacy|terms( and conditions)?|conditions|projects?|portfolio|residential|commercial|hospitality|mixed[\s-]?use|luxury condominiums?|condominiums?|all|filter|next|prev(ious)?|back|view (all|more)|read more|learn more|explore|category|architecture|interiors?|planning|share|instagram|facebook|linkedin|twitter|investors?|safety protocols?|(live )?construction cams?|floor ?plans?|gallery|videos?|brochures?|register( now)?|amenities|features|availability|location|neighbou?rhoods?|virtual tours?|schedule a (visit|tour)|book (a )?(visit|tour)|active sales|now selling|coming soon|sold out|development partners?|leadership|our (team|story|people)|insights?|supertall|rentals?|luxury rentals?|villa|penthouses?|residences|get in touch|request info(rmation)?)$/i;
+
+/** Never a for-sale/rental housing project — architect portfolios are full
+ *  of stadiums and campuses; builder sites are full of people and slogans. */
+const NONRESIDENTIAL_RE =
+  /\b(stadium|arena|convention (center|centre)|cruise|terminal|universit(y|ies)|college|student housing|administration|city hall|civic|courthouse|museum|librar(y|ies)|airport|hospital|medical|clinic|school|campus|office (tower|building|park)|parking|garage|warehouse|logistics|data (center|centre)|church|temple|mosque)\b/i;
+const PERSONISH_RE =
+  /\b(president|principal|founder|ceo|coo|cfo|managing partner|director|chairman|broker of record)\b/i;
+
+/**
+ * Why a candidate name can never become a project — or null when it's fine.
+ * Used at parse time AND at ignition (paste-lists and pre-hardening signals
+ * bypass the parser), so a slogan/email/person can't reach a research pass.
+ */
+export function junkProjectName(name: string): string | null {
+  const n = name.trim();
+  if (!n || n.length < 3 || n.length > 80) return "length";
+  if (n.includes("@")) return "email address";
+  if (/^["'“”‘’]|["'“”‘’]$/.test(n)) return "quoted tagline";
+  if (/[.!?]["'”’]?$/.test(n) && !/\b(inc|ltd|co|jr|sr|st)\.$/i.test(n)) {
+    return "reads as a sentence";
+  }
+  if (/\.\s+[A-Z]/.test(n)) return "multi-sentence tagline";
+  if (NOISE_RE.test(n)) return "navigation label";
+  if (NONRESIDENTIAL_RE.test(n)) return "non-residential";
+  if (PERSONISH_RE.test(n)) return "person/title";
+  if (n.split(/\s+/).length > 8) return "too long to be a name";
+  return null;
+}
 
 const CITY_RE =
   /\b(Miami Beach|Sunny Isles Beach|Bal Harbour|Coral Gables|Coconut Grove|Aventura|Hallandale|Hollywood|Fort Lauderdale|Pompano Beach|Boca Raton|Delray Beach|West Palm Beach|Palm Beach|Naples|Sarasota|Tampa|St\.? Petersburg|Orlando|Jacksonville|Miami|New York|Brooklyn|Manhattan|Los Angeles|San Francisco|Austin|Dallas|Houston|San Antonio|Nashville|Toronto|Vancouver|Calgary|Edmonton|Chicago|Boston|Seattle|Denver|Phoenix|Las Vegas|Washington)\b/;
@@ -203,7 +233,12 @@ function stripTags(html: string): string {
     .replace(/<[^>]+>/g, " ")
     .replace(/&amp;/g, "&")
     .replace(/&#0?39;|&apos;|&#8217;/g, "'")
+    .replace(/&#8211;|&ndash;/g, "–")
+    .replace(/&#8212;|&mdash;/g, "—")
+    .replace(/&#822[01];|&quot;/g, '"')
     .replace(/&nbsp;/g, " ")
+    // Any remaining numeric entity — decode rather than publish "&#8211;".
+    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(parseInt(n, 10)))
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -226,13 +261,8 @@ export interface PortfolioEntry {
 }
 
 function plausibleName(text: string): boolean {
-  if (!text || text.length < 3 || text.length > 70) return false;
-  if (NOISE_RE.test(text.trim())) return false;
   if (!/[A-Za-z]/.test(text)) return false;
-  // Nav fragments and sentences aren't project names.
-  if (text.split(/\s+/).length > 8) return false;
-  if (/[.!?]$/.test(text.trim())) return false;
-  return true;
+  return junkProjectName(text) == null;
 }
 
 /**
