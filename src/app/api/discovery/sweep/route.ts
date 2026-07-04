@@ -36,6 +36,12 @@ import {
   sweepAllPermits,
   probePermits,
 } from "@/lib/discovery/sources/permits";
+import {
+  PORTFOLIOS,
+  sweepPortfolio,
+  sweepAllPortfolios,
+  probePortfolio,
+} from "@/lib/discovery/sources/portfolios";
 import { igniteSignal, type IgniteOutcome } from "@/lib/discovery/go";
 import type { SignalRow } from "@/lib/discovery/match";
 
@@ -145,7 +151,9 @@ export async function GET(req: Request) {
                     ? await probeNewsFeed(source, probeUrl)
                     : permitSource(source)
                       ? await probePermits(source)
-                      : await probeUrbanToronto(probeUrl);
+                      : PORTFOLIOS.some((p) => p.tag === source)
+                        ? await probePortfolio(source, probeUrl)
+                        : await probeUrbanToronto(probeUrl);
       return NextResponse.json({ probe: source, result: out });
     }
 
@@ -216,6 +224,15 @@ export async function GET(req: Request) {
     }
     if (source === "permits") {
       sweeps.push(...(await sweepAllPermits(admin)));
+    }
+
+    // Developer/architect portfolios — individually, or all at once.
+    const pf = PORTFOLIOS.find((p) => p.tag === source);
+    if (pf) {
+      sweeps.push(await sweepPortfolio(admin, pf).catch((e) => err(pf.tag, e)));
+    }
+    if (source === "portfolios") {
+      sweeps.push(...(await sweepAllPortfolios(admin)));
     }
 
     // Ignition: every new signal goes through match → ingest → publish/draft.

@@ -15,6 +15,7 @@ import {
   sweepUrbanPlanet,
 } from "@/lib/discovery/sources/newsfeeds";
 import { sweepAllPermits } from "@/lib/discovery/sources/permits";
+import { sweepAllPortfolios } from "@/lib/discovery/sources/portfolios";
 import { igniteSignal, type IgniteOutcome } from "@/lib/discovery/go";
 import { sendEmail } from "@/lib/email";
 import type { SignalRow } from "@/lib/discovery/match";
@@ -71,6 +72,10 @@ export async function GET(req: Request) {
     );
     // Every association directory (BILD + its equivalent in each market).
     sweeps.push(...(await sweepAllDirectories(admin)));
+  }
+  if (day === 4) {
+    // Thursdays: developer + architect portfolios (the earliest name signal).
+    sweeps.push(...(await sweepAllPortfolios(admin)));
   }
 
   // Drain up to a handful of new signals per day (each may cost a research pass).
