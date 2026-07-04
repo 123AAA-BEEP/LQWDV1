@@ -133,14 +133,30 @@ export async function GET(req: Request) {
       .select("id", { count: "exact", head: true })
       .eq("status", "new");
 
-    if (published.length + drafts.length + (queued ?? 0) > 0) {
+    // Audit machine findings (last 24h) — flagged listings ride the same
+    // daily email instead of pinging per-run.
+    const { data: auditRows } = await admin
+      .from("project_audit_findings")
+      .select("verdict, summary, action_taken, projects(id, project_name, city)")
+      .gte("run_at", since)
+      .neq("verdict", "ok")
+      .order("run_at", { ascending: false })
+      .limit(25);
+    const auditFindings = ((auditRows ?? []) as unknown as {
+      verdict: string;
+      summary: string | null;
+      action_taken: string | null;
+      projects: { id: string; project_name: string; city: string | null } | null;
+    }[]).filter((f) => f.projects);
+
+    if (published.length + drafts.length + (queued ?? 0) + auditFindings.length > 0) {
       const to = process.env.LEADS_NOTIFY_EMAIL ?? "leads@getliqwd.com";
       const base = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://liqwd.ca").replace(/\/+$/, "");
       const li = (r: { id: string; project_name: string; city: string | null }) =>
         `<li><a href="${base}/dashboard/admin/projects/${r.id}">${r.project_name}</a>${r.city ? ` · ${r.city}` : ""}</li>`;
       await sendEmail({
         to,
-        subject: `Discovery digest: ${published.length} published, ${drafts.length} drafts to review`,
+        subject: `Discovery digest: ${published.length} published, ${drafts.length} drafts to review${auditFindings.length ? `, ${auditFindings.length} audit flag${auditFindings.length === 1 ? "" : "s"}` : ""}`,
         html:
           `<p><strong>Last 24h:</strong> ${published.length} published · ${drafts.length} drafts need review · ${queued ?? 0} signals still queued.</p>` +
           (drafts.length
@@ -148,6 +164,14 @@ export async function GET(req: Request) {
             : "") +
           (published.length
             ? `<p><strong>Published:</strong></p><ul>${published.slice(0, 15).map(li).join("")}${published.length > 15 ? `<li>… and ${published.length - 15} more</li>` : ""}</ul>`
+            : "") +
+          (auditFindings.length
+            ? `<p><strong>Audit flags (${auditFindings.length}):</strong></p><ul>${auditFindings
+                .map(
+                  (f) =>
+                    `<li><a href="${base}/dashboard/admin/projects/${f.projects!.id}">${f.projects!.project_name}</a>${f.projects!.city ? ` · ${f.projects!.city}` : ""} — <strong>${f.verdict}</strong>${f.action_taken && f.action_taken !== "none" ? ` (${f.action_taken})` : ""}${f.summary ? `: ${f.summary.slice(0, 160)}` : ""}</li>`,
+                )
+                .join("")}</ul>`
             : "") +
           `<p><a href="${base}/dashboard/admin/discovery">Discovery queue →</a></p>`,
       }).catch(() => null);
