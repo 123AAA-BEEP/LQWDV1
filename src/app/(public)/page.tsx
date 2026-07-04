@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 const SELECT =
-  "project_id, slug, project_name, builder_name, city, neighbourhood, province, project_type, sales_status, construction_status, price_from_public, price_to_public, hero_image_url, published_at, is_featured, is_advertiser, featured_rank, is_hot, audit_rank";
+  "project_id, slug, project_name, builder_name, city, neighbourhood, province, project_type, sales_status, construction_status, price_from_public, price_to_public, price_currency, hero_image_url, published_at, is_featured, is_advertiser, featured_rank, is_hot, audit_rank";
 
 const TYPE_OPTIONS = [
   { value: "condo", label: "Condos" },
@@ -48,6 +48,7 @@ interface Row {
   construction_status: string | null;
   price_from_public: number | null;
   price_to_public: number | null;
+  price_currency: string | null;
   hero_image_url: string | null;
   is_featured: boolean | null;
   is_advertiser: boolean | null;
@@ -59,7 +60,9 @@ interface Row {
 const isFeatured = (p: Row) => Boolean(p.is_featured || p.is_advertiser);
 
 function ProjectCard({ p, featured = false }: { p: Row; featured?: boolean }) {
-  const band = formatPriceBand(p.price_from_public, p.price_to_public);
+  const band = formatPriceBand(p.price_from_public, p.price_to_public, {
+    currency: p.price_currency,
+  });
   const builder = primaryBuilderName(p.builder_name);
   const location = [p.neighbourhood, p.city, p.province].filter(Boolean).join(", ");
   return (

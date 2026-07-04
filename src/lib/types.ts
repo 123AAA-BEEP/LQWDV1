@@ -337,16 +337,18 @@ export function primaryBuilderName(
   return cut || raw.trim();
 }
 
-/** Format a CAD price band like "From $599,000" / "$599,000 – $1,250,000". */
+/** Format a price band like "From $599,000" / "$599,000 – $1,250,000" in the
+ *  project's local currency (both CAD and USD render as plain "$"). */
 export function formatPriceBand(
   from: number | null,
   to: number | null,
-  opts?: { monthly?: boolean },
+  opts?: { monthly?: boolean; currency?: string | null },
 ): string | null {
+  const currency = opts?.currency === "USD" ? "USD" : "CAD";
   const fmt = (n: number) =>
-    new Intl.NumberFormat("en-CA", {
+    new Intl.NumberFormat(currency === "USD" ? "en-US" : "en-CA", {
       style: "currency",
-      currency: "CAD",
+      currency,
       maximumFractionDigits: 0,
     }).format(n);
   const mo = opts?.monthly ? "/mo" : "";
