@@ -98,6 +98,36 @@ export const PORTFOLIOS: Portfolio[] = [
     url: "https://www.siegersuarez.com/projects",
     kind: "architect",
   },
+  // --- GTA aggregators (launch-market backfill; current inventory) ---
+  // MyCondoPro's WP archive lists every GTA pre-con project newest-first
+  // (detail links at /project/<slug>/). First pages carry the active tail;
+  // the weekly rotation keeps catching new launches on page 1.
+  {
+    tag: "mycondopro",
+    firm: "MyCondoPro (GTA aggregator)",
+    url: "https://mycondopro.ca/project/",
+    kind: "developer",
+    website: "https://mycondopro.ca",
+  },
+  {
+    tag: "mycondopro2",
+    firm: "MyCondoPro (GTA aggregator, p2)",
+    url: "https://mycondopro.ca/project/page/2/",
+    kind: "developer",
+  },
+  {
+    tag: "mycondopro3",
+    firm: "MyCondoPro (GTA aggregator, p3)",
+    url: "https://mycondopro.ca/project/page/3/",
+    kind: "developer",
+  },
+  {
+    tag: "condoroyalty",
+    firm: "Condo Royalty (GTA aggregator)",
+    url: "https://www.condoroyalty.com/",
+    kind: "developer",
+    website: "https://www.condoroyalty.com",
+  },
   // --- "Most active" leaderboard expansion (probe-tunable URLs) ---
   {
     tag: "terra",
@@ -274,7 +304,7 @@ export function junkProjectName(name: string): string | null {
 }
 
 const CITY_RE =
-  /\b(Miami Beach|Sunny Isles Beach|Bal Harbour|Coral Gables|Coconut Grove|Aventura|Hallandale|Hollywood|Fort Lauderdale|Pompano Beach|Boca Raton|Delray Beach|West Palm Beach|Palm Beach|Naples|Sarasota|Tampa|St\.? Petersburg|Orlando|Jacksonville|Miami|New York|Brooklyn|Manhattan|Los Angeles|San Francisco|Austin|Dallas|Houston|San Antonio|Nashville|Toronto|Vancouver|Calgary|Edmonton|Chicago|Boston|Seattle|Denver|Phoenix|Las Vegas|Washington)\b/;
+  /\b(Miami Beach|Sunny Isles Beach|Bal Harbour|Coral Gables|Coconut Grove|Aventura|Hallandale|Hollywood|Fort Lauderdale|Pompano Beach|Boca Raton|Delray Beach|West Palm Beach|Palm Beach|Naples|Sarasota|Tampa|St\.? Petersburg|Orlando|Jacksonville|Miami|New York|Brooklyn|Manhattan|Los Angeles|San Francisco|Austin|Dallas|Houston|San Antonio|Nashville|Mississauga|Oakville|Burlington|Hamilton|Brampton|Vaughan|Markham|Richmond Hill|Ajax|Pickering|Whitby|Oshawa|Milton|Newmarket|Aurora|Barrie|Kitchener|Waterloo|Cambridge|Guelph|London|Niagara Falls|St\.? Catharines|Etobicoke|Scarborough|North York|Caledon|King City|Stouffville|Innisfil|Windsor|Ottawa|Toronto|Vancouver|Burnaby|Surrey|Calgary|Edmonton|Chicago|Boston|Seattle|Denver|Phoenix|Las Vegas|Washington)\b/;
 
 function stripTags(html: string): string {
   return html
