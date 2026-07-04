@@ -334,9 +334,11 @@ export default async function PublicProjectPage({
       </nav>
 
       {/* Hero — letterboxed, never cropped: the full image renders via
-          object-contain over a blurred, zoomed copy of itself, so portrait
-          renderings and wide photos both look deliberate. */}
-      <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
+          object-contain over a rich ambient backdrop (saturated blur of the
+          image itself + a subtle ink gradient), with the image floated on a
+          shadow so portrait tower renderings read as a deliberate poster
+          instead of a strip lost in fog. */}
+      <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-ink">
         {project.hero_image_url ? (
           <div className="relative h-80 sm:h-[28rem]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -344,14 +346,18 @@ export default async function PublicProjectPage({
               src={project.hero_image_url}
               alt=""
               aria-hidden
-              className="absolute inset-0 h-full w-full scale-110 object-cover opacity-50 blur-2xl"
+              className="absolute inset-0 h-full w-full scale-125 object-cover opacity-60 blur-xl saturate-150"
+            />
+            <div
+              aria-hidden
+              className="absolute inset-0 bg-gradient-to-t from-ink/50 via-ink/5 to-ink/25"
             />
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={project.hero_image_url}
               alt={project.hero_image_alt ?? project.project_name}
               fetchPriority="high"
-              className="relative mx-auto h-full object-contain"
+              className="relative mx-auto h-full object-contain py-4 drop-shadow-2xl sm:py-6"
             />
             {/* Status chips */}
             <div className="absolute left-4 top-4 flex flex-wrap gap-1.5">
