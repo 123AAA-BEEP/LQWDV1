@@ -164,6 +164,13 @@ async function attachCommission(
 export async function ingestExtractedProject(
   ex: ExtractedProject,
   ctx: { from: string | null; subject: string | null; images: InboundImage[] },
+  opts: {
+    /** What to do with a new project research can't corroborate. Email drops
+     *  default to "draft" (a human sent it — worth admin review); scraped
+     *  name-only discovery signals pass "skip" so an unverifiable nav label
+     *  or slogan never becomes a project row at all. */
+    onUnverified?: "draft" | "skip";
+  } = {},
 ): Promise<IngestResult> {
   if (!ex.is_actionable || !ex.project_name) {
     return {
@@ -269,6 +276,21 @@ export async function ingestExtractedProject(
         ? ` | web-research: corroborated (${research.confidence.toFixed(2)}) via ${research.sources.slice(0, 3).join(", ") || "sources"}`
         : " | web-research: could not corroborate"
       : "";
+
+    // Scraped signals live or die on corroboration: if the web can't confirm
+    // a residential development by this name, don't create anything — the
+    // signal keeps the name for audit, and a real project will resurface
+    // through another source.
+    const corroborated =
+      ex.confidence >= PUBLISH_CONFIDENCE || research?.found === true;
+    if (opts.onUnverified === "skip" && !corroborated) {
+      return {
+        action: "skipped",
+        project_id: null,
+        published: false,
+        notes: `“${ex.project_name}” — web research couldn't corroborate a residential development by this name; skipped (no draft created).`,
+      };
+    }
 
     const slug = slugify(ex.project_name);
     const { data: created, error: insErr } = await admin

@@ -122,17 +122,31 @@ export async function igniteSignal(
       .join(" "),
   };
 
-  const result = await ingestExtractedProject(ex, {
-    from: `discovery:${signal.source}`,
-    subject: signal.source_url ?? signal.project_name,
-    images: [],
-  });
+  // Name-only scrapes (no planning match, no address) must earn their page
+  // via web corroboration — unverifiable ones are dismissed, not drafted.
+  // Signals carrying structure (permit address, UT database specs) keep the
+  // draft-for-review path: the city corroborated those months ago.
+  const nameOnly = !watch && !address;
+  const result = await ingestExtractedProject(
+    ex,
+    {
+      from: `discovery:${signal.source}`,
+      subject: signal.source_url ?? signal.project_name,
+      images: [],
+    },
+    { onUnverified: nameOnly ? "skip" : "draft" },
+  );
 
   // 3. Write outcomes back so the Discovery tab shows the full story.
   await admin
     .from("discovery_signals")
     .update({
-      status: result.action === "error" ? "error" : "ingested",
+      status:
+        result.action === "error"
+          ? "error"
+          : result.action === "skipped"
+            ? "dismissed"
+            : "ingested",
       matched_watch_id: watch?.id ?? null,
       project_id: result.project_id,
       notes: result.notes,
