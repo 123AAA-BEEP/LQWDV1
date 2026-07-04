@@ -9,6 +9,14 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
+      // The marketplace browse moved to the homepage; old /projects links
+      // (bookmarks, indexed pages, emails) forward with their filters intact.
+      // Bare source doesn't match /projects/:slug — detail pages stay put.
+      {
+        source: "/projects",
+        destination: "/",
+        permanent: true,
+      },
       // Project slug changes: keep old public URLs alive (permanent 308).
       {
         source: "/projects/uptown-meadowvale",

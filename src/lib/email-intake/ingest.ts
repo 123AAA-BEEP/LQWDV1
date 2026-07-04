@@ -92,7 +92,7 @@ async function publishAdmin(admin: Admin, projectId: string, slug: string) {
   }
 
   // First-to-market: tell search engines the moment the page exists.
-  await pingIndexNow([`/projects/${slug}`, "/projects", "/sitemap.xml"]);
+  await pingIndexNow([`/projects/${slug}`, "/", "/sitemap.xml"]);
 }
 
 /** Adds a broker portal if the project doesn't already have one with that URL. */

@@ -198,7 +198,7 @@ export default async function RentalsPage({
               <p>
                 Looking to buy instead?{" "}
                 <Link
-                  href="/projects"
+                  href="/"
                   className="font-medium text-brand-700 hover:underline"
                 >
                   Browse new &amp; pre-construction homes →

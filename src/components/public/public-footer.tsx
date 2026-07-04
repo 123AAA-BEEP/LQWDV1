@@ -19,13 +19,13 @@ export function PublicFooter() {
           </p>
         </div>
         <nav className="flex items-center gap-6 text-sm text-slate-300">
-          <Link href="/projects" className="hover:text-white">
+          <Link href="/" className="hover:text-white">
             New homes
           </Link>
           <Link href="/rentals" className="hover:text-white">
             Rentals
           </Link>
-          <Link href="/" className="hover:text-white">
+          <Link href="/agents" className="hover:text-white">
             For agents
           </Link>
         </nav>

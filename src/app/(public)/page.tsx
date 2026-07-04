@@ -13,9 +13,10 @@ import { Button, ButtonLink } from "@/components/ui/button";
 import { formatPriceBand, primaryBuilderName } from "@/lib/types";
 
 export const metadata: Metadata = {
-  title: "New & Pre-Construction Homes for Sale | LIQWD",
+  title: { absolute: "LIQWD — New & Pre-Construction Homes for Sale" },
   description:
     "Browse new and pre-construction developments across Ontario, BC, Alberta, Florida, Tennessee, Texas, and California — condos, towns, and single-family homes.",
+  alternates: { canonical: "/" },
 };
 export const dynamic = "force-dynamic";
 
@@ -215,7 +216,7 @@ export default async function MarketplacePage({
   if (statusFilter) nextParams.set("status", statusFilter);
   if (regionFilter) nextParams.set("region", regionFilter);
   nextParams.set("page", String(pageNum + 1));
-  const loadMoreHref = `/projects?${nextParams.toString()}`;
+  const loadMoreHref = `/?${nextParams.toString()}`;
 
   // Don't repeat the featured strip's cards in the grid below it.
   const stripIds = new Set(featured.map((f) => f.project_id));
@@ -248,7 +249,7 @@ export default async function MarketplacePage({
 
           {visitorKey && !hasFilter ? (
             <Link
-              href={`/projects?region=${visitorKey}`}
+              href={`/?region=${visitorKey}`}
               className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-brand-200 bg-brand-50 px-3.5 py-1.5 text-sm font-medium text-brand-800 hover:bg-brand-100"
             >
               <MapPin aria-hidden className="size-3.5" /> See{" "}
@@ -258,7 +259,7 @@ export default async function MarketplacePage({
           {regionFilter && isRegionKey(regionFilter) ? (
             <p className="mt-4 text-sm font-medium text-brand-700">
               Showing {REGIONS[regionFilter].label} —{" "}
-              <Link href="/projects" className="underline hover:text-brand-800">
+              <Link href="/" className="underline hover:text-brand-800">
                 show all markets
               </Link>
             </p>
@@ -277,7 +278,7 @@ export default async function MarketplacePage({
                 Search
               </Button>
               {hasFilter ? (
-                <ButtonLink href="/projects" variant="secondary">
+                <ButtonLink href="/" variant="secondary">
                   Clear
                 </ButtonLink>
               ) : null}
