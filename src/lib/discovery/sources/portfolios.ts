@@ -193,12 +193,12 @@ export const PORTFOLIOS: Portfolio[] = [
 const ARCHITECT_MAX_AGE_YEARS = 3;
 
 const NOISE_RE =
-  /^(home|about( us)?|contact( us)?|team|people|news|press|careers?|career opportunities|awards?|menu|search|(investor )?login|privacy( (policy|notice))?|terms( (and|&) conditions| of (use|service))?|conditions|cookies? policy|legal( & privacy policy)?|accessibility statement|notices?|projects?|current projects|portfolio( (timeline|highlights|selects))?|residential|luxury residential|commercial|hospitality|high-end hospitality|mixed[\s-]?use|luxury condominiums?|condominiums?|condominium hotels?|all|filter|next|prev(ious)?|back|view (all|more|our)( \w+)?|read more|learn (more|about us)|explore( tags)?|discover( more)?|see all \w+|follow us|category|architecture|interiors?|planning|share|instagram|facebook|linkedin(-in)?|twitter( logo)?|investors?|affiliates|brokerage|broker tools|capabilities|vision(ar(y|ies))?|community|master plan community|affordable housing|overview|company overview|newsroom|magazine|map|videos?|films?|art|international|foundation|philanthropy|collaboration|landmark|profile|properties|shop|main navigation|select site|(main|field|corporate) offices?|safety protocols?|(live )?construction cams?|floor ?plans?|gallery|brochures?|register( now)?|amenities|features|availability|location|neighbou?rhoods?|virtual tours?|schedule a (visit|tour)|book (a )?(visit|tour)|active sales|now selling|coming soon|sold out|new construction|pre-?sales?|waterfront|development partners?|leadership|who we are|our (team|story|people|company|vision|culture|collaborators)|insights?|supertall|rentals?|luxury rentals?|villa|penthouses?|residences|get in touch|request info(rmation)?|real estate( development)?|investment approach|capital partnerships?|marketing and sales|design (excellence|forecast)|design for equity|future of \w+|city centers?|research library|skyline disruptors|lifestyle experiences|work & the workplace|workplace surveys?|sustainability( & resilience)?|resilience by design|vision & impacts?|cnbc|forbes|bloomberg|reuters)$/i;
+  /^(home|about( us)?|contact( us)?|team|people|news|press|careers?|career opportunities|awards?|menu|search|(investor )?login|privacy( (policy|notice))?|terms( (and|&) conditions| of (use|service))?|conditions|cookies? policy|legal( & privacy policy)?|accessibility statement|notices?|projects?|current projects|portfolio( (timeline|highlights|selects))?|residential|luxury residential|commercial|hospitality|high-end hospitality|mixed[\s-]?use|luxury condominiums?|condominiums?|condominium hotels?|all|filter|next|prev(ious)?|back|view (all|more|our)( \w+)?|read more|learn (more|about us)|explore( tags)?|discover( more)?|see all \w+|follow us|category|architecture|interiors?|planning|share|instagram|facebook|linkedin(-in)?|twitter( logo)?|investors?|affiliates|brokerage|broker tools|capabilities|vision(ar(y|ies))?|community|master plan community|affordable housing|overview|company overview|newsroom|magazine|map|videos?|films?|art|international|foundation|philanthropy|collaboration|landmark|profile|properties|shop|main navigation|select site|site ?map|(main|field|corporate) offices?|safety protocols?|(live )?construction cams?|floor ?plans?|gallery|brochures?|register( now)?|amenities|features|availability|location|neighbou?rhoods?|virtual tours?|schedule a (visit|tour)|book (a )?(visit|tour)|active sales|now selling|coming soon|sold out|new construction|pre-?sales?|waterfront|development partners?|leadership|who we are|our (team|story|people|company|vision|culture|collaborators)|insights?|supertall|rentals?|luxury rentals?|villa|penthouses?|residences|get in touch|request info(rmation)?|real estate( development)?|investment approach|capital partnerships?|marketing and sales|design (excellence|forecast)|design for equity|future of \w+|city centers?|research library|skyline disruptors|lifestyle experiences|work & the workplace|workplace surveys?|sustainability( & resilience)?|resilience by design|vision & impacts?|cnbc|forbes|bloomberg|reuters)$/i;
 
 /** Never a for-sale/rental housing project — architect portfolios are full
  *  of stadiums and campuses; builder sites are full of people and slogans. */
 const NONRESIDENTIAL_RE =
-  /\b(stadium|arena|convention (center|centre)|cruise|terminal|universit(y|ies)|college|student housing|administration|city hall|civic|courthouse|museum|librar(y|ies)|airport|hospital|medical|clinic|school|campus|office (tower|building|park)|parking|garage|warehouse|logistics|data (center|centre)|church|temple|mosque|automotive|auto haus)\b/i;
+  /\b(stadium|arena|convention (center|centre)|cruise|terminal|universit(y|ies)|college|student housing|administration|city hall|civic|courthouse|museum|librar(y|ies)|airport|hospital|medical|clinic|school|campus|office (tower|building|park)|parking|garage|warehouse|logistics|data (center|centre)|church|temple|mosque|automotive|auto haus|government (center|centre))\b/i;
 const PERSONISH_RE =
   /\b(president|principal|founder|ceo|coo|cfo|managing partner|director|chairman|broker of record)\b/i;
 
@@ -221,8 +221,8 @@ export function junkProjectName(name: string): string | null {
   if (/[.!?]["'”’]?$/.test(n) && !/\b(inc|ltd|co|jr|sr|st)\.$/i.test(n)) {
     return "reads as a sentence";
   }
-  // "St. Regis", "Ft. Lauderdale", "Mt. Pleasant" are names, not sentences.
-  const noAbbrev = n.replace(/\b(st|ft|mt|dr|no|ste)\.\s/gi, "");
+  // "St. Regis", "Mr. C Residences", "Mt. Pleasant" are names, not sentences.
+  const noAbbrev = n.replace(/\b(st|ft|mt|dr|no|ste|mr|mrs|ms)\.\s/gi, "");
   if (/\.\s+[A-Z]/.test(noAbbrev)) return "multi-sentence tagline";
   // "$7.5 Billion" / "15 Million" / "31M" / "40 Years" — stat blocks.
   if (
@@ -243,7 +243,7 @@ export function junkProjectName(name: string): string | null {
   // "Naftali Credit Partners", "Continuum Company", "New York Magazine" —
   // firms and press, not developments.
   if (
-    /\b(group|holdings?|capital|partners?|partnerships?|compan(y|ies)|ventures?|equities|investments?|credit|corp\.?|corporation|corporate|inc\.?|llc|realty|magazine|offices?|blog|proposals?|login|polic(y|ies)|notices?|statements?|logos?)$/i.test(
+    /\b(group|holdings?|capital|partners?|partnerships?|compan(y|ies)|ventures?|equities|investments?|credit|corp\.?|corporation|corporate|inc\.?|llc|realty|magazine|firms?|offices?|blog|proposals?|login|polic(y|ies)|notices?|statements?|logos?)$/i.test(
       n,
     )
   ) {
