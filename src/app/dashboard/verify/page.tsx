@@ -78,9 +78,93 @@ export default async function VerifyPage({
       ) : null}
 
       {status === "approved" ? (
-        <Notice tone="success">
-          You’re verified. All broker-only features are unlocked.
-        </Notice>
+        <>
+          <Notice tone="success">
+            You’re verified. All broker-only features are unlocked.
+          </Notice>
+          {/* The licence on file — not a dead end: agents come here to check
+              what we have and where to fix it. */}
+          <Card>
+            <CardBody>
+              <div className="flex items-start gap-3">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-emerald-50">
+                  <ShieldCheck
+                    className="size-5 text-emerald-600"
+                    strokeWidth={1.75}
+                    aria-hidden
+                  />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <h2 className="font-semibold text-ink">Licence on file</h2>
+                  <dl className="mt-3 grid gap-x-8 gap-y-3 text-sm sm:grid-cols-2">
+                    <div>
+                      <dt className="text-slate-500">Jurisdiction</dt>
+                      <dd className="mt-0.5 font-medium text-slate-800">
+                        {regionOrDefault(profile.license_region).label} (
+                        {regionOrDefault(profile.license_region).regulator.shortName})
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-slate-500">
+                        {regionOrDefault(profile.license_region).regulator.licenseLabel}
+                      </dt>
+                      <dd className="mt-0.5 font-medium text-slate-800">
+                        {profile.reco_registration_number ?? "—"}
+                      </dd>
+                    </div>
+                    {profile.reco_verified_at ? (
+                      <div>
+                        <dt className="text-slate-500">Verified</dt>
+                        <dd className="mt-0.5 font-medium text-slate-800">
+                          {new Date(profile.reco_verified_at).toLocaleDateString("en-CA", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          })}
+                          {profile.reco_verification_method
+                            ? ` · ${profile.reco_verification_method.replace(/_/g, " ")}`
+                            : ""}
+                        </dd>
+                      </div>
+                    ) : null}
+                    {profile.reco_expiry ? (
+                      <div>
+                        <dt className="text-slate-500">Licence expiry</dt>
+                        <dd className="mt-0.5 font-medium text-slate-800">
+                          {new Date(profile.reco_expiry).toLocaleDateString("en-CA", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          })}
+                        </dd>
+                      </div>
+                    ) : null}
+                  </dl>
+                  <p className="mt-4 text-sm text-slate-500">
+                    Something changed?{" "}
+                    <a
+                      href="/dashboard/profile"
+                      className="font-medium text-brand-700 hover:underline"
+                    >
+                      Update your profile
+                    </a>{" "}
+                    or verify on{" "}
+                    <a
+                      href={regionOrDefault(profile.license_region).regulator.registerUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-medium text-brand-700 hover:underline"
+                    >
+                      the {regionOrDefault(profile.license_region).regulator.shortName}{" "}
+                      public register
+                    </a>
+                    .
+                  </p>
+                </div>
+              </div>
+            </CardBody>
+          </Card>
+        </>
       ) : null}
       {status === "suspended" ? (
         <Notice tone="error">

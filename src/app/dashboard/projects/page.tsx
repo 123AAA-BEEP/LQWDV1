@@ -5,9 +5,10 @@ import { createClient } from "@/lib/supabase/server";
 import { Card, CardBody } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input, Select } from "@/components/ui/field";
-import { Button } from "@/components/ui/button";
+import { Button, ButtonLink } from "@/components/ui/button";
 import { VerificationRequired } from "@/components/dashboard/locked";
-import { formatPriceBand } from "@/lib/types";
+import { CardImage } from "@/components/public/card-image";
+import { formatPriceBand, primaryBuilderName } from "@/lib/types";
 import type { ProjectListItem } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Projects" };
@@ -35,6 +36,7 @@ export default async function ProjectsPage({
     city?: string;
     sales_status?: string;
     construction_status?: string;
+    page?: string;
   }>;
 }) {
   const { profile } = await requireUserProfile();
@@ -50,11 +52,16 @@ export default async function ProjectsPage({
     );
   }
 
-  const { q, city, sales_status, construction_status } = await searchParams;
+  const { q, city, sales_status, construction_status, page } =
+    await searchParams;
   const query = (q ?? "").trim();
   const cityFilter = (city ?? "").trim();
   const salesFilter = sales_status ?? "";
   const constructionFilter = construction_status ?? "";
+  // Cumulative pagination (same as the public browse): page N renders the
+  // first N pages so "Load more" appends and the browse never dead-ends.
+  const PAGE_SIZE = 30;
+  const pageNum = Math.min(Math.max(parseInt(page ?? "1", 10) || 1, 1), 50);
 
   const supabase = await createClient();
 
@@ -80,6 +87,7 @@ export default async function ProjectsPage({
     .from("broker_projects_view")
     .select(
       "id, slug, project_name, builder_name, city, sales_status, construction_status, occupancy_estimate_text, price_from_public, price_to_public, hero_image_url, record_status, is_featured, featured_rank, created_at",
+      { count: "exact" },
     )
     // Pinned (featured_rank) and featured projects lead the list for everyone,
     // then newest first — the same priority the public marketplace uses. The
@@ -87,7 +95,7 @@ export default async function ProjectsPage({
     .order("featured_rank", { ascending: true, nullsFirst: false })
     .order("is_featured", { ascending: false })
     .order("created_at", { ascending: false })
-    .limit(60);
+    .range(0, pageNum * PAGE_SIZE - 1);
 
   if (restrictByStatus) {
     request = request.in("record_status", VISIBLE_RECORD_STATUSES);
@@ -108,8 +116,9 @@ export default async function ProjectsPage({
     request = request.eq("construction_status", constructionFilter);
   }
 
-  const { data } = await request;
+  const { data, count } = await request;
   const fetched = (data as ProjectListItem[] | null) ?? [];
+  const totalCount = count ?? fetched.length;
 
   // Cap the featured cluster to a single grid row (3 on desktop). Extra featured
   // projects beyond the cap fall back into the list newest-first like any other
@@ -243,14 +252,11 @@ export default async function ProjectsPage({
               <Link key={p.id} href={`/dashboard/projects/${p.slug}`}>
                 <Card className="h-full transition-shadow hover:shadow-md">
                   <div className="aspect-video overflow-hidden rounded-t-xl bg-slate-100">
-                    {p.hero_image_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={p.hero_image_url}
-                        alt={p.project_name}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : null}
+                    <CardImage
+                      src={p.hero_image_url}
+                      alt={p.project_name}
+                      name={p.project_name}
+                    />
                   </div>
                   <CardBody>
                     <div className="flex flex-wrap items-center gap-2">
@@ -277,11 +283,13 @@ export default async function ProjectsPage({
                         <Badge tone="brand">Portal</Badge>
                       ) : null}
                     </div>
-                    <h2 className="mt-2 font-semibold text-ink">
+                    <h2 className="mt-2 line-clamp-2 font-semibold text-ink">
                       {p.project_name}
                     </h2>
-                    <p className="text-sm text-slate-500">
-                      {[p.builder_name, p.city].filter(Boolean).join(" · ")}
+                    <p className="line-clamp-1 text-sm text-slate-500">
+                      {[primaryBuilderName(p.builder_name), p.city]
+                        .filter(Boolean)
+                        .join(" · ")}
                     </p>
                     {band ? (
                       <p className="mt-2 text-sm font-medium text-slate-700">
@@ -295,6 +303,26 @@ export default async function ProjectsPage({
           })}
         </div>
       )}
+
+      {projects.length < totalCount ? (
+        <div className="text-center">
+          <ButtonLink
+            href={`/dashboard/projects?${new URLSearchParams({
+              ...(query ? { q: query } : {}),
+              ...(cityFilter ? { city: cityFilter } : {}),
+              ...(salesFilter ? { sales_status: salesFilter } : {}),
+              ...(constructionFilter
+                ? { construction_status: constructionFilter }
+                : {}),
+              page: String(pageNum + 1),
+            }).toString()}`}
+            scroll={false}
+            variant="secondary"
+          >
+            Load more ({totalCount - projects.length} remaining)
+          </ButtonLink>
+        </div>
+      ) : null}
     </div>
   );
 }
