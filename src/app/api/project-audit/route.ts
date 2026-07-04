@@ -83,7 +83,9 @@ function authorized(req: Request, url: URL): boolean {
   return false;
 }
 
-async function auditFacts(p: ProjectRow): Promise<FactAudit | null> {
+async function auditFacts(
+  p: ProjectRow,
+): Promise<FactAudit | { error: string }> {
   const facts = [
     `Name: ${p.project_name}`,
     `Builder/developer: ${p.builder_name ?? "unknown"}`,
@@ -163,7 +165,7 @@ async function auditFacts(p: ProjectRow): Promise<FactAudit | null> {
     // (same loop shape as the intake research pass).
     for (let round = 0; round < 4; round++) {
       const remaining = DEADLINE_MS - (Date.now() - startedAt);
-      if (remaining < 5_000) return null;
+      if (remaining < 5_000) return { error: "deadline exhausted" };
 
       const res = await anthropic.messages.create(
         {
@@ -213,11 +215,13 @@ async function auditFacts(p: ProjectRow): Promise<FactAudit | null> {
         messages.push({ role: "user", content: "Call emit_audit now with your verdict." });
         continue;
       }
-      return null;
+      return { error: `no verdict after nudge (stop: ${res.stop_reason})` };
     }
-    return null;
-  } catch {
-    return null;
+    return { error: "no verdict after 4 rounds" };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error(`[project-audit] ${p.project_name}: ${msg}`);
+    return { error: msg.slice(0, 300) };
   }
 }
 
@@ -388,7 +392,7 @@ export async function GET(req: Request) {
       }
     }
 
-    if (!audit) {
+    if ("error" in audit) {
       // Research failed outright — release the row back into rotation with a
       // bumped cursor so one flaky call doesn't wedge the queue.
       await admin
@@ -401,7 +405,7 @@ export async function GET(req: Request) {
         confidence: 0,
         unpublished: false,
         gallery_junked: galleryJunked,
-        summary: "audit call failed — will retry next rotation",
+        summary: `audit call failed (${audit.error}) — will retry next rotation`,
       });
       continue;
     }
