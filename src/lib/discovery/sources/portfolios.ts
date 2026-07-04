@@ -191,7 +191,7 @@ export const PORTFOLIOS: Portfolio[] = [
 const ARCHITECT_MAX_AGE_YEARS = 3;
 
 const NOISE_RE =
-  /^(home|about|contact|team|people|news|press|careers?|awards?|menu|search|login|privacy|terms|projects?|portfolio|residential|commercial|hospitality|mixed[\s-]?use|luxury condominiums?|condominiums?|all|filter|next|prev(ious)?|back|view (all|more)|read more|learn more|explore|category|architecture|interiors?|planning|share|instagram|facebook|linkedin|twitter)$/i;
+  /^(home|about|contact|team|people|news|press|careers?|awards?|menu|search|login|privacy|terms( and conditions)?|conditions|projects?|portfolio|residential|commercial|hospitality|mixed[\s-]?use|luxury condominiums?|condominiums?|all|filter|next|prev(ious)?|back|view (all|more)|read more|learn more|explore|category|architecture|interiors?|planning|share|instagram|facebook|linkedin|twitter|investors?|safety protocols?|(live )?construction cams?|floor ?plans?|gallery|videos?|brochures?|register( now)?|amenities|features|availability|location|neighbou?rhoods?|virtual tours?|schedule a (visit|tour)|book (a )?(visit|tour))$/i;
 
 const CITY_RE =
   /\b(Miami Beach|Sunny Isles Beach|Bal Harbour|Coral Gables|Coconut Grove|Aventura|Hallandale|Hollywood|Fort Lauderdale|Pompano Beach|Boca Raton|Delray Beach|West Palm Beach|Palm Beach|Naples|Sarasota|Tampa|St\.? Petersburg|Orlando|Jacksonville|Miami|New York|Brooklyn|Manhattan|Los Angeles|San Francisco|Austin|Dallas|Houston|San Antonio|Nashville|Toronto|Vancouver|Calgary|Edmonton|Chicago|Boston|Seattle|Denver|Phoenix|Las Vegas|Washington)\b/;
@@ -245,13 +245,33 @@ export function parsePortfolio(html: string, baseUrl: string): PortfolioEntry[] 
   const found = new Map<string, PortfolioEntry>();
 
   const push = (rawName: string, href: string | null, context: string) => {
-    const name = stripTags(rawName);
+    let name = stripTags(rawName);
     if (!plausibleName(name)) return;
-    const key = name.toLowerCase();
-    if (found.has(key)) return;
     const ctx = stripTags(context).slice(0, 400);
     const year = ctx.match(/\b(19[89]\d|20[0-4]\d)\b/);
     const city = name.match(CITY_RE)?.[1] ?? ctx.match(CITY_RE)?.[1] ?? null;
+    // Tile captions often append the location to the name ("1000 Boulevard of
+    // the Arts Sarasota, FL") — strip a trailing "City[, ST]" so the same
+    // project dedups against its clean-named siblings.
+    if (city) {
+      name = name
+        .replace(
+          new RegExp(`[\\s,·|–-]*${city.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(,?\\s*[A-Z]{2})?\\s*$`, "i"),
+          "",
+        )
+        .trim();
+      if (!plausibleName(name)) return;
+    }
+    // SHOUTING tiles ("1000 BOULEVARD OF THE ARTS") → title case.
+    if (name === name.toUpperCase() && /[A-Z]{4,}/.test(name)) {
+      name = name
+        .toLowerCase()
+        .replace(/\b[a-z]/g, (c) => c.toUpperCase())
+        .replace(/\b(Of|The|At|On|And|In)\b/g, (w) => w.toLowerCase())
+        .replace(/^[a-z]/, (c) => c.toUpperCase());
+    }
+    const key = name.toLowerCase();
+    if (found.has(key)) return;
     let url: string | null = null;
     if (href) {
       try {

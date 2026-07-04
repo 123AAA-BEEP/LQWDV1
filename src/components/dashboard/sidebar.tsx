@@ -118,6 +118,40 @@ const REALTOR_SECTIONS: NavSection[] = [
   },
 ];
 
+// ---- Admin: the queues first, the realtor product second -------------------
+const ADMIN_SECTIONS: NavSection[] = [
+  {
+    accent: "brand",
+    label: "Admin",
+    description: "Queues, publishing & settings",
+    icon: ShieldCheck,
+    items: [
+      { href: "/dashboard/admin", label: "Admin console", icon: ShieldCheck, exact: true },
+      { href: "/dashboard/admin/verifications", label: "Verifications", icon: ClipboardList },
+      { href: "/dashboard/admin/projects", label: "Projects", icon: Building2 },
+      { href: "/dashboard/admin/discovery", label: "Discovery", icon: Compass },
+      { href: "/dashboard/admin/settings", label: "Settings", icon: Settings2 },
+    ],
+  },
+  {
+    accent: "sky",
+    label: "New Homes",
+    description: "The product, as realtors see it",
+    icon: Compass,
+    items: [
+      { href: "/dashboard/projects", label: "Projects", icon: Building2 },
+      { href: "/dashboard/broker-portals", label: "Broker Portals", icon: DoorOpen },
+      { href: "/dashboard/lead-pages", label: "Lead Pages", icon: Link2 },
+    ],
+  },
+  {
+    accent: "slate",
+    label: "Account",
+    icon: Settings2,
+    items: [{ href: "/dashboard/profile", label: "Profile", icon: UserCircle }],
+  },
+];
+
 // ---- Developer: grouped by core return (transact / promote / research) -------
 const DEVELOPER_SECTIONS: NavSection[] = [
   {
@@ -305,27 +339,13 @@ export function Sidebar({
     </Link>
   );
 
+  // Admins get an admin-first rail (queues on top, realtor upsells gone) —
+  // the previous approach wrapped the admin console in the full realtor nav,
+  // onboarding and Pro pitch included.
   const sections = isDeveloper
     ? DEVELOPER_SECTIONS
     : isAdmin
-      ? REALTOR_SECTIONS.map((s) => {
-          // Admins see the realtor nav, minus realtor-only tools (e.g. the
-          // Off-Market board), plus the Admin console link under Account.
-          const items = s.items.filter((i) => !i.realtorOnly);
-          return s.accent === "slate"
-            ? {
-                ...s,
-                items: [
-                  ...items,
-                  {
-                    href: "/dashboard/admin",
-                    label: "Admin",
-                    icon: ShieldCheck,
-                  },
-                ],
-              }
-            : { ...s, items };
-        })
+      ? ADMIN_SECTIONS
       : REALTOR_SECTIONS;
 
   // Brand tier chip shown beside the LIQWD wordmark in the rail/drawer header.
@@ -348,8 +368,8 @@ export function Sidebar({
         {sections.map(renderSection)}
       </nav>
 
-      {/* Pro upgrade chip — only for free realtors (not Pro/Ultra, not devs). */}
-      {!isPro && !isUltra && !isDeveloper ? (
+      {/* Pro upgrade chip — only for free realtors (not Pro/Ultra/devs/admins). */}
+      {!isPro && !isUltra && !isDeveloper && !isAdmin ? (
         <div className="px-3 pb-1">
           <Link
             href="/dashboard/upgrade"

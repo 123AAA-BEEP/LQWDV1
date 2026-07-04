@@ -36,7 +36,8 @@ import { createClient } from "@/lib/supabase/server";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, CardBody } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { formatPriceBand } from "@/lib/types";
+import { formatPriceBand, primaryBuilderName } from "@/lib/types";
+import { CardImage } from "@/components/public/card-image";
 import type { Profile } from "@/lib/types";
 import { cn } from "@/lib/cn";
 import type { ReactNode } from "react";
@@ -324,25 +325,24 @@ export default async function DashboardHome() {
               return (
                 <Link key={p.id} href={`/dashboard/projects/${p.slug}`}>
                   <Card className="h-full transition-shadow hover:shadow-md">
-                    <div className="flex aspect-video items-center justify-center overflow-hidden rounded-t-xl bg-slate-100">
-                      {p.hero_image_url ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={p.hero_image_url}
-                          alt={p.project_name}
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        <Building2 className="size-8 text-slate-300" strokeWidth={1.5} aria-hidden />
-                      )}
+                    <div className="aspect-video overflow-hidden rounded-t-xl bg-slate-100">
+                      <CardImage
+                        src={p.hero_image_url}
+                        alt={p.project_name}
+                        name={p.project_name}
+                      />
                     </div>
                     <CardBody>
                       {p.sales_status ? (
                         <Badge tone="brand">{p.sales_status.replace(/_/g, " ")}</Badge>
                       ) : null}
-                      <h3 className="mt-2 font-semibold text-ink">{p.project_name}</h3>
-                      <p className="text-sm text-slate-500">
-                        {[p.builder_name, p.city].filter(Boolean).join(" · ")}
+                      <h3 className="mt-2 line-clamp-2 font-semibold text-ink">
+                        {p.project_name}
+                      </h3>
+                      <p className="line-clamp-1 text-sm text-slate-500">
+                        {[primaryBuilderName(p.builder_name), p.city]
+                          .filter(Boolean)
+                          .join(" · ")}
                       </p>
                       {band ? (
                         <p className="mt-2 text-sm font-medium text-slate-700">{band}</p>
