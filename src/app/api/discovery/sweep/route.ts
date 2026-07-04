@@ -135,6 +135,9 @@ export async function GET(req: Request) {
   const probeUrl = url.searchParams.get("url") ?? undefined;
   const ignite = url.searchParams.get("ignite") !== "0";
   const ui = url.searchParams.get("ui") === "1";
+  // quiet=1 (the pg_cron drainer): no per-run ops email — the daily
+  // discovery cron sends one digest instead.
+  const quiet = url.searchParams.get("quiet") === "1";
 
   try {
     if (probe) {
@@ -254,7 +257,7 @@ export async function GET(req: Request) {
     let outcomes: IgniteOutcome[] = [];
     if (ignite) {
       outcomes = await igniteNewSignals(admin, 3);
-      await pingOps(outcomes).catch(() => null);
+      if (!quiet) await pingOps(outcomes).catch(() => null);
     }
 
     const { count: remaining } = await admin
