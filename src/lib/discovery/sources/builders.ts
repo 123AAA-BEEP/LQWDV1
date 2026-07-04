@@ -1,4 +1,5 @@
 import "server-only";
+import Anthropic from "@anthropic-ai/sdk";
 import type { createAdminClient } from "@/lib/supabase/admin";
 import { builderNorm } from "../normalize";
 import type { SweepSummary } from "./toronto";
@@ -210,6 +211,99 @@ export async function sweepBild(
     updated: 0,
     notes,
   };
+}
+
+const NO_SITE_MARKER = "no-website-found";
+
+/**
+ * Website enrichment — for registry builders with no website on file, one
+ * Claude web search each resolves the official site. Every hit unlocks two
+ * things at once: the builder-site project sweep AND the hero-image floor.
+ * Small per-run cap (each is a paid search); misses are marked in notes so
+ * they aren't retried every run.
+ */
+export async function enrichBuilderWebsites(
+  admin: Admin,
+  limit = 6,
+): Promise<SweepSummary> {
+  const notes: string[] = [];
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return { source: "builder_enrich", scanned: 0, added: 0, updated: 0, notes: ["ANTHROPIC_API_KEY not set"] };
+  }
+  const { data } = await admin
+    .from("discovery_builders")
+    .select("id, name")
+    .is("website", null)
+    .or(`notes.is.null,notes.not.ilike.%${NO_SITE_MARKER}%`)
+    .order("first_seen_at", { ascending: true })
+    .limit(limit);
+  const rows = (data ?? []) as { id: string; name: string }[];
+
+  const anthropic = new Anthropic();
+  let found = 0;
+  for (const b of rows) {
+    try {
+      const res = await anthropic.messages.create(
+        {
+          model: "claude-opus-4-8",
+          max_tokens: 500,
+          tools: [
+            { type: "web_search_20250305", name: "web_search", max_uses: 2 },
+            {
+              name: "emit_website",
+              description: "Report the builder's official website. Call exactly once.",
+              input_schema: {
+                type: "object" as const,
+                properties: {
+                  website: {
+                    type: ["string", "null"],
+                    description:
+                      "The builder's own official homepage URL, or null if not confidently found. Never an aggregator, directory, or social profile.",
+                  },
+                },
+                required: ["website"],
+              },
+            },
+          ],
+          messages: [
+            {
+              role: "user",
+              content: `Find the official corporate website of the North American real-estate developer/home builder "${b.name}". Then call emit_website with the homepage URL — or null if you can't confidently identify their own site (never a directory/aggregator/social page).`,
+            },
+          ],
+        },
+        { timeout: 25_000 },
+      );
+      const emit = res.content.find(
+        (c): c is Anthropic.Messages.ToolUseBlock =>
+          c.type === "tool_use" && c.name === "emit_website",
+      );
+      const site =
+        emit && typeof (emit.input as { website?: unknown }).website === "string"
+          ? String((emit.input as { website: string }).website)
+          : null;
+      if (site && /^https?:\/\//i.test(site)) {
+        await admin
+          .from("discovery_builders")
+          .update({ website: site.slice(0, 300) })
+          .eq("id", b.id);
+        found++;
+        notes.push(`${b.name} → ${new URL(site).hostname}`);
+      } else {
+        await admin
+          .from("discovery_builders")
+          .update({
+            notes: `${NO_SITE_MARKER} ${new Date().toISOString().slice(0, 10)}`,
+          })
+          .eq("id", b.id);
+        notes.push(`${b.name}: not found`);
+      }
+    } catch (e) {
+      notes.push(`${b.name}: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
+
+  return { source: "builder_enrich", scanned: rows.length, added: found, updated: 0, notes };
 }
 
 /** Sweep every association directory (Wednesday cron leg + "builder-dirs"). */

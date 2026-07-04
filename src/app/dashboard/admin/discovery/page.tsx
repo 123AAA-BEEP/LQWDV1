@@ -150,6 +150,8 @@ export default async function DiscoveryPage({
             ["seed-builders", "Seed builders from projects"],
             ["builder-dirs", "Sweep builder associations (BILD + 11 US/CA HBAs)"],
             ["portfolios", "Sweep developer & architect portfolios"],
+            ["builder-enrich", "Find websites for registry builders"],
+            ["builder-sites", "Sweep registry builder sites"],
           ] as const
         ).map(([source, label]) => {
           const href = runUrl(source);

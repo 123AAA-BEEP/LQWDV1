@@ -15,7 +15,11 @@ import {
   sweepUrbanPlanet,
 } from "@/lib/discovery/sources/newsfeeds";
 import { sweepAllPermits } from "@/lib/discovery/sources/permits";
-import { sweepAllPortfolios } from "@/lib/discovery/sources/portfolios";
+import {
+  sweepAllPortfolios,
+  sweepBuilderSites,
+} from "@/lib/discovery/sources/portfolios";
+import { enrichBuilderWebsites } from "@/lib/discovery/sources/builders";
 import { igniteSignal, type IgniteOutcome } from "@/lib/discovery/go";
 import { sendEmail } from "@/lib/email";
 import type { SignalRow } from "@/lib/discovery/match";
@@ -77,6 +81,14 @@ export async function GET(req: Request) {
     // Thursdays: developer + architect portfolios (the earliest name signal).
     sweeps.push(...(await sweepAllPortfolios(admin)));
   }
+  // Every day: find websites for a few registry builders missing one, and
+  // rotate through builder sites (least-recently-swept) mining project names.
+  sweeps.push(
+    await enrichBuilderWebsites(admin, 6).catch((e) => fail("builder_enrich", e)),
+  );
+  sweeps.push(
+    await sweepBuilderSites(admin, 10).catch((e) => fail("builder_sites", e)),
+  );
 
   // Drain up to a handful of new signals per day (each may cost a research pass).
   const { data } = await admin

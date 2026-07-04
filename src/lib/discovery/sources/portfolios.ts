@@ -351,6 +351,68 @@ export async function sweepPortfolio(
   return { source: pf.tag, scanned: entries.length, added, updated: 0, notes };
 }
 
+/**
+ * Registry-driven builder-site sweep — the 434-and-growing builder registry
+ * as a project source. Rotates through builders that have a website
+ * (least-recently-swept first, stamped via last_swept_at), parses each site
+ * with the portfolio extractor, and files entries as name signals credited
+ * to that builder. Every website the enrichment pass finds automatically
+ * joins this rotation.
+ */
+export async function sweepBuilderSites(
+  admin: Admin,
+  limit = 15,
+): Promise<SweepSummary> {
+  const notes: string[] = [];
+  const { data } = await admin
+    .from("discovery_builders")
+    .select("id, name, website")
+    .not("website", "is", null)
+    .order("last_swept_at", { ascending: true, nullsFirst: true })
+    .limit(limit);
+  const rows = (data ?? []) as { id: string; name: string; website: string }[];
+
+  let added = 0;
+  for (const b of rows) {
+    try {
+      const html = await fetchText(b.website);
+      const entries = parsePortfolio(html, b.website).slice(0, 15);
+      let ok = 0;
+      for (const e of entries) {
+        const { error } = await admin.from("discovery_signals").insert({
+          source: "builder_site",
+          source_url: e.url ?? b.website,
+          project_name: e.name,
+          builder_name: b.name,
+          city: e.city,
+          raw: { portfolio: "builder_site", firm: b.name, year: e.year },
+        });
+        if (!error) {
+          ok++;
+          added++;
+        } else if (!/duplicate key/i.test(error.message)) {
+          notes.push(`${b.name}: ${error.message}`);
+        }
+      }
+      if (ok > 0) notes.push(`${b.name}: +${ok}`);
+    } catch (e) {
+      notes.push(`${b.name}: ${e instanceof Error ? e.message : String(e)}`);
+    }
+    await admin
+      .from("discovery_builders")
+      .update({ last_swept_at: new Date().toISOString() })
+      .eq("id", b.id);
+  }
+
+  return {
+    source: "builder_sites",
+    scanned: rows.length,
+    added,
+    updated: 0,
+    notes: notes.slice(0, 25),
+  };
+}
+
 /** Sweep every configured portfolio (weekly cron leg + "portfolios"). */
 export async function sweepAllPortfolios(admin: Admin): Promise<SweepSummary[]> {
   const out: SweepSummary[] = [];
