@@ -87,11 +87,14 @@ function parseListing(fd: FormData): { row?: ParsedListing; error?: string } {
   if (size_value === null && size_type)
     return { error: "Enter a size value to go with the size unit." };
 
-  // Only keep image URLs that actually point at our off-market bucket.
+  // The bucket is private (0060): store bare storage paths and sign at
+  // render. Accept a legacy public URL too (pre-0060 forms) — normalized to
+  // its path — and reject anything that isn't a plausible object path.
   const image_urls = fd
     .getAll("image_urls")
     .filter((v): v is string => typeof v === "string" && v.length > 0)
-    .filter((url) => pathFromPublicUrl(url, BUCKET) !== null);
+    .map((v) => pathFromPublicUrl(v, BUCKET) ?? v)
+    .filter((p) => /^[\w-]+\/[\w.-]+$/.test(p));
 
   // Contact snapshot comes from the (profile-prefilled) form fields.
   const realtor_name = str(fd, "realtor_name");

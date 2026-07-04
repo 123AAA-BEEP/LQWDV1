@@ -10,6 +10,7 @@ import { VerificationRequired } from "@/components/dashboard/locked";
 import { ListingCard } from "@/components/dashboard/off-market/listing-card";
 import { cn } from "@/lib/cn";
 import { claimUrlFor } from "@/lib/off-market";
+import { signListingImages } from "@/lib/off-market-media";
 import type { OffMarketListing } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Off-Market" };
@@ -142,7 +143,10 @@ export default async function OffMarketPage({
   if (q) req = req.ilike("title", `%${q}%`);
 
   const { data } = await req;
-  const listings = (data as OffMarketListing[] | null) ?? [];
+  // Private bucket (0060): swap stored paths for short-lived signed URLs.
+  const listings = await signListingImages(
+    (data as OffMarketListing[] | null) ?? [],
+  );
 
   const chipHref = (k: string) => {
     const p = new URLSearchParams();

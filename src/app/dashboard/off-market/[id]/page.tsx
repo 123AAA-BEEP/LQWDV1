@@ -9,6 +9,7 @@ import { ButtonLink } from "@/components/ui/button";
 import { VerificationRequired } from "@/components/dashboard/locked";
 import { CopyClaimLink } from "@/components/dashboard/off-market/copy-claim-link";
 import { claimUrlFor } from "@/lib/off-market";
+import { signListingImages } from "@/lib/off-market-media";
 import {
   PROPERTY_TYPE_LABELS,
   LISTING_STATUS_LABELS,
@@ -73,7 +74,9 @@ export default async function OffMarketDetailPage({
       ? formatOffMarketPrice(listing.price, listing.price_type)
       : null;
   const size = formatOffMarketSize(listing.size_value, listing.size_type);
-  const photos = listing.image_urls ?? [];
+  // Private bucket (0060): stored paths become short-lived signed URLs.
+  const [signedListing] = await signListingImages([listing]);
+  const photos = signedListing.image_urls ?? [];
   const hasContact = Boolean(listing.realtor_name);
   const claimable = !listing.claimed_by_profile_id && !hasContact;
   const edited = listing.updated_at !== listing.created_at;
