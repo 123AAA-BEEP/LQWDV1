@@ -125,6 +125,19 @@ const LA_HOODS: Record<string, string> = {
   "Boyle Heights": "Los Angeles",
 };
 
+const BAY_CITY_RE =
+  /\b(San Francisco|Oakland|Berkeley|Emeryville|Daly City|South San Francisco|San Mateo|Redwood City|Millbrae|Burlingame|San Jose|Santa Clara|Sunnyvale|Mountain View|Fremont|Walnut Creek|Concord|Alameda)\b/;
+
+const BAY_HOODS: Record<string, string> = {
+  SoMa: "San Francisco",
+  "Mission Bay": "San Francisco",
+  "Hayes Valley": "San Francisco",
+  Transbay: "San Francisco",
+  "Treasure Island": "San Francisco",
+  Dogpatch: "San Francisco",
+  Tenderloin: "San Francisco",
+};
+
 const TX_CITY_RE =
   /\b(Austin|Dallas|Fort Worth|Houston|San Antonio|Round Rock|Frisco|Plano|Arlington|Irving|The Woodlands|Katy|Georgetown|Cedar Park|Leander|New Braunfels|McKinney|Denton|Sugar Land|Pflugerville|Kyle|Buda)\b/;
 
@@ -167,6 +180,13 @@ export const NEWS_FEEDS: NewsFeed[] = [
     defaultCity: "Austin",
     cityRe: TX_CITY_RE,
     hoods: TX_HOODS,
+  },
+  {
+    tag: "sfyimby",
+    url: "https://sfyimby.com/feed/",
+    defaultCity: null, // Bay-Area-wide — require a city match in the headline
+    cityRe: BAY_CITY_RE,
+    hoods: BAY_HOODS,
   },
 ];
 
