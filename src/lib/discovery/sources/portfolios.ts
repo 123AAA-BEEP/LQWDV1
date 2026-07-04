@@ -98,6 +98,93 @@ export const PORTFOLIOS: Portfolio[] = [
     url: "https://www.siegersuarez.com/projects",
     kind: "architect",
   },
+  // --- "Most active" leaderboard expansion (probe-tunable URLs) ---
+  {
+    tag: "terra",
+    firm: "Terra Group",
+    url: "https://terragroup.com/",
+    kind: "developer",
+    website: "https://terragroup.com",
+  },
+  {
+    tag: "jds",
+    firm: "JDS Development Group",
+    url: "https://jdsdevelopment.com/",
+    kind: "developer",
+    website: "https://jdsdevelopment.com",
+  },
+  {
+    tag: "tworoads",
+    firm: "Two Roads Development",
+    url: "https://tworoadsdev.com/portfolio/",
+    kind: "developer",
+    website: "https://tworoadsdev.com",
+  },
+  {
+    tag: "continuum",
+    firm: "Continuum Company",
+    url: "https://continuumcompany.com/",
+    kind: "developer",
+    website: "https://continuumcompany.com",
+  },
+  {
+    tag: "okogroup",
+    firm: "OKO Group",
+    url: "https://okogroup.com/projects",
+    kind: "developer",
+    website: "https://okogroup.com",
+  },
+  {
+    tag: "mastcapital",
+    firm: "Mast Capital",
+    url: "https://mastcapital.com/portfolio",
+    kind: "developer",
+    website: "https://mastcapital.com",
+  },
+  {
+    tag: "fortuneintl",
+    firm: "Fortune International Group",
+    url: "https://www.fortuneintlgroup.com/developments",
+    kind: "developer",
+    website: "https://www.fortuneintlgroup.com",
+  },
+  {
+    tag: "witkoff",
+    firm: "Witkoff",
+    url: "https://www.witkoff.com/portfolio/",
+    kind: "developer",
+    website: "https://www.witkoff.com",
+  },
+  {
+    tag: "ramsa",
+    firm: "Robert A.M. Stern Architects",
+    url: "https://www.ramsa.com/projects",
+    kind: "architect",
+  },
+  {
+    tag: "beharfont",
+    firm: "Behar Font & Partners",
+    url: "https://beharfont.com/projects/",
+    kind: "architect",
+  },
+  {
+    tag: "spinaorourke",
+    firm: "Spina O'Rourke + Partners",
+    url: "https://www.spinaorourke.com/portfolio",
+    kind: "architect",
+  },
+  {
+    tag: "garciastromberg",
+    firm: "Garcia Stromberg",
+    url: "https://garciastromberg.com/portfolio/",
+    kind: "architect",
+  },
+  {
+    tag: "carlosott",
+    firm: "Carlos Ott",
+    url: "https://carlosott.com/projects/",
+    kind: "architect",
+  },
 ];
 
 /** Architect entries older than this many years are retrospective — skip. */
