@@ -76,7 +76,11 @@ export async function researchProject(
             type: ["string", "null"],
             description: "condo | townhouse | single_family | mixed | other",
           },
-          price_from: { type: ["number", "null"], description: "Starting price in CAD, only if stated by a source" },
+          price_from: {
+            type: ["number", "null"],
+            description:
+              "Starting price in the project's LOCAL currency (CAD for Canadian projects, USD for US projects) — only if stated by a source, never converted",
+          },
           bedrooms_summary: {
             type: ["string", "null"],
             description:

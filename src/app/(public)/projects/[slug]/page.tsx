@@ -10,6 +10,7 @@ import {
   RENTAL_STATUS_LABELS,
 } from "@/lib/types";
 import { ImagePlaceholder } from "@/components/public/image-placeholder";
+import { GalleryLightbox } from "@/components/public/gallery-lightbox";
 import type { PublicProject, RealtorCard } from "@/lib/types";
 import { TITLE_LABELS } from "@/lib/types";
 import { regionForProvince } from "@/lib/regions";
@@ -270,7 +271,7 @@ export default async function PublicProjectPage({
   const priceBand = formatPriceBand(
     project.price_from_public,
     project.price_to_public,
-    { monthly: rental },
+    { monthly: rental, currency: project.price_currency },
   );
   // Street address leads when we have it; parts the address already carries
   // (a neighbourhood or city baked into the string) aren't repeated after it.
@@ -448,34 +449,18 @@ export default async function PublicProjectPage({
             ) : null}
           </dl>
 
-          {/* Gallery — renderings, photos, floor plans */}
+          {/* Gallery — renderings, photos, floor plans (in-page lightbox) */}
           {gallery.length > 0 ? (
             <section className="mt-8">
               <h2 className="text-xl font-semibold tracking-tight text-ink">
                 Gallery
               </h2>
-              <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
-                {gallery.map((g, i) => (
-                  <a
-                    key={g.url}
-                    href={g.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`group overflow-hidden rounded-xl border border-slate-200 bg-slate-100 ${
-                      i === 0 && gallery.length > 2 ? "col-span-2 row-span-2" : ""
-                    }`}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={g.url}
-                      alt={g.alt_text ?? project.project_name}
-                      loading="lazy"
-                      className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-[1.03]"
-                      style={{ aspectRatio: i === 0 && gallery.length > 2 ? undefined : "4 / 3" }}
-                    />
-                  </a>
-                ))}
-              </div>
+              <GalleryLightbox
+                images={gallery.map((g) => ({
+                  url: g.url,
+                  alt: g.alt_text ?? project.project_name,
+                }))}
+              />
             </section>
           ) : null}
 
