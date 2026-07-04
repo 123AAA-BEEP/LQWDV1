@@ -63,6 +63,14 @@ Daily cron `/api/cron/discovery`; manual/probe runs via
 - **BILD member directory** — `https://bildgta.ca` (weekly): the GTA
   builder/developer census → `discovery_builders`; also seeded from our own
   `projects.builder_name`. A known builder boosts signal confidence.
+- **GTA aggregator sweeps** (Thursdays with the portfolios, tags
+  `mycondopro`/`mycondopro2`/`mycondopro3` + `condoroyalty`):
+  **mycondopro.ca** — WP archive `https://mycondopro.ca/project/` lists every
+  GTA pre-con project newest-first (detail pages at `/project/<slug>/` with
+  builder + address); pages 1–3 swept, page 1 catches new launches on
+  rotation. **condoroyalty.com** — homepage grid of current GTA launches.
+  Both go through the generic portfolio parser + junk gates; research
+  verifies before anything publishes.
 - **Meta ads**: no public API for Canadian housing ads — forward ad creatives
   to the intake inbox (the Summerhill flow); they ride the same pipeline.
 
