@@ -143,17 +143,27 @@ export default async function MarketplacePage({
   );
 
   // Main results — featured/sponsored float to the top of the grid too (so they
-  // mix into results as the catalog grows), then newest first.
-  let req = supabase
-    .from("public_projects_view")
-    .select(SELECT, { count: "exact" })
-    // Rentals live on /rentals — the buy browse stays for-sale only.
-    .or("listing_type.is.null,listing_type.neq.for_rent")
-    .order("featured_rank", { ascending: true, nullsFirst: false })
-    .order("is_advertiser", { ascending: false })
-    .order("is_featured", { ascending: false })
-    .order("published_at", { ascending: false })
-    .range(0, pageNum * PAGE_SIZE - 1);
+  // mix into results as the catalog grows), then newest first. Within that,
+  // the DEFAULT browse ranks Ontario first: it's the launch market, so the
+  // homepage leads with the inventory we actually serve today while the other
+  // markets (seeded for SEO) follow below — still fully crawlable, and one
+  // region chip away. Any search/filter switches to plain global ranking.
+  const buildBrowse = () =>
+    supabase
+      .from("public_projects_view")
+      .select(SELECT, { count: "exact" })
+      // Rentals live on /rentals — the buy browse stays for-sale only.
+      .or("listing_type.is.null,listing_type.neq.for_rent")
+      .order("featured_rank", { ascending: true, nullsFirst: false })
+      .order("is_advertiser", { ascending: false })
+      .order("is_featured", { ascending: false })
+      .order("published_at", { ascending: false });
+
+  // Province values vary by source ("ON" vs "Ontario") — match any form; a
+  // null province is legacy Ontario seed data.
+  const ONTARIO_ANY = "province.is.null,province.ilike.on,province.ilike.ontario";
+
+  let req = buildBrowse().range(0, pageNum * PAGE_SIZE - 1);
   if (q) {
     req = req.or(
       `project_name.ilike.%${q}%,city.ilike.%${q}%,builder_name.ilike.%${q}%`,
@@ -163,13 +173,13 @@ export default async function MarketplacePage({
   if (typeFilter) req = req.eq("project_type", typeFilter);
   if (statusFilter) req = req.eq("sales_status", statusFilter);
   if (regionFilter && isRegionKey(regionFilter)) {
-    // Province values vary by source ("ON" vs "Ontario") — match any form.
     req = req.or(
       REGIONS[regionFilter].provinceValues
         .map((v) => `province.ilike.${v}`)
         .join(","),
     );
   }
+  if (!hasFilter) req = req.or(ONTARIO_ANY);
 
   // One parallel wave instead of four sequential round-trips (faster TTFB).
   // Featured strip runs only on the unfiltered browse (a curated highlight,
@@ -191,7 +201,7 @@ export default async function MarketplacePage({
             .or("listing_type.is.null,listing_type.neq.for_rent")
             .order("featured_rank", { ascending: true, nullsFirst: false })
             .order("published_at", { ascending: false })
-            .limit(3),
+            .limit(6),
       hasFilter
         ? Promise.resolve(null)
         : supabase
@@ -202,9 +212,42 @@ export default async function MarketplacePage({
             .limit(6),
     ]);
   const cities = [...new Set((cityRows ?? []).map((r) => r.city as string))];
-  const featured: Row[] = ((featuredRes?.data ?? null) as Row[] | null) ?? [];
-  const projects = (mainRes.data as Row[] | null) ?? [];
-  const totalCount = mainRes.count ?? projects.length;
+  const isOntario = (p: Row) =>
+    !p.province || /^(on|ontario)$/i.test(p.province.trim());
+  // Featured strip mirrors the launch-market-first ranking: Ontario picks
+  // lead, other markets fill any leftover slots.
+  const featuredPool = ((featuredRes?.data ?? null) as Row[] | null) ?? [];
+  const featured = [
+    ...featuredPool.filter(isOntario),
+    ...featuredPool.filter((p) => !isOntario(p)),
+  ].slice(0, 3);
+
+  let projects = (mainRes.data as Row[] | null) ?? [];
+  let totalCount = mainRes.count ?? projects.length;
+  if (!hasFilter) {
+    // Second slice of the default browse: once Ontario is exhausted for this
+    // page window, the other markets continue in the same order.
+    const want = pageNum * PAGE_SIZE;
+    const remainder = want - projects.length;
+    const restRes =
+      remainder > 0
+        ? await buildBrowse()
+            .not("province", "is", null)
+            .not("province", "ilike", "on")
+            .not("province", "ilike", "ontario")
+            .range(0, remainder - 1)
+        : await supabase
+            .from("public_projects_view")
+            .select("project_id", { count: "exact", head: true })
+            .or("listing_type.is.null,listing_type.neq.for_rent")
+            .not("province", "is", null)
+            .not("province", "ilike", "on")
+            .not("province", "ilike", "ontario");
+    totalCount += restRes.count ?? 0;
+    if (remainder > 0) {
+      projects = [...projects, ...(((restRes.data ?? []) as Row[]) ?? [])];
+    }
+  }
   const hasMore = projects.length < totalCount;
 
   // "Load more" = same URL with page+1 — filters preserved, crawlable, and
