@@ -43,6 +43,8 @@ export async function updateProject(formData: FormData) {
       project_name: str(formData.get("project_name")) ?? "Untitled",
       builder_name: str(formData.get("builder_name")),
       city: str(formData.get("city")) ?? "Unknown",
+      address_full: str(formData.get("address_full")),
+      province: str(formData.get("province")),
       description_short: str(formData.get("description_short")),
       description_long: str(formData.get("description_long")),
       sales_status: str(formData.get("sales_status")),

@@ -319,6 +319,22 @@ export default async function AdminProjectEditor({
                   defaultValue={project.city ?? ""}
                 />
               </Field>
+              <Field label="Street address" htmlFor="address_full">
+                <Input
+                  id="address_full"
+                  name="address_full"
+                  placeholder="e.g. 4630 Kingston Road"
+                  defaultValue={project.address_full ?? ""}
+                />
+              </Field>
+              <Field label="Province / state" htmlFor="province">
+                <Input
+                  id="province"
+                  name="province"
+                  placeholder="e.g. Ontario, Florida"
+                  defaultValue={project.province ?? ""}
+                />
+              </Field>
               <Field label="Occupancy" htmlFor="occupancy_estimate_text">
                 <Input
                   id="occupancy_estimate_text"

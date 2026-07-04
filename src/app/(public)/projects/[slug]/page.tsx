@@ -172,6 +172,7 @@ function jsonLd(project: PublicProject, galleryUrls: string[] = []): object[] {
     image: allImages.length ? allImages : undefined,
     address: {
       "@type": "PostalAddress",
+      streetAddress: project.address_full ?? undefined,
       addressLocality: project.city ?? undefined,
       addressRegion: project.province ?? "ON",
       addressCountry: regionForProvince(project.province)?.country ?? "CA",
@@ -219,14 +220,14 @@ function jsonLd(project: PublicProject, galleryUrls: string[] = []): object[] {
         "@type": "ListItem",
         position: 1,
         name: rental ? "New rentals" : "New homes",
-        item: rental ? `${SITE_URL}/rentals` : `${SITE_URL}/projects`,
+        item: rental ? `${SITE_URL}/rentals` : `${SITE_URL}/`,
       },
       ...(project.city
         ? [{
             "@type": "ListItem",
             position: 2,
             name: project.city,
-            item: `${SITE_URL}/projects?q=${encodeURIComponent(project.city)}`,
+            item: `${SITE_URL}/?q=${encodeURIComponent(project.city)}`,
           }]
         : []),
       {
@@ -271,8 +272,18 @@ export default async function PublicProjectPage({
     project.price_to_public,
     { monthly: rental },
   );
-  const location = [project.neighbourhood, project.city, project.province]
-    .filter(Boolean)
+  // Street address leads when we have it; parts the address already carries
+  // (a neighbourhood or city baked into the string) aren't repeated after it.
+  const locationParts = [
+    project.address_full,
+    project.neighbourhood,
+    project.city,
+    project.province,
+  ].filter(Boolean) as string[];
+  const location = locationParts
+    .filter((part, i) =>
+      !locationParts.slice(0, i).join(", ").toLowerCase().includes(part.toLowerCase()),
+    )
     .join(", ");
   // One round-trip wave instead of four sequential ones — faster first paint.
   const [realtor, moreFromBuilder, galleryAll, nearbyRaw] = await Promise.all([
@@ -307,7 +318,7 @@ export default async function PublicProjectPage({
       {/* Breadcrumb — mirrors the BreadcrumbList JSON-LD */}
       <nav aria-label="Breadcrumb" className="mb-4 text-sm text-slate-500">
         <Link
-          href={rental ? "/rentals" : "/projects"}
+          href={rental ? "/rentals" : "/"}
           className="hover:text-ink hover:underline"
         >
           {rental ? "New rentals" : "New homes"}
