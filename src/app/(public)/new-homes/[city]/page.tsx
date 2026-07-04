@@ -129,7 +129,7 @@ export default async function CityHubPage({
       />
 
       <nav aria-label="Breadcrumb" className="mb-4 text-sm text-slate-500">
-        <Link href="/projects" className="hover:text-ink hover:underline">
+        <Link href="/" className="hover:text-ink hover:underline">
           New homes
         </Link>
         <span aria-hidden className="mx-1.5 text-slate-300">

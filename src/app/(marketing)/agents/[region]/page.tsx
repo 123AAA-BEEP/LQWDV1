@@ -108,7 +108,7 @@ export default async function RegionAgentsPage({
           Sign up free
         </ButtonLink>
         <Link
-          href={`/projects?region=${region.key}`}
+          href={`/?region=${region.key}`}
           className="text-sm font-medium text-brand-700 hover:underline"
         >
           Browse {projectCount > 0 ? `${projectCount} ` : ""}

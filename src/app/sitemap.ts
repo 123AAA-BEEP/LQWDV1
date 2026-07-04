@@ -13,8 +13,8 @@ const SITE_URL = (
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
-    { url: `${SITE_URL}/`, changeFrequency: "weekly", priority: 1 },
-    { url: `${SITE_URL}/projects`, changeFrequency: "daily", priority: 0.9 },
+    { url: `${SITE_URL}/`, changeFrequency: "daily", priority: 1.0 },
+    { url: `${SITE_URL}/agents`, changeFrequency: "weekly", priority: 0.8 },
     { url: `${SITE_URL}/rentals`, changeFrequency: "daily", priority: 0.8 },
     ...REGION_KEYS.map((k) => ({
       url: `${SITE_URL}/agents/${regionSlug(k)}`,

@@ -12,9 +12,9 @@ import { BRAND } from "@/lib/brand";
  * marketplace) is never stuck — they can always jump back to the agent site.
  */
 const SURFACES = [
-  { href: "/", label: "For agents", hint: "Realtor broker portal" },
+  { href: "/agents", label: "For agents", hint: "Realtor broker portal" },
   { href: "/developers", label: "For developers", hint: "List & promote projects" },
-  { href: "/projects", label: "New homes", hint: "Browse the marketplace" },
+  { href: "/", label: "New homes", hint: "Browse the marketplace" },
 ] as const;
 
 function isActive(pathname: string, href: string): boolean {

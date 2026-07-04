@@ -27,11 +27,11 @@ export const metadata: Metadata = {
   ),
   applicationName: "LIQWD",
   title: {
-    default: "LIQWD — The Ultimate Broker Portal for New Homes",
+    default: "LIQWD — New & Pre-Construction Homes",
     template: "%s · LIQWD",
   },
   description:
-    "LIQWD is the Ultimate Broker Portal for new homes across Canada & the U.S. Free for verified agents. Built in Canada.",
+    "New and pre-construction homes across Canada & the U.S. — and the Ultimate Broker Portal behind them. Free for verified agents. Built in Canada.",
 };
 
 export const viewport: Viewport = {

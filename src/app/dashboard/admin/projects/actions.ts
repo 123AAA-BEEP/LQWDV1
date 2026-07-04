@@ -119,7 +119,7 @@ export async function bulkPublish(formData: FormData) {
     // Tell search engines about every page that just went live.
     await pingIndexNow([
       ...(projects ?? []).map((p) => `/projects/${p.slug}`),
-      "/projects",
+      "/",
       "/sitemap.xml",
     ]);
   });
