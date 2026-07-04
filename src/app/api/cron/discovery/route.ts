@@ -112,24 +112,48 @@ export async function GET(req: Request) {
     outcomes.push(await igniteSignal(admin, s));
   }
 
-  const needsHuman = outcomes.filter((o) => !o.published);
-  if (needsHuman.length > 0) {
-    const to = process.env.LEADS_NOTIFY_EMAIL ?? "leads@getliqwd.com";
-    const base = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://liqwd.ca").replace(/\/+$/, "");
-    await sendEmail({
-      to,
-      subject: `Discovery: ${needsHuman.length} project(s) need review`,
-      html: `<ul>${needsHuman
-        .map(
-          (o) =>
-            `<li><strong>${o.action}</strong> — ${o.notes}${
-              o.project_id
-                ? ` — <a href="${base}/dashboard/admin/projects/${o.project_id}">open draft</a>`
-                : ""
-            }</li>`,
-        )
-        .join("")}</ul><p><a href="${base}/dashboard/admin/discovery">Discovery queue →</a></p>`,
-    }).catch(() => null);
+  // Daily DIGEST — the pg_cron drainer runs quiet, so this is the one ops
+  // email per day: everything discovery did in the last 24h, in one message.
+  try {
+    const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
+    const { data: recentRows } = await admin
+      .from("projects")
+      .select("id, project_name, city, record_status, discovery_signals!inner(id)")
+      .gte("created_at", since);
+    const recent = ((recentRows ?? []) as unknown as {
+      id: string;
+      project_name: string;
+      city: string | null;
+      record_status: string;
+    }[]);
+    const published = recent.filter((r) => r.record_status === "published");
+    const drafts = recent.filter((r) => r.record_status === "draft");
+    const { count: queued } = await admin
+      .from("discovery_signals")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "new");
+
+    if (published.length + drafts.length + (queued ?? 0) > 0) {
+      const to = process.env.LEADS_NOTIFY_EMAIL ?? "leads@getliqwd.com";
+      const base = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://liqwd.ca").replace(/\/+$/, "");
+      const li = (r: { id: string; project_name: string; city: string | null }) =>
+        `<li><a href="${base}/dashboard/admin/projects/${r.id}">${r.project_name}</a>${r.city ? ` · ${r.city}` : ""}</li>`;
+      await sendEmail({
+        to,
+        subject: `Discovery digest: ${published.length} published, ${drafts.length} drafts to review`,
+        html:
+          `<p><strong>Last 24h:</strong> ${published.length} published · ${drafts.length} drafts need review · ${queued ?? 0} signals still queued.</p>` +
+          (drafts.length
+            ? `<p><strong>Drafts to review:</strong></p><ul>${drafts.slice(0, 25).map(li).join("")}${drafts.length > 25 ? `<li>… and ${drafts.length - 25} more</li>` : ""}</ul>`
+            : "") +
+          (published.length
+            ? `<p><strong>Published:</strong></p><ul>${published.slice(0, 15).map(li).join("")}${published.length > 15 ? `<li>… and ${published.length - 15} more</li>` : ""}</ul>`
+            : "") +
+          `<p><a href="${base}/dashboard/admin/discovery">Discovery queue →</a></p>`,
+      }).catch(() => null);
+    }
+  } catch {
+    /* digest is best-effort */
   }
 
   return NextResponse.json({
