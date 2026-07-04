@@ -133,6 +133,13 @@ export const PERMIT_SOURCES: PermitSource[] = [
     resource: "https://www.dallasopendata.com/resource/e7gq-4sah.json",
     defaultCity: "Dallas",
   },
+  {
+    key: "sanfrancisco",
+    label: "San Francisco permits",
+    kind: "socrata",
+    resource: "https://data.sfgov.org/resource/i98e-djp9.json",
+    defaultCity: "San Francisco",
+  },
 ];
 
 export function permitSource(key: string): PermitSource | null {

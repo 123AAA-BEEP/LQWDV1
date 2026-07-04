@@ -7,6 +7,10 @@
     {
       "path": "/api/cron/discovery",
       "schedule": "23 9 * * *"
+    },
+    {
+      "path": "/api/market-radar",
+      "schedule": "0 13 2 */3 *"
     }
   ]
 }
