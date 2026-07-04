@@ -20,6 +20,7 @@ import {
   sweepAllDirectories,
   probeBild,
   seedBuildersFromProjects,
+  enrichBuilderWebsites,
   BUILDER_DIRECTORIES,
 } from "@/lib/discovery/sources/builders";
 import {
@@ -40,6 +41,7 @@ import {
   PORTFOLIOS,
   sweepPortfolio,
   sweepAllPortfolios,
+  sweepBuilderSites,
   probePortfolio,
 } from "@/lib/discovery/sources/portfolios";
 import { igniteSignal, type IgniteOutcome } from "@/lib/discovery/go";
@@ -233,6 +235,17 @@ export async function GET(req: Request) {
     }
     if (source === "portfolios") {
       sweeps.push(...(await sweepAllPortfolios(admin)));
+    }
+    // Registry-driven: rotate through builder websites / find missing ones.
+    if (source === "builder-sites") {
+      sweeps.push(
+        await sweepBuilderSites(admin).catch((e) => err("builder_sites", e)),
+      );
+    }
+    if (source === "builder-enrich") {
+      sweeps.push(
+        await enrichBuilderWebsites(admin).catch((e) => err("builder_enrich", e)),
+      );
     }
 
     // Ignition: every new signal goes through match → ingest → publish/draft.
