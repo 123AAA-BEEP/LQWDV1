@@ -97,7 +97,7 @@ function parseProjectPage(html: string): ParsedProject | null {
     html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i)?.[1];
   if (!title) return null;
   const name = stripTags(title)
-    .replace(/\s*[|–-]\s*UrbanToronto.*$/i, "")
+    .replace(/\s*[|–-]\s*(UrbanToronto|SkyriseCities).*$/i, "")
     .trim();
   if (!name || name.length < 3) return null;
 
