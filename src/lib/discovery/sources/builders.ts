@@ -74,7 +74,7 @@ function stripTags(html: string): string {
     .trim();
 }
 
-async function upsertBuilder(
+export async function upsertBuilder(
   admin: Admin,
   name: string,
   source: string,

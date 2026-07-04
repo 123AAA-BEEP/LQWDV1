@@ -149,6 +149,7 @@ export default async function DiscoveryPage({
             ["permits", "Sweep permits & applications (Miami-Dade, Nashville, LA, Calgary, Edmonton, Mississauga, Hamilton)"],
             ["seed-builders", "Seed builders from projects"],
             ["builder-dirs", "Sweep builder associations (BILD + 11 US/CA HBAs)"],
+            ["portfolios", "Sweep developer & architect portfolios"],
           ] as const
         ).map(([source, label]) => {
           const href = runUrl(source);
