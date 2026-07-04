@@ -14,9 +14,16 @@ const UA =
 
 const MAX_PAGES = 2;
 const MAX_PAGE_CHARS = 6000;
-const MAX_LINK_IMAGES = 4;
+/** Download up to this many candidates, then keep the biggest ones —
+ *  renderings are megabytes, header logos are kilobytes. */
+const MAX_FETCH_IMAGES = 9;
+const MAX_LINK_IMAGES = 6;
+/** Below this an image is a logo/icon/thumbnail — never a hero candidate. */
+const MIN_IMAGE_BYTES = 15 * 1024;
 const MAX_IMAGE_BYTES = 6 * 1024 * 1024;
 const IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp", "image/gif"];
+/** URL smells for brand assets rather than property imagery. */
+const LOGOISH_URL_RE = /logo|icon|favicon|badge|award|footer|header-|sprite/i;
 
 // Link noise we never want to follow from marketing emails.
 const SKIP_HOSTS =
@@ -122,9 +129,14 @@ export async function fetchLinkContext(urls: string[]): Promise<FetchedLinkConte
       const text = stripHtml(html).slice(0, MAX_PAGE_CHARS);
       if (text.length > 100) pages.push({ url: res.url, text });
 
-      // Pull the page's hero rendering(s) for the vision pass + hero upload.
+      // Pull the page's imagery for the vision pass + hero upload. Fetch a
+      // wide candidate pool (skipping brand-asset URLs), then keep the
+      // LARGEST files — renderings are megabytes, wordmarks are kilobytes,
+      // and DOM order always puts the header logo first.
+      const fetched: { buf: Buffer; type: string }[] = [];
       for (const imgUrl of imageUrls(html, res.url)) {
-        if (images.length >= MAX_LINK_IMAGES) break;
+        if (fetched.length >= MAX_FETCH_IMAGES) break;
+        if (LOGOISH_URL_RE.test(imgUrl)) continue;
         try {
           const imgRes = await fetch(imgUrl, {
             headers: { "User-Agent": UA },
@@ -138,14 +150,18 @@ export async function fetchLinkContext(urls: string[]): Promise<FetchedLinkConte
             .replace("image/jpg", "image/jpeg");
           if (!imgRes.ok || !IMAGE_TYPES.includes(imgType)) continue;
           const buf = Buffer.from(await imgRes.arrayBuffer());
-          if (buf.length === 0 || buf.length > MAX_IMAGE_BYTES) continue;
-          images.push({
-            media_type: imgType as InboundImage["media_type"],
-            data: buf.toString("base64"),
-          });
+          if (buf.length < MIN_IMAGE_BYTES || buf.length > MAX_IMAGE_BYTES) continue;
+          fetched.push({ buf, type: imgType });
         } catch {
           /* skip unreachable image */
         }
+      }
+      fetched.sort((a, b) => b.buf.length - a.buf.length);
+      for (const f of fetched.slice(0, MAX_LINK_IMAGES - images.length)) {
+        images.push({
+          media_type: f.type as InboundImage["media_type"],
+          data: f.buf.toString("base64"),
+        });
       }
     } catch {
       /* skip unreachable page — extraction proceeds on whatever we have */

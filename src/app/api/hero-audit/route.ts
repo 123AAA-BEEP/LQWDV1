@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { imageDims } from "@/lib/email-intake/media";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -59,6 +60,16 @@ async function vetHero(
   const buf = Buffer.from(await resp.arrayBuffer());
   if (buf.length < 2048) {
     return { kind: "too_small", acceptable: false, reason: "under 2KB" };
+  }
+  // A grainy 300px logo stretched across a 1200px hero band is the worst
+  // look we have — low-resolution heroes fail regardless of content.
+  const dims = imageDims(buf, ct);
+  if (dims && (dims.w < 700 || dims.h < 400)) {
+    return {
+      kind: "low_resolution",
+      acceptable: false,
+      reason: `only ${dims.w}x${dims.h}px`,
+    };
   }
   const media = ["image/jpeg", "image/png", "image/webp", "image/gif"].includes(ct)
     ? ct

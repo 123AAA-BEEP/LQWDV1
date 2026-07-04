@@ -44,12 +44,81 @@ const GALLERY_KINDS = new Set([
   "unclassified",
 ]);
 
+/** A grainy upscaled logo must never become a hero — minimum true pixels. */
+const HERO_MIN_WIDTH = 700;
+const HERO_MIN_HEIGHT = 400;
+const GALLERY_MIN_WIDTH = 400;
+
+/**
+ * Minimal dimension sniffing for PNG/JPEG/GIF/WebP — no deps. Returns null
+ * when the header can't be parsed (treated as unknown, not as a rejection
+ * for the gallery; the HERO requires known-good dimensions).
+ */
+export function imageDims(
+  buf: Buffer,
+  type: string,
+): { w: number; h: number } | null {
+  try {
+    if (type === "image/png" && buf.length > 24) {
+      return { w: buf.readUInt32BE(16), h: buf.readUInt32BE(20) };
+    }
+    if (type === "image/gif" && buf.length > 10) {
+      return { w: buf.readUInt16LE(6), h: buf.readUInt16LE(8) };
+    }
+    if (type === "image/webp" && buf.length > 30) {
+      const cc = buf.subarray(12, 16).toString("latin1");
+      if (cc === "VP8X") {
+        return { w: 1 + buf.readUIntLE(24, 3), h: 1 + buf.readUIntLE(27, 3) };
+      }
+      if (cc === "VP8 ") {
+        return {
+          w: buf.readUInt16LE(26) & 0x3fff,
+          h: buf.readUInt16LE(28) & 0x3fff,
+        };
+      }
+      if (cc === "VP8L") {
+        const b = buf.readUInt32LE(21);
+        return { w: (b & 0x3fff) + 1, h: ((b >> 14) & 0x3fff) + 1 };
+      }
+    }
+    if (type === "image/jpeg") {
+      let off = 2;
+      while (off + 9 < buf.length) {
+        if (buf[off] !== 0xff) {
+          off++;
+          continue;
+        }
+        const marker = buf[off + 1];
+        if (marker === 0xff) {
+          off++;
+          continue;
+        }
+        const len = buf.readUInt16BE(off + 2);
+        if (
+          marker >= 0xc0 &&
+          marker <= 0xcf &&
+          marker !== 0xc4 &&
+          marker !== 0xc8 &&
+          marker !== 0xcc
+        ) {
+          return { h: buf.readUInt16BE(off + 5), w: buf.readUInt16BE(off + 7) };
+        }
+        off += 2 + len;
+      }
+    }
+  } catch {
+    /* unparseable header */
+  }
+  return null;
+}
+
 interface Classified {
   img: InboundImage;
   kind: string;
   /** Overlaid offer/marketing text (commission %, bonuses, price banners) —
    *  these are agent-facing creatives and must NEVER reach the public page. */
   promo: boolean;
+  dims: { w: number; h: number } | null;
 }
 
 async function classifyBase64(
@@ -192,34 +261,43 @@ export async function attachGalleryAndHero(
   const startedAt = Date.now();
   const classified: Classified[] = [];
   for (const img of batch) {
+    const dims = imageDims(Buffer.from(img.data, "base64"), img.media_type);
     if (Date.now() - startedAt > deadline) {
-      classified.push({ img, kind: "unclassified", promo: false });
+      classified.push({ img, kind: "unclassified", promo: false, dims });
       continue;
     }
     const c = await classifyBase64(img, {
       projectName: opts.projectName,
       city: opts.city,
     });
-    classified.push({ img, kind: c.kind, promo: c.promo });
+    classified.push({ img, kind: c.kind, promo: c.promo, dims });
   }
+
+  // Resolution gate: only known-good, hero-scale pixels may become the hero
+  // (a grainy 300px logo upscaled to a 1200px band is the worst look we have).
+  const heroScale = (c: Classified) =>
+    c.dims != null && c.dims.w >= HERO_MIN_WIDTH && c.dims.h >= HERO_MIN_HEIGHT;
 
   // Hero ladder: rendering/photo > lifestyle/amenity > project logo >
   // (lenient mode only) unclassified first image. Headshots and vehicle/
   // product shots never; promo creatives (commission/incentive overlays)
   // never — those are broker-only material.
   let hero: Classified | undefined = classified
-    .filter((c) => c.kind in HERO_RANK && !c.promo)
+    .filter((c) => c.kind in HERO_RANK && !c.promo && heroScale(c))
     .sort((a, b) => HERO_RANK[a.kind] - HERO_RANK[b.kind])[0];
   if (!hero) {
     hero = classified
-      .filter((c) => c.kind in HERO_RANK_FALLBACK && !c.promo)
+      .filter((c) => c.kind in HERO_RANK_FALLBACK && !c.promo && heroScale(c))
       .sort(
         (a, b) => HERO_RANK_FALLBACK[a.kind] - HERO_RANK_FALLBACK[b.kind],
       )[0];
   }
   if (!hero && !opts.strictHero) {
     hero = classified.find(
-      (c) => (c.kind === "unclassified" || c.kind === "other") && !c.promo,
+      (c) =>
+        (c.kind === "unclassified" || c.kind === "other") &&
+        !c.promo &&
+        heroScale(c),
     );
   }
 
@@ -228,9 +306,12 @@ export async function attachGalleryAndHero(
   for (const c of classified) {
     const isHero = c === hero;
     // Promo creatives never reach the public gallery at all; in strict mode
-    // unclassified scraped images don't either (they're unvetted).
+    // unclassified scraped images don't either (they're unvetted). Tiny
+    // images (thumbnails/logos) stay out of the gallery too.
+    const bigEnough = c.dims == null || c.dims.w >= GALLERY_MIN_WIDTH;
     const inGallery =
       !c.promo &&
+      bigEnough &&
       ((GALLERY_KINDS.has(c.kind) &&
         !(opts.strictHero && c.kind === "unclassified")) ||
         isHero);
