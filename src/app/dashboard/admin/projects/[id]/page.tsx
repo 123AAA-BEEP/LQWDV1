@@ -474,6 +474,19 @@ export default async function AdminProjectEditor({
                 developments” strip and floats to the top of the results grid.
               </span>
             </label>
+            <label className="flex items-start gap-2 text-sm text-slate-700">
+              <input
+                type="checkbox"
+                name="is_hot"
+                defaultChecked={Boolean(project.is_hot)}
+                className="mt-0.5 size-4"
+              />
+              <span>
+                Hot — gets a 🔥 badge on the browse card and ranks right below
+                featured placements. Use for high-demand / fast-selling
+                launches.
+              </span>
+            </label>
             <Button type="submit">Save project</Button>
           </form>
         </CardBody>

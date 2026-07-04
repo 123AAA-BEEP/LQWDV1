@@ -57,6 +57,7 @@ export async function updateProject(formData: FormData) {
       hero_image_url: str(formData.get("hero_image_url")),
       record_status: str(formData.get("record_status")) ?? "draft",
       is_featured: formData.get("is_featured") === "on",
+      is_hot: formData.get("is_hot") === "on",
     })
     .eq("id", id);
 

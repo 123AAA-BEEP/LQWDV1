@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { headers } from "next/headers";
-import { MapPin, Star } from "lucide-react";
+import { Flame, MapPin, Star } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { CardImage } from "@/components/public/card-image";
 import { REGIONS, isRegionKey, visitorRegionKey } from "@/lib/regions";
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 const SELECT =
-  "project_id, slug, project_name, builder_name, city, neighbourhood, province, project_type, sales_status, construction_status, price_from_public, price_to_public, hero_image_url, published_at, is_featured, is_advertiser, featured_rank";
+  "project_id, slug, project_name, builder_name, city, neighbourhood, province, project_type, sales_status, construction_status, price_from_public, price_to_public, hero_image_url, published_at, is_featured, is_advertiser, featured_rank, is_hot, audit_rank";
 
 const TYPE_OPTIONS = [
   { value: "condo", label: "Condos" },
@@ -52,6 +52,8 @@ interface Row {
   is_featured: boolean | null;
   is_advertiser: boolean | null;
   featured_rank: number | null;
+  is_hot: boolean | null;
+  audit_rank: number | null;
 }
 
 const isFeatured = (p: Row) => Boolean(p.is_featured || p.is_advertiser);
@@ -77,6 +79,10 @@ function ProjectCard({ p, featured = false }: { p: Row; featured?: boolean }) {
           {featured ? (
             <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-amber-500/95 px-2 py-0.5 text-xs font-semibold text-white shadow-sm">
               <Star aria-hidden className="size-3 fill-current" /> Featured
+            </span>
+          ) : p.is_hot ? (
+            <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-rose-600/95 px-2 py-0.5 text-xs font-semibold text-white shadow-sm">
+              <Flame aria-hidden className="size-3 fill-current" /> Hot
             </span>
           ) : null}
         </div>
@@ -148,6 +154,9 @@ export default async function MarketplacePage({
   // homepage leads with the inventory we actually serve today while the other
   // markets (seeded for SEO) follow below — still fully crawlable, and one
   // region chip away. Any search/filter switches to plain global ranking.
+  // Ranking, in order: paid/curated placements, then hot picks, then the
+  // audit machine's trust rank (2 verified clean / 1 unaudited / 0 flagged),
+  // then newest first.
   const buildBrowse = () =>
     supabase
       .from("public_projects_view")
@@ -157,6 +166,8 @@ export default async function MarketplacePage({
       .order("featured_rank", { ascending: true, nullsFirst: false })
       .order("is_advertiser", { ascending: false })
       .order("is_featured", { ascending: false })
+      .order("is_hot", { ascending: false })
+      .order("audit_rank", { ascending: false, nullsFirst: false })
       .order("published_at", { ascending: false });
 
   // Province values vary by source ("ON" vs "Ontario") — match any form; a

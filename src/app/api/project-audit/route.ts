@@ -415,9 +415,20 @@ export async function GET(req: Request) {
       audit.verdict === "ok" && galleryIssues.length > 0 ? "issues" : audit.verdict;
 
     // 3. Act. Auto-unpublish only the high-confidence criticals; everything
-    //    else is a finding for the admin queue + daily digest.
+    //    else is a finding for the admin queue + daily digest. audit_rank
+    //    feeds the browse ordering: verified-clean floats (2), unaudited is
+    //    neutral (1), flagged sinks until fixed (0).
     const shouldUnpublish =
       fix && verdict === "critical" && audit.confidence >= UNPUBLISH_CONFIDENCE;
+    // "issues" verdicts confirm the project is REAL with a stale detail —
+    // that's a fix-up flag, not a trust problem, so they stay neutral.
+    // Only criticals (kept published at low confidence) sink.
+    const auditRank =
+      verdict === "ok" && audit.confidence >= 0.8
+        ? 2
+        : verdict === "critical"
+          ? 0
+          : 1;
     const action = shouldUnpublish
       ? "unpublished to draft"
       : galleryJunked > 0
@@ -430,13 +441,17 @@ export async function GET(req: Request) {
           record_status: "draft",
           import_notes: `${p.import_notes ?? ""} [project-audit critical ${stamp}: ${audit.summary.slice(0, 300)}]`,
           last_audited_at: new Date().toISOString(),
+          audit_rank: 0,
           updated_at: new Date().toISOString(),
         })
         .eq("id", p.id);
     } else {
       await admin
         .from("projects")
-        .update({ last_audited_at: new Date().toISOString() })
+        .update({
+          last_audited_at: new Date().toISOString(),
+          audit_rank: auditRank,
+        })
         .eq("id", p.id);
     }
 
