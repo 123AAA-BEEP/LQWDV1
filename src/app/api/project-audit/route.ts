@@ -24,7 +24,12 @@ export const maxDuration = 300;
  */
 
 const MODEL = "claude-opus-4-8";
-const REAUDIT_DAYS = 30;
+// Every project still gets its FIRST audit (the sanity check) on publish
+// rotation; re-visits are semi-annual — the catalog is surface content that
+// moves slowly, and realtor-submitted updates carry the freshness instead.
+// Future upgrade (flagged): tiered cadence — issues-flagged monthly,
+// verified-clean quarterly+.
+const REAUDIT_DAYS = 180;
 /** Only auto-unpublish when the web check is this sure — anything less is a
  *  flag for a human, not an action. */
 const UNPUBLISH_CONFIDENCE = 0.7;
