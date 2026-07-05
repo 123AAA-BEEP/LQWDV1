@@ -4,7 +4,7 @@ import { ingestExtractedProject } from "@/lib/email-intake/ingest";
 import type { ExtractedProject } from "@/lib/email-intake/extract";
 import { regionForProvince } from "@/lib/regions";
 import { matchSignalToWatch, isKnownBuilder, type SignalRow, type WatchRow } from "./match";
-import { junkProjectName } from "./sources/portfolios";
+import { junkProjectName, AGGREGATOR_TAGS } from "./sources/portfolios";
 
 type Admin = ReturnType<typeof createAdminClient>;
 
@@ -74,7 +74,12 @@ export async function igniteSignal(
   };
   const num = (v: unknown) =>
     typeof v === "number" && Number.isFinite(v) && v > 0 ? v : null;
-  const builder = signal.builder_name ?? watch?.developer_name ?? null;
+  // Aggregator sweeps stamp their own name on signals (pre-fix rows still
+  // carry it) — an aggregator is a SOURCE, never the builder.
+  const builder =
+    (AGGREGATOR_TAGS.has(signal.source) ? null : signal.builder_name) ??
+    watch?.developer_name ??
+    null;
   const knownBuilder = await isKnownBuilder(admin, builder);
 
   // 2. Confidence: planning-data address match ≈ verified geography; a known

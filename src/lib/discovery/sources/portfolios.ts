@@ -37,6 +37,9 @@ export interface Portfolio {
   kind: "developer" | "architect";
   /** Developer's own site → builder registry (powers the hero floor too). */
   website?: string;
+  /** Listing aggregator/marketplace (a SOURCE, not a builder) — its name must
+   *  never be credited as the developer or appear anywhere public. */
+  aggregator?: boolean;
 }
 
 export const PORTFOLIOS: Portfolio[] = [
@@ -107,26 +110,28 @@ export const PORTFOLIOS: Portfolio[] = [
     firm: "MyCondoPro (GTA aggregator)",
     url: "https://mycondopro.ca/project/",
     kind: "developer",
-    website: "https://mycondopro.ca",
+    aggregator: true,
   },
   {
     tag: "mycondopro2",
     firm: "MyCondoPro (GTA aggregator, p2)",
     url: "https://mycondopro.ca/project/page/2/",
     kind: "developer",
+    aggregator: true,
   },
   {
     tag: "mycondopro3",
     firm: "MyCondoPro (GTA aggregator, p3)",
     url: "https://mycondopro.ca/project/page/3/",
     kind: "developer",
+    aggregator: true,
   },
   {
     tag: "condoroyalty",
     firm: "Condo Royalty (GTA aggregator)",
     url: "https://www.condoroyalty.com/",
     kind: "developer",
-    website: "https://www.condoroyalty.com",
+    aggregator: true,
   },
   // --- "Most active" leaderboard expansion (probe-tunable URLs) ---
   {
@@ -219,6 +224,11 @@ export const PORTFOLIOS: Portfolio[] = [
   },
 ];
 
+/** Source tags whose builder_name must never be trusted (aggregators). */
+export const AGGREGATOR_TAGS = new Set(
+  PORTFOLIOS.filter((p) => p.aggregator).map((p) => p.tag),
+);
+
 /** Architect entries older than this many years are retrospective — skip. */
 const ARCHITECT_MAX_AGE_YEARS = 3;
 
@@ -295,6 +305,9 @@ export function junkProjectName(name: string): string | null {
   ) {
     return "location header, not a name";
   }
+  // Aggregators list assignment resales alongside new inventory — an
+  // assignment is a resold pre-con contract, not a new development.
+  if (/\bassignments?\b/i.test(n)) return "assignment resale, not a new development";
   if (/:/.test(n)) return "editorial title";
   if (NOISE_RE.test(n)) return "navigation label";
   if (NONRESIDENTIAL_RE.test(n)) return "non-residential";
@@ -445,7 +458,7 @@ export async function sweepPortfolio(
 
   // Developer firms join the builder registry (name cross-referencing at
   // ignition + the builder-site hero floor).
-  if (pf.kind === "developer" && pf.website) {
+  if (pf.kind === "developer" && pf.website && !pf.aggregator) {
     await upsertBuilder(admin, pf.firm, `portfolio_${pf.tag}`, pf.website);
   }
 
@@ -463,7 +476,8 @@ export async function sweepPortfolio(
       source: pf.tag,
       source_url: e.url ?? pf.url,
       project_name: e.name,
-      builder_name: pf.kind === "developer" ? pf.firm : null,
+      // Aggregators are sources, not builders — research finds the real one.
+      builder_name: pf.kind === "developer" && !pf.aggregator ? pf.firm : null,
       city: e.city,
       raw: {
         portfolio: pf.kind,
