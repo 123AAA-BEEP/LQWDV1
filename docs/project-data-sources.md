@@ -63,6 +63,10 @@ Daily cron `/api/cron/discovery`; manual/probe runs via
 - **BILD member directory** — `https://bildgta.ca` (weekly): the GTA
   builder/developer census → `discovery_builders`; also seeded from our own
   `projects.builder_name`. A known builder boosts signal confidence.
+- **Arkfield portfolio** (`https://arkfield.com/portfolio/`, tag `arkfield`,
+  Thursdays with the portfolios): GTA developer, high-rise + low-rise, with
+  addresses and stage per project — mostly Planning & Approval, the earliest
+  possible signal. Initial 13 projects hand-seeded 2026-07-05.
 - **GTA aggregator sweeps** (Thursdays with the portfolios, tags
   `mycondopro`/`mycondopro2`/`mycondopro3` + `condoroyalty`):
   **mycondopro.ca** — WP archive `https://mycondopro.ca/project/` lists every

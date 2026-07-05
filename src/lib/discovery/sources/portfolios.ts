@@ -101,6 +101,15 @@ export const PORTFOLIOS: Portfolio[] = [
     url: "https://www.siegersuarez.com/projects",
     kind: "architect",
   },
+  {
+    tag: "arkfield",
+    firm: "Arkfield",
+    // High-rise + low-rise portfolio with addresses and stage per project —
+    // mostly Planning & Approval, i.e. the earliest possible signal.
+    url: "https://arkfield.com/portfolio/",
+    kind: "developer",
+    website: "https://arkfield.com",
+  },
   // --- GTA aggregators (launch-market backfill; current inventory) ---
   // MyCondoPro's WP archive lists every GTA pre-con project newest-first
   // (detail links at /project/<slug>/). First pages carry the active tail;
