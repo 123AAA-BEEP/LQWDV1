@@ -190,10 +190,24 @@ export async function ingestExtractedProject(
     `brokerage=${ex.brokerage_name ?? "?"}`;
 
   try {
-    const match = await findExistingProjectFuzzy(admin, ex.project_name, ex.city);
-
     // ---- UPDATE an existing project (non-destructive) ----------------------
-    if (match) {
+    // Used for both the pre-research match (email drops carry a city) and the
+    // post-research re-match (scraped name-only signals get their city from
+    // the web — without the second look, "Riverbank Place" from an aggregator
+    // re-creates the Riverbank Place we already feature).
+    const updateExisting = async (
+      match: NonNullable<
+        Awaited<ReturnType<typeof findExistingProjectFuzzy>>
+      >,
+      fills: {
+        builder_name: string | null;
+        address_full: string | null;
+        project_type: string | null;
+        price_from: number | null;
+        bedrooms_summary: string | null;
+        occupancy_estimate_text: string | null;
+      },
+    ): Promise<IngestResult> => {
       const { data: cur } = await admin
         .from("projects")
         .select(
@@ -210,13 +224,13 @@ export async function ingestExtractedProject(
       const fillNum = (k: string, v: number | null) => {
         if (v != null && cur[k as keyof typeof cur] == null) patch[k] = v;
       };
-      fillStr("builder_name", ex.builder_name);
-      fillStr("address_full", ex.address_full);
-      fillStr("project_type", normType(ex.project_type));
-      fillNum("price_from_public", ex.price_from);
+      fillStr("builder_name", fills.builder_name);
+      fillStr("address_full", fills.address_full);
+      fillStr("project_type", normType(fills.project_type));
+      fillNum("price_from_public", fills.price_from);
       fillNum("price_to_public", ex.price_to);
-      fillStr("bedrooms_summary", ex.bedrooms_summary);
-      fillStr("occupancy_estimate_text", ex.occupancy_estimate_text);
+      fillStr("bedrooms_summary", fills.bedrooms_summary);
+      fillStr("occupancy_estimate_text", fills.occupancy_estimate_text);
       if (!cur.external_source) patch.external_source = "email_intake";
       patch.import_notes = `${cur.import_notes ? cur.import_notes + "\n" : ""}${provenance}`;
 
@@ -247,6 +261,18 @@ export async function ingestExtractedProject(
         published: cur.record_status === "published",
         notes: `Matched “${match.project_name}” (${match.record_status}, ${match.matched_by}); filled ${Object.keys(patch).length} field(s).`,
       };
+    };
+
+    const match = await findExistingProjectFuzzy(admin, ex.project_name, ex.city);
+    if (match) {
+      return await updateExisting(match, {
+        builder_name: ex.builder_name,
+        address_full: ex.address_full,
+        project_type: ex.project_type,
+        price_from: ex.price_from,
+        bedrooms_summary: ex.bedrooms_summary,
+        occupancy_estimate_text: ex.occupancy_estimate_text,
+      });
     }
 
     // ---- CREATE: research thin drops, then auto-publish when geography holds
@@ -276,6 +302,30 @@ export async function ingestExtractedProject(
         ? ` | web-research: corroborated (${research.confidence.toFixed(2)}) via ${research.sources.slice(0, 3).join(", ") || "sources"}`
         : " | web-research: could not corroborate"
       : "";
+
+    // Research just pinned a city the extraction lacked — check for an
+    // existing project again BEFORE creating anything. This is the duplicate
+    // gate for scraped name-only signals.
+    if (
+      merged.city &&
+      (!ex.city || merged.city.toLowerCase() !== ex.city.toLowerCase())
+    ) {
+      const lateMatch = await findExistingProjectFuzzy(
+        admin,
+        ex.project_name,
+        merged.city,
+      );
+      if (lateMatch) {
+        return await updateExisting(lateMatch, {
+          builder_name: merged.builder_name,
+          address_full: merged.address_full,
+          project_type: merged.project_type,
+          price_from: merged.price_from,
+          bedrooms_summary: merged.bedrooms_summary,
+          occupancy_estimate_text: merged.occupancy_estimate_text,
+        });
+      }
+    }
 
     // Scraped signals live or die on corroboration: if the web can't confirm
     // a residential development by this name, don't create anything — the
