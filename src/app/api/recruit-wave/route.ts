@@ -49,22 +49,26 @@ const WAVES: Record<string, WaveConfig> = {
     cityLike: "%mississauga%",
     region: "ontario",
     cap: 250,
-    subject: "Mississauga's new-construction market, mapped for agents",
+    subject: "Be first on Mississauga's new-construction deals",
     utmCampaign: "wave1-mississauga",
     html: (first) => ({
-      heading: "Every Mississauga project, one portal",
+      heading: "Your Mississauga edge",
       body:
         `${first ? `Hi ${first},` : "Hi,"}<br><br>` +
-        `LIQWD is a free portal for licensed agents working new construction. We've mapped ` +
-        `<strong>Mississauga's active market</strong> — 45+ developments with builder, pricing, ` +
-        `sales status, and incentives on one page each — plus the planning-stage pipeline that ` +
-        `hasn't hit marketing yet, tracked from development applications and builder portfolios.<br><br>` +
-        `Verified agents can also be matched to a project's public page and receive the buyer ` +
-        `inquiries it generates. Free — no referral fees, no brokerage change; licence ` +
-        `verification keeps it professionals-only.<br><br>` +
-        `— Alex Karczewski, LIQWD`,
+        `You sell Mississauga. Three things that put you ahead this week:<br><br>` +
+        `<strong>Win the pre-con conversation.</strong> Every active project — 45+ — with ` +
+        `pricing, status, and incentives on one page. Answer a buyer in seconds instead of ` +
+        `digging through PDFs and VIP portals.<br><br>` +
+        `<strong>Know what's coming before anyone's marketing it.</strong> We track development ` +
+        `applications and builder pipelines — walk into your next listing appointment knowing ` +
+        `what's breaking ground down the street.<br><br>` +
+        `<strong>Free buyer inquiries.</strong> Claim a project's public page and the buyer ` +
+        `leads it generates come to you. No referral fees. No brokerage change. Nothing to pay ` +
+        `— verification takes two minutes with your RECO number.<br><br>` +
+        `Mississauga is live now.<br><br>` +
+        `— Alex, LIQWD`,
       ctaUrl: `${SITE}/agents/early-access?utm_source=recruit&utm_medium=email&utm_campaign=wave1-mississauga`,
-      ctaLabel: "See your market",
+      ctaLabel: "Claim your market",
     }),
   },
 };
