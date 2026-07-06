@@ -2,10 +2,10 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "LIQWD — The Ultimate Broker Portal for New Homes",
+    name: "LIQWD — New & Pre-Construction Homes",
     short_name: "LIQWD",
     description:
-      "New-home and pre-construction projects across Canada & the U.S. — free buyer leads for verified agents.",
+      "Browse new and pre-construction condos, townhomes, and single-family homes across Canada & the U.S. — from Toronto to Miami.",
     start_url: "/",
     display: "standalone",
     background_color: "#ffffff",

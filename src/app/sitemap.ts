@@ -15,6 +15,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: `${SITE_URL}/`, changeFrequency: "daily", priority: 1.0 },
     { url: `${SITE_URL}/agents`, changeFrequency: "weekly", priority: 0.8 },
+    // Campaign pitch variants — one focused angle per page.
+    { url: `${SITE_URL}/agents/early-access`, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${SITE_URL}/agents/one-portal`, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${SITE_URL}/agents/off-market`, changeFrequency: "monthly", priority: 0.7 },
     { url: `${SITE_URL}/rentals`, changeFrequency: "daily", priority: 0.8 },
     ...REGION_KEYS.map((k) => ({
       url: `${SITE_URL}/agents/${regionSlug(k)}`,

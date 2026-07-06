@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     template: "%s · LIQWD",
   },
   description:
-    "New and pre-construction homes across Canada & the U.S. — and the Ultimate Broker Portal behind them. Free for verified agents. Built in Canada.",
+    "Browse new and pre-construction condos, townhomes, and single-family homes across Canada & the U.S. — pricing, floor plans, and first access, from Toronto to Miami.",
 };
 
 export const viewport: Viewport = {
