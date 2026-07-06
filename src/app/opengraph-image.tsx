@@ -4,7 +4,7 @@ import { ImageResponse } from "next/og";
  * Default social-share card for pages without their own OG image (project
  * pages already use their hero). Wordmark on ink with the market line.
  */
-export const alt = "LIQWD — The Ultimate Broker Portal for New Homes";
+export const alt = "LIQWD — New & Pre-Construction Homes";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -44,7 +44,7 @@ export default function OpengraphImage() {
             display: "flex",
           }}
         >
-          The Ultimate Broker Portal for New Homes
+          New &amp; pre-construction homes, from Toronto to Miami
         </div>
         <div
           style={{
@@ -54,7 +54,7 @@ export default function OpengraphImage() {
             display: "flex",
           }}
         >
-          Ontario · British Columbia · Florida
+          Ontario · BC · Alberta · Florida · Texas · Tennessee · California
         </div>
       </div>
     ),
