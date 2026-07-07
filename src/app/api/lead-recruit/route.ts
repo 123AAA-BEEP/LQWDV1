@@ -11,36 +11,52 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
 /**
- * Lead-triggered recruitment — the connector between consumer demand and the
- * agent outreach list. When a real buyer inquiry lands on a project whose page
- * NO agent has claimed, the top producers who farm that city get an invite
- * anchored to that inquiry. Never fabricated: every email traces back to an
- * actual project_leads row, and buyer PII never leaves the building — the
- * email says "a buyer", not who.
+ * Lead-triggered recruitment — every real buyer inquiry becomes the proof
+ * point in a recruitment blast to the next tranche of that city's agent list.
  *
- * Sweep semantics (run by cron or by hand):
- *   - evaluates recent leads with recruit_notified_at IS NULL
- *   - skips: realtor self-identified leads, spam, claimed pages, leads already
- *     routed to an agent, cities with no recruit coverage
+ * The lead is a carrot, not the product: with ~limited lead volume, what we
+ * maximize is VERIFIED SIGNUPS per lead, not lead servicing. So the email is
+ * written for the miss case (the reader almost certainly won't get this
+ * inquiry) and the CTA is always "claim your projects / free account" — never
+ * "come get this lead". Two truthful variants:
+ *
+ *   unclaimed page — "a buyer inquired on X and no agent owns that page; the
+ *     inquiry is sitting unworked. {n} projects in {city} are still open."
+ *   claimed page  — "a buyer inquired on X and it routed instantly to the
+ *     claiming agent, no referral fee. {n} projects in {city} are still open."
+ *
+ * Honesty by construction: every send traces to a real project_leads row
+ * (≤7 days old), counts are computed live, buyer PII never leaves the
+ * building, and we never promise the triggering lead to anyone.
+ *
+ * Sweep semantics (cron or manual):
+ *   - evaluates recent leads with recruit_notified_at IS NULL (skips realtor
+ *     self-registrations, spam, cities without recruit coverage)
  *   - per-project cooldown (14d) — a hot project's tenth lead of the week
- *     doesn't re-blast the same agents
- *   - per-target frequency cap (7d since last_emailed_at) + global suppression
- *   - top PER_LEAD producers by volume, invited via the ISOLATED outreach
- *     sender (RECRUIT_RESEND_API_KEY / RECRUIT_EMAIL_FROM — see recruit-wave)
+ *     doesn't re-blast the same city tranche
+ *   - per-target rest (7d since last_emailed_at, any campaign) + suppression
+ *   - global warm-up throttle: at most DAILY_CAP connector sends per 24h
+ *   - targets ranked by sales volume; each event drains the next tranche
  *
- *   ?limit=5   leads evaluated per run (max 10)
- *   ?dry=1     no sends, no state changes: returns what WOULD happen + sample
+ *   ?limit=5    leads evaluated per run (max 10)
+ *   ?batch=25   sends per triggering lead (max 50)
+ *   ?dry=1      no sends, no state changes: returns what WOULD happen + sample
  * Auth: ?key=INBOUND_EMAIL_SECRET or Bearer CRON_SECRET.
+ *
+ * Sender isolation: same RECRUIT_RESEND_API_KEY / RECRUIT_EMAIL_FROM second
+ * Resend account as recruit-wave — never the transactional sender.
  */
 
 const SITE = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://liqwd.ca").replace(/\/+$/, "");
-/** Invites per triggering lead — small on purpose: scarcity is the pitch. */
-const PER_LEAD = 3;
+/** Recruits emailed per triggering lead (override with ?batch=, capped 50). */
+const DEFAULT_BATCH = 25;
+/** Warm-up ceiling: connector sends across ALL leads in any rolling 24h. */
+const DAILY_CAP = 50;
 /** Don't re-blast the same project within this window. */
 const PROJECT_COOLDOWN_DAYS = 14;
 /** Don't email the same target within this window (any campaign). */
 const TARGET_COOLDOWN_DAYS = 7;
-/** Only leads this fresh can trigger — "just asked" has to be true. */
+/** Only leads this fresh can trigger — "just inquired" has to be true. */
 const LEAD_MAX_AGE_DAYS = 7;
 
 const CONSENT_CONTEXT =
@@ -81,27 +97,48 @@ function inviteEmail(opts: {
   city: string;
   slug: string;
   email: string;
+  claimed: boolean;
+  unclaimedCount: number | null;
 }): { subject: string; html: string } {
   const pageUrl = `${SITE}/projects/${opts.slug}`;
   const ctaUrl =
     `${SITE}/agents/early-access?utm_source=recruit&utm_medium=email` +
     `&utm_campaign=lead-trigger&utm_content=${encodeURIComponent(opts.slug)}`;
+  const name = esc(opts.projectName);
+  const city = esc(opts.city);
+
+  // The proof line — both variants are literally true for this lead.
+  const proof = opts.claimed
+    ? `A buyer inquired on <strong>${name} in ${city}</strong> this week. It routed ` +
+      `instantly — no referral fee — to the one agent who claims that page.`
+    : `A buyer inquired on <strong>${name} in ${city}</strong> this week — and no ` +
+      `agent has claimed that page, so the inquiry is sitting unworked.`;
+
+  // Miss-case pivot: the reader won't get THIS lead; they can own the next one.
+  const openLine =
+    opts.unclaimedCount && opts.unclaimedCount > 0
+      ? `Right now <strong>${opts.unclaimedCount} ${city} project${opts.unclaimedCount === 1 ? " has" : "s have"} ` +
+        `no claiming agent</strong>. Each one takes exactly one.`
+      : `Projects across ${city} still have no claiming agent. Each one takes exactly one.`;
+
   return {
-    subject: `A buyer just inquired about ${opts.projectName}`,
+    subject: opts.claimed
+      ? `A buyer inquired on ${opts.projectName} — it went to the claiming agent`
+      : `A buyer inquired on ${opts.projectName} — no agent has it`,
     html: brandedEmail({
-      heading: "A live buyer inquiry — unclaimed",
+      heading: "This is how leads move now",
       body:
         `${opts.first ? `Hi ${esc(opts.first)},` : "Hi,"}<br><br>` +
-        `A buyer inquiry just landed on <strong>${esc(opts.projectName)} in ` +
-        `${esc(opts.city)}</strong> — and no agent owns that page yet, so nobody ` +
-        `is following up.<br><br>` +
-        `Claim the page and its buyer inquiries route to you. No referral fees, ` +
-        `nothing to pay — verification takes two minutes with your RECO number. ` +
-        `Reply to this email and we'll connect you with this buyer directly.<br><br>` +
-        `The live page: <a href="${pageUrl}">${pageUrl.replace(/^https?:\/\//, "")}</a><br><br>` +
+        `${proof}<br><br>` +
+        `That's the model: claim a pre-con project on LIQWD and every buyer inquiry ` +
+        `it generates routes to you while you hold it — you hold it by keeping the ` +
+        `page fresher than anyone else. No referral fees, nothing to pay.<br><br>` +
+        `${openLine}<br><br>` +
+        `Free account, two-minute verification with your RECO number, claim from there.<br><br>` +
+        `The page that got the inquiry: <a href="${pageUrl}">${pageUrl.replace(/^https?:\/\//, "")}</a><br><br>` +
         `— Alex, LIQWD`,
       ctaUrl,
-      ctaLabel: "Get verified & claim it",
+      ctaLabel: "Claim your projects — free",
       footnote: complianceFootnote({
         law: "casl",
         email: opts.email,
@@ -118,6 +155,10 @@ export async function GET(req: Request) {
   }
   const dry = url.searchParams.get("dry") === "1";
   const limit = Math.min(parseInt(url.searchParams.get("limit") ?? "5", 10) || 5, 10);
+  const batch = Math.min(
+    parseInt(url.searchParams.get("batch") ?? String(DEFAULT_BATCH), 10) || DEFAULT_BATCH,
+    50,
+  );
 
   const recruitKey = process.env.RECRUIT_RESEND_API_KEY;
   const recruitFrom = process.env.RECRUIT_EMAIL_FROM;
@@ -132,6 +173,20 @@ export async function GET(req: Request) {
   }
 
   const admin = createAdminClient();
+
+  // Warm-up throttle: fresh outreach domain, so hard-cap rolling-24h volume.
+  const { count: sentToday } = await admin
+    .from("lead_recruit_sends")
+    .select("id", { count: "exact", head: true })
+    .gte("sent_at", daysAgo(1));
+  let dailyRoom = Math.max(0, DAILY_CAP - (sentToday ?? 0));
+  if (!dry && dailyRoom === 0) {
+    return NextResponse.json({
+      ranAt: new Date().toISOString(),
+      sent: 0,
+      note: `daily cap (${DAILY_CAP}/24h) reached — leads stay queued for the next window`,
+    });
+  }
 
   const { data: leadRows } = await admin
     .from("project_leads")
@@ -148,15 +203,16 @@ export async function GET(req: Request) {
   const outcomes: {
     lead_id: string;
     project?: string;
+    variant?: "claimed" | "unclaimed";
     outcome: string;
-    invited?: { email: string; name: string | null }[];
+    invited?: number;
   }[] = [];
   let totalSent = 0;
   let aborted = false;
   let sample: { to: string; subject: string; html: string } | undefined;
 
   // Evaluated = decided; only real decisions advance the watermark. A send
-  // failure leaves the lead untouched so the next sweep retries it.
+  // failure or the daily cap leaves the lead untouched for the next sweep.
   const markEvaluated = async (leadId: string) => {
     if (dry) return;
     await admin
@@ -167,12 +223,13 @@ export async function GET(req: Request) {
 
   for (const lead of leads) {
     if (aborted) break;
+    if (!dry && dailyRoom === 0) break; // cap hit mid-run — rest stay queued
 
-    // An agent already owns this lead (steward or referral link) — nothing to
-    // recruit against. Realtor self-registrations get their own reply flow.
-    if (lead.assigned_realtor_profile_id || lead.is_realtor) {
+    // Realtor self-registrations get their own reply flow; a buyer's inquiry
+    // is the only honest "a buyer inquired" trigger.
+    if (lead.is_realtor) {
       await markEvaluated(lead.id);
-      outcomes.push({ lead_id: lead.id, outcome: "skip: already routed to an agent" });
+      outcomes.push({ lead_id: lead.id, outcome: "skip: realtor self-registration" });
       continue;
     }
 
@@ -183,7 +240,7 @@ export async function GET(req: Request) {
       .maybeSingle();
     const { data: page } = await admin
       .from("public_project_pages")
-      .select("id, slug, is_active, assigned_realtor_profile_id")
+      .select("id, slug, is_active, assigned_realtor_profile_id, assigned_realtor_until")
       .eq("project_id", lead.project_id)
       .maybeSingle();
 
@@ -196,15 +253,13 @@ export async function GET(req: Request) {
       });
       continue;
     }
-    if (page.assigned_realtor_profile_id) {
-      await markEvaluated(lead.id);
-      outcomes.push({
-        lead_id: lead.id,
-        project: project.project_name,
-        outcome: "skip: page already claimed",
-      });
-      continue;
-    }
+
+    // Claimed vs unclaimed picks the copy variant — both are recruit triggers.
+    const stewardLive =
+      Boolean(page.assigned_realtor_profile_id) &&
+      (!page.assigned_realtor_until ||
+        new Date(page.assigned_realtor_until).getTime() > Date.now());
+    const claimed = stewardLive || Boolean(lead.assigned_realtor_profile_id);
 
     // Per-project cooldown — one blast per project per window, however many
     // leads it collects in the meantime.
@@ -223,8 +278,22 @@ export async function GET(req: Request) {
       continue;
     }
 
-    // Top producers who farm this city, resting anyone contacted recently.
     const cityPattern = `%${project.city.replace(/[%_]/g, "")}%`;
+
+    // Live scarcity number for the copy — computed, never invented.
+    const { count: unclaimedCount } = await admin
+      .from("public_project_pages")
+      .select("id, projects!inner(id)", { count: "exact", head: true })
+      .eq("is_active", true)
+      .eq("projects.record_status", "published")
+      .ilike("projects.city", cityPattern)
+      .or(
+        `assigned_realtor_profile_id.is.null,assigned_realtor_until.lte.${new Date().toISOString()}`,
+      );
+
+    // Next tranche of the city's ranked list: top producers first, resting
+    // anyone contacted in the last week (wave sends count too).
+    const take = dry ? batch : Math.min(batch, dailyRoom);
     const { data: targetRows } = await admin
       .from("recruit_targets")
       .select("id, email, full_name, status, notes, volume_last_period")
@@ -232,13 +301,13 @@ export async function GET(req: Request) {
       .ilike("base_city", cityPattern)
       .or(`last_emailed_at.is.null,last_emailed_at.lt.${daysAgo(TARGET_COOLDOWN_DAYS)}`)
       .order("volume_last_period", { ascending: false, nullsFirst: false })
-      .limit(PER_LEAD * 2); // headroom for suppression skips
+      .limit(take + 10); // headroom for suppression skips
     const candidates = (targetRows ?? []) as RecruitTarget[];
 
     const suppressed = await suppressedAmong(admin, candidates.map((t) => t.email));
     const targets = candidates
       .filter((t) => !suppressed.has(t.email.trim().toLowerCase()))
-      .slice(0, PER_LEAD);
+      .slice(0, take);
 
     if (targets.length === 0) {
       await markEvaluated(lead.id);
@@ -250,7 +319,7 @@ export async function GET(req: Request) {
       continue;
     }
 
-    const invited: { email: string; name: string | null }[] = [];
+    let invited = 0;
     let sendFailed = false;
 
     for (const t of targets) {
@@ -262,10 +331,12 @@ export async function GET(req: Request) {
         city: project.city,
         slug: page.slug,
         email,
+        claimed,
+        unclaimedCount: unclaimedCount ?? null,
       });
 
       if (dry) {
-        invited.push({ email, name: t.full_name });
+        invited++;
         sample ??= { to: email, subject: mail.subject, html: mail.html };
         continue;
       }
@@ -287,7 +358,8 @@ export async function GET(req: Request) {
 
       if (res.ok) {
         totalSent++;
-        invited.push({ email, name: t.full_name });
+        invited++;
+        dailyRoom--;
         await admin.from("lead_recruit_sends").insert({
           lead_id: lead.id,
           project_id: lead.project_id,
@@ -324,7 +396,8 @@ export async function GET(req: Request) {
       outcomes.push({
         lead_id: lead.id,
         project: project.project_name,
-        outcome: dry ? `dry-run: would invite ${invited.length}` : `invited ${invited.length}`,
+        variant: claimed ? "claimed" : "unclaimed",
+        outcome: dry ? `dry-run: would invite ${invited}` : `invited ${invited}`,
         invited,
       });
     }
@@ -333,6 +406,9 @@ export async function GET(req: Request) {
   return NextResponse.json({
     ranAt: new Date().toISOString(),
     dry,
+    batch,
+    daily_cap: DAILY_CAP,
+    sent_last_24h: sentToday ?? 0,
     leads_evaluated: leads.length,
     sent: totalSent,
     outcomes,
