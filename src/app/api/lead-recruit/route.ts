@@ -5,6 +5,7 @@ import {
   complianceFootnote,
   suppressedAmong,
 } from "@/lib/email-compliance";
+import { OUTREACH_DAILY_CAP, outreachSentLast24h } from "@/lib/outreach";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -50,8 +51,6 @@ export const maxDuration = 300;
 const SITE = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://liqwd.ca").replace(/\/+$/, "");
 /** Recruits emailed per triggering lead (override with ?batch=, capped 50). */
 const DEFAULT_BATCH = 25;
-/** Warm-up ceiling: connector sends across ALL leads in any rolling 24h. */
-const DAILY_CAP = 50;
 /** Don't re-blast the same project within this window. */
 const PROJECT_COOLDOWN_DAYS = 14;
 /** Don't email the same target within this window (any campaign). */
@@ -174,17 +173,15 @@ export async function GET(req: Request) {
 
   const admin = createAdminClient();
 
-  // Warm-up throttle: fresh outreach domain, so hard-cap rolling-24h volume.
-  const { count: sentToday } = await admin
-    .from("lead_recruit_sends")
-    .select("id", { count: "exact", head: true })
-    .gte("sent_at", daysAgo(1));
-  let dailyRoom = Math.max(0, DAILY_CAP - (sentToday ?? 0));
+  // Shared outreach budget (waves + lead-triggered): lead blasts get first
+  // claim on the day's volume by running on the tighter cron.
+  const sentToday = await outreachSentLast24h(admin);
+  let dailyRoom = Math.max(0, OUTREACH_DAILY_CAP - sentToday);
   if (!dry && dailyRoom === 0) {
     return NextResponse.json({
       ranAt: new Date().toISOString(),
       sent: 0,
-      note: `daily cap (${DAILY_CAP}/24h) reached — leads stay queued for the next window`,
+      note: `outreach daily cap (${OUTREACH_DAILY_CAP}/24h) reached — leads stay queued for the next window`,
     });
   }
 
@@ -407,8 +404,8 @@ export async function GET(req: Request) {
     ranAt: new Date().toISOString(),
     dry,
     batch,
-    daily_cap: DAILY_CAP,
-    sent_last_24h: sentToday ?? 0,
+    daily_cap: OUTREACH_DAILY_CAP,
+    sent_last_24h: sentToday,
     leads_evaluated: leads.length,
     sent: totalSent,
     outcomes,

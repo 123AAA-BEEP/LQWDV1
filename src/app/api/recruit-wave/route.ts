@@ -5,6 +5,7 @@ import {
   complianceFootnote,
   suppressedAmong,
 } from "@/lib/email-compliance";
+import { OUTREACH_DAILY_CAP, outreachSentLast24h } from "@/lib/outreach";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -123,6 +124,19 @@ export async function GET(req: Request) {
 
   const admin = createAdminClient();
 
+  // Shared outreach budget (waves + lead-triggered blasts): the wave is the
+  // evergreen filler, so it only spends what the day has left.
+  const sentToday = await outreachSentLast24h(admin);
+  const dailyRoom = Math.max(0, OUTREACH_DAILY_CAP - sentToday);
+  if (!dry && dailyRoom === 0) {
+    return NextResponse.json({
+      wave: wave.utmCampaign,
+      sent: 0,
+      sent_last_24h: sentToday,
+      note: `outreach daily cap (${OUTREACH_DAILY_CAP}/24h) reached — targets stay pending`,
+    });
+  }
+
   // Wave cap: how many have already been contacted under this campaign.
   const { count: alreadySent } = await admin
     .from("recruit_targets")
@@ -145,7 +159,7 @@ export async function GET(req: Request) {
     .eq("region", wave.region)
     .ilike("base_city", wave.cityLike)
     .order("volume_last_period", { ascending: false, nullsFirst: false })
-    .limit(Math.min(limit, room));
+    .limit(Math.min(limit, room, dry ? limit : dailyRoom));
   const targets = (data ?? []) as Target[];
 
   // Global suppression list — never email anyone on it, any campaign.
@@ -252,6 +266,8 @@ export async function GET(req: Request) {
     sent,
     cap: wave.cap,
     previously_sent: alreadySent ?? 0,
+    daily_cap: OUTREACH_DAILY_CAP,
+    sent_last_24h: sentToday,
     results,
     sample,
   });
