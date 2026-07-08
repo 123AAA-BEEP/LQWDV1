@@ -34,12 +34,16 @@ export async function GET(request: Request) {
   const priorityProject = url.searchParams.get("project");
   const admin = createAdminClient();
 
-  // Candidates: active pages of published projects missing any AI field.
+  // Candidates: active pages of published projects missing any AI field —
+  // every regenerable field counts, so a single scrubbed/cleared section
+  // (e.g. a source-name purge) re-queues the page on its own.
   const { data: pages } = await admin
     .from("public_project_pages")
     .select("project_id, slug, seo_title, section_faq, section_buying")
     .eq("is_active", true)
-    .or("seo_title.is.null,section_faq.is.null,section_buying.is.null")
+    .or(
+      "seo_title.is.null,seo_meta_description.is.null,page_summary.is.null,page_description.is.null,section_intro.is.null,section_amenities.is.null,section_getting_around.is.null,section_developer.is.null,section_faq.is.null,section_buying.is.null",
+    )
     .limit(400);
   const candidateIds = ((pages ?? []) as {
     project_id: string;
