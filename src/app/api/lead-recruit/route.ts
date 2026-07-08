@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { brandedEmail } from "@/lib/email";
+import { plainEmail } from "@/lib/email";
 import {
   complianceFootnote,
   suppressedAmong,
@@ -106,38 +106,36 @@ function inviteEmail(opts: {
   const name = esc(opts.projectName);
   const city = esc(opts.city);
 
-  // The proof line — both variants are literally true for this lead.
+  // The proof line — both variants are literally true for this lead. Written
+  // like a person telling you what happened, not a campaign announcing itself.
   const proof = opts.claimed
-    ? `A buyer inquired on <strong>${name} in ${city}</strong> this week. It routed ` +
-      `instantly — no referral fee — to the one agent who claims that page.`
-    : `A buyer inquired on <strong>${name} in ${city}</strong> this week — and no ` +
-      `agent has claimed that page, so the inquiry is sitting unworked.`;
+    ? `A buyer inquired on ${name} in ${city} this week. It went straight to the ` +
+      `one agent who's claimed that page — no referral fee.`
+    : `A buyer inquired on ${name} in ${city} this week — and that page has no ` +
+      `agent on it, so nobody followed up.`;
 
   // Miss-case pivot: the reader won't get THIS lead; they can own the next one.
   const openLine =
     opts.unclaimedCount && opts.unclaimedCount > 0
-      ? `Right now <strong>${opts.unclaimedCount} ${city} project${opts.unclaimedCount === 1 ? " has" : "s have"} ` +
-        `no claiming agent</strong>. Each one takes exactly one.`
-      : `Projects across ${city} still have no claiming agent. Each one takes exactly one.`;
+      ? `${opts.unclaimedCount} ${city} project${opts.unclaimedCount === 1 ? " page still has" : " pages still have"} ` +
+        `no agent — it's one agent per project, first to claim.`
+      : `A number of ${city} project pages still have no agent — it's one agent per project, first to claim.`;
 
   return {
     subject: opts.claimed
-      ? `A buyer inquired on ${opts.projectName} — it went to the claiming agent`
-      : `A buyer inquired on ${opts.projectName} — no agent has it`,
-    html: brandedEmail({
-      heading: "This is how leads move now",
+      ? `a buyer just asked about ${opts.projectName}`
+      : `a buyer asked about ${opts.projectName} — nobody answered`,
+    html: plainEmail({
       body:
-        `${opts.first ? `Hi ${esc(opts.first)},` : "Hi,"}<br><br>` +
-        `${proof}<br><br>` +
-        `That's the model: claim a pre-con project on LIQWD and every buyer inquiry ` +
-        `it generates routes to you while you hold it — you hold it by keeping the ` +
-        `page fresher than anyone else. No referral fees, nothing to pay.<br><br>` +
-        `${openLine}<br><br>` +
-        `Free account, two-minute verification with your RECO number, claim from there.<br><br>` +
-        `The page that got the inquiry: <a href="${pageUrl}">${pageUrl.replace(/^https?:\/\//, "")}</a><br><br>` +
-        `— Alex, LIQWD`,
-      ctaUrl,
-      ctaLabel: "Claim your projects — free",
+        `<p>${opts.first ? `Hi ${esc(opts.first)},` : "Hi,"}</p>` +
+        `<p>${proof}</p>` +
+        `<p>That's how LIQWD works: claim a pre-con project page (it's free) and its ` +
+        `buyer inquiries route to you for as long as you keep the page current. ` +
+        `${openLine}</p>` +
+        `<p>Here's the page the inquiry came in on: <a href="${pageUrl}" style="color:#0d6efd;">${pageUrl.replace(/^https?:\/\//, "")}</a></p>` +
+        `<p>Verifying takes about two minutes with your RECO number: ` +
+        `<a href="${ctaUrl}" style="color:#0d6efd;">liqwd.ca/agents</a></p>` +
+        `<p>Alex<br>LIQWD &middot; liqwd.ca</p>`,
       footnote: complianceFootnote({
         law: "casl",
         email: opts.email,

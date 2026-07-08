@@ -106,6 +106,25 @@ export function brandedEmail(opts: {
 </html>`;
 }
 
+/**
+ * Personal-note email shell for COLD OUTREACH — deliberately the opposite of
+ * brandedEmail. No logo, no card, no button, no styling that reads
+ * "newsletter": Gmail's Promotions classifier keys on exactly those, and a
+ * recipient's eye does too. Just left-aligned text like a human typed it,
+ * with the legally-required footer in small quiet type underneath.
+ */
+export function plainEmail(opts: { body: string; footnote: string }): string {
+  return `<!doctype html>
+<html lang="en">
+  <body style="margin:0;padding:0;background:#ffffff;">
+    <div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.6;color:#1f2937;max-width:560px;padding:16px 20px;">
+      ${opts.body}
+      <p style="font-size:11px;line-height:1.5;color:#9ca3af;margin-top:32px;">${opts.footnote}</p>
+    </div>
+  </body>
+</html>`;
+}
+
 /** Escapes user-supplied text before it goes into email HTML. */
 function esc(s: string): string {
   return s
