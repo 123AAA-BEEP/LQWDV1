@@ -54,6 +54,25 @@ const FIELD_DESCRIPTIONS = {
     "A short educational section (2–3 paragraphs, blank-line separated) titled toward 'buying pre-construction here': registering for first access, deposit structures staged over time, interim occupancy vs final closing, and why buying early in a release can matter. Cite ONLY the buyer-protection rule for THIS project's jurisdiction: Ontario → 10-day cooling-off period for new condos under the Condominium Act (condos only); British Columbia → 7-day rescission right for development units under REDMA; Florida → 15-day rescission period for new condos under FS 718.503 (condos only); Texas → 6-day rescission period for new condos under Property Code §82.156 (condos only). For any other jurisdiction, describe the process generally WITHOUT citing a specific statute or day-count. General, accurate, non-promissory education — no invented numbers, no financial advice, no guarantees of appreciation.",
 } as const;
 
+/**
+ * Data sources / aggregator brands that must NEVER surface in public copy —
+ * provenance is admin-only (the core public/private invariant). The prompt
+ * forbids naming sources, but a stale aggregator-as-builder row once leaked
+ * "MyCondoPro" into a live developer section, so outputs are also scrubbed in
+ * code: any sentence naming one of these is dropped before it can be stored.
+ */
+const SOURCE_NAME_RE =
+  /mycondopro|condo\s?royalty|livabl|altus|buzzbuzz|precondo|condonow|urbantoronto|zonda/i;
+
+function scrubSourceNames(text: string): string {
+  if (!SOURCE_NAME_RE.test(text)) return text;
+  return text
+    .split(/(?<=[.!?])\s+/)
+    .filter((s) => !SOURCE_NAME_RE.test(s))
+    .join(" ")
+    .trim();
+}
+
 interface SeoPromptSettings {
   overall_instructions: string | null;
   seo_title_instructions: string | null;
@@ -110,6 +129,15 @@ export async function generateSeoFields(
   const system = overall
     ? `${SYSTEM}\n\nHouse style / additional instructions:\n${overall}`
     : SYSTEM;
+
+  // Belt and braces on the INPUT side: an aggregator name must never reach
+  // the copywriter as the builder (stale rows once carried one, and the model
+  // faithfully wrote it into public copy). Blank it — "builder to be
+  // confirmed" copy is the correct output for those projects.
+  const builderRaw = (project as { builder_name?: string | null }).builder_name;
+  if (builderRaw && SOURCE_NAME_RE.test(builderRaw)) {
+    (project as Record<string, unknown>).builder_name = null;
+  }
 
   try {
     const client = new Anthropic();
@@ -222,8 +250,9 @@ export async function generateSeoFields(
     if (!block || block.type !== "tool_use") return null;
     const out = block.input as Record<string, unknown>;
     const str = (k: string) =>
-      typeof out[k] === "string" ? (out[k] as string) : "";
-    // Sanitize the FAQ: keep only well-formed, non-empty Q&A pairs (max 8).
+      typeof out[k] === "string" ? scrubSourceNames(out[k] as string) : "";
+    // Sanitize the FAQ: keep only well-formed, non-empty Q&A pairs (max 8),
+    // and drop any pair that names a data source/aggregator.
     const faq = Array.isArray(out.section_faq)
       ? (out.section_faq as unknown[])
           .filter(
@@ -233,7 +262,10 @@ export async function generateSeoFields(
               typeof (f as Record<string, unknown>).question === "string" &&
               typeof (f as Record<string, unknown>).answer === "string" &&
               !!(f as Record<string, string>).question.trim() &&
-              !!(f as Record<string, string>).answer.trim(),
+              !!(f as Record<string, string>).answer.trim() &&
+              !SOURCE_NAME_RE.test(
+                `${(f as Record<string, string>).question} ${(f as Record<string, string>).answer}`,
+              ),
           )
           .slice(0, 8)
       : [];
