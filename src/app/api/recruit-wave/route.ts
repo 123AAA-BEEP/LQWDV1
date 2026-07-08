@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { brandedEmail } from "@/lib/email";
+import { plainEmail } from "@/lib/email";
 import {
   complianceFootnote,
   suppressedAmong,
@@ -39,37 +39,34 @@ interface WaveConfig {
   cap: number;
   subject: string;
   utmCampaign: string;
-  /** returns branded HTML body (before compliance footnote) */
-  html: (firstName: string | null) => { heading: string; body: string; ctaUrl: string; ctaLabel: string };
+  /** returns the plain-note body (before compliance footnote) */
+  html: (firstName: string | null) => { body: string };
 }
 
 const SITE = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://liqwd.ca").replace(/\/+$/, "");
 
+// Cold copy rules: sounds like a person typed it (no bold benefit blocks, no
+// marketing cadence, no button), one link, ends on a question — questions get
+// replies, and replies are what move us out of the Promotions tab.
 const WAVES: Record<string, WaveConfig> = {
   "1": {
     cityLike: "%mississauga%",
     region: "ontario",
     cap: 250,
-    subject: "Be first on Mississauga's new-construction deals",
+    subject: "quick one about Mississauga pre-con",
     utmCampaign: "wave1-mississauga",
     html: (first) => ({
-      heading: "Your Mississauga edge",
       body:
-        `${first ? `Hi ${first},` : "Hi,"}<br><br>` +
-        `You sell Mississauga. Three things that put you ahead this week:<br><br>` +
-        `<strong>Win the pre-con conversation.</strong> Every active project — 45+ — with ` +
-        `pricing, status, and incentives on one page. Answer a buyer in seconds instead of ` +
-        `digging through PDFs and VIP portals.<br><br>` +
-        `<strong>Know what's coming before anyone's marketing it.</strong> We track development ` +
-        `applications and builder pipelines — walk into your next listing appointment knowing ` +
-        `what's breaking ground down the street.<br><br>` +
-        `<strong>Free buyer inquiries.</strong> Claim a project's public page and the buyer ` +
-        `leads it generates come to you. No referral fees. No brokerage change. Nothing to pay ` +
-        `— verification takes two minutes with your RECO number.<br><br>` +
-        `Mississauga is live now.<br><br>` +
-        `— Alex, LIQWD`,
-      ctaUrl: `${SITE}/agents/early-access?utm_source=recruit&utm_medium=email&utm_campaign=wave1-mississauga`,
-      ctaLabel: "Claim your market",
+        `<p>${first ? `Hi ${first},` : "Hi,"}</p>` +
+        `<p>When a buyer texts you at 9pm about a pre-con project — what's left, ` +
+        `deposit structure, incentives — how long does it take to get them a real answer?</p>` +
+        `<p>I built LIQWD so it takes about thirty seconds. Every active Mississauga ` +
+        `project on one page: pricing, status, incentives, floor plans. No VIP portals, ` +
+        `no digging through PDFs.</p>` +
+        `<p>It's free for verified agents — two minutes with your RECO number: ` +
+        `<a href="${SITE}/agents/early-access?utm_source=recruit&utm_medium=email&utm_campaign=wave1-mississauga" style="color:#0d6efd;">liqwd.ca/agents</a></p>` +
+        `<p>Worth a look?</p>` +
+        `<p>Alex<br>LIQWD &middot; liqwd.ca</p>`,
     }),
   },
 };
@@ -181,11 +178,8 @@ export async function GET(req: Request) {
 
     const first = (t.full_name ?? "").trim().split(/\s+/)[0] || null;
     const content = wave.html(first);
-    const html = brandedEmail({
-      heading: content.heading,
+    const html = plainEmail({
       body: content.body,
-      ctaUrl: content.ctaUrl,
-      ctaLabel: content.ctaLabel,
       footnote: complianceFootnote({
         law: "casl",
         email,
@@ -244,11 +238,8 @@ export async function GET(req: Request) {
     sample = {
       to: t.email,
       subject: wave.subject,
-      html: brandedEmail({
-        heading: content.heading,
+      html: plainEmail({
         body: content.body,
-        ctaUrl: content.ctaUrl,
-        ctaLabel: content.ctaLabel,
         footnote: complianceFootnote({
           law: "casl",
           email: t.email,
