@@ -37,7 +37,9 @@ interface WaveConfig {
   region: string;
   /** hard ceiling of invites for this wave */
   cap: number;
-  subject: string;
+  /** projectName is a real published project in the wave's city (rotates per
+   *  send so subjects stay concrete and non-identical); null if none fit. */
+  subject: (projectName: string | null) => string;
   utmCampaign: string;
   /** returns the plain-note body (before compliance footnote) */
   html: (firstName: string | null) => { body: string };
@@ -53,7 +55,13 @@ const WAVES: Record<string, WaveConfig> = {
     cityLike: "%mississauga%",
     region: "ontario",
     cap: 250,
-    subject: "quick one about Mississauga pre-con",
+    // The subject IS the 9pm scenario — and the drip cron fires at 9pm
+    // Toronto time so it arrives while it's happening to them. Framed as
+    // "your buyer" (clearly rhetorical), never impersonating a real inquiry.
+    subject: (project) =>
+      project
+        ? `your buyer at 9pm: "what's left at ${project}?"`
+        : `your buyer at 9pm`,
     utmCampaign: "wave1-mississauga",
     html: (first) => ({
       body:
@@ -162,10 +170,23 @@ export async function GET(req: Request) {
   // Global suppression list — never email anyone on it, any campaign.
   const suppressed = await suppressedAmong(admin, targets.map((t) => t.email));
 
+  // Real published project names in the wave's city, rotated through the
+  // subject line. Short, mixed-case names only — a subject reading
+  // "what's left at MILLCROFT THE LEGACY RESIDENCES?" stops sounding human.
+  const { data: projRows } = await admin
+    .from("projects")
+    .select("project_name")
+    .eq("record_status", "published")
+    .ilike("city", wave.cityLike)
+    .limit(60);
+  const subjectProjects = ((projRows ?? []) as { project_name: string }[])
+    .map((r) => r.project_name.trim())
+    .filter((n) => n.length <= 26 && /[a-z]/.test(n));
+
   const results: { email: string; name: string | null; outcome: string }[] = [];
   let sent = 0;
 
-  for (const t of targets) {
+  for (const [i, t] of targets.entries()) {
     const email = t.email.trim().toLowerCase();
     if (suppressed.has(email)) {
       await admin
@@ -201,7 +222,9 @@ export async function GET(req: Request) {
       body: JSON.stringify({
         from: recruitFrom,
         to: [email],
-        subject: wave.subject,
+        subject: wave.subject(
+          subjectProjects.length ? subjectProjects[i % subjectProjects.length] : null,
+        ),
         html,
         reply_to: process.env.LEADS_NOTIFY_EMAIL ?? "leads@getliqwd.com",
       }),
@@ -237,7 +260,7 @@ export async function GET(req: Request) {
     const content = wave.html(first);
     sample = {
       to: t.email,
-      subject: wave.subject,
+      subject: wave.subject(subjectProjects[0] ?? null),
       html: plainEmail({
         body: content.body,
         footnote: complianceFootnote({
