@@ -41,40 +41,51 @@ interface WaveConfig {
    *  send so subjects stay concrete and non-identical); null if none fit. */
   subject: (projectName: string | null) => string;
   utmCampaign: string;
-  /** returns the plain-note body (before compliance footnote) */
-  html: (firstName: string | null) => { body: string };
+  /** returns the plain-note body (before compliance footnote); projectName
+   *  echoes the subject's project, projectCount is the live published count
+   *  in the wave's city so the copy never over-claims ("every") or goes stale */
+  html: (
+    firstName: string | null,
+    projectName: string | null,
+    projectCount: number | null,
+  ) => { body: string };
 }
 
 const SITE = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://liqwd.ca").replace(/\/+$/, "");
 
-// Cold copy rules: sounds like a person typed it (no bold benefit blocks, no
-// marketing cadence, no button), one link, ends on a question — questions get
-// replies, and replies are what move us out of the Promotions tab.
+// Cold copy rules: sounds like a person typed it. No bold benefit blocks, no
+// marketing cadence, no buttons, no em-dashes (the classic AI tell), one link,
+// a direct ask. Numbers are live-computed merges, never invented.
 const WAVES: Record<string, WaveConfig> = {
   "1": {
     cityLike: "%mississauga%",
     region: "ontario",
     cap: 250,
-    // The subject IS the 9pm scenario — and the drip cron fires at 9pm
-    // Toronto time so it arrives while it's happening to them. Framed as
-    // "your buyer" (clearly rhetorical), never impersonating a real inquiry.
+    // The subject is the scenario and the drip cron fires at 9pm Toronto time
+    // so it arrives while it's happening to them. Framed as "your buyer"
+    // (clearly rhetorical), never impersonating a real inquiry.
     subject: (project) =>
       project
-        ? `your buyer at 9pm: "what's left at ${project}?"`
-        : `your buyer at 9pm`,
+        ? `Your Buyer: "What's Left At ${project}?"`
+        : `Your Buyer: "What's Left In Mississauga?"`,
     utmCampaign: "wave1-mississauga",
-    html: (first) => ({
+    html: (first, project, count) => ({
       body:
         `<p>${first ? `Hi ${first},` : "Hi,"}</p>` +
-        `<p>When a buyer texts you at 9pm about a pre-con project — what's left, ` +
-        `deposit structure, incentives — how long does it take to get them a real answer?</p>` +
-        `<p>I built LIQWD so it takes about thirty seconds. Every active Mississauga ` +
-        `project on one page: pricing, status, incentives, floor plans. No VIP portals, ` +
-        `no digging through PDFs.</p>` +
-        `<p>It's free for verified agents — two minutes with your RECO number: ` +
-        `<a href="${SITE}/agents/early-access?utm_source=recruit&utm_medium=email&utm_campaign=wave1-mississauga" style="color:#0d6efd;">liqwd.ca/agents</a></p>` +
-        `<p>Worth a look?</p>` +
-        `<p>Alex<br>LIQWD &middot; liqwd.ca</p>`,
+        `<p>When a buyer texts you at 9pm asking what's left ` +
+        `${project ? `at ${project}` : "in Mississauga"}, how long does it take ` +
+        `to get them a real answer?</p>` +
+        `<p>I built LIQWD so it takes about thirty seconds. ` +
+        `${count && count >= 20 ? `${count} active` : "Dozens of"} Mississauga ` +
+        `projects in one place: pricing, status, incentives, floor plans, and ` +
+        `builder portals one click away.</p>` +
+        `<p>Sign up free at ` +
+        `<a href="${SITE}/agents/early-access?utm_source=recruit&utm_medium=email&utm_campaign=wave1-mississauga" style="color:#0d6efd;">liqwd.ca/agents</a>. ` +
+        `Verification takes two minutes with your RECO number, and it's all in ` +
+        `your pocket tonight.</p>` +
+        `<p>Alex<br>LIQWD</p>` +
+        `<p>P.S. Don't see a project you sell? Add it, claim it, and its buyer ` +
+        `inquiries route to you.</p>`,
     }),
   },
 };
@@ -183,6 +194,13 @@ export async function GET(req: Request) {
     .map((r) => r.project_name.trim())
     .filter((n) => n.length <= 26 && /[a-z]/.test(n));
 
+  // Live published count for the body's inventory claim.
+  const { count: projectCount } = await admin
+    .from("projects")
+    .select("id", { count: "exact", head: true })
+    .eq("record_status", "published")
+    .ilike("city", wave.cityLike);
+
   const results: { email: string; name: string | null; outcome: string }[] = [];
   let sent = 0;
 
@@ -198,7 +216,10 @@ export async function GET(req: Request) {
     }
 
     const first = (t.full_name ?? "").trim().split(/\s+/)[0] || null;
-    const content = wave.html(first);
+    const project = subjectProjects.length
+      ? subjectProjects[i % subjectProjects.length]
+      : null;
+    const content = wave.html(first, project, projectCount ?? null);
     const html = plainEmail({
       body: content.body,
       footnote: complianceFootnote({
@@ -257,7 +278,7 @@ export async function GET(req: Request) {
   if (dry && targets[0]) {
     const t = targets[0];
     const first = (t.full_name ?? "").trim().split(/\s+/)[0] || null;
-    const content = wave.html(first);
+    const content = wave.html(first, subjectProjects[0] ?? null, projectCount ?? null);
     sample = {
       to: t.email,
       subject: wave.subject(subjectProjects[0] ?? null),
