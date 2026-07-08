@@ -35,6 +35,12 @@ interface WaveConfig {
   /** recruit_targets filter */
   cityLike: string;
   region: string;
+  /** Sales-volume band. The sweet spot is the tier BELOW the mega-teams:
+   *  they read their own inbox, get no builder VIP treatment, and claiming a
+   *  project is transformative rather than incremental. Top producers become
+   *  targets later, once the platform has social proof. */
+  minVolume?: number;
+  maxVolume?: number;
   /** hard ceiling of invites for this wave */
   cap: number;
   /** projectName is a real published project in the wave's city (rotates per
@@ -62,6 +68,11 @@ const WAVES: Record<string, WaveConfig> = {
   "1": {
     cityLike: "%mississauga%",
     region: "ontario",
+    // $2.5M–$12M last-period volume: roughly the 40th–95th percentile of the
+    // Mississauga list (~1,500 agents). Solid producers, no assistants
+    // filtering their email, no VIP allocations. The hungry middle.
+    minVolume: 2_500_000,
+    maxVolume: 12_000_000,
     cap: 250,
     // The subject is the scenario and the drip cron fires at 9pm Toronto time
     // so it arrives while it's happening to them. Framed as "your buyer"
@@ -171,13 +182,17 @@ export async function GET(req: Request) {
     });
   }
 
-  // Top producers first — the export's sales volume is the ranking signal.
-  const { data } = await admin
+  // Best of the wave's volume band first — the export's sales volume is the
+  // ranking signal, the band keeps us aimed at agents who need us most.
+  let query = admin
     .from("recruit_targets")
     .select("id, email, full_name, brokerage, base_city, volume_last_period")
     .eq("status", "pending")
     .eq("region", wave.region)
-    .ilike("base_city", wave.cityLike)
+    .ilike("base_city", wave.cityLike);
+  if (wave.minVolume != null) query = query.gte("volume_last_period", wave.minVolume);
+  if (wave.maxVolume != null) query = query.lte("volume_last_period", wave.maxVolume);
+  const { data } = await query
     .order("volume_last_period", { ascending: false, nullsFirst: false })
     .limit(Math.min(limit, room, dry ? limit : dailyRoom));
   const targets = (data ?? []) as Target[];
