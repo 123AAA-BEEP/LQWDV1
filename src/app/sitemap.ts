@@ -31,6 +31,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/tools/land-transfer-tax-calculator`, changeFrequency: "monthly", priority: 0.8 },
     { url: `${SITE_URL}/tools/pre-construction-deposit-calculator`, changeFrequency: "monthly", priority: 0.8 },
     { url: `${SITE_URL}/tools/hst-rebate-calculator`, changeFrequency: "monthly", priority: 0.8 },
+    // Market reports — linkable data assets, refreshed live.
+    { url: `${SITE_URL}/reports`, changeFrequency: "weekly", priority: 0.6 },
+    { url: `${SITE_URL}/reports/gta-pre-construction`, changeFrequency: "daily", priority: 0.8 },
     { url: `${SITE_URL}/privacy`, changeFrequency: "yearly", priority: 0.2 },
     { url: `${SITE_URL}/terms`, changeFrequency: "yearly", priority: 0.2 },
   ];
