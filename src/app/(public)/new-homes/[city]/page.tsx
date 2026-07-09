@@ -437,6 +437,35 @@ export default async function CityHubPage({
         </section>
       ) : null}
 
+      {/* Buyer tools — Ontario jurisdictions only (the calculators are ON math) */}
+      {province && /ontario|^on$/i.test(province) ? (
+        <section className="mt-12 max-w-3xl">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+            Run the numbers
+          </h2>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Link
+              href="/tools/land-transfer-tax-calculator"
+              className="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:border-brand-400 hover:text-brand-700"
+            >
+              Land transfer tax calculator
+            </Link>
+            <Link
+              href="/tools/pre-construction-deposit-calculator"
+              className="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:border-brand-400 hover:text-brand-700"
+            >
+              Deposit-schedule calculator
+            </Link>
+            <Link
+              href="/tools/hst-rebate-calculator"
+              className="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:border-brand-400 hover:text-brand-700"
+            >
+              HST rebate estimator
+            </Link>
+          </div>
+        </section>
+      ) : null}
+
       {rentalCount > 0 ? (
         <p className="mt-10 text-sm text-slate-600">
           Also in {city}:{" "}

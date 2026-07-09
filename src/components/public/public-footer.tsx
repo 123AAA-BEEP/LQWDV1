@@ -25,6 +25,9 @@ export function PublicFooter() {
           <Link href="/rentals" className="hover:text-white">
             Rentals
           </Link>
+          <Link href="/tools" className="hover:text-white">
+            Buyer tools
+          </Link>
           <Link href="/agents" className="hover:text-white">
             For agents
           </Link>
