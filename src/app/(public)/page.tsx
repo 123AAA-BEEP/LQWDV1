@@ -128,15 +128,19 @@ export default async function MarketplacePage({
     type?: string;
     status?: string;
     region?: string;
+    min?: string;
+    max?: string;
     page?: string;
   }>;
 }) {
-  const { q: rawQ, city, type, status, region, page } = await searchParams;
+  const { q: rawQ, city, type, status, region, min, max, page } = await searchParams;
   const q = (rawQ ?? "").trim();
   const cityFilter = (city ?? "").trim();
   const typeFilter = type ?? "";
   const statusFilter = status ?? "";
   const regionFilter = isRegionKey(region ?? "") ? (region as string) : "";
+  const minPrice = Number(min) > 0 ? Number(min) : null;
+  const maxPrice = Number(max) > 0 ? Number(max) : null;
   // Cumulative pagination: page N renders the first N pages, so "Load more"
   // appends to the grid (scroll preserved) and every state is a crawlable URL.
   const PAGE_SIZE = 24;
@@ -148,7 +152,7 @@ export default async function MarketplacePage({
 
   const supabase = await createClient();
   const hasFilter = Boolean(
-    q || cityFilter || typeFilter || statusFilter || regionFilter,
+    q || cityFilter || typeFilter || statusFilter || regionFilter || minPrice || maxPrice,
   );
 
   // Main results — featured/sponsored float to the top of the grid too (so they
@@ -186,6 +190,9 @@ export default async function MarketplacePage({
   if (cityFilter) req = req.eq("city", cityFilter);
   if (typeFilter) req = req.eq("project_type", typeFilter);
   if (statusFilter) req = req.eq("sales_status", statusFilter);
+  // Price-band filters (from city-hub links): match on starting price.
+  if (minPrice) req = req.gte("price_from_public", minPrice);
+  if (maxPrice) req = req.lt("price_from_public", maxPrice);
   if (regionFilter && isRegionKey(regionFilter)) {
     req = req.or(
       REGIONS[regionFilter].provinceValues
