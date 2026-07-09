@@ -228,7 +228,11 @@ function jsonLd(project: PublicProject, galleryUrls: string[] = []): object[] {
             "@type": "ListItem",
             position: 2,
             name: project.city,
-            item: `${SITE_URL}/?q=${encodeURIComponent(project.city)}`,
+            // Point at the city hub, not a search — concentrates internal
+            // link authority on the hub we want ranking for head terms.
+            item: rental
+              ? `${SITE_URL}/rentals?city=${encodeURIComponent(project.city)}`
+              : `${SITE_URL}/new-homes/${plainSlug(project.city)}`,
           }]
         : []),
       {
