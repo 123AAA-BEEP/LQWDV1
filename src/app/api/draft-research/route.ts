@@ -122,7 +122,7 @@ export async function GET(req: Request) {
     const patch: Record<string, unknown> = {};
     const filled: string[] = [];
     const fill = (k: keyof DraftRow | "price_from_public" | "bedrooms_summary" | "occupancy_estimate_text", v: string | number | null) => {
-      if (v != null && v !== "" && !(d as Record<string, unknown>)[k]) {
+      if (v != null && v !== "" && !(d as unknown as Record<string, unknown>)[k]) {
         patch[k] = v;
         filled.push(String(k));
       }
