@@ -142,6 +142,19 @@ export const PORTFOLIOS: Portfolio[] = [
     kind: "developer",
     aggregator: true,
   },
+  // Circle Real Estate — a Brampton pre-con VIP marketing brokerage covering
+  // the GTA + secondary markets (Hamilton, Guelph, Barrie, Ajax) where our
+  // coverage is thinner. It MARKETS other builders' projects, so it's an
+  // aggregator for attribution (never credit "Circle" as the developer). Note:
+  // the Circle family also runs an assignment platform — the assignment filter
+  // + corroboration gate keep resale assignments out.
+  {
+    tag: "circlere",
+    firm: "Circle Real Estate (GTA aggregator)",
+    url: "https://circlere.ca/projects",
+    kind: "developer",
+    aggregator: true,
+  },
   // --- "Most active" leaderboard expansion (probe-tunable URLs) ---
   {
     tag: "terra",
