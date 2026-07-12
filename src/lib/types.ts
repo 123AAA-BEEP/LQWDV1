@@ -223,6 +223,13 @@ export interface RealtorCard {
   brokerage: string | null;
   email: string | null;
   phone: string | null;
+  /** Appended by migration 0063 — public agent page fields. */
+  slug: string | null;
+  avatar_url: string | null;
+  bio_short: string | null;
+  service_area: string | null;
+  referral_code: string | null;
+  is_pro: boolean | null;
 }
 
 export const TITLE_LABELS: Record<RealtorTitle, string> = {

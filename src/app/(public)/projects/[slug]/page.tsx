@@ -557,11 +557,22 @@ export default async function PublicProjectPage({
                 <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
                   Your representative
                 </p>
-                <p className="mt-2 font-semibold text-ink">
-                  {[realtor.first_name, realtor.last_name]
-                    .filter(Boolean)
-                    .join(" ")}
-                </p>
+                {realtor.slug ? (
+                  <Link
+                    href={`/realtors/${realtor.slug}`}
+                    className="mt-2 block font-semibold text-ink hover:text-brand-700 hover:underline"
+                  >
+                    {[realtor.first_name, realtor.last_name]
+                      .filter(Boolean)
+                      .join(" ")}
+                  </Link>
+                ) : (
+                  <p className="mt-2 font-semibold text-ink">
+                    {[realtor.first_name, realtor.last_name]
+                      .filter(Boolean)
+                      .join(" ")}
+                  </p>
+                )}
                 {realtor.title ? (
                   <p className="text-sm text-slate-500">
                     {TITLE_LABELS[realtor.title]}
