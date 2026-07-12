@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { requireUserProfile } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody } from "@/components/ui/card";
-import { Field, Input, Select } from "@/components/ui/field";
+import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { Notice } from "@/components/ui/notice";
 import { Badge, verificationBadgeTone } from "@/components/ui/badge";
@@ -128,6 +128,33 @@ export default async function ProfilePage({
               </Select>
             </Field>
 
+            <Field
+              label="Short bio"
+              htmlFor="bio_short"
+              hint="Shown on your public agent page. 2–3 sentences about how you work and what you specialize in."
+            >
+              <Textarea
+                id="bio_short"
+                name="bio_short"
+                rows={3}
+                maxLength={600}
+                defaultValue={profile.bio_short ?? ""}
+              />
+            </Field>
+
+            <Field
+              label="Service area"
+              htmlFor="service_area"
+              hint='Cities you work, e.g. "Mississauga, Oakville, Burlington" — also used to curate your public page.'
+            >
+              <Input
+                id="service_area"
+                name="service_area"
+                maxLength={200}
+                defaultValue={profile.service_area ?? ""}
+              />
+            </Field>
+
             <label className="flex items-start gap-3 rounded-lg border border-slate-200 p-3">
               <input
                 type="checkbox"
@@ -136,8 +163,8 @@ export default async function ProfilePage({
                 className="mt-0.5 size-4"
               />
               <span className="text-sm text-slate-600">
-                Show my realtor card on public project pages (name, title, and
-                brokerage only). Visible once you are verified.
+                Show my public agent page and realtor card (name, title,
+                brokerage, photo, and bio). Visible once you are verified.
               </span>
             </label>
 

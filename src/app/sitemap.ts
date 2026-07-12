@@ -41,8 +41,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let projectRoutes: MetadataRoute.Sitemap = [];
   let cityRoutes: MetadataRoute.Sitemap = [];
   let builderRoutes: MetadataRoute.Sitemap = [];
+  let realtorRoutes: MetadataRoute.Sitemap = [];
   try {
     const supabase = await createClient();
+
+    // Public agent profiles — opted-in + verified agents with a slug.
+    const { data: agents } = await supabase
+      .from("public_realtor_cards")
+      .select("slug")
+      .not("slug", "is", null)
+      .limit(2000);
+    realtorRoutes = ((agents ?? []) as { slug: string }[]).map((a) => ({
+      url: `${SITE_URL}/realtors/${a.slug}`,
+      changeFrequency: "weekly" as const,
+      priority: 0.6,
+    }));
     // public_projects_view already filters to active, public_page_enabled,
     // record_status='published'. We additionally honour the per-page
     // `indexable` flag so noindex pages stay out of the sitemap.
@@ -103,5 +116,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // If the data layer is unavailable, still return the static routes.
   }
 
-  return [...staticRoutes, ...cityRoutes, ...builderRoutes, ...projectRoutes];
+  return [...staticRoutes, ...cityRoutes, ...builderRoutes, ...realtorRoutes, ...projectRoutes];
 }

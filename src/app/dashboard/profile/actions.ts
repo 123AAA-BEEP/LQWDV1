@@ -14,6 +14,8 @@ export async function updateProfile(formData: FormData) {
   const phone = String(formData.get("phone") ?? "").trim();
   const brokerage_name = String(formData.get("brokerage_name") ?? "").trim();
   const title = String(formData.get("title") ?? "").trim();
+  const bio_short = String(formData.get("bio_short") ?? "").trim().slice(0, 600);
+  const service_area = String(formData.get("service_area") ?? "").trim().slice(0, 200);
   const is_public = formData.get("is_public_profile_enabled") === "on";
 
   const supabase = await createClient();
@@ -30,6 +32,8 @@ export async function updateProfile(formData: FormData) {
       phone: phone || null,
       brokerage_name: brokerage_name || null,
       title: title || null,
+      bio_short: bio_short || null,
+      service_area: service_area || null,
       is_public_profile_enabled: is_public,
     })
     .eq("id", user.id);
