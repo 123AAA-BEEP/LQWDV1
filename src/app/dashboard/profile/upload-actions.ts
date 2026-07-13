@@ -56,3 +56,26 @@ export async function recordLogo(formData: FormData) {
 
   revalidatePath(PROFILE);
 }
+
+/** Page banner — lives in the avatars bucket at {uid}/banner.{ext}. */
+export async function recordBanner(formData: FormData) {
+  const path = String(formData.get("path") ?? "");
+  if (!path) return;
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from("avatars").getPublicUrl(path);
+
+  await supabase
+    .from("profiles")
+    .update({ banner_url: `${publicUrl}?v=${Date.now()}` })
+    .eq("id", user.id);
+
+  revalidatePath("/dashboard/my-page");
+}

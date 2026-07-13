@@ -2,8 +2,19 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { BadgeCheck, MapPin, Phone } from "lucide-react";
+import {
+  BadgeCheck,
+  Building2,
+  Compass,
+  MapPin,
+  Phone,
+  Rocket,
+  Trophy,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { Card, CardBody } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CardImage } from "@/components/public/card-image";
@@ -27,7 +38,16 @@ const SITE_URL = (
  *    agent's own picks — full control is the upgrade.
  * Only opted-in (is_public_profile_enabled) + RECO-verified agents exist in
  * the view, so every page here is consented and licensed.
+ *
+ * Visual layer (migration 0065): banner = agent upload, else a hero from
+ * their own picks, else the curated placements, else brand gradient.
+ * Achievements = system-computed medals from REAL platform data only (never
+ * invented ranks), hideable via show_achievements; self-reported awards are
+ * listed separately and labelled as agent-provided.
  */
+
+/** Agents verified before this date carry the Founding Agent medal. */
+const FOUNDING_AGENT_CUTOFF = "2027-01-01";
 
 interface AgentCard {
   profile_id: string;
@@ -43,6 +63,23 @@ interface AgentCard {
   service_area: string | null;
   referral_code: string | null;
   is_pro: boolean | null;
+  banner_url: string | null;
+  show_achievements: boolean | null;
+  reco_verified_at: string | null;
+}
+
+interface AwardRow {
+  id: string;
+  title: string;
+  issuer: string | null;
+  year: number | null;
+}
+
+interface Medal {
+  key: string;
+  label: string;
+  detail: string;
+  icon: LucideIcon;
 }
 
 interface ProjRow {
@@ -108,15 +145,53 @@ export default async function RealtorProfilePage({
   if (!agent) notFound();
 
   const supabase = await createClient();
+  const showAchievements = agent.show_achievements !== false;
 
-  // The agent's own picks (public read is RLS-gated to public profiles).
-  const { data: pickRows } = await supabase
-    .from("realtor_page_projects")
-    .select("project_id, sort_order")
-    .eq("profile_id", agent.profile_id)
-    .order("sort_order", { ascending: true })
-    .order("created_at", { ascending: true });
-  const pickIds = ((pickRows ?? []) as { project_id: string }[]).map((r) => r.project_id);
+  // Picks + awards (public read is RLS-gated to public profiles) and the
+  // medal source counts, in one wave. Medal counts that live behind RLS
+  // (submissions, referrals) come via the admin client — aggregates only,
+  // never row data.
+  const admin = createAdminClient();
+  const [pickRes, awardRes, stewardRes, scoutRes, networkRes] =
+    await Promise.all([
+      supabase
+        .from("realtor_page_projects")
+        .select("project_id, sort_order")
+        .eq("profile_id", agent.profile_id)
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: true }),
+      supabase
+        .from("realtor_awards")
+        .select("id, title, issuer, year")
+        .eq("profile_id", agent.profile_id)
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: true }),
+      showAchievements
+        ? supabase
+            .from("public_projects_view")
+            .select("project_id", { count: "exact", head: true })
+            .eq("assigned_realtor_profile_id", agent.profile_id)
+        : Promise.resolve({ count: 0 }),
+      showAchievements
+        ? admin
+            .from("property_submissions")
+            .select("id", { count: "exact", head: true })
+            .eq("submitted_by_user_id", agent.profile_id)
+            .eq("status", "approved")
+        : Promise.resolve({ count: 0 }),
+      showAchievements
+        ? admin
+            .from("referrals")
+            .select("id", { count: "exact", head: true })
+            .eq("referrer_profile_id", agent.profile_id)
+            .neq("status", "void")
+        : Promise.resolve({ count: 0 }),
+    ]);
+
+  const pickIds = ((pickRes.data ?? []) as { project_id: string }[]).map(
+    (r) => r.project_id,
+  );
+  const awards = (awardRes.data ?? []) as AwardRow[];
 
   let picks: ProjRow[] = [];
   if (pickIds.length > 0) {
@@ -149,6 +224,46 @@ export default async function RealtorProfilePage({
     curated = [...geoMatched, ...pool.filter((p) => !geoMatched.includes(p))].slice(0, 3);
   }
 
+  // System medals — every one derived from real, current data.
+  const medals: Medal[] = [];
+  if (showAchievements) {
+    if (agent.reco_verified_at && agent.reco_verified_at < FOUNDING_AGENT_CUTOFF) {
+      medals.push({
+        key: "founding",
+        label: "Founding Agent",
+        detail: "Verified on LIQWD in its launch year",
+        icon: Rocket,
+      });
+    }
+    const steward = stewardRes.count ?? 0;
+    if (steward > 0) {
+      medals.push({
+        key: "steward",
+        label: "Project Steward",
+        detail: `Official representative on ${steward} live project page${steward === 1 ? "" : "s"}`,
+        icon: Building2,
+      });
+    }
+    const scout = scoutRes.count ?? 0;
+    if (scout > 0) {
+      medals.push({
+        key: "scout",
+        label: "Project Scout",
+        detail: `Added ${scout} project${scout === 1 ? "" : "s"} to the LIQWD catalogue`,
+        icon: Compass,
+      });
+    }
+    const network = networkRes.count ?? 0;
+    if (network > 0) {
+      medals.push({
+        key: "network",
+        label: "Network Builder",
+        detail: `Referred ${network} agent${network === 1 ? "" : "s"} to LIQWD`,
+        icon: Users,
+      });
+    }
+  }
+
   const name = fullName(agent);
   const titleLabel = agent.title
     ? (TITLE_LABELS[agent.title as RealtorTitle] ?? agent.title)
@@ -156,6 +271,14 @@ export default async function RealtorProfilePage({
   const refSuffix = agent.referral_code
     ? `?ref=${encodeURIComponent(agent.referral_code)}`
     : "";
+
+  // Banner: their upload wins; otherwise borrow a hero from their own picks,
+  // then from the curated placements; the brand gradient is the floor.
+  const bannerUrl =
+    agent.banner_url ??
+    picks.find((p) => p.hero_image_url)?.hero_image_url ??
+    curated.find((p) => p.hero_image_url)?.hero_image_url ??
+    null;
 
   const schema = [
     {
@@ -169,6 +292,13 @@ export default async function RealtorProfilePage({
         : {}),
       ...(agent.service_area ? { areaServed: agent.service_area } : {}),
       ...(agent.phone ? { telephone: agent.phone } : {}),
+      ...(awards.length > 0
+        ? {
+            award: awards.map((a) =>
+              [a.title, a.issuer, a.year].filter(Boolean).join(", "),
+            ),
+          }
+        : {}),
       knowsAbout: "New construction and pre-construction homes",
     },
     {
@@ -234,25 +364,46 @@ export default async function RealtorProfilePage({
         <span aria-current="page" className="font-medium text-slate-700">{name}</span>
       </nav>
 
-      {/* Agent hero */}
-      <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
-        <div className="relative size-28 shrink-0 overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 sm:size-32">
-          {agent.avatar_url ? (
-            <Image
-              src={agent.avatar_url}
-              alt={name}
-              fill
-              sizes="128px"
-              className="object-cover"
-              unoptimized
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center text-3xl font-semibold text-slate-400">
-              {name.slice(0, 1)}
-            </div>
-          )}
+      {/* Banner — decorative, so the empty alt is correct */}
+      <div className="relative h-40 w-full overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-r from-brand-800 via-brand-600 to-brand-400 sm:h-56">
+        {bannerUrl ? (
+          <Image
+            src={bannerUrl}
+            alt=""
+            fill
+            sizes="(min-width: 1024px) 1024px, 100vw"
+            className="object-cover"
+            unoptimized
+            priority
+          />
+        ) : null}
+        <div
+          aria-hidden
+          className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent"
+        />
+      </div>
+
+      {/* Agent hero — avatar overlaps the banner */}
+      <div className="px-4 sm:px-8">
+        <div className="relative -mt-12 sm:-mt-16">
+          <div className="relative size-28 overflow-hidden rounded-2xl bg-slate-100 shadow-md ring-4 ring-white sm:size-32">
+            {agent.avatar_url ? (
+              <Image
+                src={agent.avatar_url}
+                alt={name}
+                fill
+                sizes="128px"
+                className="object-cover"
+                unoptimized
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center text-3xl font-semibold text-slate-400">
+                {name.slice(0, 1)}
+              </div>
+            )}
+          </div>
         </div>
-        <div className="min-w-0">
+        <div className="mt-4 min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
               {name}
@@ -286,6 +437,56 @@ export default async function RealtorProfilePage({
           ) : null}
         </div>
       </div>
+
+      {/* Awards & achievements — medals are computed, awards are self-reported */}
+      {medals.length > 0 || awards.length > 0 ? (
+        <section className="mt-10">
+          <h2 className="text-xl font-semibold text-ink">
+            Awards &amp; achievements
+          </h2>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            {medals.map((m) => (
+              <div
+                key={m.key}
+                className="flex items-center gap-3 rounded-xl border border-amber-200/70 bg-amber-50/60 p-3.5"
+              >
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+                  <m.icon aria-hidden className="size-5" strokeWidth={1.75} />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-ink">{m.label}</p>
+                  <p className="text-xs text-slate-500">{m.detail}</p>
+                </div>
+              </div>
+            ))}
+            {awards.map((a) => (
+              <div
+                key={a.id}
+                className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3.5"
+              >
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600">
+                  <Trophy aria-hidden className="size-5" strokeWidth={1.75} />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-ink">{a.title}</p>
+                  {a.issuer || a.year ? (
+                    <p className="text-xs text-slate-500">
+                      {[a.issuer, a.year].filter(Boolean).join(" · ")}
+                    </p>
+                  ) : null}
+                </div>
+              </div>
+            ))}
+          </div>
+          {medals.length > 0 || awards.length > 0 ? (
+            <p className="mt-2 text-[11px] text-slate-400">
+              {medals.length > 0 ? "Medals are earned automatically from LIQWD platform activity." : ""}
+              {medals.length > 0 && awards.length > 0 ? " " : ""}
+              {awards.length > 0 ? "Other awards are provided by the agent." : ""}
+            </p>
+          ) : null}
+        </section>
+      ) : null}
 
       {/* The agent's projects — their picks route leads to them via ?ref= */}
       {picks.length > 0 ? (

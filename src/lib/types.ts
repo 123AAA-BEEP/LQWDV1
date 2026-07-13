@@ -230,6 +230,10 @@ export interface RealtorCard {
   service_area: string | null;
   referral_code: string | null;
   is_pro: boolean | null;
+  /** Appended by migration 0065 — profile visuals. */
+  banner_url: string | null;
+  show_achievements: boolean | null;
+  reco_verified_at: string | null;
 }
 
 export const TITLE_LABELS: Record<RealtorTitle, string> = {

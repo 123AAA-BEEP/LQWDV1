@@ -6,13 +6,20 @@ import { Button } from "@/components/ui/button";
 import { Notice } from "@/components/ui/notice";
 import { createClient } from "@/lib/supabase/client";
 import { validateUpload, extFor, AVATAR_MAX, LOGO_MIME } from "@/lib/upload";
-import { recordAvatar, recordLogo } from "./upload-actions";
+import { recordAvatar, recordLogo, recordBanner } from "./upload-actions";
 
 /**
- * Profile photo / logo uploader. Sends the file straight to Supabase Storage
- * from the browser (avoiding Vercel's Server Action body limit), then records
- * the resulting public URL on the profile.
+ * Profile photo / logo / page-banner uploader. Sends the file straight to
+ * Supabase Storage from the browser (avoiding Vercel's Server Action body
+ * limit), then records the resulting public URL on the profile. Banners ride
+ * the avatars bucket ({uid}/banner.{ext}) — same owner-folder policies.
  */
+const RECORDERS = {
+  avatar: recordAvatar,
+  logo: recordLogo,
+  banner: recordBanner,
+} as const;
+
 export function UploadTile({
   kind,
   title,
@@ -22,7 +29,7 @@ export function UploadTile({
   fallback,
   rounded,
 }: {
-  kind: "avatar" | "logo";
+  kind: "avatar" | "logo" | "banner";
   title: string;
   currentUrl: string | null;
   userId: string;
@@ -34,7 +41,7 @@ export function UploadTile({
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  const bucket = kind === "avatar" ? "avatars" : "logos";
+  const bucket = kind === "logo" ? "logos" : "avatars";
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -64,7 +71,7 @@ export function UploadTile({
 
     const fd = new FormData();
     fd.set("path", path);
-    await (kind === "avatar" ? recordAvatar(fd) : recordLogo(fd));
+    await RECORDERS[kind](fd);
     form.reset();
     router.refresh();
     setBusy(false);
@@ -74,9 +81,9 @@ export function UploadTile({
     <div className="space-y-2">
       <div className="flex gap-4">
         <div
-          className={`flex size-20 shrink-0 items-center justify-center overflow-hidden border border-slate-200 bg-slate-50 ${
-            rounded ? "rounded-full" : "rounded-lg"
-          }`}
+          className={`flex shrink-0 items-center justify-center overflow-hidden border border-slate-200 bg-slate-50 ${
+            kind === "banner" ? "h-20 w-40" : "size-20"
+          } ${rounded ? "rounded-full" : "rounded-lg"}`}
         >
           {currentUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
