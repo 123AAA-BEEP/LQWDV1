@@ -21,6 +21,9 @@ const FREE_PICK_LIMIT = 3;
 // Self-reported awards cap — a page, not a trophy warehouse.
 const AWARD_LIMIT = 10;
 
+// Custom link-in-bio links cap — kept in sync with page.tsx.
+const LINK_LIMIT = 8;
+
 const MY_PAGE = "/dashboard/my-page";
 
 function fail(message: string): never {
@@ -158,6 +161,52 @@ export async function removeAward(formData: FormData) {
     .eq("profile_id", profile.id);
   revalidatePath(MY_PAGE);
   redirect(`${MY_PAGE}?message=award-removed`);
+}
+
+/** Adds a custom link ("My listings", "Google reviews", their site, …). */
+export async function addLink(formData: FormData) {
+  const label = String(formData.get("label") ?? "").trim().slice(0, 60);
+  const url = String(formData.get("url") ?? "").trim().slice(0, 500);
+
+  if (!label) fail("Give the link a label.");
+  if (!/^https?:\/\/.+\..+/i.test(url)) {
+    fail("Enter a full link starting with https://");
+  }
+
+  const { profile } = await requireUserProfile();
+  if (profile.role !== "realtor") redirect("/dashboard");
+  const supabase = await createClient();
+
+  const { count } = await supabase
+    .from("realtor_links")
+    .select("id", { count: "exact", head: true })
+    .eq("profile_id", profile.id);
+  if ((count ?? 0) >= LINK_LIMIT) {
+    fail(`You can show up to ${LINK_LIMIT} links. Remove one first.`);
+  }
+
+  const { error } = await supabase.from("realtor_links").insert({
+    profile_id: profile.id,
+    label,
+    url,
+  });
+  if (error) fail("Couldn't save that link. Please try again.");
+  revalidatePath(MY_PAGE);
+  redirect(`${MY_PAGE}?message=link-added`);
+}
+
+export async function removeLink(formData: FormData) {
+  const id = String(formData.get("link_id") ?? "");
+  if (!id) redirect(MY_PAGE);
+  const { profile } = await requireUserProfile();
+  const supabase = await createClient();
+  await supabase
+    .from("realtor_links")
+    .delete()
+    .eq("id", id)
+    .eq("profile_id", profile.id);
+  revalidatePath(MY_PAGE);
+  redirect(`${MY_PAGE}?message=link-removed`);
 }
 
 /** Shows/hides the system-computed medals section on the public page. */

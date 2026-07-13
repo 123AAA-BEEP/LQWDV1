@@ -20,7 +20,11 @@ export default async function SignupPage({
     typeof next === "string" && next.startsWith("/") && !next.startsWith("//")
       ? next
       : "";
-  const claiming = safeNext.startsWith("/claim/");
+  // Claim handoffs: off-market listings (/claim/{token}) and prospect agent
+  // pages (/realtors/{slug}/claim) both route back after account creation.
+  const claiming =
+    safeNext.startsWith("/claim/") ||
+    /^\/realtors\/[^/]+\/claim$/.test(safeNext);
 
   return (
     <div>
@@ -30,7 +34,7 @@ export default async function SignupPage({
             Step 1 — create your free account
           </p>
           <p className="mt-0.5 text-sm text-brand-700">
-            Then you&apos;ll be taken straight back to claim your listing.
+            Then you&apos;ll be taken straight back to finish your claim.
           </p>
         </div>
       ) : null}

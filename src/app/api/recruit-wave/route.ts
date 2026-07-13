@@ -6,6 +6,7 @@ import {
   suppressedAmong,
 } from "@/lib/email-compliance";
 import { OUTREACH_DAILY_CAP, outreachSentLast24h } from "@/lib/outreach";
+import { ensureProspectPage } from "@/lib/prospect-pages";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -43,19 +44,29 @@ interface WaveConfig {
   maxVolume?: number;
   /** hard ceiling of invites for this wave */
   cap: number;
+  /** Mint an unclaimed prospect page per target before sending, so the
+   *  "your page is live" claim in the copy is literally true when the email
+   *  lands. Targets that can't get a page (no usable name) are parked, never
+   *  emailed — the copy must never point at a 404. */
+  mintsPage?: boolean;
+  /** Overrides the default consent line in the compliance footer (the claim
+   *  wave adds the same-day page-removal promise). */
+  consentContext?: string;
   /** projectName is a real published project in the wave's city (rotates per
    *  send so subjects stay concrete and non-identical); null if none fit. */
-  subject: (projectName: string | null) => string;
+  subject: (projectName: string | null, firstName: string | null) => string;
   utmCampaign: string;
   /** returns the plain-note body (before compliance footnote); projectName
    *  echoes the subject's project, projectCount is the live published count
-   *  in the wave's city, platformCount the live published total. Live merges
-   *  so the copy never over-claims ("every") or goes stale. */
+   *  in the wave's city, platformCount the live published total, pageUrl the
+   *  target's minted prospect page (mintsPage waves only). Live merges so the
+   *  copy never over-claims ("every") or goes stale. */
   html: (
     firstName: string | null,
     projectName: string | null,
     projectCount: number | null,
     platformCount: number | null,
+    pageUrl: string | null,
   ) => { body: string };
 }
 
@@ -101,6 +112,39 @@ const WAVES: Record<string, WaveConfig> = {
         `<p>Alex<br>LIQWD</p>` +
         `<p>P.S. Don't see a project you sell? Add it, claim it, and its buyer ` +
         `inquiries route to you.</p>`,
+    }),
+  },
+  // Wave 2 — "your page is live": pre-minted unclaimed profile pages for the
+  // sub-$2.5M band wave 1 skips (Instagram-native, biggest slice of the list).
+  // The page EXISTS before the email sends (mintsPage), so every claim in the
+  // copy is checkable by clicking the link.
+  "2": {
+    cityLike: "%mississauga%",
+    region: "ontario",
+    maxVolume: 2_500_000,
+    cap: 250,
+    mintsPage: true,
+    consentContext:
+      "You're receiving this one-time professional invitation because your business contact information is published in connection with your real-estate practice. " +
+      "Prefer not to have an unclaimed page? Reply \"remove\" and it comes down the same day.",
+    subject: (_project, first) =>
+      first ? `Your Free Realtor Page Is Live, ${first}` : "Your Free Realtor Page Is Live",
+    utmCampaign: "claim-mississauga",
+    html: (first, _project, _count, _platform, pageUrl) => ({
+      body:
+        `<p>${first ? `Hey ${first},` : "Hey,"}</p>` +
+        `<p>I created a LIQWD page for you. A clean, shareable profile built ` +
+        `for Ontario realtors:</p>` +
+        `<p><a href="${pageUrl}?utm_source=recruit&utm_medium=email&utm_campaign=claim-mississauga" style="color:#0d6efd;">` +
+        `${(pageUrl ?? "").replace(/^https?:\/\//, "")}</a></p>` +
+        `<p>Add your own links, showcase active pre-construction projects from ` +
+        `our database, and send clients one link instead of ten. It's made to ` +
+        `be the one link in your Instagram bio.</p>` +
+        `<p>It's ready now. You just need to claim it.</p>` +
+        `<p>Alex, LIQWD</p>` +
+        `<p>P.S. The page is already live with your name on it. Claiming takes ` +
+        `about two minutes with your RECO number, and until you do, nobody else ` +
+        `can touch it.</p>`,
     }),
   },
 };
@@ -242,13 +286,52 @@ export async function GET(req: Request) {
     const project = subjectProjects.length
       ? subjectProjects[i % subjectProjects.length]
       : null;
-    const content = wave.html(first, project, projectCount ?? null, platformCount ?? null);
+
+    // Claim waves: the page must exist BEFORE the email that points at it.
+    // No mintable page (no usable name) -> park, never send — the copy's
+    // "your page is live" must never resolve to a 404. Dry runs don't mint;
+    // the sample shows a placeholder instead of creating rows.
+    let pageUrl: string | null = null;
+    if (wave.mintsPage) {
+      if (dry) {
+        pageUrl = `${SITE}/realtors/their-slug-preview`;
+      } else {
+        const slug = await ensureProspectPage(admin, {
+          id: t.id,
+          full_name: t.full_name,
+          brokerage: t.brokerage,
+          base_city: t.base_city,
+          region: wave.region,
+        });
+        if (!slug) {
+          await admin
+            .from("recruit_targets")
+            .update({ status: "parked", notes: `${wave.utmCampaign}:no-page` })
+            .eq("id", t.id);
+          results.push({
+            email,
+            name: t.full_name,
+            outcome: "parked — no usable name to mint a page",
+          });
+          continue;
+        }
+        pageUrl = `${SITE}/realtors/${slug}`;
+      }
+    }
+
+    const content = wave.html(
+      first,
+      project,
+      projectCount ?? null,
+      platformCount ?? null,
+      pageUrl,
+    );
     const html = plainEmail({
       body: content.body,
       footnote: complianceFootnote({
         law: "casl",
         email,
-        consentContext: CONSENT_CONTEXT,
+        consentContext: wave.consentContext ?? CONSENT_CONTEXT,
       }),
     });
 
@@ -266,9 +349,7 @@ export async function GET(req: Request) {
       body: JSON.stringify({
         from: recruitFrom,
         to: [email],
-        subject: wave.subject(
-          subjectProjects.length ? subjectProjects[i % subjectProjects.length] : null,
-        ),
+        subject: wave.subject(project, first),
         html,
         reply_to: process.env.LEADS_NOTIFY_EMAIL ?? "leads@getliqwd.com",
       }),
@@ -301,16 +382,22 @@ export async function GET(req: Request) {
   if (dry && targets[0]) {
     const t = targets[0];
     const first = (t.full_name ?? "").trim().split(/\s+/)[0] || null;
-    const content = wave.html(first, subjectProjects[0] ?? null, projectCount ?? null, platformCount ?? null);
+    const content = wave.html(
+      first,
+      subjectProjects[0] ?? null,
+      projectCount ?? null,
+      platformCount ?? null,
+      wave.mintsPage ? `${SITE}/realtors/their-slug-preview` : null,
+    );
     sample = {
       to: t.email,
-      subject: wave.subject(subjectProjects[0] ?? null),
+      subject: wave.subject(subjectProjects[0] ?? null, first),
       html: plainEmail({
         body: content.body,
         footnote: complianceFootnote({
           law: "casl",
           email: t.email,
-          consentContext: CONSENT_CONTEXT,
+          consentContext: wave.consentContext ?? CONSENT_CONTEXT,
         }),
       }),
     };
