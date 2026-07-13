@@ -18,6 +18,15 @@ import { plainSlug } from "@/lib/slug";
 // export async functions, so the constant can't be exported from here).
 const FREE_PICK_LIMIT = 3;
 
+// Self-reported awards cap — a page, not a trophy warehouse.
+const AWARD_LIMIT = 10;
+
+const MY_PAGE = "/dashboard/my-page";
+
+function fail(message: string): never {
+  redirect(`${MY_PAGE}?error=${encodeURIComponent(message)}`);
+}
+
 function hasFullCustomization(profile: {
   plan: string;
   realtor_tier: string;
@@ -99,4 +108,67 @@ export async function removePagePick(formData: FormData) {
     .eq("profile_id", profile.id);
   revalidatePath("/dashboard/my-page");
   redirect("/dashboard/my-page?message=removed");
+}
+
+/** Adds a self-reported award ("Top Producer 2024", brokerage awards, …). */
+export async function addAward(formData: FormData) {
+  const title = String(formData.get("title") ?? "").trim().slice(0, 120);
+  const issuer =
+    String(formData.get("issuer") ?? "").trim().slice(0, 120) || null;
+  const yearRaw = String(formData.get("year") ?? "").trim();
+  const year = yearRaw ? Number(yearRaw) : null;
+
+  if (!title) fail("Give the award a name.");
+  if (year !== null && (!Number.isInteger(year) || year < 1950 || year > 2100)) {
+    fail("Enter a valid year (e.g. 2024).");
+  }
+
+  const { profile } = await requireUserProfile();
+  if (profile.role !== "realtor") redirect("/dashboard");
+  const supabase = await createClient();
+
+  const { count } = await supabase
+    .from("realtor_awards")
+    .select("id", { count: "exact", head: true })
+    .eq("profile_id", profile.id);
+  if ((count ?? 0) >= AWARD_LIMIT) {
+    fail(`You can show up to ${AWARD_LIMIT} awards. Remove one first.`);
+  }
+
+  const { error } = await supabase.from("realtor_awards").insert({
+    profile_id: profile.id,
+    title,
+    issuer,
+    year,
+  });
+  if (error) fail("Couldn't save that award. Please try again.");
+  revalidatePath(MY_PAGE);
+  redirect(`${MY_PAGE}?message=award-added`);
+}
+
+export async function removeAward(formData: FormData) {
+  const id = String(formData.get("award_id") ?? "");
+  if (!id) redirect(MY_PAGE);
+  const { profile } = await requireUserProfile();
+  const supabase = await createClient();
+  await supabase
+    .from("realtor_awards")
+    .delete()
+    .eq("id", id)
+    .eq("profile_id", profile.id);
+  revalidatePath(MY_PAGE);
+  redirect(`${MY_PAGE}?message=award-removed`);
+}
+
+/** Shows/hides the system-computed medals section on the public page. */
+export async function setShowAchievements(formData: FormData) {
+  const next = String(formData.get("next") ?? "") === "on";
+  const { profile } = await requireUserProfile();
+  const supabase = await createClient();
+  await supabase
+    .from("profiles")
+    .update({ show_achievements: next })
+    .eq("id", profile.id);
+  revalidatePath(MY_PAGE);
+  redirect(`${MY_PAGE}?message=${next ? "achievements-on" : "achievements-off"}`);
 }
