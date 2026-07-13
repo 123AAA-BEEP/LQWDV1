@@ -16,6 +16,7 @@ import {
   visitorRegionKey,
 } from "@/lib/regions";
 import { submitVerification, verifyRecoCertificate } from "./actions";
+import { ConfettiBurst } from "@/components/dashboard/confetti-burst";
 
 export const metadata: Metadata = { title: "Verification" };
 
@@ -172,13 +173,18 @@ export default async function VerifyPage({
         </Notice>
       ) : null}
       {message === "submitted" ? (
-        <Notice tone="success">
-          Submitted — we typically review within a day, and we&apos;ll email you
-          the moment you&apos;re approved.
-          {heldTitles.length > 0
-            ? " Your claimed listing goes live automatically on approval."
-            : ""}
-        </Notice>
+        <>
+          {/* Small earned-moment burst — first real finish line. Session-
+              guarded so a refresh of this URL never re-fires it. */}
+          <ConfettiBurst variant="burst" guardKey="liqwd-confetti-verify-submitted" />
+          <Notice tone="success">
+            Submitted — we typically review within a day, and we&apos;ll email you
+            the moment you&apos;re approved.
+            {heldTitles.length > 0
+              ? " Your claimed listing goes live automatically on approval."
+              : ""}
+          </Notice>
+        </>
       ) : null}
       {recoNotice ? <Notice tone={recoNotice.tone}>{recoNotice.msg}</Notice> : null}
       {error ? <Notice tone="error">{error}</Notice> : null}

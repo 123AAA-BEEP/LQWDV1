@@ -6,7 +6,7 @@ import {
   isDeveloper,
 } from "@/lib/auth";
 import { Sidebar } from "@/components/dashboard/sidebar";
-import { VerificationBanner } from "@/components/dashboard/verification-banner";
+import { VerificationBannerGate } from "@/components/dashboard/verification-banner-gate";
 import { RecoExpiryBanner } from "@/components/dashboard/reco-expiry-banner";
 import { ToastProvider } from "@/components/ui/toast";
 import { Badge, verificationBadgeTone } from "@/components/ui/badge";
@@ -73,7 +73,7 @@ export default async function DashboardLayout({
           <div className="mx-auto max-w-5xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
             {developer ? null : (
               <>
-                <VerificationBanner status={profile.verification_status} />
+                <VerificationBannerGate status={profile.verification_status} />
                 <RecoExpiryBanner expiry={profile.reco_expiry} />
               </>
             )}
