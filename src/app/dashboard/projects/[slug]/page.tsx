@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { headers } from "next/headers";
 import Link from "next/link";
-import { requireUserProfile, isApproved, isPro } from "@/lib/auth";
+import { requireUserProfile, isApproved } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardBody } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -15,7 +15,7 @@ import {
   NeighbourhoodBlock,
   hasNeighbourhood,
 } from "@/components/projects/neighbourhood-block";
-import { formatPriceBand, hasActivePro } from "@/lib/types";
+import { formatPriceBand } from "@/lib/types";
 import type { NeighbourhoodFeatures } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Project detail" };
@@ -122,9 +122,9 @@ export default async function ProjectDetailPage({
   );
 
   // "Share with clients": the realtor's own attributing referral link for this
-  // project (Pro unlocks it; free sees an upsell). Same `?ref=` mechanism the
-  // Lead Pages feature uses, surfaced right where the agent is working a lead.
-  const proAccess = isPro(profile) || hasActivePro(profile);
+  // project — free for every verified agent (each share is our distribution).
+  // Same `?ref=` mechanism the Lead Pages feature uses, surfaced right where
+  // the agent is working a lead.
   const refCode = profile.referral_code;
   const h = await headers();
   const host = h.get("x-forwarded-host") ?? h.get("host") ?? "liqwd.com";
@@ -196,12 +196,7 @@ export default async function ProjectDetailPage({
         </div>
       ) : null}
 
-      <ShareWithClients
-        proAccess={proAccess}
-        hasCode={!!refCode}
-        refUrl={refUrl}
-        pageUrl={pageUrl}
-      />
+      <ShareWithClients hasCode={!!refCode} refUrl={refUrl} pageUrl={pageUrl} />
 
       <WorkThisLead />
 

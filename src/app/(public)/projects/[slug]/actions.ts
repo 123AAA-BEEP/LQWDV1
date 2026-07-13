@@ -1,5 +1,6 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { resolveLeadSteward } from "@/lib/rewards";
 import { sendEmail, brandedEmail } from "@/lib/email";
@@ -43,10 +44,16 @@ export async function submitLead(
     message = message ? `${renterIntent}\n\n${message}` : renterIntent;
   }
   // Referral codes are uppercase alphanumerics; normalise so a pasted/lowercased
-  // link still attributes correctly.
-  const ref = String(formData.get("ref") ?? "")
+  // link still attributes correctly. When the hidden field is empty (the buyer
+  // navigated away from the shared landing page before submitting), fall back
+  // to the 30-day attribution cookie the proxy set on landing.
+  let ref = String(formData.get("ref") ?? "")
     .trim()
     .toUpperCase();
+  if (!ref) {
+    const jar = await cookies();
+    ref = (jar.get("liqwd_ref")?.value ?? "").trim().toUpperCase();
+  }
   const isRealtor = String(formData.get("is_realtor") ?? "") === "yes";
 
   if (!project_id || !lead_name || !lead_email) {

@@ -259,7 +259,10 @@ export default async function DashboardHome() {
           <ConfettiBurst variant="big" onFired={markVerificationCelebrated} />
           <Notice tone="success">
             <span className="font-semibold">You&apos;re verified</span> — all
-            broker tools are unlocked. Welcome to the network.
+            broker tools are unlocked. Welcome to the network.{" "}
+            <Link href="/dashboard/my-page" className="font-semibold underline">
+              Grab your verified badge →
+            </Link>
           </Notice>
         </>
       ) : null}
