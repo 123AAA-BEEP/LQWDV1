@@ -1,0 +1,2698 @@
+Keyword
+Intent
+Position
+SF
+Traffic
+Traffic %
+
+Volume
+KD %
+URL
+Updated
+Sortable
+
+porsche tower miami florida
+
+I
+1
+
+6
+396
+1.59
+1.6K
+26
+miamiresidential.com/porschetower
+Jun 01
+
+one paraiso
+
+I
+T
+2
+
+7
+250
+1.00
+1.9K
+18
+miamiresidential.com/oneparaiso
+Jul 08
+
+midblock miami
+
+I
+T
+1
+
+5
+248
+0.99
+1K
+9
+miamiresidential.com/midblock/
+May 31
+
+porsche building miami fl
+
+I
+T
+1
+
+7
+218
+0.87
+880
+25
+miamiresidential.com/porschetower
+2 days
+
+porsche design miami
+
+I
+T
+1
+
+6
+218
+0.87
+880
+28
+miamiresidential.com/porschetower
+May 24
+
+porsche design tower miami
+
+C
+1
+
+9
+211
+0.84
+1.6K
+17
+miamiresidential.com/porschetower
+Jun 12
+
+midblock
+
+I
+T
+1
+
+7
+208
+0.83
+260
+16
+miamiresidential.com/midblock/
+Jun 17
+
+porsche design tower
+
+T
+1
+
+8
+196
+0.78
+2.4K
+31
+miamiresidential.com/porschetower
+2 days
+
+miami canvas
+
+I
+5
+
+3
+193
+0.77
+4.4K
+28
+miamiresidential.com/canvas
+Jul 08
+
+canvas miami
+
+I
+3
+
+6
+188
+0.75
+2.9K
+22
+miamiresidential.com/canvas
+Jul 06
+
+brickell on the river
+
+I
+T
+4
+
+5
+156
+0.62
+2.4K
+13
+miamiresidential.com/brickellontheriversouth
+Jul 07
+
+porsche design building miami
+
+I
+T
+1
+
+6
+146
+0.58
+590
+20
+miamiresidential.com/porschetower
+May 27
+
+terrazas river park village miami
+
+I
+1
+
+5
+146
+0.58
+590
+13
+miamiresidential.com/terrazasmiami/
+Jul 01
+
+10 museum park
+
+I
+T
+2
+
+6
+132
+0.53
+1K
+17
+miamiresidential.com/tenmuseumpark
+May 21
+
+porsche design building
+
+C
+1
+
+8
+132
+0.53
+1K
+30
+miamiresidential.com/porschetower
+May 28
+
+porsche tower miami
+
+C
+2
+
+8
+131
+0.52
+1.6K
+31
+miamiresidential.com/porschetower
+Jun 10
+
+1000 venetian way
+
+I
+3
+
+3
+131
+0.52
+1.6K
+4
+miamiresidential.com/1000venetianway/
+Jul 03
+
+miami porsche design
+
+T
+1
+
+8
+123
+0.49
+1.9K
+36
+miamiresidential.com/porschetower
+3 days
+
+apartamentos en venta en miami
+
+C
+1
+
+4
+119
+0.47
+480
+20
+miamiresidential.com/es/
+Jun 12
+
+apartamento en venta
+
+C
+1
+
+2
+119
+0.47
+480
+14
+miamiresidential.com/es/
+May 22
+
+portofino towers
+
+I
+T
+1
+
+7
+119
+0.47
+480
+15
+miamiresidential.com/portofinotower/
+May 26
+
+loft miami
+
+C
+
+4
+119
+0.47
+480
+29
+miamiresidential.com/loftdowntowni/
+Jun 05
+
+neo lofts
+
+I
+T
+1
+
+7
+119
+0.47
+480
+16
+miamiresidential.com/neolofts/
+Jul 04
+
+aventura park square
+
+I
+2
+
+5
+116
+0.46
+880
+7
+miamiresidential.com/aventura-park-square/
+Jul 06
+
+okan tower miami
+
+I
+T
+2
+
+5
+116
+0.46
+880
+14
+miamiresidential.com/okantower/
+May 29
+
+porsche building miami
+
+C
+1
+
+8
+116
+0.46
+880
+24
+miamiresidential.com/porschetower
+May 28
+
+pearl house
+
+N
+
+6
+114
+0.45
+4.4K
+34
+miamiresidential.com/pearlhouse/
+Jul 06
+
+la baia south residences
+
+I
+T
+1
+
+4
+112
+0.45
+140
+9
+miamiresidential.com/labaiasouth/
+May 31
+
+reach brickell
+
+I
+7
+
+7
+108
+0.43
+3.6K
+21
+miamiresidential.com/ReachBCC
+3 days
+
+1000 museum miami
+
+I
+T
+3
+
+7
+106
+0.42
+1.3K
+33
+miamiresidential.com/1000museum
+May 24
+
+72 park
+
+I
+4
+
+8
+104
+0.41
+1.6K
+21
+miamiresidential.com/72park
+Jun 14
+
+puerta de palmas
+
+I
+T
+1
+
+7
+96
+0.38
+390
+13
+miamiresidential.com/puertadepalmas/
+Jun 19
+
+the loft downtown
+
+C
+
+5
+96
+0.38
+390
+17
+miamiresidential.com/loftdowntowni/
+Jun 13
+
+prive island
+
+I
+T
+1
+
+6
+96
+0.38
+390
+11
+miamiresidential.com/priveisland/
+May 24
+
+sands of key biscayne
+
+I
+1
+
+6
+96
+0.38
+390
+5
+miamiresidential.com/sandsofkeybiscayne/
+Jun 19
+
+aventura parksquare
+
+I
+2
+
+6
+95
+0.38
+720
+8
+miamiresidential.com/aventura-park-square/
+Jun 28
+
+miami residential group
+
+N
+1
+
+6
+88
+0.35
+110
+65
+miamiresidential.com/
+Jun 12
+
+umiami canvas
+
+I
+6
+
+5
+87
+0.34
+2.9K
+30
+miamiresidential.com/canvas
+Jul 08
+
+quantum miami
+
+I
+T
+4
+
+6
+84
+0.33
+1.3K
+18
+miamiresidential.com/quantum
+Jun 14
+
+one thousand museum miami
+
+I
+T
+5
+
+8
+83
+0.33
+1.9K
+32
+miamiresidential.com/1000museum
+2 days
+
+aston martin building miami
+
+I
+4
+
+6
+83
+0.33
+1.9K
+29
+miamiresidential.com/astonmartin
+Jul 07
+
+bay harbor club condos
+
+C
+
+6
+79
+0.31
+320
+9
+miamiresidential.com/theclubcondo/
+Jul 06
+
+opera tower miami
+
+C
+8
+
+5
+79
+0.31
+3.6K
+18
+miamiresidential.com/operatower
+Jul 08
+
+neo lofts miami
+
+I
+T
+1
+
+6
+79
+0.31
+320
+8
+miamiresidential.com/neolofts/
+Jun 29
+
+l atelier miami beach
+
+I
+1
+
+7
+79
+0.31
+320
+14
+miamiresidential.com/latelier/
+Jun 17
+
+the grand miami
+
+I
+2
+
+6
+77
+0.30
+590
+14
+miamiresidential.com/thegrand/
+May 21
+
+new construction miami
+
+C
+2
+
+4
+77
+0.30
+590
+35
+miamiresidential.com/new-developments/
+Jul 01
+
+centro downtown condominium association
+
+I
+T
+2
+
+3
+77
+0.30
+590
+15
+miamiresidential.com/centro
+May 22
+
+the loft miami fl
+
+I
+1
+
+4
+72
+0.28
+90
+23
+miamiresidential.com/loftdowntowni/
+May 23
+
+faena house
+
+I
+T
+3
+
+8
+72
+0.28
+880
+20
+miamiresidential.com/faena-house
+Jun 18
+
+the lexi bayview residences
+
+I
+T
+1
+
+2
+72
+0.28
+90
+10
+miamiresidential.com/lexi/
+May 20
+
+one paraiso miami
+
+I
+T
+3
+
+4
+72
+0.28
+880
+11
+miamiresidential.com/oneparaiso
+Jun 03
+
+loft 1
+
+I
+1
+
+5
+72
+0.28
+90
+12
+miamiresidential.com/loftdowntowni/
+Jun 13
+
+the loft 1
+
+I
+1
+
+6
+72
+0.28
+90
+12
+miamiresidential.com/loftdowntowni/
+Jun 28
+
+the ivy miami
+
+C
+I
+4
+
+4
+70
+0.28
+1.6K
+7
+miamiresidential.com/theivy
+Jun 01
+
+mint miami fl
+
+C
+4
+
+4
+65
+0.26
+1K
+8
+miamiresidential.com/mint
+May 31
+
+bentley residences miami
+
+I
+3
+
+6
+65
+0.26
+1K
+27
+miamiresidential.com/bentleyresidences/
+Jun 04
+
+ten museum park
+
+I
+T
+4
+
+5
+65
+0.26
+1K
+17
+miamiresidential.com/tenmuseumpark
+May 21
+
+1000 museum park miami
+
+I
+T
+4
+
+6
+65
+0.26
+1K
+33
+miamiresidential.com/1000museum
+Jun 13
+
+1428 brickell
+
+I
+4
+
+9
+65
+0.26
+1K
+13
+miamiresidential.com/theresidencesat1428brickell/
+Jun 16
+
+majestic tower
+
+C
+
+4
+64
+0.25
+260
+17
+miamiresidential.com/majestictower/
+Jun 18
+
+5350 park at downtown doral
+
+I
+1
+
+6
+64
+0.25
+260
+13
+miamiresidential.com/5350-park/
+Jun 23
+
+centro miami fl
+
+I
+T
+1
+
+6
+64
+0.25
+260
+12
+miamiresidential.com/centro
+3 days
+
+natiivo miami
+
+I
+T
+1
+
+6
+64
+0.25
+260
+7
+miamiresidential.com/natiivomiami/
+Jun 28
+
+1000 venetian
+
+I
+T
+1
+
+5
+64
+0.25
+260
+8
+miamiresidential.com/1000venetianway/
+Jul 01
+
+villa miami residences
+
+I
+T
+2
+
+8
+63
+0.25
+480
+14
+miamiresidential.com/villamiamiresidences
+Jul 01
+
+360 condominium in north bay village fl
+
+I
+T
+2
+
+6
+63
+0.25
+480
+5
+miamiresidential.com/360condowest/
+Jul 02
+
+mystic pointe tower 500
+
+I
+T
+2
+
+5
+63
+0.25
+480
+7
+miamiresidential.com/mysticpointe500/
+May 22
+
+the ivy miami fl
+
+C
+2
+
+5
+63
+0.25
+480
+9
+miamiresidential.com/theivy
+Jul 02
+
+apartamentos venta
+
+C
+2
+
+3
+63
+0.25
+480
+9
+miamiresidential.com/es/
+Jul 02
+
+baltus house
+
+I
+T
+3
+
+4
+59
+0.23
+720
+9
+miamiresidential.com/baltushouse/
+May 26
+
+the madison downtown condominium
+
+I
+T
+3
+
+6
+59
+0.23
+720
+11
+miamiresidential.com/themadison
+2 days
+
+met 1
+
+I
+T
+3
+
+6
+59
+0.23
+720
+25
+miamiresidential.com/met-1
+Jun 15
+
+nirvana condo
+
+I
+T
+3
+
+4
+59
+0.23
+720
+9
+miamiresidential.com/nirvanacondos/
+Jun 08
+
+landmark doral
+
+C
+2
+
+5
+59
+0.23
+720
+11
+miamiresidential.com/miami-condo/doral-miami/landmark-at-doral/
+Jun 13
+
+faena house in miami beach
+
+I
+T
+5
+
+6
+57
+0.22
+1.3K
+25
+miamiresidential.com/faena-house
+May 29
+
+echo aventura
+
+I
+4
+
+4
+57
+0.22
+880
+17
+miamiresidential.com/echoaventura/
+May 28
+
+1000 museum miami fl
+
+I
+T
+4
+
+8
+57
+0.22
+880
+32
+miamiresidential.com/1000museum
+Jun 11
+
+fendi chateau
+
+I
+T
+5
+
+6
+57
+0.22
+1.3K
+17
+miamiresidential.com/fendichateau
+Jun 17
+
+brickell heights
+
+I
+6
+
+6
+56
+0.22
+1.6K
+18
+miamiresidential.com/brickellheightseast/
+Jun 15
+
+the ivy miami
+
+C
+I
+
+4
+55
+0.22
+1.6K
+7
+miamiresidential.com/theivy
+Jun 01
+
+aventura square park
+
+I
+1
+
+6
+52
+0.20
+210
+6
+miamiresidential.com/aventura-park-square/
+Jul 02
+
+porsche apartment miami
+
+I
+T
+1
+
+7
+52
+0.20
+210
+22
+miamiresidential.com/porschetower
+Jun 02
+
+porsche towers
+
+C
+1
+
+8
+52
+0.20
+210
+13
+miamiresidential.com/porschetower
+Jun 17
+
+prive island florida
+
+I
+T
+1
+
+7
+52
+0.20
+210
+7
+miamiresidential.com/priveisland/
+Jul 04
+
+miami new construction
+
+C
+1
+
+7
+52
+0.20
+210
+33
+miamiresidential.com/new-developments/
+Jun 11
+
+landmark at doral
+
+I
+1
+
+5
+52
+0.20
+210
+5
+miamiresidential.com/miami-condo/doral-miami/landmark-at-doral/
+May 28
+
+departamentos en miami
+
+C
+1
+
+6
+52
+0.20
+210
+24
+miamiresidential.com/es/
+Jun 18
+
+porsche residences miami
+
+C
+I
+1
+
+5
+52
+0.20
+210
+15
+miamiresidential.com/porschetower
+May 28
+
+the majestic tower
+
+C
+
+3
+52
+0.20
+210
+13
+miamiresidential.com/majestictower/
+May 23
+
+eloquence on the bay
+
+I
+T
+1
+
+6
+52
+0.20
+210
+5
+miamiresidential.com/eloquenceonthebay/
+Jun 29
+
+flow house miami
+
+I
+T
+2
+
+7
+51
+0.20
+390
+15
+miamiresidential.com/flowhouse/
+May 30
+
+grandview palace condominiums
+
+I
+2
+
+7
+51
+0.20
+390
+6
+miamiresidential.com/grandviewpalace/
+Jul 06
+
+the bath club miami florida
+
+I
+2
+
+6
+51
+0.20
+390
+19
+miamiresidential.com/thebathclub
+Jun 10
+
+centro miami
+
+I
+T
+2
+
+5
+51
+0.20
+390
+8
+miamiresidential.com/centro
+May 20
+
+aston martin residences miami
+
+N
+3
+
+5
+50
+0.20
+3.6K
+40
+miamiresidential.com/astonmartin
+2 days
+
+one thousand museum
+
+I
+T
+7
+
+6
+48
+0.19
+1.6K
+38
+miamiresidential.com/1000museum
+Jun 03
+
+aria on the bay
+
+C
+6
+
+5
+48
+0.19
+1.6K
+12
+miamiresidential.com/ariaonthebay
+Jun 16
+
+downtown loft
+
+C
+1
+
+5
+48
+0.19
+590
+19
+miamiresidential.com/loftdowntowni/
+Jun 23
+
+oasis hallandale
+
+I
+T
+3
+
+5
+48
+0.19
+590
+8
+miamiresidential.com/oasishallandale/
+May 30
+
+Keyword
+Intent
+Position
+SF
+Traffic
+Traffic %
+
+Volume
+KD %
+URL
+Updated
+Sortable
+
+balmoral condominium
+
+C
+2
+
+5
+48
+0.19
+590
+9
+miamiresidential.com/balmoral/
+Jun 26
+
+baltus house miami
+
+I
+T
+3
+
+5
+48
+0.19
+590
+9
+miamiresidential.com/baltushouse/
+May 23
+
+porsche tower
+
+C
+2
+
+11
+48
+0.19
+590
+25
+miamiresidential.com/porschetower
+Jul 01
+
+flow house
+
+C
+3
+
+5
+48
+0.19
+590
+21
+miamiresidential.com/flowhouse/
+Jun 07
+
+grandview palace
+
+C
+3
+
+4
+46
+0.18
+720
+20
+miamiresidential.com/grandviewpalace/
+Jun 02
+
+the crosby miami world center
+
+I
+T
+6
+
+7
+45
+0.18
+1.3K
+16
+miamiresidential.com/thecrosby
+Jul 04
+
+infinity building miami
+
+C
+6
+
+5
+45
+0.18
+1.3K
+18
+miamiresidential.com/infinitybrickell
+Jun 09
+
+rise brickell city centre
+
+I
+T
+6
+
+5
+45
+0.18
+1.3K
+10
+miamiresidential.com/risebrickellcitycentre
+Jun 15
+
+reach brickell city centre
+
+I
+8
+
+6
+45
+0.18
+1.9K
+16
+miamiresidential.com/ReachBCC
+Jul 08
+
+mercedes benz places miami
+
+C
+5
+
+5
+44
+0.17
+1K
+28
+miamiresidential.com/es/mercedesbenzbrickell/
+May 28
+
+capobella condominium
+
+I
+T
+1
+
+4
+42
+0.16
+170
+7
+miamiresidential.com/capobella
+May 30
+
+my brickell
+
+I
+T
+1
+
+7
+42
+0.16
+170
+6
+miamiresidential.com/mybrickell/
+Jun 26
+
+loft downtown
+
+C
+
+6
+42
+0.16
+170
+21
+miamiresidential.com/loftdowntowni/
+Jun 21
+
+le parc at brickell
+
+I
+2
+
+5
+42
+0.16
+320
+6
+miamiresidential.com/leparcatbrickell
+Jun 08
+
+terrazas river park village
+
+I
+1
+
+5
+42
+0.16
+170
+15
+miamiresidential.com/terrazasmiami/
+Jun 08
+
+the loft condo
+
+C
+
+5
+42
+0.16
+170
+7
+miamiresidential.com/loftdowntowni/
+Jun 25
+
+the loft i
+
+I
+T
+1
+
+6
+42
+0.16
+170
+7
+miamiresidential.com/loftdowntowni/
+Jul 07
+
+terrazas miami
+
+I
+1
+
+5
+42
+0.16
+170
+20
+miamiresidential.com/terrazasmiami/
+Jun 05
+
+one paraiso edgewater
+
+I
+T
+2
+
+7
+42
+0.16
+320
+7
+miamiresidential.com/oneparaiso
+Jun 16
+
+azure condominium
+
+C
+1
+
+6
+42
+0.16
+320
+16
+miamiresidential.com/azure
+Jul 02
+
+porsche condo miami
+
+I
+T
+1
+
+7
+42
+0.16
+170
+29
+miamiresidential.com/porschetower
+Jun 13
+
+one thousand museum photos
+
+I
+T
+1
+
+7
+42
+0.16
+170
+24
+miamiresidential.com/1000museum
+Jul 03
+
+72 carlyle
+
+I
+T
+2
+
+6
+42
+0.16
+320
+8
+miamiresidential.com/72carlyle/
+May 30
+
+one park tower
+
+N
+2
+
+7
+41
+0.16
+1.6K
+14
+miamiresidential.com/oneparktowerturnberry
+Jul 04
+
+the club bay harbor
+
+T
+1
+
+5
+40
+0.16
+50
+7
+miamiresidential.com/theclubcondo/
+Jul 05
+
+neo loft miami
+
+T
+1
+
+4
+40
+0.16
+50
+n/a
+miamiresidential.com/neolofts/
+Jul 04
+
+grovenor house
+
+I
+3
+
+5
+39
+0.15
+480
+8
+miamiresidential.com/grovenorhouse/
+Jun 28
+
+vista harbor
+
+C
+3
+
+5
+39
+0.15
+480
+7
+miamiresidential.com/vistaharbor/
+Jun 13
+
+bayshore yacht and tennis club
+
+C
+1
+
+3
+39
+0.15
+480
+8
+miamiresidential.com/bayshoreyachtandtennisclub/
+Jun 03
+
+departamentos a la venta en miami
+
+C
+3
+
+2
+39
+0.15
+480
+3
+miamiresidential.com/es/
+May 27
+
+fendi chateu
+
+I
+T
+3
+
+6
+39
+0.15
+480
+16
+miamiresidential.com/fendichateau
+May 22
+
+cipriani residences
+
+I
+T
+5
+
+6
+38
+0.15
+880
+26
+miamiresidential.com/ciprianiresidences
+May 31
+
+quantum on the bay miami
+
+I
+4
+
+7
+38
+0.15
+590
+15
+miamiresidential.com/quantum
+Jun 28
+
+skyline on brickell
+
+I
+4
+
+5
+38
+0.15
+880
+8
+miamiresidential.com/skylineonbrickell/
+Jun 09
+
+portofino tower
+
+I
+T
+6
+
+6
+38
+0.15
+1.6K
+18
+miamiresidential.com/portofinotower/
+Jun 07
+
+ponce circle park
+
+I
+5
+
+5
+38
+0.15
+880
+24
+miamiresidential.com/ponceparkresidences/
+Jun 04
+
+aventura yacht club florida
+
+I
+8
+
+5
+38
+0.15
+1.6K
+8
+miamiresidential.com/yachtclubataventura/
+Jul 06
+
+portofino tower south beach
+
+I
+T
+4
+
+7
+38
+0.15
+590
+17
+miamiresidential.com/portofinotower/
+Jul 01
+
+porsche design tower miami sales center
+
+T
+2
+
+7
+38
+0.15
+590
+20
+miamiresidential.com/porschetower
+Jun 29
+
+aston martin residences
+
+N
+5
+
+6
+36
+0.14
+3.6K
+33
+miamiresidential.com/astonmartin
+12 hours
+
+reach brickell city centre parking lot
+
+C
+8
+
+5
+35
+0.14
+1.6K
+17
+miamiresidential.com/ReachBCC
+Jun 30
+
+mint miami
+
+C
+3
+
+6
+35
+0.14
+1K
+10
+miamiresidential.com/mint
+May 27
+
+nirvana condominium
+
+N
+T
+6
+
+5
+35
+0.14
+1K
+8
+miamiresidential.com/nirvanacondos/
+Jun 14
+
+50 biscayne building
+
+I
+T
+10
+
+6
+35
+0.14
+1.6K
+22
+miamiresidential.com/50biscayne
+May 29
+
+icon beach
+
+I
+T
+2
+
+7
+34
+0.13
+260
+15
+miamiresidential.com/iconhollywoodcondo/
+May 22
+
+the elder residences miami
+
+I
+T
+2
+
+7
+34
+0.13
+260
+14
+miamiresidential.com/theelser
+Jun 30
+
+the loft miami
+
+C
+
+5
+34
+0.13
+140
+26
+miamiresidential.com/loftdowntowni/
+Jun 24
+
+my brickell apartments
+
+I
+T
+2
+
+4
+34
+0.13
+260
+7
+miamiresidential.com/mybrickell/
+Jun 15
+
+miami residential
+
+N
+2
+
+8
+34
+0.13
+260
+66
+miamiresidential.com/
+Jul 02
+
+river district 14
+
+N
+2
+
+5
+34
+0.13
+260
+13
+miamiresidential.com/14riverdistrict/
+Jun 16
+
+apartamento en venta en miami
+
+C
+1
+
+3
+34
+0.13
+140
+17
+miamiresidential.com/es/
+Jun 17
+
+aventura parksquare residences
+
+I
+1
+
+7
+34
+0.13
+140
+12
+miamiresidential.com/aventura-park-square/
+Jun 21
+
+porsche building
+
+C
+1
+
+8
+34
+0.13
+260
+29
+miamiresidential.com/porschetower
+Jun 06
+
+l'atelier miami beach
+
+I
+1
+
+6
+34
+0.13
+140
+10
+miamiresidential.com/latelier/
+Jun 23
+
+avenia
+
+I
+2
+
+4
+34
+0.13
+260
+19
+miamiresidential.com/avenia/
+May 22
+
+paseos via ventura by lennar
+
+I
+1
+
+5
+34
+0.13
+140
+10
+miamiresidential.com/viaventuralennarhomes/
+Jun 20
+
+terrazas miami fl
+
+I
+1
+
+5
+34
+0.13
+140
+20
+miamiresidential.com/terrazasmiami/
+Jun 21
+
+new housing developments in miami
+
+C
+1
+
+3
+34
+0.13
+140
+36
+miamiresidential.com/new-developments/
+Jun 05
+
+o residences
+
+I
+T
+1
+
+4
+34
+0.13
+140
+6
+miamiresidential.com/o-residences
+May 31
+
+the bath club residences
+
+I
+1
+
+6
+34
+0.13
+140
+11
+miamiresidential.com/thebathclub
+Jun 11
+
+skyline brickell
+
+I
+4
+
+7
+31
+0.12
+480
+8
+miamiresidential.com/skylineonbrickell/
+Jun 27
+
+the wind condominium wind by neo
+
+I
+T
+3
+
+6
+31
+0.12
+390
+11
+miamiresidential.com/windbyneo
+Jul 06
+
+sonesta miami coconut
+
+I
+T
+4
+
+5
+31
+0.12
+720
+19
+miamiresidential.com/sonestahotelcoconutgrove/
+Jun 28
+
+ocean blue apartments
+
+C
+
+4
+31
+0.12
+390
+22
+miamiresidential.com/oceanblue/
+May 26
+
+ora by casa tua
+
+C
+4
+
+4
+31
+0.12
+480
+6
+miamiresidential.com/oracasatua
+Jun 29
+
+midtown doral
+
+C
+3
+
+4
+31
+0.12
+480
+8
+miamiresidential.com/miami-condo/doral-miami/midtown-doral/
+Jun 05
+
+the palace condo miami
+
+I
+3
+
+4
+31
+0.12
+390
+15
+miamiresidential.com/palaceonbrickell/
+May 22
+
+sonesta miami hotel coconut grove
+
+I
+T
+4
+
+5
+31
+0.12
+720
+16
+miamiresidential.com/sonestahotelcoconutgrove/
+Jun 28
+
+shoma bay
+
+I
+T
+4
+
+6
+31
+0.12
+480
+11
+miamiresidential.com/shomabay/
+Jun 28
+
+cite on the bay
+
+I
+T
+4
+
+6
+31
+0.12
+480
+7
+miamiresidential.com/citeonthebay
+Jun 21
+
+1000 museum
+
+I
+T
+5
+
+8
+30
+0.12
+880
+25
+miamiresidential.com/1000museum
+Jun 13
+
+neo vertika miami
+
+I
+7
+
+5
+30
+0.12
+1K
+12
+miamiresidential.com/neovertika/
+May 27
+
+900 biscayne bay miami fl 33132
+
+C
+I
+5
+
+3
+30
+0.12
+880
+13
+miamiresidential.com/900biscaynebay
+May 27
+
+gale miami
+
+I
+T
+5
+
+6
+30
+0.12
+1K
+24
+miamiresidential.com/galemiami/
+Jun 08
+
+infinity at brickell
+
+I
+
+6
+28
+0.11
+1.6K
+19
+miamiresidential.com/infinitybrickell
+Jun 10
+
+neo vertika brickell miami
+
+I
+10
+
+6
+28
+0.11
+1.3K
+12
+miamiresidential.com/neovertika/
+May 28
+
+new developments miami
+
+C
+1
+
+3
+27
+0.10
+110
+17
+miamiresidential.com/new-developments/
+May 30
+
+mandarin oriental miami residences
+
+I
+2
+
+9
+27
+0.10
+210
+15
+miamiresidential.com/mandarinresidences/
+Jun 19
+
+tula residences miami
+
+I
+1
+
+6
+27
+0.10
+110
+11
+miamiresidential.com/tularesidences/
+Jun 30
+
+terrazas riverpark village
+
+I
+1
+
+5
+27
+0.10
+110
+15
+miamiresidential.com/terrazasmiami/
+Jun 06
+
+tequesta brickell key
+
+C
+1
+
+4
+27
+0.10
+210
+11
+miamiresidential.com/twotequestapoint/
+Jun 02
+
+tula residences
+
+I
+1
+
+5
+27
+0.10
+110
+22
+miamiresidential.com/tularesidences/
+Jun 29
+
+26 edgewater miami fl
+
+I
+T
+1
+
+4
+27
+0.10
+110
+5
+miamiresidential.com/26edgewater
+May 25
+
+one tequesta point condominium
+
+I
+T
+2
+
+5
+27
+0.10
+210
+9
+miamiresidential.com/onetequestapoint/
+Jun 16
+
+l excellence
+
+I
+T
+2
+
+3
+27
+0.10
+210
+16
+miamiresidential.com/lexcellence/
+Jul 06
+
+mirador miami
+
+I
+T
+2
+
+5
+27
+0.10
+210
+16
+miamiresidential.com/miradornorthtower
+May 28
+
+grovenor house coconut grove
+
+I
+1
+
+6
+27
+0.10
+110
+6
+miamiresidential.com/grovenorhouse/
+May 25
+
+sereno bay harbour
+
+I
+T
+1
+
+6
+27
+0.10
+110
+5
+miamiresidential.com/sereno
+2 days
+
+miami new developments
+
+C
+1
+
+4
+27
+0.10
+110
+15
+miamiresidential.com/new-developments/
+May 30
+
+terra beachside villas
+
+I
+2
+
+5
+27
+0.10
+210
+6
+miamiresidential.com/terrabeachsidevillas/
+May 23
+
+oceania island tower iv
+
+I
+T
+2
+
+5
+27
+0.10
+210
+5
+miamiresidential.com/oceaniaiv/
+Jul 02
+
+the elser residences miami
+
+I
+T
+2
+
+5
+27
+0.10
+210
+9
+miamiresidential.com/theelser
+Jun 07
+
+venta de apartamentos
+
+I
+1
+
+5
+27
+0.10
+210
+2
+miamiresidential.com/es/apartamentos-de-lujo/
+Jun 19
+
+icon beach hollywood
+
+I
+T
+2
+
+7
+27
+0.10
+210
+6
+miamiresidential.com/iconhollywoodcondo/
+Jul 01
+
+paraiso one
+
+I
+T
+2
+
+4
+27
+0.10
+210
+n/a
+miamiresidential.com/oneparaiso
+Jun 07
+
+harbour house bal harbour
+
+I
+2
+
+6
+27
+0.10
+210
+12
+miamiresidential.com/harbourhouse
+Jul 03
+
+porsche miami tower
+
+I
+T
+1
+
+8
+27
+0.10
+110
+27
+miamiresidential.com/porschetower
+Jun 16
+
+eloquence on the bay north bay village
+
+C
+2
+
+4
+27
+0.10
+210
+6
+miamiresidential.com/eloquenceonthebay/
+Jun 03
+
+gables club tower
+
+I
+1
+
+4
+27
+0.10
+110
+5
+miamiresidential.com/gablesclubtowerii/
+Jun 05
+
+miami porsche tower
+
+C
+1
+
+8
+27
+0.10
+110
+20
+miamiresidential.com/porschetower
+Jun 13

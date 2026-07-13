@@ -1,0 +1,133 @@
+FILTER: Keyword Difficulty = "Very easy" only. Sorted by search volume. Positions report. Page 1 of 1,628.
+
+Keyword	Intent	Position	SF	Traffic	Traffic %	Volume	KD %	URL	Updated
+
+how long does it take to build a house	I	92	6	0	<0.01	6.6K	14	newhomesource.com/learn/how-long-to-build-custom-home/	2 days
+how long does it take to build a house	I	85	6	0	<0.01	6.6K	14	newhomesource.com/learn/how-long-to-build-custom-home/	2 days
+tiny home communities	C	-	7	62	0.01	6.6K	12	newhomesource.com/learn/tiny-house-problems/	3 days
+shea north	C	44	5	1	<0.01	5.4K	7	newhomesource.com/communities/az/phoenix-mesa-area/scottsdale/builder-shea-homes-612	20 hours
+roesville	I	10	4	37	<0.01	5.4K	12	newhomesource.com/basiccommunity/community-59226/roesville-felton-de-19943	Jul 09
+roesville	I	7	4	118	0.02	5.4K	12	newhomesource.com/basiccommunity/community-59226/roesville-felton-de-19943	Jul 09
+riverfront pointe	I	69	5	0	<0.01	4.4K	13	newhomesource.com/community/fl/riverview/river-pointe-by-william-ryan-homes/184666	2 days
+how do you measure square feet	I	42	6	1	<0.01	4.4K	14	newhomesource.com/learn/how-to-calculate-house-square-footage/	3 days
+king of prussia zip code	I	6	4	83	0.02	4.4K	13	newhomesource.com/communities/pa/philadelphia-area/19406	4 days
+the arbor	I	84	6	0	<0.01	4.4K	11	newhomesource.com/community/az/phoenix/the-arbors-by-lennar/126426	Jul 08
+what is traditional interior design	I	40	7	1	<0.01	4.4K	8	newhomesource.com/learn/guide-to-traditional-design/	Jul 07
+new park	I	21	7	6	<0.01	4.4K	12	newhomesource.com/community/al/montgomery/new-park-a-new-home-community-by-new-park-jim-wilson-assoc/66110	4 days
+what to do in santa fe	I	66	7	0	<0.01	3.6K	14	newhomesource.com/learn/fun-things-to-do-in-santa-fe/	Jul 09
+woodcreek	I	43	4	1	<0.01	3.6K	11	newhomesource.com/communities/tx/dallas-area/fate?communityname=woodcreek	Jul 07
+utah zip codes st george	I	77	4	0	<0.01	3.6K	14	newhomesource.com/learn/best-suburbs-surrounding-st-george-utah/	3 days
+liberty high school sommers road o'fallon mo oklahoma musical	I	46	5	0	<0.01	3.6K	8	newhomesource.com/plan/avery-fischer-homes-o-fallon-mo/1893632	Jul 06
+gated neighborhood pa	C	29	4	2	<0.01	3.6K	11	newhomesource.com/communities/pa?gated=true	Jul 06
+willow ridge	C	73	5	0	<0.01	3.6K	12	newhomesource.com/community/va/alexandria/willow-ridge-by-beazer-homes/172551	Jul 06
+willow ridge	C	50	5	0	<0.01	3.6K	12	newhomesource.com/community/in/fort-wayne/willow-ridge-north-by-granite-ridge-builders/176497	Jul 06
+willow ridge	C	49	5	0	<0.01	3.6K	12	newhomesource.com/community/in/fort-wayne/willow-ridge-north-by-granite-ridge-builders/176497	Jul 06
+new construction homes for sale near me	T	82	3	0	<0.01	2.9K	10	newhomesource.com/communities/fl/orlando-area	1 day
+new construction homes for sale near me	T	69	3	0	<0.01	2.9K	10	newhomesource.com/communities/in/evansville-area	1 day
+new construction homes for sale near me	T	65	3	0	<0.01	2.9K	10	newhomesource.com/communities/wa/bremerton-area	1 day
+new construction homes for sale near me	T	61	3	0	<0.01	2.9K	10	newhomesource.com/communities/va/richmond-petersburg-area	1 day
+new construction homes for sale near me	T	45	3	0	<0.01	2.9K	10	newhomesource.com/communities/co/denver-area	1 day
+new construction homes for sale near me	T	8	3	69	0.01	2.9K	10	newhomesource.com/communities/az/phoenix-mesa-area	1 day
+home buying tips for single mothers usa	I	23	6	4	<0.01	2.9K	10	newhomesource.com/learn/single-female-buyers/	Jul 08
+saler homes	I|T	59	3	0	<0.01	2.9K	11	newhomesource.com/communities/ok/oklahoma-city-area/builder-salazar-homes-inc-24668	Jul 09
+new construction townhomes	C	(ranks 84,83,82,81,80,79,78,77,76,75,74,73,72,70,67,64,61,58,53,50,48,44,35,27,22,19,10,5)	4	best=87@pos5	0.02	2.9K	13	newhomesource.com/condos-townhomes/{many state+metro URLs}	18 hours
+magnolia estates	C	53	5	0	<0.01	2.9K	13	newhomesource.com/basiccommunity/community-199931/magnolia-estates-magnolia-de-19962	2 days
+highland oaks	C	74	6	0	<0.01	2.9K	11	newhomesource.com/community/la/gray/highland-oaks-by-dsld-homes-louisiana/128163	Jul 08
+highland oaks	C	54	6	0	<0.01	2.9K	11	newhomesource.com/community/tx/boyd/highland-oaks-by-our-country-homes/156971	Jul 08
+what is a spec house	I	12	7	4	<0.01	2.9K	12	newhomesource.com/learn/need-a-new-home-fast/	Jul 09
+city of umatilla fl megaprojects 2024-2026	I	23	4	0	<0.01	2.9K	12	newhomesource.com/communities/fl/orlando-area/umatilla	Jul 07
+wyngate	I	60	4	0	<0.01	2.9K	11	newhomesource.com/community/nc/creedmoor/wynngate-by-adams-homes-rdu/41454	Jul 06
+single wide	I	-	7	0	<0.01	2.9K	13	newhomesource.com/learn/how-to-make-manufactured-home-energy-efficient/	21 hours
+wellington estates	I	66	5	0	<0.01	2.9K	14	newhomesource.com/community/fl/oviedo/estates-at-wellington-by-lennar/145641	2 days
+wellington estates	I	33	5	2	<0.01	2.9K	14	newhomesource.com/community/ga/madison/wellington-estates-by-lennar/206372	2 days
+lenox heights buckhead	I	60	6	0	<0.01	2.9K	9	newhomesource.com/basiccommunity/community-170205/lenox-at-buckhead-east-richmond-hill-ga-31324	3 days
+archers park sittingbourne	I	26	3	3	<0.01	2.4K	14	newhomesource.com/basiccommunity/community-195642/archers-park-middlesex-nc-27557	Jul 07
+kissing tree san marcos	N	74	5	0	<0.01	2.4K	12	newhomesource.com/plan/spieth-brookfield-residential-san-marcos-tx/2009392	Jul 08
+kissing tree san marcos	N	66	5	0	<0.01	2.4K	12	newhomesource.com/community/tx/san-marcos/kissing-tree-a-brookfield-residential-development-by-brookfield-residential/145936	Jul 08
+eagle harbor clay county	C	87	6	0	<0.01	2.4K	10	newhomesource.com/basiccommunity/community-142378/eagle-nest-preserve-at-eagle-harbor-fleming-island-fl-32003	Jul 08
+eagle harbor clay county	C	82	6	0	<0.01	2.4K	10	newhomesource.com/basiccommunity/community-100179/fleming-ii-orange-park-fl-32003	Jul 08
+eagle harbor clay county	C	50	6	0	<0.01	2.4K	10	newhomesource.com/community/fl/fleming-island/reserve-at-eagle-harbor-by-dream-home-finders/143136	Jul 08
+lewes road	I|T	78	7	0	<0.01	2.4K	12	newhomesource.com/community/de/lewes/lewes-crossing-by-ryan-homes/66536	Jul 07
+lewes road	I|T	74	7	0	<0.01	2.4K	12	newhomesource.com/community/de/lewes/lewes-crossing-by-ryan-homes/66536	Jul 07
+what is a casita	I	23	7	3	<0.01	2.4K	12	newhomesource.com/learn/guest-house-or-casita-right-for-you/	21 hours
+how long does building a house take	I	79	9	0	<0.01	2.4K	14	newhomesource.com/learn/how-long-does-it-take-to-build-a-house/	Jul 08
+how long does building a house take	I	70	9	0	<0.01	2.4K	14	newhomesource.com/learn/how-long-does-it-take-to-build-a-house/	Jul 08
+how long does building a house take	I	18	9	1	<0.01	2.4K	14	newhomesource.com/learn/how-long-to-build-custom-home/	Jul 08
+westgate buildings	I	79	5	0	<0.01	2.4K	8	newhomesource.com/basiccommunity/community-79938/westgate-lakewood-nj-08701	Jul 08
+marina pointe	I	71	5	0	<0.01	2.4K	10	newhomesource.com/basiccommunity/community-197258/marina-pointe-tampa-fl-33611	Jul 06
+sage meadows	C	36	5	1	<0.01	2.4K	14	newhomesource.com/communitydetail/builder-746/community-35392	Jul 09
+new construction homes sale near me	T	(ranks 76,73,69,64,54,45,33,27,15)	4	best=7@pos15	<0.01	2.4K	14	newhomesource.com/communities/{various metros}	3 days
+new foundation construction	I	4	8	45	0.01	2.4K	5	newhomesource.com/learn/solid-foundation/	Jul 08
+equality home	I	35	5	0	<0.01	2.4K	11	newhomesource.com/communities/al/montgomery-area/equality	3 days
+buying a condo in florida	I	41	8	0	<0.01	2.4K	8	newhomesource.com/condos-townhomes/fl	Jul 08
+gateway commons	I	35	5	1	<0.01	2.4K	6	newhomesource.com/community/co/denver/gateway-commons-by-lokal-homes/154041	Jul 06
+barney farms	N	(ranks 56,48,46,27)	5	0	<0.01	2.4K	13	newhomesource.com/community/az/queen-creek/{...}-barney-farms-by-fulton-homes/{id}	Jul 09
+fun things to do in savannah ga	I	68	8	0	<0.01	2.4K	12	newhomesource.com/learn/fun-things-to-do-in-savannah/	Jul 08
+fun things to do in savannah ga	I	67	8	0	<0.01	2.4K	12	newhomesource.com/learn/fun-things-to-do-in-savannah/	Jul 08
+
+--- page break (SEMrush "Page 1 of 1,628") ---
+
+12025 us highway 301 n parrish fl 34219	I	29	1	2	<0.01	1.9K	12	newhomesource.com/community/fl/parrish/prosperity-lakes-active-adult-active-adult-estates-by-lennar/187750	May 27
+12025 us highway 301 n parrish fl 34219	I	15	1	9	<0.01	1.9K	12	newhomesource.com/plan/morningtide-lennar-parrish-fl/2578521	May 27
+12025 us highway 301 n parrish fl 34219	I	9	1	45	0.01	1.9K	12	newhomesource.com/community/fl/parrish/prosperity-lakes-active-adult-active-adult-villas-by-lennar/187748	May 27
+2410 wampum dr harker heights tx	I	91	1	0	<0.01	1.9K	13	newhomesource.com/floor-plans/tx/killeen-area/harker-heights	May 27
+lanebrook	I	53	1	0	<0.01	1.9K	13	newhomesource.com/community/fl/green-cove-springs/edenbrooke-at-hyland-trail-55-by-lennar/206896	18 hours
+lanebrook	I	48	1	0	<0.01	1.9K	13	newhomesource.com/community/fl/green-cove-springs/edenbrooke-at-hyland-trail-55-by-lennar/206896	18 hours
+describe the parts of house from frontyard	I	75	6	0	<0.01	1.9K	8	newhomesource.com/learn/home-styles-courtyard-homes/	May 27
+describe the parts of house from frontyard	I	40	6	0	<0.01	1.9K	8	newhomesource.com/learn/courtyard-homes/	May 27
+creekside crossing	I	78	3	0	<0.01	1.9K	1	newhomesource.com/community/il/plainfield/creekside-crossing-by-lennar/151992	2 days
+creekside crossing	I	61	3	0	<0.01	1.9K	1	newhomesource.com/basiccommunity/community-119713/creekside-crossing-eighty-four-pa-15330	2 days
+creekside crossing	I	36	3	1	<0.01	1.9K	1	newhomesource.com/community/pa/eighty-four/creekside-crossing-by-ryan-homes/185002	2 days
+delaire country club	I|T	43	5	0	<0.01	1.9K	13	newhomesource.com/basiccommunity/community-178409/delaire-country-club-delray-beach-fl-33445	Jun 01
+mission del lago	I	84	8	0	<0.01	1.9K	13	newhomesource.com/community/tx/san-antonio/mission-del-lago-by-kb-home/164469	Jul 06
+mission del lago	I	71	8	0	<0.01	1.9K	13	newhomesource.com/community/tx/san-antonio/mission-del-lago-by-kb-home/168773	Jul 06
+mission del lago	I	50	8	0	<0.01	1.9K	13	newhomesource.com/basiccommunity/community-200068/mission-del-lago-san-antonio-tx-78221	Jul 06
+who competes with zip kit homes in utah	I	10	4	24	<0.01	1.9K	14	newhomesource.com/learn/best-tiny-home-builders-in-utah/	May 27
+chestnut commons	C	57	4	0	<0.01	1.9K	11	newhomesource.com/community/oh/commercial-point/chestnut-commons-by-westport-homes-of-columbus/105399	Jun 03
+chestnut commons	C	38	4	1	<0.01	1.9K	11	newhomesource.com/community/oh/commercial-point/chestnut-commons-by-d-r-horton/138387	Jun 03
+chestnut commons	C	35	4	1	<0.01	1.9K	11	newhomesource.com/community/oh/commercial-point/chestnut-commons-by-d-r-horton/138387	Jun 03
+lotus boca raton amenities	I	34	5	0	<0.01	1.9K	6	newhomesource.com/community/fl/boca-raton/lotus-edge-by-gl-homes/195549	May 28
+sunnyside hills	I	19	5	2	<0.01	1.9K	5	newhomesource.com/community/ca/campbell/sunnyside-heights-by-44-sunnyside-llc/222184	Jul 06
+ne waaga way	I	69	3	0	<0.01	1.9K	13	newhomesource.com/communities/wa/bremerton-area	Jun 25
+ne waaga way	I	43	3	0	<0.01	1.9K	13	newhomesource.com/communities/wa/bremerton-area	Jun 25
+amberwood	C	81	7	0	<0.01	1.9K	13	newhomesource.com/community/mn/rosemount/amberwood-by-timberland-custom-homes/151125	21 hours
+silo ridge field club	N	(ranks 70,58,19)	5	best=2@pos19	<0.01	1.9K	12	newhomesource.com/basiccommunity/community-216996/silo-ridge-field-clubcondos-amenia-ny-12501	Jun 14
+village walk	I	62	5	0	<0.01	1.9K	14	newhomesource.com/community/fl/fernandina-beach/village-walk-by-d-r-horton/126034	Jul 09
+village walk	I	57	5	0	<0.01	1.9K	14	newhomesource.com/community/fl/fernandina-beach/village-walk-by-d-r-horton/126034	Jul 09
+creekside meadows	C	56	6	0	<0.01	1.9K	8	newhomesource.com/community/pa/elizabethtown/creekside-meadows-by-landmark-homes/107165	Jul 08
+edisto w/frog floorplan hanahan	C	91	1	0	<0.01	1.9K	2	newhomesource.com/communities/sc/charleston-area/edisto-island	May 27
+queen anne style home	I	11	9	2	<0.01	1.9K	12	newhomesource.com/learn/queen-anne-style/	May 26
+waterway gardens	I	5	3	83	0.02	1.9K	4	newhomesource.com/basiccommunity/community-180615/waterway-gardens-myrtle-beach-sc-29579	Jul 02
+how to become a landlord	I	73	6	0	<0.01	1.9K	12	newhomesource.com/learn/rental-property-good-landlord/	2 days
+henry erda image	I	20	1	5	<0.01	1.9K	13	newhomesource.com/homes/ut/salt-lake-city-ogden-area/erda	May 27
+house settling	I	7	9	2	<0.01	1.9K	6	newhomesource.com/learn/is-new-home-settling-5-common-settling-issues-when-to-call-pro/	Jul 06
+rice military	I	48	7	0	<0.01	1.9K	10	newhomesource.com/community/tx/houston/rice-military-by-sandcastle-homes/103486	May 31
+lakeshore landing	C	33	6	1	<0.01	1.9K	14	newhomesource.com/basiccommunity/community-139062/lakeshore-landings-orlando-fl-32839	Jul 07
+tuscany hills	C	47	5	0	<0.01	1.9K	6	newhomesource.com/basiccommunity/community-220206/tuscany-hills-douglasville-ga-30135	Jul 09
+fawnlakee	I	60/40	3	0	<0.01	1.9K	8	newhomesource.com/community/va/spotsylvania/fawn-lake-by-{builder}/{id}	May 29
+edisto w/frog floorplan charleston	C	34	2	1	<0.01	1.9K	13	newhomesource.com/communities/sc/charleston-area/edisto-island/page-2	May 28
+notting place	I	19	6	2	<0.01	1.9K	8	newhomesource.com/basiccommunity/community-117316/townes-at-notting-place-richmond-va-23235	Jul 08
+holliday farms zionsville	N	(ranks 70,58,40)	5	0	<0.01	1.6K	14	newhomesource.com/basiccommunity/community-{id}/holliday-farms-zionsville-in-46077	May 26
+15164 reynosa dr. rancho murieta california	I	36	1	1	<0.01	1.6K	13	newhomesource.com/communities/ca/sacramento-area/rancho-murieta/builder-reynen-bardis-22070	May 28
+avalon park wesley chapel	N	29	6	1	<0.01	1.6K	11	newhomesource.com/community/fl/wesley-chapel/avalon-park-wesley-chapel-by-stanley-martin-homes/164456	Jun 11
+prefab granny pods	C	22	6	2	<0.01	1.6K	10	newhomesource.com/learn/granny-pods/	May 26
+house for sale in cordelia ca	T	29	2	2	<0.01	1.6K	13	newhomesource.com/community/ca/fairfield/enclave-at-cordelia-by-seeno-homes/198723	May 31
+city of kerman ca major development projects 2025 2026	I	33/25	4	0	<0.01	1.6K	12	newhomesource.com/communities/ca/fresno-area/kerman	Jun 25
+what is a spec home	I	9	7	4	<0.01	1.6K	12	newhomesource.com/learn/need-a-new-home-fast/	Jul 05
+sycamore heights	N	(ranks 84,38,28)	3	best=2@pos28	<0.01	1.6K	14	newhomesource.com/community/ca/rancho-cucamonga/sycamore-heights-woodland-by-lennar/209866	Jun 08
+del webb bayview	I|T	47	5	0	<0.01	1.6K	14	newhomesource.com/community/fl/parrish/del-webb-bayview-by-del-webb/153058	Jun 02
+del webb bayview	I|T	26	5	1	<0.01	1.6K	14	newhomesource.com/community/fl/palmetto/del-webb-bayview-by-del-webb/151322	Jun 02
+parading the house	I	27	5	1	<0.01	1.6K	6	newhomesource.com/learn/local-parade-of-homes/	May 28
+brookhollow	I	77/39	5	0	<0.01	1.6K	6	newhomesource.com/{basiccommunity|community}/{...}brookhollow{...}	Jun 01
+meadows drive	C	65/52	1	0	<0.01	1.6K	7	newhomesource.com/basiccommunity/community-186947/the-meadows-iii-jonesborough-tn-37659	May 23
+nashville suburbs	C|I	2	6	70	0.01	1.6K	9	newhomesource.com/learn/best-suburbs-near-nashville-tennessee/	May 25
+best places to live in new hampshire	C	46	5	0	<0.01	1.6K	14	newhomesource.com/learn/affordable-cities-new-hampshire/	Jun 15
+martin county builders	C	(ranks 88,63,46,10,3)	5	best=3@pos3	0.01	1.6K	10	newhomesource.com/builders/fl/martin-st.-lucie-okeechobee-counties-area/martin-county	May 23
+meadow run	I	57	4	0	<0.01	1.6K	13	newhomesource.com/community/oh/copley/meadow-run-towns-by-ryan-homes/153684	Jun 07
+new construction insulation	I	47	9	0	<0.01	1.6K	10	newhomesource.com/learn/insulating-your-home/	May 28
+mallard cove	C|I	59	5	0	<0.01	1.6K	11	newhomesource.com/basiccommunity/community-209572/the-cove-at-mallard-crossing-summerville-sc-29483	May 25
+los caminitos	N	65/53	6	0	<0.01	1.6K	14	newhomesource.com/community/nm/albuquerque/la-cuentista-ii-by-abrazo-homes/117560	Jun 28
+summit drive	I	76/57	2	0	<0.01	1.6K	13	newhomesource.com/basiccommunity/community-{id}/{summit...}	Jun 07
+johnstown village	I	(ranks 91,81,59,53,26,13)	6	best=4@pos13	<0.01	1.6K	11	newhomesource.com/{communities|condos-townhomes|community|plan}/co/{...}/johnstown{...}	Jun 01
+peachtree corners independent real estate new homes	C	66/49/2	2	best=2@pos2	0.05	1.6K	13	newhomesource.com/communities/ga/atlanta-area/peachtree-corners	May 28
+move in ready new homes	I	(ranks 99..47, all page 5-10)	3	0	<0.01	1.6K	9	newhomesource.com/communities/{metro}?inventory=true	Jun 28

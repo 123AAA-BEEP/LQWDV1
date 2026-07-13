@@ -1,0 +1,2657 @@
+Keyword
+Intent
+Position
+SF
+Traffic
+Traffic %
+Volume
+
+KD %
+URL
+Updated
+Sortable
+
+the ivy
+
+C
+55
+
+5
+2
+< 0.01
+27.1K
+53
+miamiresidential.com/theivy
+4 days
+
+fisher island
+
+I
+53
+
+10
+0
+< 0.01
+22.2K
+48
+miamiresidential.com/sixfisherisland/
+3 days
+
+w miami
+
+I
+T
+11
+
+7
+18
+0.07
+12.1K
+61
+miamiresidential.com/wmiami/
+13 hours
+
+mandarin oriental miami
+
+I
+T
+60
+
+8
+0
+< 0.01
+12.1K
+50
+miamiresidential.com/mandarinhotel/
+3 days
+
+mandarin oriental miami
+
+I
+T
+21
+
+8
+1
+< 0.01
+12.1K
+50
+miamiresidential.com/mandarinresidences/
+3 days
+
+fisher isle
+
+I
+44
+
+8
+3
+0.01
+12.1K
+41
+miamiresidential.com/sixfisherisland/
+Jul 07
+
+the ritz carlton south beach
+
+I
+T
+54
+
+7
+0
+< 0.01
+9.9K
+55
+miamiresidential.com/ritzcarltonsouthbeach/
+Jul 06
+
+mr c
+
+I
+22
+
+8
+2
+< 0.01
+9.9K
+65
+miamiresidential.com/mrcresidences
+2 days
+
+gale miami hotel and residences
+
+I
+N
+78
+
+8
+0
+< 0.01
+9.9K
+45
+miamiresidential.com/es/galemiami/
+1 day
+
+gale miami hotel and residences
+
+I
+N
+62
+
+8
+0
+< 0.01
+9.9K
+45
+miamiresidential.com/es/galemiami/
+1 day
+
+gale miami hotel and residences
+
+I
+N
+15
+
+8
+2
+< 0.01
+9.9K
+45
+miamiresidential.com/galemiami/
+1 day
+
+ritz carlton key biscayne
+
+I
+31
+
+9
+1
+< 0.01
+8.1K
+51
+miamiresidential.com/ritzcarltonkeybiscayne/
+23 hours
+
+sls lux brickell
+
+C
+88
+
+7
+0
+< 0.01
+8.1K
+39
+miamiresidential.com/duamiami/
+1 day
+
+sls lux brickell
+
+C
+23
+
+7
+5
+0.02
+8.1K
+39
+miamiresidential.com/slslux/
+1 day
+
+cipriani miami
+
+I
+T
+34
+
+6
+0
+< 0.01
+8.1K
+48
+miamiresidential.com/ciprianiresidences
+4 days
+
+the ritz carlton key biscayne miami
+
+I
+42
+
+8
+0
+< 0.01
+8.1K
+51
+miamiresidential.com/ritzcarltonkeybiscayne/
+2 days
+
+the lincoln
+
+C
+25
+
+6
+12
+0.04
+8.1K
+44
+miamiresidential.com/thelincoln/
+1 day
+
+fontainebleau miami beach collins avenue miami beach fl
+
+N
+69
+
+7
+0
+< 0.01
+8.1K
+57
+miamiresidential.com/fontainebleauii
+1 day
+
+panorama tower
+
+N
+76
+
+7
+0
+< 0.01
+6.6K
+46
+miamiresidential.com/es/panoramatower/
+3 days
+
+panorama tower
+
+N
+21
+
+7
+1
+< 0.01
+6.6K
+46
+miamiresidential.com/panoramatower/
+3 days
+
+panorama tower
+
+N
+
+7
+26
+0.10
+6.6K
+46
+miamiresidential.com/panoramatower/
+3 days
+
+fisher island miami beach florida
+
+I
+59
+
+10
+0
+< 0.01
+6.6K
+41
+miamiresidential.com/sixfisherisland/
+15 hours
+
+the crosby
+
+I
+23
+
+6
+1
+< 0.01
+6.6K
+55
+miamiresidential.com/thecrosby
+3 days
+
+artech
+
+N
+T
+
+7
+21
+0.08
+6.6K
+48
+miamiresidential.com/artech/
+Jul 07
+
+mercedes house
+
+N
+46
+
+8
+0
+< 0.01
+6.6K
+19
+miamiresidential.com/mercedesbenzplaces/
+Jul 09
+
+the ritz carlton coconut grove miami miami fl usa
+
+I
+T
+79
+
+5
+0
+< 0.01
+5.4K
+57
+miamiresidential.com/ritzcarltoncoconutgrove/
+Jul 07
+
+hotel ritz key biscayne florida
+
+I
+26
+
+7
+3
+0.01
+5.4K
+49
+miamiresidential.com/ritzcarltonkeybiscayne/
+3 days
+
+paramount miami world center location
+
+I
+17
+
+6
+16
+0.06
+5.4K
+20
+miamiresidential.com/paramount/
+14 hours
+
+hyde midtown miami
+
+C
+65
+
+7
+0
+< 0.01
+5.4K
+36
+miamiresidential.com/es/hyde-midtown/
+Jul 06
+
+hyde midtown miami
+
+C
+25
+
+7
+8
+0.03
+5.4K
+36
+miamiresidential.com/hyde-midtown/
+Jul 06
+
+paramount miami
+
+I
+11
+
+8
+8
+0.03
+5.4K
+26
+miamiresidential.com/paramount/
+Jul 06
+
+the ritz carlton coconut grove miami florida
+
+I
+84
+
+8
+0
+< 0.01
+5.4K
+47
+miamiresidential.com/ritzcarltoncoconutgrove/
+Jul 08
+
+the ritz carlton coconut grove miami florida
+
+I
+77
+
+8
+0
+< 0.01
+5.4K
+47
+miamiresidential.com/ritzcarltoncoconutgrove/
+Jul 08
+
+aman miami
+
+I
+51
+
+9
+0
+< 0.01
+5.4K
+41
+miamiresidential.com/es/amanmiamibeach
+3 days
+
+aman miami
+
+I
+9
+
+9
+1
+< 0.01
+5.4K
+41
+miamiresidential.com/amanmiamibeach
+3 days
+
+aman miami
+
+I
+
+9
+0
+< 0.01
+5.4K
+41
+miamiresidential.com/amanmiamibeach
+3 days
+
+aman miami
+
+I
+
+9
+0
+< 0.01
+5.4K
+41
+miamiresidential.com/amanmiamibeach
+3 days
+
+flow brickell
+
+N
+70
+
+8
+0
+< 0.01
+5.4K
+39
+miamiresidential.com/duamiami/
+Jul 07
+
+flow brickell
+
+N
+42
+
+8
+0
+< 0.01
+5.4K
+39
+miamiresidential.com/flowhouse/
+Jul 07
+
+flow brickell
+
+N
+29
+
+8
+0
+< 0.01
+5.4K
+39
+miamiresidential.com/flowhouse/
+Jul 07
+
+flow brickell
+
+N
+14
+
+8
+1
+< 0.01
+5.4K
+39
+miamiresidential.com/flowbrickell/
+Jul 07
+
+paramount world center miami fl
+
+C
+21
+
+6
+8
+0.03
+5.4K
+20
+miamiresidential.com/paramount/
+Jul 08
+
+paramount world center miami fl
+
+C
+20
+
+6
+8
+0.03
+5.4K
+20
+miamiresidential.com/paramount/
+Jul 08
+
+melody towers downtown miami
+
+I
+76
+
+4
+0
+< 0.01
+5.4K
+28
+miamiresidential.com/
+Jul 07
+
+melody towers downtown miami
+
+I
+49
+
+4
+1
+< 0.01
+5.4K
+28
+miamiresidential.com/themadison
+Jul 07
+
+hotel ritz carlton miami key biscayne
+
+I
+37
+
+6
+0
+< 0.01
+5.4K
+52
+miamiresidential.com/ritzcarltonkeybiscayne/
+3 days
+
+arte grand central
+
+N
+44
+
+5
+0
+< 0.01
+5.4K
+31
+miamiresidential.com/
+1 day
+
+ritz carlton resort key biscayne
+
+I
+38
+
+7
+0
+< 0.01
+5.4K
+50
+miamiresidential.com/ritzcarltonkeybiscayne/
+3 days
+
+ritz-carlton key biscayne miami
+
+I
+31
+
+7
+0
+< 0.01
+5.4K
+52
+miamiresidential.com/ritzcarltonkeybiscayne/
+20 hours
+
+magnus brickell
+
+I
+N
+72
+
+6
+0
+< 0.01
+5.4K
+31
+miamiresidential.com/mybrickell/
+Jul 08
+
+magnus brickell
+
+I
+N
+51
+
+6
+0
+< 0.01
+5.4K
+31
+miamiresidential.com/
+Jul 08
+
+magnus brickell
+
+I
+N
+44
+
+6
+0
+< 0.01
+5.4K
+31
+miamiresidential.com/mybrickell/
+Jul 08
+
+coral gables village of merrick park
+
+N
+19
+
+6
+1
+< 0.01
+4.4K
+42
+miamiresidential.com/coramerrickpark/
+1 day
+
+miami canvas
+
+I
+5
+
+3
+193
+0.77
+4.4K
+28
+miamiresidential.com/canvas
+Jul 08
+
+ritz carlton florida south beach
+
+I
+67
+
+8
+0
+< 0.01
+4.4K
+52
+miamiresidential.com/ritzcarltonsouthbeach/
+Jul 08
+
+brick and ivy
+
+N
+59
+
+5
+0
+< 0.01
+4.4K
+33
+miamiresidential.com/theivy
+12 hours
+
+ritz key biscayne
+
+I
+24
+
+8
+3
+0.01
+4.4K
+44
+miamiresidential.com/ritzcarltonkeybiscayne/
+Jul 06
+
+pearl house
+
+N
+
+6
+114
+0.45
+4.4K
+34
+miamiresidential.com/pearlhouse/
+Jul 06
+
+amli midtown miami
+
+N
+52
+
+5
+0
+< 0.01
+4.4K
+33
+miamiresidential.com/midtownpark/
+Jul 06
+
+society wynwood
+
+I
+62
+
+6
+0
+< 0.01
+4.4K
+16
+miamiresidential.com/
+Jul 07
+
+the setai south beach miami
+
+I
+N
+20
+
+8
+0
+< 0.01
+4.4K
+51
+miamiresidential.com/setai/
+2 days
+
+harbour harbour
+
+I
+61
+
+5
+0
+< 0.01
+4.4K
+24
+miamiresidential.com/harbour-park/
+1 day
+
+the ritz carlton coconut grove miami
+
+I
+71
+
+8
+0
+< 0.01
+4.4K
+46
+miamiresidential.com/ritzcarltoncoconutgrove/
+Jul 07
+
+waldorf astoria miami
+
+I
+23
+
+7
+3
+0.01
+4.4K
+33
+miamiresidential.com/waldorfastoriamiami/
+Jul 06
+
+miro brickell
+
+I
+T
+70
+
+7
+0
+< 0.01
+3.6K
+26
+miamiresidential.com/
+2 days
+
+miro brickell
+
+I
+T
+43
+
+7
+0
+< 0.01
+3.6K
+26
+miamiresidential.com/mybrickell/
+2 days
+
+delano in south beach fl
+
+I
+52
+
+9
+0
+< 0.01
+3.6K
+44
+miamiresidential.com/delanosouthbeach/
+4 days
+
+bay house
+
+N
+40
+
+7
+0
+< 0.01
+3.6K
+40
+miamiresidential.com/bayhouse/
+2 days
+
+flow miami
+
+N
+20
+
+7
+0
+< 0.01
+3.6K
+44
+miamiresidential.com/flowhouse/
+1 day
+
+aston martin residences miami
+
+N
+3
+
+5
+50
+0.20
+3.6K
+40
+miamiresidential.com/astonmartin
+2 days
+
+hotel ritz key biscayne
+
+I
+35
+
+7
+1
+< 0.01
+3.6K
+41
+miamiresidential.com/ritzcarltonkeybiscayne/
+Jul 09
+
+sereno
+
+I
+15
+
+6
+10
+0.04
+3.6K
+46
+miamiresidential.com/sereno
+Jul 07
+
+opera tower miami
+
+C
+8
+
+5
+79
+0.31
+3.6K
+18
+miamiresidential.com/operatower
+Jul 08
+
+aston martin residences
+
+N
+59
+
+6
+0
+< 0.01
+3.6K
+33
+miamiresidential.com/aston-martin/
+13 hours
+
+aston martin residences
+
+N
+49
+
+6
+0
+< 0.01
+3.6K
+33
+miamiresidential.com/aston-martin/
+13 hours
+
+aston martin residences
+
+N
+5
+
+6
+36
+0.14
+3.6K
+33
+miamiresidential.com/astonmartin
+13 hours
+
+condos miami brickell
+
+C
+58
+
+3
+0
+< 0.01
+3.6K
+32
+miamiresidential.com/miami-condo/brickell/
+2 days
+
+condos miami brickell
+
+C
+44
+
+3
+1
+< 0.01
+3.6K
+32
+miamiresidential.com/miami-condo/brickell/
+2 days
+
+condos miami brickell
+
+C
+24
+
+3
+5
+0.02
+3.6K
+32
+miamiresidential.com/duamiami/
+2 days
+
+midtown park
+
+T
+64
+
+5
+0
+< 0.01
+3.6K
+32
+miamiresidential.com/es/midtownpark/
+Jul 07
+
+midtown park
+
+T
+16
+
+5
+10
+0.04
+3.6K
+32
+miamiresidential.com/midtownpark/
+Jul 07
+
+madison st
+
+I
+46
+
+7
+1
+< 0.01
+3.6K
+8
+miamiresidential.com/themadison
+Jul 07
+
+key biscayne ritz carlton
+
+I
+26
+
+10
+0
+< 0.01
+3.6K
+50
+miamiresidential.com/ritzcarltonkeybiscayne/
+3 days
+
+reach brickell
+
+I
+82
+
+7
+0
+< 0.01
+3.6K
+21
+miamiresidential.com/
+3 days
+
+reach brickell
+
+I
+39
+
+7
+1
+< 0.01
+3.6K
+21
+miamiresidential.com/es/ReachBCC
+3 days
+
+reach brickell
+
+I
+7
+
+7
+108
+0.43
+3.6K
+21
+miamiresidential.com/ReachBCC
+3 days
+
+paramount miami world
+
+I
+16
+
+6
+5
+0.02
+3.6K
+23
+miamiresidential.com/paramount/
+Jul 07
+
+midtown miami
+
+C
+36
+
+8
+1
+< 0.01
+3.6K
+37
+miamiresidential.com/midtownpark/
+4 days
+
+2000 biscayne
+
+N
+31
+
+7
+0
+< 0.01
+3.6K
+35
+miamiresidential.com/
+Jul 06
+
+terrazul miami
+
+N
+T
+49
+
+6
+0
+< 0.01
+3.6K
+19
+miamiresidential.com/
+1 day
+
+parkside residences
+
+N
+31
+
+8
+0
+< 0.01
+3.6K
+23
+miamiresidential.com/parksidebrickell/
+Jul 07
+
+miami mls
+
+I
+N
+18
+
+6
+1
+< 0.01
+3.6K
+76
+miamiresidential.com/property-search/
+Jul 07
+
+mandarin oriental miami miami fl
+
+I
+76
+
+7
+0
+< 0.01
+3.6K
+53
+miamiresidential.com/mandarinhotel/
+3 days
+
+mandarin oriental miami miami fl
+
+I
+22
+
+7
+0
+< 0.01
+3.6K
+53
+miamiresidential.com/mandarinresidences/
+3 days
+
+icon brickell
+
+C
+85
+
+8
+0
+< 0.01
+3.6K
+32
+miamiresidential.com/
+2 days
+
+icon brickell
+
+C
+52
+
+8
+0
+< 0.01
+3.6K
+32
+miamiresidential.com/wmiami/
+2 days
+
+downtown 5th
+
+I
+67
+
+6
+0
+< 0.01
+3.6K
+24
+miamiresidential.com/district225/
+Jul 08
+
+madison's st.
+
+C
+I
+37
+
+5
+2
+< 0.01
+3.6K
+23
+miamiresidential.com/themadison
+Jul 07
+
+flamingo point
+
+N
+32
+
+7
+0
+< 0.01
+3.6K
+34
+miamiresidential.com/flamingosouthbeach/
+3 days
+
+opera tower
+
+I
+T
+23
+
+8
+2
+< 0.01
+3.6K
+17
+miamiresidential.com/operatower
+4 days
+Keyword
+Intent
+Position
+SF
+Traffic
+Traffic %
+Volume
+
+KD %
+URL
+Updated
+Sortable
+
+amli wynwood
+
+N
+65
+
+5
+0
+< 0.01
+2.9K
+31
+miamiresidential.com/
+Jul 06
+
+gio midtown
+
+N
+58
+
+6
+0
+< 0.01
+2.9K
+33
+miamiresidential.com/
+Jul 06
+
+ritz carlton key biscayne fl
+
+I
+24
+
+8
+0
+< 0.01
+2.9K
+46
+miamiresidential.com/ritzcarltonkeybiscayne/
+13 hours
+
+atelier apt
+
+I
+T
+46
+
+8
+0
+< 0.01
+2.9K
+45
+miamiresidential.com/ateliermiami/
+2 days
+
+mandarin hotel miami
+
+I
+54
+
+9
+0
+< 0.01
+2.9K
+50
+miamiresidential.com/mandarinresidences/
+4 days
+
+mandarin hotel miami
+
+I
+22
+
+9
+0
+< 0.01
+2.9K
+50
+miamiresidential.com/mandarinhotel/
+4 days
+
+remi on the river
+
+I
+N
+54
+
+7
+0
+< 0.01
+2.9K
+30
+miamiresidential.com/
+Jul 06
+
+aqualina
+
+N
+T
+27
+
+7
+0
+< 0.01
+2.9K
+50
+miamiresidential.com/acqualina
+4 days
+
+aqualina
+
+N
+T
+25
+
+7
+0
+< 0.01
+2.9K
+50
+miamiresidential.com/acqualina
+4 days
+
+flow miami apartments
+
+N
+13
+
+8
+0
+< 0.01
+2.9K
+35
+miamiresidential.com/flowhouse/
+Jul 07
+
+miami condo investments
+
+N
+19
+
+5
+0
+< 0.01
+2.9K
+47
+miamiresidential.com/
+Jul 06
+
+miami condo investments
+
+N
+16
+
+5
+0
+< 0.01
+2.9K
+47
+miamiresidential.com/
+Jul 06
+
+canvas miami
+
+I
+3
+
+6
+188
+0.75
+2.9K
+22
+miamiresidential.com/canvas
+Jul 06
+
+downtown 1st
+
+I
+68
+
+8
+0
+< 0.01
+2.9K
+25
+miamiresidential.com/loftdowntowni/
+Jul 06
+
+downtown 1st
+
+I
+66
+
+8
+0
+< 0.01
+2.9K
+25
+miamiresidential.com/loftdowntowni/
+Jul 06
+
+downtown 1st
+
+I
+28
+
+8
+2
+< 0.01
+2.9K
+25
+miamiresidential.com/501first
+Jul 06
+
+apartment building miami fl
+
+C
+60
+
+5
+0
+< 0.01
+2.9K
+65
+miamiresidential.com/neolofts/
+1 day
+
+apartment building miami fl
+
+C
+47
+
+5
+0
+< 0.01
+2.9K
+65
+miamiresidential.com/
+1 day
+
+apartment building miami fl
+
+C
+35
+
+5
+2
+< 0.01
+2.9K
+65
+miamiresidential.com/
+1 day
+
+bay village miami
+
+I
+55
+
+9
+0
+< 0.01
+2.9K
+38
+miamiresidential.com/miami-condo/north-bay-village/
+Jul 06
+
+bay village miami
+
+I
+29
+
+9
+0
+< 0.01
+2.9K
+38
+miamiresidential.com/paganinbv/
+Jul 06
+
+umiami canvas
+
+I
+6
+
+5
+87
+0.34
+2.9K
+30
+miamiresidential.com/canvas
+Jul 08
+
+umiami canvas
+
+I
+
+5
+20
+0.08
+2.9K
+30
+miamiresidential.com/canvas
+Jul 08
+
+miami penthouse
+
+I
+7
+
+7
+8
+0.03
+2.9K
+14
+miamiresidential.com/top10penthouses/
+Jul 06
+
+the baie
+
+I
+51
+
+8
+0
+< 0.01
+2.9K
+48
+miamiresidential.com/labaianorth/
+4 days
+
+the ritz carlton key biscayne
+
+I
+35
+
+7
+0
+< 0.01
+2.9K
+54
+miamiresidential.com/ritzcarltonkeybiscayne/
+4 days
+
+condominio
+
+I
+58
+
+7
+0
+< 0.01
+2.9K
+34
+miamiresidential.com/
+3 days
+
+continuum condominium south beach
+
+I
+67
+
+6
+0
+< 0.01
+2.9K
+19
+miamiresidential.com/es/continuumsouthbeach
+Jul 06
+
+continuum condominium south beach
+
+I
+13
+
+6
+4
+0.01
+2.9K
+19
+miamiresidential.com/continuumsouthbeach/
+Jul 06
+
+hyde midtown
+
+C
+69
+
+6
+0
+< 0.01
+2.9K
+24
+miamiresidential.com/es/hyde-midtown/
+2 days
+
+hyde midtown
+
+C
+17
+
+6
+8
+0.03
+2.9K
+24
+miamiresidential.com/hyde-midtown/
+2 days
+
+sls lux miami
+
+T
+76
+
+7
+0
+< 0.01
+2.9K
+32
+miamiresidential.com/duamiami/
+11 hours
+
+sls lux miami
+
+T
+10
+
+7
+11
+0.04
+2.9K
+32
+miamiresidential.com/slslux/
+11 hours
+
+sls brickell
+
+I
+65
+
+8
+0
+< 0.01
+2.9K
+34
+miamiresidential.com/duamiami/
+Jul 07
+
+sls brickell
+
+I
+12
+
+8
+14
+0.05
+2.9K
+34
+miamiresidential.com/slslux/
+Jul 07
+
+1010 brickell
+
+C
+I
+13
+
+5
+14
+0.05
+2.9K
+24
+miamiresidential.com/1010brickell/
+2 days
+
+forma miami
+
+N
+50
+
+6
+0
+< 0.01
+2.9K
+36
+miamiresidential.com/
+Jul 06
+
+mr c coconut grove
+
+I
+N
+21
+
+8
+0
+< 0.01
+2.9K
+49
+miamiresidential.com/mrcresidences
+2 days
+
+wynwood haus
+
+N
+56
+
+7
+0
+< 0.01
+2.4K
+25
+miamiresidential.com/
+2 days
+
+sls lux brickell miami
+
+C
+84
+
+7
+0
+< 0.01
+2.4K
+37
+miamiresidential.com/duamiami/
+2 days
+
+equinox brickell miami fl
+
+N
+16
+
+5
+1
+< 0.01
+2.4K
+33
+miamiresidential.com/news/equinox-fitness-chain-is-taking-the-over-the-industry-and-will-be-part-of-brickell-heights/
+3 days
+
+quantum on the bay
+
+I
+89
+
+7
+0
+< 0.01
+2.4K
+19
+miamiresidential.com/
+Jul 08
+
+quantum on the bay
+
+I
+15
+
+7
+7
+0.02
+2.4K
+19
+miamiresidential.com/quantum
+Jul 08
+
+carillion
+
+I
+64
+
+7
+0
+< 0.01
+2.4K
+38
+miamiresidential.com/carillionnorth
+17 hours
+
+resia golden glades
+
+I
+N
+67
+
+8
+0
+< 0.01
+2.4K
+30
+miamiresidential.com/
+16 hours
+
+resia golden glades
+
+I
+N
+66
+
+8
+0
+< 0.01
+2.4K
+30
+miamiresidential.com/
+16 hours
+
+brickell on the river
+
+I
+T
+92
+
+5
+0
+< 0.01
+2.4K
+13
+miamiresidential.com/
+Jul 07
+
+brickell on the river
+
+I
+T
+86
+
+5
+0
+< 0.01
+2.4K
+13
+miamiresidential.com/flowbrickell/
+Jul 07
+
+brickell on the river
+
+I
+T
+78
+
+5
+0
+< 0.01
+2.4K
+13
+miamiresidential.com/theivy
+Jul 07
+
+brickell on the river
+
+I
+T
+66
+
+5
+0
+< 0.01
+2.4K
+13
+miamiresidential.com/brickellriver/
+Jul 07
+
+brickell on the river
+
+I
+T
+30
+
+5
+1
+< 0.01
+2.4K
+13
+miamiresidential.com/brickellontheriver
+Jul 07
+
+brickell on the river
+
+I
+T
+4
+
+5
+156
+0.62
+2.4K
+13
+miamiresidential.com/brickellontheriversouth
+Jul 07
+
+ivy tower
+
+I
+37
+
+7
+0
+< 0.01
+2.4K
+9
+miamiresidential.com/theivy
+Jul 09
+
+amara wynwood
+
+N
+51
+
+6
+0
+< 0.01
+2.4K
+33
+miamiresidential.com/
+Jul 08
+
+flamingo south beach
+
+N
+66
+
+7
+0
+< 0.01
+2.4K
+25
+miamiresidential.com/es/flamingosouthbeach/
+2 days
+
+flamingo south beach
+
+N
+14
+
+7
+1
+< 0.01
+2.4K
+25
+miamiresidential.com/flamingosouthbeach/
+2 days
+
+prime one twelve in miami
+
+N
+83
+
+6
+0
+< 0.01
+2.4K
+47
+miamiresidential.com/cloudoneresidences/
+Jul 07
+
+prime one twelve in miami
+
+N
+73
+
+6
+0
+< 0.01
+2.4K
+47
+miamiresidential.com/es/onewest12/
+Jul 07
+
+prime one twelve in miami
+
+N
+58
+
+6
+0
+< 0.01
+2.4K
+47
+miamiresidential.com/onewest12/
+Jul 07
+
+miami population 2025
+
+I
+69
+
+4
+0
+< 0.01
+2.4K
+40
+miamiresidential.com/news/miamis-population-continues-growing-is-one-of-the-major-metropolitan-areas-of-usa/
+3 days
+
+sls brickell miami
+
+I
+T
+22
+
+6
+3
+0.01
+2.4K
+40
+miamiresidential.com/duamiami/
+Jul 07
+
+miami metro population
+
+I
+47
+
+5
+0
+< 0.01
+2.4K
+40
+miamiresidential.com/news/miamis-population-continues-growing-is-one-of-the-major-metropolitan-areas-of-usa/
+Jul 06
+
+ritz carlton biscayne bay
+
+I
+31
+
+9
+0
+< 0.01
+2.4K
+49
+miamiresidential.com/ritzcarltonkeybiscayne/
+Jul 08
+
+ritz carlton biscayne bay
+
+I
+
+9
+8
+0.03
+2.4K
+49
+miamiresidential.com/ritzcarltonkeybiscayne/
+Jul 08
+
+icon brickell fl
+
+C
+61
+
+7
+0
+< 0.01
+2.4K
+34
+miamiresidential.com/wmiami/
+2 days
+
+icon brickell fl
+
+C
+23
+
+7
+3
+0.01
+2.4K
+34
+miamiresidential.com/iconbrickell
+2 days
+
+continuum south beach
+
+I
+80
+
+7
+0
+< 0.01
+2.4K
+19
+miamiresidential.com/es/continuumsouthbeach
+Jul 07
+
+continuum south beach
+
+I
+43
+
+7
+0
+< 0.01
+2.4K
+19
+miamiresidential.com/continuum2
+Jul 07
+
+continuum south beach
+
+I
+40
+
+7
+0
+< 0.01
+2.4K
+19
+miamiresidential.com/continuum2
+Jul 07
+
+continuum south beach
+
+I
+16
+
+7
+3
+0.01
+2.4K
+19
+miamiresidential.com/continuumsouthbeach/
+Jul 07
+
+missoni baia
+
+I
+88
+
+6
+0
+< 0.01
+2.4K
+18
+miamiresidential.com/
+Jul 06
+
+missoni baia
+
+I
+13
+
+6
+3
+0.01
+2.4K
+18
+miamiresidential.com/missonibaia
+Jul 06
+
+vox miami
+
+I
+N
+53
+
+7
+0
+< 0.01
+2.4K
+26
+miamiresidential.com/
+Jul 07
+
+brickell key miami
+
+I
+38
+
+8
+0
+< 0.01
+2.4K
+44
+miamiresidential.com/miami-condo/brickell-key/
+Jul 06
+
+sls miami
+
+I
+T
+25
+
+7
+1
+< 0.01
+2.4K
+34
+miamiresidential.com/slslux/
+22 hours
+
+eleven downtown miami
+
+I
+35
+
+8
+0
+< 0.01
+2.4K
+37
+miamiresidential.com/es/e11evenresidences
+3 days
+
+eleven downtown miami
+
+I
+5
+
+8
+14
+0.05
+2.4K
+37
+miamiresidential.com/e11evenresidences
+3 days
+
+ocean terrace condominiums
+
+C
+24
+
+6
+3
+0.01
+2.4K
+28
+miamiresidential.com/oceanterracemiamibeach/
+4 days
+
+modera station miami fl
+
+N
+74
+
+5
+0
+< 0.01
+2.4K
+34
+miamiresidential.com/
+3 days
+
+porsche design tower
+
+T
+72
+
+8
+0
+< 0.01
+2.4K
+31
+miamiresidential.com/es/porschetower
+2 days
+
+porsche design tower
+
+T
+1
+
+8
+196
+0.78
+2.4K
+31
+miamiresidential.com/porschetower
+2 days
+
+eden house
+
+C
+22
+
+8
+3
+0.01
+2.4K
+43
+miamiresidential.com/edenhouse/
+2 days
+
+eden house
+
+C
+17
+
+8
+3
+0.01
+2.4K
+43
+miamiresidential.com/edenhouse/
+2 days
+
+club aqua miami miami fl
+
+I
+T
+35
+
+6
+0
+< 0.01
+2.4K
+13
+miamiresidential.com/aqua/
+Jul 08
+
+fisher island miami
+
+I
+43
+
+9
+0
+< 0.01
+2.4K
+67
+miamiresidential.com/sixfisherisland/
+Jul 06
+
+sls brickell miami florida
+
+I
+T
+28
+
+6
+1
+< 0.01
+2.4K
+30
+miamiresidential.com/duamiami/
+Jul 08
+
+aria reserve
+
+C
+14
+
+6
+12
+0.04
+2.4K
+12
+miamiresidential.com/ariareserve/
+Jul 06
+
+aventura apartments
+
+N
+81
+
+6
+0
+< 0.01
+2.4K
+60
+miamiresidential.com/aventuraplace/
+11 hours
+
+aventura apartments
+
+N
+79
+
+6
+0
+< 0.01
+2.4K
+60
+miamiresidential.com/aventuraplace/
+11 hours
+
+aventura apartments
+
+N
+37
+
+6
+0
+< 0.01
+2.4K
+60
+miamiresidential.com/aventura-park-square/
+11 hours
+
+flat miami
+
+I
+32
+
+6
+1
+< 0.01
+2.4K
+57
+miamiresidential.com/neolofts/
+4 days
+
+paramount miami world center
+
+I
+14
+
+7
+7
+0.02
+2.4K
+21
+miamiresidential.com/paramount/
+Jul 06
+
+bay parc apartments
+
+N
+67
+
+6
+0
+< 0.01
+2.4K
+32
+miamiresidential.com/bayparktowers/
+3 days
+
+830 brickell
+
+N
+78
+
+7
+0
+< 0.01
+2.4K
+20
+miamiresidential.com/
+1 day
+
+terrenos en venta
+
+I
+40
+
+5
+0
+< 0.01
+2.4K
+12
+miamiresidential.com/es/terrenos/
+Jul 09
+
+maizon brickell
+
+N
+63
+
+6
+0
+< 0.01
+2.4K
+31
+miamiresidential.com/
+18 hours
+
+maizon brickell
+
+N
+53
+
+6
+0
+< 0.01
+2.4K
+31
+miamiresidential.com/mybrickell/
+18 hours
+
+the elser miami
+
+I
+N
+19
+
+9
+0
+< 0.01
+2.4K
+45
+miamiresidential.com/theelser
+Jul 09
+
+hotel mandarin oriental miami
+
+C
+56
+
+6
+0
+< 0.01
+2.4K
+53
+miamiresidential.com/mandarinresidences/
+Jul 09
+
+mercedes benz miami
+
+N
+43
+
+8
+0
+< 0.01
+2.4K
+35
+miamiresidential.com/mercedesbenzplaces/
+Jul 07
