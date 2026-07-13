@@ -106,7 +106,8 @@ export async function POST(request: Request) {
             action: "error" as const,
             project_id: null,
             published: false,
-            notes: "Extraction unavailable (ANTHROPIC_API_KEY unset or parse failed).",
+            notes:
+              "Extraction returned nothing (API key unset or the model emitted no tool call).",
           };
 
       await admin.from("email_intake_log").insert({
