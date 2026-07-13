@@ -106,7 +106,11 @@ function n(v: unknown): number | null {
 
 /**
  * Runs the extraction. Returns null if the API key is unset or the model didn't
- * return the tool call — callers treat null as "couldn't parse".
+ * return the tool call — callers treat null as "couldn't parse". API failures
+ * (credit exhaustion, overload) THROW with the real message so the intake log
+ * records the actual reason instead of a generic "unavailable" — the SDK
+ * already retries transient 429/5xx internally, so whatever reaches us is
+ * worth surfacing.
  */
 export async function extractProjectFromEmail(opts: {
   subject: string | null;
@@ -142,45 +146,41 @@ export async function extractProjectFromEmail(opts: {
     ),
   ];
 
-  try {
-    const client = new Anthropic();
-    const message = await client.messages.create({
-      model: "claude-opus-4-8",
-      max_tokens: 1500,
-      system: SYSTEM,
-      tools: [TOOL],
-      tool_choice: { type: "tool", name: "emit_project" },
-      messages: [{ role: "user", content }],
-    });
+  const client = new Anthropic();
+  const message = await client.messages.create({
+    model: "claude-opus-4-8",
+    max_tokens: 1500,
+    system: SYSTEM,
+    tools: [TOOL],
+    tool_choice: { type: "tool", name: "emit_project" },
+    messages: [{ role: "user", content }],
+  });
 
-    const block = message.content.find((b) => b.type === "tool_use");
-    if (!block || block.type !== "tool_use") return null;
-    const o = block.input as Record<string, unknown>;
+  const block = message.content.find((b) => b.type === "tool_use");
+  if (!block || block.type !== "tool_use") return null;
+  const o = block.input as Record<string, unknown>;
 
-    return {
-      is_actionable: o.is_actionable === true,
-      confidence: n(o.confidence) ?? 0,
-      project_name: s(o.project_name),
-      builder_name: s(o.builder_name),
-      project_type: s(o.project_type),
-      city: s(o.city),
-      address_full: s(o.address_full),
-      price_from: n(o.price_from),
-      price_to: n(o.price_to),
-      bedrooms_summary: s(o.bedrooms_summary),
-      occupancy_estimate_text: s(o.occupancy_estimate_text),
-      incentives: s(o.incentives),
-      commission_summary: s(o.commission_summary),
-      commission_percent: n(o.commission_percent),
-      broker_portal_url: s(o.broker_portal_url),
-      broker_portal_name: s(o.broker_portal_name),
-      contact_name: s(o.contact_name),
-      contact_email: s(o.contact_email),
-      contact_phone: s(o.contact_phone),
-      brokerage_name: s(o.brokerage_name),
-      notes: s(o.notes),
-    };
-  } catch {
-    return null;
-  }
+  return {
+    is_actionable: o.is_actionable === true,
+    confidence: n(o.confidence) ?? 0,
+    project_name: s(o.project_name),
+    builder_name: s(o.builder_name),
+    project_type: s(o.project_type),
+    city: s(o.city),
+    address_full: s(o.address_full),
+    price_from: n(o.price_from),
+    price_to: n(o.price_to),
+    bedrooms_summary: s(o.bedrooms_summary),
+    occupancy_estimate_text: s(o.occupancy_estimate_text),
+    incentives: s(o.incentives),
+    commission_summary: s(o.commission_summary),
+    commission_percent: n(o.commission_percent),
+    broker_portal_url: s(o.broker_portal_url),
+    broker_portal_name: s(o.broker_portal_name),
+    contact_name: s(o.contact_name),
+    contact_email: s(o.contact_email),
+    contact_phone: s(o.contact_phone),
+    brokerage_name: s(o.brokerage_name),
+    notes: s(o.notes),
+  };
 }

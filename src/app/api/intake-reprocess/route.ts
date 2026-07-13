@@ -112,7 +112,7 @@ export async function GET(req: Request) {
           id: row.id,
           subject: row.subject,
           action: "error",
-          notes: "extraction failed again — check API credits/logs",
+          notes: "extraction returned nothing (model emitted no tool call)",
         });
         continue;
       }
@@ -143,11 +143,18 @@ export async function GET(req: Request) {
         notes: result.notes,
       });
     } catch (e) {
+      const message = e instanceof Error ? e.message.slice(0, 200) : String(e);
+      // Refresh the row's notes so the admin tab shows the REAL failure
+      // (credit exhaustion, overload, …) instead of the original generic one.
+      await admin
+        .from("email_intake_log")
+        .update({ notes: `[reprocess failed] ${message}` })
+        .eq("id", row.id);
       results.push({
         id: row.id,
         subject: row.subject,
         action: "error",
-        notes: e instanceof Error ? e.message.slice(0, 200) : String(e),
+        notes: message,
       });
     }
   }
