@@ -43,6 +43,13 @@ import { cn } from "@/lib/cn";
 import type { ReactNode } from "react";
 import { SECTION_ACCENT, type SectionAccent } from "@/lib/section-accents";
 import { GetStartedBanner } from "@/components/dashboard/onboarding/get-started-banner";
+import { Notice } from "@/components/ui/notice";
+import {
+  ActivationTracker,
+  type ActivationStep,
+} from "@/components/dashboard/activation-tracker";
+import { ConfettiBurst } from "@/components/dashboard/confetti-burst";
+import { markVerificationCelebrated } from "./celebration-actions";
 import { PlaybookCallout } from "@/components/dashboard/playbook-callout";
 import { LeadPathStatus } from "@/components/dashboard/lead-path-status";
 import { NextStepCard } from "@/components/dashboard/next-step-card";
@@ -100,6 +107,91 @@ export default async function DashboardHome() {
       .eq("status", "pending");
     hasSubmittedVerification = (count ?? 0) > 0;
   }
+
+  // Activation tracker signals + steps. Derived purely from CURRENT data —
+  // never from an assumed order: auto-verification can complete several steps
+  // in one moment, and profile/project steps can precede verification.
+  const [anyVerReq, subCount, pickCount] = await Promise.all([
+    supabase
+      .from("verification_requests")
+      .select("id", { count: "exact", head: true })
+      .eq("profile_id", profile.id),
+    supabase
+      .from("property_submissions")
+      .select("id", { count: "exact", head: true })
+      .eq("submitted_by_user_id", profile.id),
+    supabase
+      .from("realtor_page_projects")
+      .select("id", { count: "exact", head: true })
+      .eq("profile_id", profile.id),
+  ]);
+  const status = profile.verification_status;
+  const submitted =
+    approved || Boolean(profile.reco_registration_number) || (anyVerReq.count ?? 0) > 0;
+  const profileDone = Boolean(
+    profile.first_name && profile.brokerage_name && profile.avatar_url,
+  );
+  const firstActionDone = (subCount.count ?? 0) > 0 || (pickCount.count ?? 0) > 0;
+
+  const rawSteps: ActivationStep[] = [
+    { key: "account", label: "Account created", state: "done" },
+    {
+      key: "submitted",
+      label: "Verification submitted",
+      state: submitted ? "done" : "todo",
+      href: "/dashboard/verify",
+    },
+    {
+      key: "verified",
+      label: "Verified",
+      state:
+        status === "approved"
+          ? "done"
+          : status === "rejected" || status === "suspended"
+            ? "blocked"
+            : "todo",
+      sub:
+        status === "approved"
+          ? undefined
+          : status === "rejected"
+            ? "Not approved — review and resubmit."
+            : status === "suspended"
+              ? "Account suspended — contact support."
+              : submitted
+                ? "Our team is reviewing your RECO registration."
+                : undefined,
+      href: status === "approved" ? undefined : "/dashboard/verify",
+    },
+    {
+      key: "profile",
+      label: "Profile completed",
+      sub: profileDone ? undefined : "Name, brokerage, and a photo.",
+      state: profileDone ? "done" : "todo",
+      href: "/dashboard/profile",
+    },
+    {
+      key: "first-action",
+      label: "First project action",
+      sub: firstActionDone ? undefined : "Add a project to your page, or submit one.",
+      state: firstActionDone ? "done" : "todo",
+      href: approved ? "/dashboard/my-page" : "/dashboard/projects",
+    },
+  ];
+  // The first incomplete, unblocked step gets the "in progress" treatment —
+  // waiting-on-review reads as alive, not stalled.
+  const firstOpen = rawSteps.find((s) => s.state === "todo" || s.state === "blocked");
+  const trackerSteps = rawSteps.map((s) =>
+    s === firstOpen && s.state === "todo" ? { ...s, state: "active" as const } : s,
+  );
+  const allDone = rawSteps.every((s) => s.state === "done");
+
+  // The big once-ever "you're verified" moment — fires on the TRANSITION to
+  // approved regardless of path (manual review discovered on a later login,
+  // or instant auto-verification). The DB flag is the cross-device guard.
+  const celebrateApproval =
+    approved &&
+    (profile as { verification_celebrated_at?: string | null })
+      .verification_celebrated_at == null;
 
   if (approved) {
     const [pc, ntw, cityRows, matched, leads, rec] = await Promise.all([
@@ -161,6 +253,20 @@ export default async function DashboardHome() {
           {approved ? "Browse projects" : "Start verification"}
         </ButtonLink>
       </div>
+
+      {profile.role === "realtor" && celebrateApproval ? (
+        <>
+          <ConfettiBurst variant="big" onFired={markVerificationCelebrated} />
+          <Notice tone="success">
+            <span className="font-semibold">You&apos;re verified</span> — all
+            broker tools are unlocked. Welcome to the network.
+          </Notice>
+        </>
+      ) : null}
+
+      {profile.role === "realtor" && !allDone ? (
+        <ActivationTracker steps={trackerSteps} />
+      ) : null}
 
       {approved ? (
         <LeadPathStatus
