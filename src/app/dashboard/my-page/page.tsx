@@ -3,6 +3,7 @@ import Link from "next/link";
 import {
   ExternalLink,
   Globe,
+  Link2,
   Medal,
   Plus,
   Sparkles,
@@ -24,6 +25,8 @@ import {
   ensureSlug,
   addAward,
   removeAward,
+  addLink,
+  removeLink,
   setShowAchievements,
 } from "./actions";
 
@@ -37,14 +40,19 @@ const SITE_URL = (
 // Kept in sync with actions.ts.
 const FREE_PICK_LIMIT = 3;
 const AWARD_LIMIT = 10;
+const LINK_LIMIT = 8;
 
 const MESSAGES: Record<string, string> = {
   added: "Project added to your page.",
   removed: "Removed.",
   "award-added": "Award added to your page.",
   "award-removed": "Award removed.",
+  "link-added": "Link added to your page.",
+  "link-removed": "Link removed.",
   "achievements-on": "Achievements now show on your page.",
   "achievements-off": "Achievements are now hidden on your page.",
+  "page-claimed":
+    "Page claimed — it's yours. Verify your licence below and it publishes automatically.",
 };
 
 interface PickRow {
@@ -58,6 +66,12 @@ interface AwardRow {
   title: string;
   issuer: string | null;
   year: number | null;
+}
+
+interface LinkRow {
+  id: string;
+  label: string;
+  url: string;
 }
 
 export default async function MyPagePage({
@@ -120,6 +134,14 @@ export default async function MyPagePage({
     .order("sort_order", { ascending: true })
     .order("created_at", { ascending: true });
   const awards = (awardData ?? []) as AwardRow[];
+
+  const { data: linkData } = await supabase
+    .from("realtor_links")
+    .select("id, label, url")
+    .eq("profile_id", profile.id)
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: true });
+  const links = (linkData ?? []) as LinkRow[];
 
   // Project search for the picker (published only, excluding current picks).
   const query = (q ?? "").trim();
@@ -187,7 +209,12 @@ export default async function MyPagePage({
               </ButtonLink>
             </div>
             <p className="mt-3 text-xs text-slate-500">
-              Paste this link in your Instagram / Facebook bio. Add a photo and bio in{" "}
+              Paste this link in your Instagram / Facebook bio — or use the
+              short handle version:{" "}
+              <span className="font-medium text-slate-700">
+                {SITE_URL.replace(/^https?:\/\//, "")}/@{slug}
+              </span>
+              . Add a photo and bio in{" "}
               <Link href="/dashboard/profile" className="font-medium text-brand-700 hover:underline">
                 Profile &amp; settings
               </Link>{" "}
@@ -296,6 +323,81 @@ export default async function MyPagePage({
               ))}
             </ul>
           ) : null}
+        </CardBody>
+      </Card>
+
+      {/* Custom link-in-bio links */}
+      <Card>
+        <CardBody>
+          <div className="flex items-center justify-between">
+            <h2 className="inline-flex items-center gap-2 font-semibold text-ink">
+              <Link2 aria-hidden className="size-4 text-brand-600" /> Your links
+            </h2>
+            <span className="text-xs text-slate-500">
+              {links.length}/{LINK_LIMIT}
+            </span>
+          </div>
+          <p className="mt-1 text-sm text-slate-500">
+            Buttons on your page for anything you want to point at — your
+            listings, Google reviews, your site, your YouTube.
+          </p>
+
+          {links.length > 0 ? (
+            <ul className="mt-3 divide-y divide-slate-100">
+              {links.map((l) => (
+                <li
+                  key={l.id}
+                  className="flex items-center justify-between gap-3 py-2.5"
+                >
+                  <span className="min-w-0 truncate text-sm text-slate-700">
+                    {l.label}
+                    <span className="text-slate-400"> · {l.url}</span>
+                  </span>
+                  <form action={removeLink}>
+                    <input type="hidden" name="link_id" value={l.id} />
+                    <button
+                      type="submit"
+                      className="rounded-md p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600"
+                      aria-label="Remove link"
+                    >
+                      <Trash2 aria-hidden className="size-4" />
+                    </button>
+                  </form>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+
+          <form action={addLink} className="mt-4 space-y-3">
+            <div className="grid gap-3 sm:grid-cols-[1fr_2fr]">
+              <Field label="Label" htmlFor="link_label">
+                <Input
+                  id="link_label"
+                  name="label"
+                  placeholder="e.g. Google reviews"
+                  required
+                  maxLength={60}
+                />
+              </Field>
+              <Field label="Link" htmlFor="link_url">
+                <Input
+                  id="link_url"
+                  name="url"
+                  type="url"
+                  placeholder="https://…"
+                  required
+                  maxLength={500}
+                />
+              </Field>
+            </div>
+            <Button
+              type="submit"
+              variant="secondary"
+              disabled={links.length >= LINK_LIMIT}
+            >
+              <Plus aria-hidden className="mr-1 size-4" /> Add link
+            </Button>
+          </form>
         </CardBody>
       </Card>
 

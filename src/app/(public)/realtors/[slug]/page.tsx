@@ -6,6 +6,7 @@ import {
   BadgeCheck,
   Building2,
   Compass,
+  ExternalLink,
   MapPin,
   Phone,
   Rocket,
@@ -75,6 +76,22 @@ interface AwardRow {
   year: number | null;
 }
 
+interface LinkRow {
+  id: string;
+  label: string;
+  url: string;
+}
+
+interface ProspectRow {
+  id: string;
+  slug: string;
+  first_name: string | null;
+  last_name: string | null;
+  brokerage: string | null;
+  city: string | null;
+  claimed_by_profile_id: string | null;
+}
+
 interface Medal {
   key: string;
   label: string;
@@ -112,7 +129,21 @@ async function getAgent(slug: string): Promise<AgentCard | null> {
   return (data as AgentCard) ?? null;
 }
 
-function fullName(a: AgentCard): string {
+/** Pre-minted unclaimed page (outreach wave). RLS hides removed rows. */
+async function getProspect(slug: string): Promise<ProspectRow | null> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("prospect_pages")
+    .select("id, slug, first_name, last_name, brokerage, city, claimed_by_profile_id")
+    .eq("slug", slug)
+    .maybeSingle();
+  return (data as ProspectRow) ?? null;
+}
+
+function fullName(a: {
+  first_name: string | null;
+  last_name: string | null;
+}): string {
   return [a.first_name, a.last_name].filter(Boolean).join(" ") || "LIQWD Agent";
 }
 
@@ -123,14 +154,24 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const agent = await getAgent(slug);
-  if (!agent) return { title: "Agent not found" };
-  const name = fullName(agent);
-  const area = agent.service_area || "Ontario";
+  if (agent) {
+    const name = fullName(agent);
+    const area = agent.service_area || "Ontario";
+    return {
+      title: `${name} — ${agent.brokerage ?? "Real Estate Agent"} | New Construction, ${area}`,
+      description:
+        agent.bio_short ||
+        `${name} is a verified real estate agent${agent.brokerage ? ` with ${agent.brokerage}` : ""} specializing in new & pre-construction homes in ${area}. Browse their projects and get in touch.`,
+      alternates: { canonical: `/realtors/${slug}` },
+    };
+  }
+  // Unclaimed prospect pages exist for their owner to find, not for Google —
+  // noindex until claimed + verified (young-domain hygiene: no thin name pages).
+  const prospect = await getProspect(slug);
+  if (!prospect) return { title: "Agent not found" };
   return {
-    title: `${name} — ${agent.brokerage ?? "Real Estate Agent"} | New Construction, ${area}`,
-    description:
-      agent.bio_short ||
-      `${name} is a verified real estate agent${agent.brokerage ? ` with ${agent.brokerage}` : ""} specializing in new & pre-construction homes in ${area}. Browse their projects and get in touch.`,
+    title: `${fullName(prospect)} — Real Estate Agent${prospect.city ? `, ${prospect.city}` : ""}`,
+    robots: { index: false, follow: false },
     alternates: { canonical: `/realtors/${slug}` },
   };
 }
@@ -142,7 +183,11 @@ export default async function RealtorProfilePage({
 }) {
   const { slug } = await params;
   const agent = await getAgent(slug);
-  if (!agent) notFound();
+  if (!agent) {
+    const prospect = await getProspect(slug);
+    if (!prospect) notFound();
+    return <UnclaimedProfile prospect={prospect} />;
+  }
 
   const supabase = await createClient();
   const showAchievements = agent.show_achievements !== false;
@@ -152,7 +197,7 @@ export default async function RealtorProfilePage({
   // (submissions, referrals) come via the admin client — aggregates only,
   // never row data.
   const admin = createAdminClient();
-  const [pickRes, awardRes, stewardRes, scoutRes, networkRes] =
+  const [pickRes, awardRes, linkRes, stewardRes, scoutRes, networkRes] =
     await Promise.all([
       supabase
         .from("realtor_page_projects")
@@ -163,6 +208,12 @@ export default async function RealtorProfilePage({
       supabase
         .from("realtor_awards")
         .select("id, title, issuer, year")
+        .eq("profile_id", agent.profile_id)
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: true }),
+      supabase
+        .from("realtor_links")
+        .select("id, label, url")
         .eq("profile_id", agent.profile_id)
         .order("sort_order", { ascending: true })
         .order("created_at", { ascending: true }),
@@ -192,6 +243,10 @@ export default async function RealtorProfilePage({
     (r) => r.project_id,
   );
   const awards = (awardRes.data ?? []) as AwardRow[];
+  // Only http(s) links ever render (validated on write too — belt and braces).
+  const links = ((linkRes.data ?? []) as LinkRow[]).filter((l) =>
+    /^https?:\/\//i.test(l.url),
+  );
 
   let picks: ProjRow[] = [];
   if (pickIds.length > 0) {
@@ -435,6 +490,27 @@ export default async function RealtorProfilePage({
               </a>
             </p>
           ) : null}
+
+          {/* The agent's own links — the link-in-bio surface */}
+          {links.length > 0 ? (
+            <div className="mt-6 flex w-full max-w-md flex-col gap-2.5">
+              {links.map((l) => (
+                <a
+                  key={l.id}
+                  href={l.url}
+                  target="_blank"
+                  rel="noopener noreferrer nofollow"
+                  className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-ink transition-colors hover:border-brand-300 hover:bg-brand-50"
+                >
+                  <span className="min-w-0 truncate">{l.label}</span>
+                  <ExternalLink
+                    aria-hidden
+                    className="size-4 shrink-0 text-slate-400"
+                  />
+                </a>
+              ))}
+            </div>
+          ) : null}
         </div>
       </div>
 
@@ -532,6 +608,149 @@ export default async function RealtorProfilePage({
           Are you an agent? Get your free page →
         </Link>
       </p>
+    </div>
+  );
+}
+
+/**
+ * Pre-minted, unclaimed agent page (outreach wave). Directory-grade info only
+ * (name, brokerage, city), no verified badge, noindex — plus real local
+ * inventory so the page has substance, and the claim CTA that is the whole
+ * point. Flips to the full verified profile automatically once claimed +
+ * verified, at this same URL.
+ */
+async function UnclaimedProfile({ prospect }: { prospect: ProspectRow }) {
+  const name = fullName(prospect);
+  const first = prospect.first_name ?? name.split(" ")[0];
+  const claimed = Boolean(prospect.claimed_by_profile_id);
+
+  // Real published projects near them — substance, not a bare name page.
+  let cityProjects: ProjRow[] = [];
+  if (prospect.city) {
+    const supabase = await createClient();
+    const { data } = await supabase
+      .from("public_projects_view")
+      .select(PROJ_SELECT)
+      .ilike("city", `%${prospect.city}%`)
+      .or("listing_type.is.null,listing_type.neq.for_rent")
+      .order("published_at", { ascending: false })
+      .limit(3);
+    cityProjects = (data ?? []) as ProjRow[];
+  }
+
+  return (
+    <div className="mx-auto max-w-5xl px-6 py-12 sm:py-16">
+      <nav aria-label="Breadcrumb" className="mb-6 text-sm text-slate-500">
+        <Link href="/" className="hover:text-ink hover:underline">New homes</Link>
+        <span aria-hidden className="mx-1.5 text-slate-300">/</span>
+        <span aria-current="page" className="font-medium text-slate-700">{name}</span>
+      </nav>
+
+      {/* Placeholder banner — the agent's own arrives when they claim */}
+      <div className="relative h-40 w-full overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-r from-slate-700 via-slate-600 to-slate-400 sm:h-56" />
+
+      <div className="px-4 sm:px-8">
+        <div className="relative -mt-12 sm:-mt-16">
+          <div className="relative flex size-28 items-center justify-center overflow-hidden rounded-2xl bg-slate-100 text-3xl font-semibold text-slate-400 shadow-md ring-4 ring-white sm:size-32">
+            {name.slice(0, 1)}
+          </div>
+        </div>
+        <div className="mt-4 min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
+              {name}
+            </h1>
+            <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-500">
+              Unclaimed profile
+            </span>
+          </div>
+          <p className="mt-1 text-slate-600">
+            {[prospect.brokerage, prospect.city].filter(Boolean).join(" · ")}
+          </p>
+        </div>
+
+        {/* The claim card — the page's one job */}
+        <div className="mt-8 max-w-xl rounded-2xl border border-brand-200 bg-brand-50 p-5">
+          {claimed ? (
+            <>
+              <p className="font-semibold text-brand-800">
+                This page has been claimed
+              </p>
+              <p className="mt-1 text-sm text-brand-700">
+                Licence verification is in progress. The full profile appears
+                here once it&apos;s confirmed.
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="font-semibold text-brand-800">Are you {first}?</p>
+              <p className="mt-1 text-sm leading-relaxed text-brand-700">
+                This page is reserved for you. Claim it free to add your photo,
+                banner, awards, your own links, and the projects you sell — and
+                buyer inquiries on those projects route directly to you.
+              </p>
+              <Link
+                href={`/realtors/${prospect.slug}/claim`}
+                className="mt-4 inline-flex items-center gap-2 rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-800"
+              >
+                Claim this page
+              </Link>
+              <p className="mt-3 text-xs text-brand-700/70">
+                Takes about two minutes with your RECO number. Not {name}, or
+                want this page removed? Email{" "}
+                <a href="mailto:hello@liqwd.ca" className="underline">
+                  hello@liqwd.ca
+                </a>{" "}
+                and it comes down the same day.
+              </p>
+            </>
+          )}
+        </div>
+
+        {/* Real local inventory so the page isn't a bare name */}
+        {cityProjects.length > 0 ? (
+          <section className="mt-12">
+            <h2 className="text-xl font-semibold text-ink">
+              New construction in {prospect.city}
+            </h2>
+            <div className="mt-5 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {cityProjects.map((p) => (
+                <Link
+                  key={p.project_id}
+                  href={`/projects/${p.slug}`}
+                  className="group block h-full"
+                >
+                  <Card className="h-full overflow-hidden transition-all duration-300 group-hover:-translate-y-0.5 group-hover:shadow-lg">
+                    <div className="aspect-[4/3] overflow-hidden bg-slate-100">
+                      <CardImage
+                        src={p.hero_image_url}
+                        alt={p.project_name}
+                        name={p.project_name}
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                      />
+                    </div>
+                    <CardBody>
+                      <h3 className="line-clamp-2 font-semibold text-ink">
+                        {p.project_name}
+                      </h3>
+                      {p.city ? (
+                        <p className="mt-1 text-sm text-slate-500">{p.city}</p>
+                      ) : null}
+                    </CardBody>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
+        <p className="mt-14 border-t border-slate-200 pt-6 text-sm text-slate-500">
+          This is an unclaimed directory page on LIQWD.{" "}
+          <Link href="/agents" className="font-medium text-brand-700 hover:underline">
+            Are you an agent? Get your free page →
+          </Link>
+        </p>
+      </div>
     </div>
   );
 }
