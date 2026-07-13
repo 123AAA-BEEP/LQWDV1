@@ -133,3 +133,51 @@ domain** — and its traffic shape is the portals' mirror image:
 page doesn't serve, and (c) everything from builders without real websites.
 The builder registry already tracks who's who; a "builder web-strength" flag
 would rank every project by how winnable its name queries are.
+
+### Canadian database (Mattamy) — home-market corrections
+
+The Canadian pull confirms the builder-lens findings hold in LIQWD's home
+market (branded dominance, GBP-listing URLs carrying "new home construction
+in milton" / "new subdivision kitchener" / "new builds brampton"), and adds
+four things the US view missed:
+
+- **"{builder} broker portal" is a live query class with dedicated landing
+  pages** (`/wildflowers-broker-portal`, `/central-broker-portal` ranking
+  "mattamy broker portal"). Agents search for builders' broker portals by
+  name. That is LIQWD's own B2B acquisition surface: agent-facing pages
+  targeting "{builder} broker portal" / "{builder} agent commission" intent
+  are a direct funnel into the product.
+- **Incentive/promo pages rank generic terms**: `/promos/government-rebates`
+  pulls 792 visits on "hst rebate" (184 keywords); per-metro
+  `/promos/quick-move-in-homes` ranks "quick move in homes ottawa"; a solar
+  promo ranks "new homes with solar panels". Validates LIQWD's HST-rebate
+  calculator and argues for indexable quick-move-in / incentive hub pages.
+- **GTA condo pages rank by street address** ("1660 bloor street west" on
+  Westbend — 268 keywords; unit-level "603-720 whitlock avenue") and GTA
+  condo pages hold the site's biggest referring-domain counts (The Laurels
+  199, Blvd Q 175, Clockwork 138). Address queries are a first-class query
+  class in the GTA.
+- **Founder/entity queries carry real volume** ("peter gilgan" ≈ 1K
+  visits/mo to an about page) — builder pages answering "who is behind
+  {builder}" capture brand-research intent. A legacy `.aspx` URL still
+  ranking is another redirect-hygiene exhibit.
+
+### mycondopro.ca — the small-aggregator floor
+
+The closest structural comparable to LIQWD's public surface (GTA
+pre-construction aggregator, one `/project/{slug}` page per project):
+
+- **Address and intersection queries are its entire traffic base**: "270 the
+  kingsway", "357 king st w", "brimley and sheppard", "hurontario and
+  eglinton", "weston and major mackenzie". With ~zero referring domains it
+  still ranks — this query class is effectively uncontested. LIQWD already
+  stores `address_full` + `intersection_primary/secondary`; surfacing them
+  in titles, H1-adjacent copy, FAQs, and schema is the cheapest coverage win
+  available in the GTA.
+- **Assignment-sale pages are a distinct intent lane** ("{project}
+  assignment", per-bedroom variants) it monetizes with dedicated pages.
+- **The cautionary ceiling**: name/address entity pages alone, with no hubs,
+  no guides, and no authority, cap out around ~10K visits/mo with the top
+  page earning ~116. Entity pages are the floor, not the strategy — hubs,
+  guides, and referring-domain growth are what separate NHS-scale from
+  mycondopro-scale.
