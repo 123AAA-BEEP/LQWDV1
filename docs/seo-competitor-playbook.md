@@ -84,3 +84,52 @@ parsed with `data/semrush/parse_semrush.py`; see `data/semrush/README.md`
 for column semantics and the batch log. Highest-value future pulls: Keyword
 Gap vs. an Ontario competitor (BuzzBuzzHome/Livabl/Precondo), backlink
 profiles (authority gate), and more pages of the very-easy-KD export.
+
+## Addendum: mattamyhomes.com Top Pages (builder-site lens)
+
+Mattamy is the third species of site in the dataset — a **builder's own
+domain** — and its traffic shape is the portals' mirror image:
+
+- **~90% of its organic traffic is branded/navigational**: "mattamy homes",
+  "mattamy homes {community}", "mattamy homes {city}". The homepage alone is
+  25% of traffic (1.1K referring domains). Builders own their brand+community
+  queries; they barely register on generic "new homes {city}" terms — those
+  belong to the portals. Portals and builders split the SERP; they don't
+  really compete.
+- **The generic Commercial queries it *does* land come via Google Business
+  Profile listings**, not blue links: the URLs tagged
+  `?utm_campaign=GBPlisting` are the ones whose top keywords are
+  "new homes in fuquay varina nc", "port st lucie new construction",
+  "mattamy homes near me". Local-pack/Maps presence is a separate, measurable
+  organic channel for "near me"/"new homes {city}" intent — one a portal
+  can't fully replicate (no premises), but assigned agents' GBP profiles and
+  sales-centre listings can partially capture. It also means some head-term
+  SERP real estate is absorbed by the local pack regardless of ranking.
+- **Hygiene warning we should not copy:** those GBP UTM URLs are being
+  indexed and tracked as separate pages, splitting each community page's
+  equity across two URLs. Canonical tags must collapse query-string variants.
+- **Deep hierarchy ranks at every level**: state → metro → city → community →
+  sub-community/product line (`/tradition/seville`, `/cadence-townhomes`) and
+  even single-address pages ("denali drive"). Non-branded sub-community
+  queries ("brightmore at wellen park", "telaro at tradition", "avila jensen
+  beach") resolve to these deep pages — supports LIQWD's separate-page-per-
+  phase/product-line model, and suggests per-model/floor-plan pages have a
+  long-tail future.
+- **Referring domains concentrate on a few flagship communities** (Island
+  Village Celebration 112–120, Brightmore/Wellen Park 137, Waxhaw Landing
+  110, Townes at Cheyney 106). Where a builder page has that authority, don't
+  fight it for the brand+name query; target the unbranded variants and
+  informational angles (pricing, floor plans, FAQ) the builder page is thin
+  on. Conversely, projects from small builders with weak sites are where a
+  portal page takes position 1 outright — a prioritization signal worth
+  joining against the builder registry.
+- Their `/ontario/gta` page (142 referring domains, ranks "toronto gta
+  housing") is a reminder this export is US-database-heavy; Canada's largest
+  builder still concentrates link equity on a GTA hub.
+
+**Net for LIQWD:** project pages should expect to *lose* "{builder}
+{community}" to the builder's own site and *win* (a) unbranded
+"{community} {city}" variants, (b) comparison/pricing/FAQ intent the builder
+page doesn't serve, and (c) everything from builders without real websites.
+The builder registry already tracks who's who; a "builder web-strength" flag
+would rank every project by how winnable its name queries are.
