@@ -7,13 +7,17 @@ import {
   Building2,
   Compass,
   ExternalLink,
+  Mail,
   MapPin,
+  MessageCircle,
+  MessageSquare,
   Phone,
   Rocket,
   Trophy,
   Users,
   type LucideIcon,
 } from "lucide-react";
+import { AgentContactForm } from "./contact-form";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { Card, CardBody } from "@/components/ui/card";
@@ -147,6 +151,12 @@ function fullName(a: {
   return [a.first_name, a.last_name].filter(Boolean).join(" ") || "LIQWD Agent";
 }
 
+/** wa.me wants country-code digits only; assume NANP when 10 digits. */
+function waDigits(phone: string): string {
+  const digits = phone.replace(/\D/g, "");
+  return digits.length === 10 ? `1${digits}` : digits;
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -157,12 +167,23 @@ export async function generateMetadata({
   if (agent) {
     const name = fullName(agent);
     const area = agent.service_area || "Ontario";
+    const description =
+      agent.bio_short ||
+      `${name} is a verified real estate agent${agent.brokerage ? ` with ${agent.brokerage}` : ""} specializing in new & pre-construction homes in ${area}. Browse their projects and get in touch.`;
     return {
       title: `${name} — ${agent.brokerage ?? "Real Estate Agent"} | New Construction, ${area}`,
-      description:
-        agent.bio_short ||
-        `${name} is a verified real estate agent${agent.brokerage ? ` with ${agent.brokerage}` : ""} specializing in new & pre-construction homes in ${area}. Browse their projects and get in touch.`,
+      description,
       alternates: { canonical: `/realtors/${slug}` },
+      // og:image / twitter:image come from the file-convention
+      // opengraph-image.tsx next to this page (the per-agent card).
+      openGraph: {
+        title: `${name} — Verified Real Estate Agent`,
+        description,
+        type: "profile",
+        url: `/realtors/${slug}`,
+        siteName: "LIQWD",
+      },
+      twitter: { card: "summary_large_image" },
     };
   }
   // Unclaimed prospect pages exist for their owner to find, not for Google —
@@ -480,15 +501,41 @@ export default async function RealtorProfilePage({
               {agent.bio_short}
             </p>
           ) : null}
-          {agent.phone ? (
-            <p className="mt-4">
-              <a
-                href={`tel:${agent.phone.replace(/[^\d+]/g, "")}`}
-                className="inline-flex items-center gap-2 rounded-full bg-ink px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
-              >
-                <Phone aria-hidden className="size-4" /> Call {name.split(" ")[0]}
-              </a>
-            </p>
+          {agent.phone || agent.email ? (
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              {agent.phone ? (
+                <>
+                  <a
+                    href={`tel:${agent.phone.replace(/[^\d+]/g, "")}`}
+                    className="inline-flex items-center gap-2 rounded-full bg-ink px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+                  >
+                    <Phone aria-hidden className="size-4" /> Call {name.split(" ")[0]}
+                  </a>
+                  <a
+                    href={`https://wa.me/${waDigits(agent.phone)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700"
+                  >
+                    <MessageCircle aria-hidden className="size-4" /> WhatsApp
+                  </a>
+                  <a
+                    href={`sms:${agent.phone.replace(/[^\d+]/g, "")}`}
+                    className="inline-flex items-center gap-2 rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700"
+                  >
+                    <MessageSquare aria-hidden className="size-4" /> Text
+                  </a>
+                </>
+              ) : null}
+              {agent.email ? (
+                <a
+                  href={`mailto:${agent.email}`}
+                  className="inline-flex items-center gap-2 rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700"
+                >
+                  <Mail aria-hidden className="size-4" /> Email
+                </a>
+              ) : null}
+            </div>
           ) : null}
 
           {/* The agent's own links — the link-in-bio surface */}
@@ -513,6 +560,25 @@ export default async function RealtorProfilePage({
           ) : null}
         </div>
       </div>
+
+      {/* Work with {first} — the page's lead capture; routes to the agent */}
+      <section id="contact" className="mt-10">
+        <div className="max-w-2xl rounded-2xl border border-slate-200 bg-white p-6">
+          <h2 className="text-xl font-semibold text-ink">
+            Work with {name.split(" ")[0]}
+          </h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Tell {name.split(" ")[0]} what you&apos;re looking for — the message
+            goes directly to them.
+          </p>
+          <div className="mt-5">
+            <AgentContactForm
+              profileId={agent.profile_id}
+              firstName={name.split(" ")[0]}
+            />
+          </div>
+        </div>
+      </section>
 
       {/* Awards & achievements — medals are computed, awards are self-reported */}
       {medals.length > 0 || awards.length > 0 ? (

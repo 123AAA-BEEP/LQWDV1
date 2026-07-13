@@ -1,16 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { headers } from "next/headers";
-import { Building2, ExternalLink, Search, Zap } from "lucide-react";
-import { requireUserProfile, isApproved, isPro } from "@/lib/auth";
+import { Building2, ExternalLink, Search } from "lucide-react";
+import { requireUserProfile, isApproved } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardBody } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Input } from "@/components/ui/field";
 import { VerificationRequired } from "@/components/dashboard/locked";
-import { ProBadge } from "@/components/dashboard/tier-ui";
-import { hasActivePro, formatPriceBand } from "@/lib/types";
+import { formatPriceBand } from "@/lib/types";
 import { CopyLinkButton } from "./copy-link-button";
 
 export const metadata: Metadata = { title: "Lead Pages" };
@@ -66,7 +65,6 @@ export default async function LeadPagesPage({
     );
   }
 
-  const proAccess = isPro(profile) || hasActivePro(profile);
   const code = profile.referral_code;
 
   const h = await headers();
@@ -115,11 +113,13 @@ export default async function LeadPagesPage({
   }
   const leadTotal = leadRows?.length ?? 0;
 
-  // "Promote any project" search (Pro/Ultra only).
+  // "Promote any project" search — every verified agent. The server-side lead
+  // action attributes any approved agent's code, so gating this UI only taxed
+  // the viral loop without protecting anything.
   const { q } = await searchParams;
   const query = (q ?? "").trim();
   let promote: PageRow[] = [];
-  if (proAccess && query) {
+  if (query) {
     const { data } = await supabase
       .from("public_projects_view")
       .select(VIEW_COLUMNS)
@@ -203,92 +203,69 @@ export default async function LeadPagesPage({
         )}
       </section>
 
-      {/* ---- Pro/Ultra: promote any project ------------------------------ */}
+      {/* ---- Promote any project (every verified agent) ------------------- */}
       <section className="space-y-3">
-        <div className="flex flex-wrap items-center gap-2">
+        <div>
           <h2 className="flex items-center gap-2 text-sm font-medium uppercase tracking-[0.18em] text-sky-700">
             <span className="size-1.5 rounded-full bg-sky-500" aria-hidden />
             Promote any project
           </h2>
-          <ProBadge />
+          <p className="mt-1 text-sm text-slate-500">
+            Every published project has a referral link with your code on it —
+            not just the ones you&apos;re bound to. Hand it to a buyer
+            you&apos;re working and their enquiry lands with you.
+          </p>
         </div>
-        <p className="text-sm text-slate-500">
-          Pro &amp; Ultra unlock a shareable referral link for any published
-          project — not just the ones you&apos;re bound to. Hand it to a buyer
-          you&apos;re working and their enquiry lands with you.
-        </p>
 
-        {proAccess ? (
-          <>
-            <form method="get" className="flex gap-2">
-              <div className="relative flex-1">
-                <Search
-                  className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400"
-                  aria-hidden
-                />
-                <Input
-                  name="q"
-                  defaultValue={query}
-                  placeholder="Search published projects by name, city, or builder…"
-                  className="pl-9"
-                />
-              </div>
-              <Button type="submit" variant="secondary">
-                Search
+        <form method="get" className="flex gap-2">
+          <div className="relative flex-1">
+            <Search
+              className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400"
+              aria-hidden
+            />
+            <Input
+              name="q"
+              defaultValue={query}
+              placeholder="Search published projects by name, city, or builder…"
+              className="pl-9"
+            />
+          </div>
+          <Button type="submit" variant="secondary">
+            Search
+          </Button>
+          {query ? (
+            <Link href="/dashboard/lead-pages">
+              <Button type="button" variant="secondary">
+                Clear
               </Button>
-              {query ? (
-                <Link href="/dashboard/lead-pages">
-                  <Button type="button" variant="secondary">
-                    Clear
-                  </Button>
-                </Link>
-              ) : null}
-            </form>
+            </Link>
+          ) : null}
+        </form>
 
-            {query ? (
-              promote.length === 0 ? (
-                <Card>
-                  <CardBody className="text-center text-sm text-slate-500">
-                    No published projects match “{query}”.
-                  </CardBody>
-                </Card>
-              ) : (
-                <div className="space-y-3">
-                  {promote.map((p) => (
-                    <PageRowCard
-                      key={p.public_page_id}
-                      project={p}
-                      pageUrl={`${base}/projects/${p.slug}`}
-                      refUrl={refLink(p.slug)}
-                      hasCode={!!code}
-                    />
-                  ))}
-                </div>
-              )
-            ) : (
-              <Card>
-                <CardBody className="text-sm text-slate-500">
-                  Search above to find a project and copy its referral link.
-                </CardBody>
-              </Card>
-            )}
-          </>
+        {query ? (
+          promote.length === 0 ? (
+            <Card>
+              <CardBody className="text-center text-sm text-slate-500">
+                No published projects match “{query}”.
+              </CardBody>
+            </Card>
+          ) : (
+            <div className="space-y-3">
+              {promote.map((p) => (
+                <PageRowCard
+                  key={p.public_page_id}
+                  project={p}
+                  pageUrl={`${base}/projects/${p.slug}`}
+                  refUrl={refLink(p.slug)}
+                  hasCode={!!code}
+                />
+              ))}
+            </div>
+          )
         ) : (
-          <Card className="border-brand-200 bg-gradient-to-br from-brand-50 to-white">
-            <CardBody className="flex flex-wrap items-center justify-between gap-4">
-              <div className="max-w-lg">
-                <p className="font-semibold text-ink">
-                  Promote any project with Pro
-                </p>
-                <p className="mt-1 text-sm text-slate-600">
-                  Your free pages stay yours. Pro adds a shareable, attributing
-                  referral link for every published project — perfect for the
-                  buyer you&apos;re already working.
-                </p>
-              </div>
-              <ButtonLink href="/dashboard/upgrade" className="shrink-0">
-                <Zap className="size-4" aria-hidden /> Upgrade to Pro
-              </ButtonLink>
+          <Card>
+            <CardBody className="text-sm text-slate-500">
+              Search above to find a project and copy its referral link.
             </CardBody>
           </Card>
         )}

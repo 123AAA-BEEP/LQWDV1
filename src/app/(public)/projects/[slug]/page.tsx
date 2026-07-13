@@ -51,6 +51,29 @@ async function getRealtorCard(
   return (data as RealtorCard) ?? null;
 }
 
+/**
+ * The representative shown on the page. A valid `?ref=` sharer WINS the lead
+ * (submitLead), so the buyer should see THAT agent's face — showing the page
+ * steward while the sharer collects the lead would be quietly dishonest.
+ * Falls back to the steward when the ref doesn't resolve to a public card.
+ */
+async function getDisplayRealtor(
+  ref: string | undefined,
+  stewardProfileId: string | null,
+): Promise<RealtorCard | null> {
+  const code = (ref ?? "").trim().toUpperCase();
+  if (code) {
+    const supabase = await createClient();
+    const { data } = await supabase
+      .from("public_realtor_cards")
+      .select("*")
+      .eq("referral_code", code)
+      .maybeSingle();
+    if (data) return data as RealtorCard;
+  }
+  return getRealtorCard(stewardProfileId);
+}
+
 interface MiniProject {
   project_id: string;
   slug: string;
@@ -292,7 +315,7 @@ export default async function PublicProjectPage({
     .join(", ");
   // One round-trip wave instead of four sequential ones — faster first paint.
   const [realtor, moreFromBuilder, galleryAll, nearbyRaw] = await Promise.all([
-    getRealtorCard(project.assigned_realtor_profile_id),
+    getDisplayRealtor(ref, project.assigned_realtor_profile_id),
     getMoreFromBuilder(project.builder_name, project.project_id),
     getGallery(project.project_id),
     getNearbyProjects(project.city, [project.project_id]),

@@ -13,7 +13,21 @@ export async function proxy(request: NextRequest) {
     return NextResponse.rewrite(url);
   }
 
-  return await updateSession(request);
+  const response = await updateSession(request);
+
+  // Referral attribution survives navigation: an agent's shared ?ref= link
+  // sets a 30-day cookie, so the buyer can browse before submitting and the
+  // sharer still gets the lead (submitLead falls back to this cookie).
+  const ref = request.nextUrl.searchParams.get("ref");
+  if (ref && /^[A-Za-z0-9]{4,16}$/.test(ref)) {
+    response.cookies.set("liqwd_ref", ref.toUpperCase(), {
+      maxAge: 60 * 60 * 24 * 30,
+      path: "/",
+      sameSite: "lax",
+    });
+  }
+
+  return response;
 }
 
 export const config = {

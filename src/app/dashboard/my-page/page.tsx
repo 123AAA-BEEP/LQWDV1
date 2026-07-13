@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
+  BadgeCheck,
   ExternalLink,
   Globe,
   Link2,
@@ -16,6 +17,7 @@ import { hasActivePro } from "@/lib/types";
 import { IMAGE_MIME } from "@/lib/upload";
 import { Card, CardBody } from "@/components/ui/card";
 import { Button, ButtonLink } from "@/components/ui/button";
+import { CopyField } from "@/components/ui/copy-field";
 import { Field, Input } from "@/components/ui/field";
 import { Notice } from "@/components/ui/notice";
 import { UploadTile } from "../profile/upload-tile";
@@ -208,6 +210,9 @@ export default async function MyPagePage({
                 <ExternalLink aria-hidden className="mr-1.5 size-4" /> View
               </ButtonLink>
             </div>
+            <div className="mt-3">
+              <CopyField value={pageUrl} size="sm" />
+            </div>
             <p className="mt-3 text-xs text-slate-500">
               Paste this link in your Instagram / Facebook bio — or use the
               short handle version:{" "}
@@ -220,6 +225,83 @@ export default async function MyPagePage({
               </Link>{" "}
               — pages with a photo convert better.
             </p>
+          </CardBody>
+        </Card>
+      ) : null}
+
+      {/* Verified badge kit — the portable credential */}
+      {verified && slug ? (
+        <Card>
+          <CardBody>
+            <h2 className="inline-flex items-center gap-2 font-semibold text-ink">
+              <BadgeCheck aria-hidden className="size-4 text-emerald-600" />
+              Your verified badge
+            </h2>
+            <p className="mt-1 text-sm text-slate-500">
+              A live badge for your email signature, website, or listing decks.
+              It renders from LIQWD in real time — proof your licence
+              verification is current, with your registered name and brokerage
+              on it (TRESA-friendly by default).
+            </p>
+            {!isPublic ? (
+              <Notice tone="warning" className="mt-3">
+                Your badge shows &quot;Not currently verified&quot; while your
+                page is hidden — enable &quot;Show my realtor card&quot; in{" "}
+                <Link href="/dashboard/profile" className="font-medium underline">
+                  Profile &amp; settings
+                </Link>{" "}
+                to activate it.
+              </Notice>
+            ) : (
+              <>
+                <div className="mt-4">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={`/api/badge/${slug}`}
+                    width={280}
+                    height={70}
+                    alt="Your verified LIQWD badge"
+                    className="rounded-lg border border-slate-200"
+                  />
+                </div>
+                <div className="mt-4 space-y-3">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      Email signature / website (HTML)
+                    </p>
+                    <CopyField
+                      className="mt-1.5"
+                      size="sm"
+                      copyLabel="Copy HTML"
+                      value={`<a href="${SITE_URL}/realtors/${slug}?utm_source=badge&utm_medium=embed"><img src="${SITE_URL}/api/badge/${slug}.png" width="280" height="70" alt="${[profile.first_name, profile.last_name].filter(Boolean).join(" ")} — licence verified on LIQWD" style="border:0;" /></a>`}
+                    />
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      Image URL only (signature builders, CRMs)
+                    </p>
+                    <CopyField
+                      className="mt-1.5"
+                      size="sm"
+                      copyLabel="Copy URL"
+                      value={`${SITE_URL}/api/badge/${slug}.png`}
+                    />
+                  </div>
+                  <p className="text-xs text-slate-500">
+                    Posting to Instagram?{" "}
+                    <a
+                      href={`/api/badge/${slug}.png?size=square`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-medium text-brand-700 hover:underline"
+                    >
+                      Download the square version
+                    </a>{" "}
+                    — for stories and posts, link your bio to your page instead.
+                  </p>
+                </div>
+              </>
+            )}
           </CardBody>
         </Card>
       ) : null}
