@@ -607,6 +607,71 @@ export const SIZE_TYPE_LABELS: Record<SizeType, string> = {
   unit_count: "Units",
 };
 
+/* -------------------------- Assignment Desk (0072) ------------------------- */
+
+export type BuilderConsentStatus =
+  | "unknown"
+  | "not_required"
+  | "consent_pending"
+  | "consent_obtained"
+  | "assignment_prohibited";
+
+export type AssignmentStatus =
+  | "active"
+  | "under_contract"
+  | "assigned"
+  | "withdrawn"
+  | "expired";
+
+export interface AssignmentListing {
+  id: string;
+  realtor_id: string | null;
+  project_id: string | null;
+  project_name: string;
+  city_region: string;
+  unit_label: string | null;
+  beds: number | null;
+  baths: number | null;
+  size_sqft: number | null;
+  exposure: string | null;
+  parking: number | null;
+  locker: boolean | null;
+  original_purchase_price: number | null;
+  assignment_price: number;
+  deposit_paid_to_date: number | null;
+  co_op_commission_note: string | null;
+  occupancy_estimate: string | null;
+  final_closing_estimate: string | null;
+  builder_consent_status: BuilderConsentStatus;
+  builder_assignment_fee: number | null;
+  rights_confirmed_at: string | null;
+  notes: string | null;
+  image_urls: string[];
+  realtor_name: string;
+  brokerage_name: string;
+  contact_phone: string;
+  contact_email: string;
+  status: AssignmentStatus;
+  created_at: string;
+  updated_at: string;
+}
+
+export const BUILDER_CONSENT_LABELS: Record<BuilderConsentStatus, string> = {
+  unknown: "Consent status unknown",
+  not_required: "Consent not required",
+  consent_pending: "Consent in progress",
+  consent_obtained: "Consent obtained",
+  assignment_prohibited: "Assignment prohibited",
+};
+
+export const ASSIGNMENT_STATUS_LABELS: Record<AssignmentStatus, string> = {
+  active: "Active",
+  under_contract: "Under contract",
+  assigned: "Assigned",
+  withdrawn: "Withdrawn",
+  expired: "Expired",
+};
+
 /** Formats a listing's price with its rate basis, e.g. "$1,250,000" or
  *  "$45 / sq ft" / "$320,000 / unit". */
 export function formatOffMarketPrice(
