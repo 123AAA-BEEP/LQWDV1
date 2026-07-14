@@ -24,7 +24,7 @@ import {
   deleteCollection,
 } from "./actions";
 
-export const metadata: Metadata = { title: "Client collections" };
+export const metadata: Metadata = { title: "Shortlists" };
 export const dynamic = "force-dynamic";
 
 const SITE_URL = (
@@ -32,12 +32,12 @@ const SITE_URL = (
 ).replace(/\/+$/, "");
 
 const MESSAGES: Record<string, string> = {
-  created: "Collection created — add projects below, then send your client the link.",
+  created: "Shortlist created — add projects below, then send your client the link.",
   added: "Project added.",
   removed: "Removed.",
   revoked: "Link revoked — the page no longer loads for anyone.",
   restored: "Link restored.",
-  deleted: "Collection deleted.",
+  deleted: "Shortlist deleted.",
 };
 
 interface CollectionRow {
@@ -72,11 +72,11 @@ export default async function CollectionsPage({
     return (
       <div className="space-y-6">
         <h1 className="text-2xl font-semibold tracking-tight text-ink">
-          Client collections
+          Shortlists
         </h1>
         <Card>
           <CardBody className="text-center text-sm text-slate-500">
-            Collections are for realtor accounts.
+            Shortlists are for realtor accounts.
           </CardBody>
         </Card>
       </div>
@@ -152,7 +152,7 @@ export default async function CollectionsPage({
       {/* Create */}
       <Card>
         <CardBody>
-          <h2 className="font-semibold text-ink">New collection</h2>
+          <h2 className="font-semibold text-ink">New shortlist</h2>
           <form action={createCollection} className="mt-4 space-y-3">
             <div className="grid gap-3 sm:grid-cols-2">
               <Field
@@ -178,7 +178,7 @@ export default async function CollectionsPage({
               </Field>
             </div>
             <Button type="submit" variant="secondary">
-              <Plus aria-hidden className="mr-1 size-4" /> Create collection
+              <Plus aria-hidden className="mr-1 size-4" /> Create shortlist
             </Button>
           </form>
         </CardBody>
@@ -224,7 +224,7 @@ export default async function CollectionsPage({
                         </ButtonLink>
                       ) : null}
                       <ButtonLink
-                        href={`/dashboard/collections?c=${coll.id}`}
+                        href={`/dashboard/shortlists?c=${coll.id}`}
                         variant="secondary"
                         size="sm"
                       >
@@ -263,7 +263,7 @@ export default async function CollectionsPage({
                                 <button
                                   type="submit"
                                   className="rounded-md p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600"
-                                  aria-label="Remove from collection"
+                                  aria-label="Remove from shortlist"
                                 >
                                   <Trash2 aria-hidden className="size-4" />
                                 </button>
@@ -351,7 +351,7 @@ export default async function CollectionsPage({
       ) : (
         <Card>
           <CardBody className="text-center text-sm text-slate-500">
-            No collections yet. Create one above — it replaces the list of
+            No shortlists yet. Create one above — it replaces the list of
             links you&apos;d otherwise paste into an email, and every inquiry
             from it routes to you.
           </CardBody>
@@ -365,8 +365,7 @@ function Header() {
   return (
     <div>
       <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-ink">
-        <FolderHeart aria-hidden className="size-6 text-brand-600" /> Client
-        collections
+        <FolderHeart aria-hidden className="size-6 text-brand-600" /> Shortlists
       </h1>
       <p className="mt-1 text-sm text-slate-500">
         Curate a shortlist for a specific client and send one link. Your name

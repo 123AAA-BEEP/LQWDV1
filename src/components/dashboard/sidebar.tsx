@@ -94,7 +94,7 @@ const REALTOR_SECTIONS: NavSection[] = [
       { href: "/dashboard/buyer-mandates", label: "Buyer Matching", icon: ClipboardList },
       { href: "/dashboard/proposals", label: "Negotiate Terms", icon: FileText },
       { href: "/dashboard/my-page", label: "My Public Page", icon: Globe },
-      { href: "/dashboard/collections", label: "Client Collections", icon: FolderHeart },
+      { href: "/dashboard/shortlists", label: "Shortlists", icon: FolderHeart },
       { href: "/dashboard/refer", label: "Refer & earn", icon: Gift },
     ],
   },

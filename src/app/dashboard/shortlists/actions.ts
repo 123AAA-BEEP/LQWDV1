@@ -7,13 +7,14 @@ import { createClient } from "@/lib/supabase/server";
 import { requireUserProfile } from "@/lib/auth";
 
 /**
- * Client collections — "5 projects for the Smiths". Owner-scoped by RLS; the
+ * Shortlists — "5 projects for the Smiths". (DB tables keep their original
+ * client_collections names; only the product surface is renamed.) Owner-scoped by RLS; the
  * public micro-page (/c/{token}) is capability-addressed by the token, so
  * revoking flips the link dead instantly. Caps keep pages personal, not
  * catalogues.
  */
 
-const COLLECTIONS = "/dashboard/collections";
+const COLLECTIONS = "/dashboard/shortlists";
 const COLLECTION_LIMIT = 20;
 const ITEM_LIMIT = 12;
 
@@ -25,7 +26,7 @@ function fail(msg: string, id?: string): never {
 export async function createCollection(formData: FormData) {
   const title = String(formData.get("title") ?? "").trim().slice(0, 120);
   const note = String(formData.get("note") ?? "").trim().slice(0, 1000) || null;
-  if (!title) fail("Give the collection a name — usually your client's.");
+  if (!title) fail("Give the shortlist a name — usually your client's.");
 
   const { profile } = await requireUserProfile();
   if (profile.role !== "realtor") redirect("/dashboard");
@@ -37,7 +38,7 @@ export async function createCollection(formData: FormData) {
     .eq("profile_id", profile.id)
     .is("revoked_at", null);
   if ((count ?? 0) >= COLLECTION_LIMIT) {
-    fail(`You can keep up to ${COLLECTION_LIMIT} active collections — revoke one first.`);
+    fail(`You can keep up to ${COLLECTION_LIMIT} active shortlists — revoke one first.`);
   }
 
   const token = randomBytes(9).toString("base64url");
@@ -46,7 +47,7 @@ export async function createCollection(formData: FormData) {
     .insert({ profile_id: profile.id, token, title, note })
     .select("id")
     .maybeSingle();
-  if (error || !data) fail("Couldn't create the collection. Please try again.");
+  if (error || !data) fail("Couldn't create the shortlist. Please try again.");
   revalidatePath(COLLECTIONS);
   redirect(`${COLLECTIONS}?c=${data.id}&message=created`);
 }
@@ -65,7 +66,7 @@ export async function addCollectionItem(formData: FormData) {
     .select("id", { count: "exact", head: true })
     .eq("collection_id", collection_id);
   if ((count ?? 0) >= ITEM_LIMIT) {
-    fail(`Collections hold up to ${ITEM_LIMIT} projects.`, collection_id);
+    fail(`Shortlists hold up to ${ITEM_LIMIT} projects.`, collection_id);
   }
 
   await supabase.from("client_collection_items").insert({
