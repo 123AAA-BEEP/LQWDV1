@@ -33,6 +33,7 @@ import {
   X,
   Globe,
   FolderHeart,
+  Repeat2,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
@@ -89,6 +90,7 @@ const REALTOR_SECTIONS: NavSection[] = [
         label: "Off-Market",
         icon: EyeOff,
       },
+      { href: "/dashboard/assignments", label: "Assignment Desk", icon: Repeat2 },
       { href: "/dashboard/quick-wins", label: "Quick Wins", icon: Coins },
       { href: "/dashboard/deal-desk", label: "Developer Deals", icon: Handshake, ultra: true },
       { href: "/dashboard/buyer-mandates", label: "Buyer Matching", icon: ClipboardList },
