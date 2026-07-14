@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { after } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { Card, CardBody } from "@/components/ui/card";
 import {
   formatPriceBand,
@@ -141,16 +143,29 @@ async function getNearbyProjects(
 
 export async function generateMetadata({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ ref?: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
+  const { ref } = await searchParams;
   const project = await getProject(slug);
   if (!project) return { title: "Project not found" };
   const title = project.seo_title ?? project.project_name;
   const description =
     project.seo_meta_description ?? project.page_summary ?? undefined;
   const pageUrl = `${SITE_URL}/projects/${project.slug}`;
+
+  // Shared-with-ref links unfurl as "Presented by {agent}" — the group-chat
+  // moment. The OG route validates the code itself and falls back to the
+  // plain hero when it doesn't resolve, so a bad ref can't break the card.
+  const refCode = (ref ?? "").trim();
+  const ogImage =
+    refCode && /^[A-Za-z0-9]{4,16}$/.test(refCode) && project.hero_image_url
+      ? `${SITE_URL}/api/og/project/${project.slug}?ref=${encodeURIComponent(refCode.toUpperCase())}`
+      : project.hero_image_url;
+
   return {
     title,
     description,
@@ -163,15 +178,13 @@ export async function generateMetadata({
       siteName: "LIQWD",
       type: "website",
       locale: "en_CA",
-      images: project.hero_image_url
-        ? [{ url: project.hero_image_url, alt: project.project_name }]
-        : undefined,
+      images: ogImage ? [{ url: ogImage, alt: project.project_name }] : undefined,
     },
     twitter: {
-      card: project.hero_image_url ? "summary_large_image" : "summary",
+      card: ogImage ? "summary_large_image" : "summary",
       title,
       description,
-      images: project.hero_image_url ? [project.hero_image_url] : undefined,
+      images: ogImage ? [ogImage] : undefined,
     },
   };
 }
@@ -313,6 +326,30 @@ export default async function PublicProjectPage({
       !locationParts.slice(0, i).join(", ").toLowerCase().includes(part.toLowerCase()),
     )
     .join(", ");
+  // Referral-link view tracking — the "34 views this week" number that keeps
+  // agents sharing. Logged after the response; resolves the code server-side
+  // so only real approved-agent codes ever count.
+  if (ref && /^[A-Za-z0-9]{4,16}$/.test(ref.trim())) {
+    const code = ref.trim().toUpperCase();
+    const projectId = project.project_id;
+    after(async () => {
+      const admin = createAdminClient();
+      const { data: sharer } = await admin
+        .from("profiles")
+        .select("id")
+        .eq("referral_code", code)
+        .eq("role", "realtor")
+        .eq("verification_status", "approved")
+        .maybeSingle();
+      if (!sharer) return;
+      await admin.from("link_visits").insert({
+        profile_id: sharer.id,
+        project_id: projectId,
+        source: "ref",
+      });
+    });
+  }
+
   // One round-trip wave instead of four sequential ones — faster first paint.
   const [realtor, moreFromBuilder, galleryAll, nearbyRaw] = await Promise.all([
     getDisplayRealtor(ref, project.assigned_realtor_profile_id),

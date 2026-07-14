@@ -22,3 +22,22 @@ export async function markVerificationCelebrated(): Promise<void> {
     .eq("id", user.id)
     .is("verification_celebrated_at", null);
 }
+
+/**
+ * Confetti moment #3 — the first buyer lead. Same once-ever DB-flag pattern
+ * as the verification celebration; "time to first lead" stays derivable as
+ * min(project_leads.created_at) − reco_verified_at.
+ */
+export async function markFirstLeadCelebrated(): Promise<void> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return;
+
+  await supabase
+    .from("profiles")
+    .update({ first_lead_celebrated_at: new Date().toISOString() })
+    .eq("id", user.id)
+    .is("first_lead_celebrated_at", null);
+}

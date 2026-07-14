@@ -49,7 +49,10 @@ import {
   type ActivationStep,
 } from "@/components/dashboard/activation-tracker";
 import { ConfettiBurst } from "@/components/dashboard/confetti-burst";
-import { markVerificationCelebrated } from "./celebration-actions";
+import {
+  markVerificationCelebrated,
+  markFirstLeadCelebrated,
+} from "./celebration-actions";
 import { PlaybookCallout } from "@/components/dashboard/playbook-callout";
 import { LeadPathStatus } from "@/components/dashboard/lead-path-status";
 import { NextStepCard } from "@/components/dashboard/next-step-card";
@@ -193,6 +196,13 @@ export default async function DashboardHome() {
     (profile as { verification_celebrated_at?: string | null })
       .verification_celebrated_at == null;
 
+  // Confetti #3 — the first buyer lead (the real magic moment). Never fires
+  // the same visit as the approval burst; it keeps for the next load.
+  const firstLeadPending =
+    approved &&
+    (profile as { first_lead_celebrated_at?: string | null })
+      .first_lead_celebrated_at == null;
+
   if (approved) {
     const [pc, ntw, cityRows, matched, leads, rec] = await Promise.all([
       supabase
@@ -263,6 +273,20 @@ export default async function DashboardHome() {
             <Link href="/dashboard/my-page" className="font-semibold underline">
               Grab your verified badge →
             </Link>
+          </Notice>
+        </>
+      ) : null}
+
+      {profile.role === "realtor" &&
+      !celebrateApproval &&
+      firstLeadPending &&
+      buyerInquiries > 0 ? (
+        <>
+          <ConfettiBurst variant="big" onFired={markFirstLeadCelebrated} />
+          <Notice tone="success">
+            <span className="font-semibold">Your first lead is in</span> — a
+            buyer asked to be connected with you. Check your inbox and follow
+            up fast; early follow-ups convert best.
           </Notice>
         </>
       ) : null}
