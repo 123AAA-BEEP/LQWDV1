@@ -3,7 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { after } from "next/server";
-import { BadgeCheck, Phone } from "lucide-react";
+import { BadgeCheck, FileText, Phone, Sparkles, Wallet } from "lucide-react";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { Card, CardBody } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -133,6 +133,69 @@ export default async function CollectionPage({
       .filter((p): p is ProjRow => Boolean(p));
   }
 
+  // Depth per project — scoped to the projects that actually rendered, so we
+  // never fetch or sign materials for a project the public view filtered out:
+  //   - the sharing agent's OWN notes (their voice, their shortlists only)
+  //   - PROJECT-level shared materials via the shared_project_materials VIEW,
+  //     which is the single gate: it contains only rights-confirmed
+  //     realtor_share rows whose path sits under a broker folder. Admin /
+  //     provenance documents in project_documents can never appear in it.
+  // Files live in the PRIVATE project-documents bucket; buyers get 1-hour
+  // signed URLs minted here, so nothing gains a permanent public address. The
+  // commercials table is never touched.
+  const renderedIds = projects.map((p) => p.project_id);
+  const notesByProject = new Map<
+    string,
+    { incentive_note: string | null; deposit_note: string | null; extra_note: string | null }
+  >();
+  const filesByProject = new Map<string, { label: string; url: string }[]>();
+  if (renderedIds.length > 0) {
+    const [{ data: noteRows }, { data: fileRows }] = await Promise.all([
+      admin
+        .from("agent_project_notes")
+        .select("project_id, incentive_note, deposit_note, extra_note")
+        .eq("profile_id", coll.profile_id)
+        .in("project_id", renderedIds),
+      admin
+        .from("shared_project_materials")
+        .select("project_id, title, file_url")
+        .in("project_id", renderedIds)
+        .order("created_at", { ascending: true }),
+    ]);
+    for (const n of (noteRows ?? []) as {
+      project_id: string;
+      incentive_note: string | null;
+      deposit_note: string | null;
+      extra_note: string | null;
+    }[]) {
+      notesByProject.set(n.project_id, n);
+    }
+    const files = (fileRows ?? []) as {
+      project_id: string;
+      title: string;
+      file_url: string;
+    }[];
+    if (files.length > 0) {
+      const { data: signed } = await admin.storage
+        .from("project-documents")
+        .createSignedUrls(files.map((f) => f.file_url), 3600);
+      const urlByPath = new Map(
+        (signed ?? [])
+          .filter((s) => s.signedUrl && !s.error)
+          .map((s) => [s.path as string, s.signedUrl as string]),
+      );
+      for (const f of files) {
+        const u = urlByPath.get(f.file_url);
+        if (!u) continue;
+        const list = filesByProject.get(f.project_id) ?? [];
+        list.push({ label: f.title, url: u });
+        filesByProject.set(f.project_id, list);
+      }
+    }
+  }
+  const hasAgentMaterials =
+    notesByProject.size > 0 || filesByProject.size > 0;
+
   // Proof-it-works analytics — logged after the response, never blocking.
   after(async () => {
     await admin.from("link_visits").insert({
@@ -216,21 +279,24 @@ export default async function CollectionPage({
             const band = formatPriceBand(p.price_from_public, p.price_to_public, {
               currency: p.price_currency,
             });
+            const notes = notesByProject.get(p.project_id);
+            const files = filesByProject.get(p.project_id) ?? [];
+            const hasDepth = Boolean(
+              notes?.incentive_note || notes?.deposit_note || notes?.extra_note || files.length,
+            );
             return (
-              <Link
-                key={p.project_id}
-                href={`/projects/${p.slug}${refSuffix}`}
-                className="group block h-full"
-              >
-                <Card className="h-full overflow-hidden transition-all duration-300 group-hover:-translate-y-0.5 group-hover:shadow-lg">
-                  <div className="aspect-[4/3] overflow-hidden bg-slate-100">
-                    <CardImage
-                      src={p.hero_image_url}
-                      alt={p.project_name}
-                      name={p.project_name}
-                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-                    />
-                  </div>
+              <div key={p.project_id} className="h-full">
+                <Card className="h-full overflow-hidden transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg">
+                  <Link href={`/projects/${p.slug}${refSuffix}`} className="group block">
+                    <div className="aspect-[4/3] overflow-hidden bg-slate-100">
+                      <CardImage
+                        src={p.hero_image_url}
+                        alt={p.project_name}
+                        name={p.project_name}
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                      />
+                    </div>
+                  </Link>
                   <CardBody>
                     <div className="flex flex-wrap items-center gap-2">
                       {p.sales_status ? (
@@ -240,18 +306,62 @@ export default async function CollectionPage({
                       ) : null}
                       {p.city ? <Badge tone="neutral">{p.city}</Badge> : null}
                     </div>
-                    <h2 className="mt-2 line-clamp-2 font-semibold text-ink">
-                      {p.project_name}
-                    </h2>
+                    <Link href={`/projects/${p.slug}${refSuffix}`} className="hover:underline">
+                      <h2 className="mt-2 line-clamp-2 font-semibold text-ink">
+                        {p.project_name}
+                      </h2>
+                    </Link>
                     {band ? (
                       <p className="mt-2 text-sm font-medium text-slate-700">{band}</p>
                     ) : null}
+
+                    {/* Depth from the agent — their notes and materials */}
+                    {hasDepth ? (
+                      <div className="mt-3 space-y-2 rounded-lg border border-brand-100 bg-brand-50/50 p-3">
+                        {notes?.incentive_note ? (
+                          <p className="flex items-start gap-1.5 text-xs text-slate-700">
+                            <Sparkles aria-hidden className="mt-0.5 size-3.5 shrink-0 text-amber-500" />
+                            <span>
+                              <span className="font-semibold">Incentive:</span>{" "}
+                              {notes.incentive_note}
+                            </span>
+                          </p>
+                        ) : null}
+                        {notes?.deposit_note ? (
+                          <p className="flex items-start gap-1.5 text-xs text-slate-700">
+                            <Wallet aria-hidden className="mt-0.5 size-3.5 shrink-0 text-brand-600" />
+                            <span>
+                              <span className="font-semibold">Deposit:</span>{" "}
+                              {notes.deposit_note}
+                            </span>
+                          </p>
+                        ) : null}
+                        {notes?.extra_note ? (
+                          <p className="text-xs italic leading-relaxed text-slate-600">
+                            “{notes.extra_note}” — {first}
+                          </p>
+                        ) : null}
+                        {files.map((f) => (
+                          <a
+                            key={f.url}
+                            href={f.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:border-brand-300 hover:text-brand-700"
+                          >
+                            <FileText aria-hidden className="size-3.5 shrink-0 text-slate-400" />
+                            {f.label}
+                          </a>
+                        ))}
+                      </div>
+                    ) : null}
+
                     <p className="mt-2 text-xs text-slate-500">
                       Inquiries go to {first}.
                     </p>
                   </CardBody>
                 </Card>
-              </Link>
+              </div>
             );
           })}
         </div>
@@ -292,6 +402,19 @@ export default async function CollectionPage({
           </>
         ) : null}
       </p>
+
+      {hasAgentMaterials ? (
+        <p className="mt-4 text-[11px] leading-relaxed text-slate-400">
+          Floor plans, incentive and deposit details, and other materials on
+          this page are provided by licensed real estate agents, not by LIQWD
+          or the builder. Builders generally make such materials available for
+          agents to share with their clients, but LIQWD does not verify any
+          agent&apos;s rights to distribute them and accepts no responsibility
+          for their accuracy, currency, or use. Pricing, incentives, and
+          availability change without notice — confirm details with {first}{" "}
+          before relying on them.
+        </p>
+      ) : null}
     </div>
   );
 }

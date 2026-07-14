@@ -3,6 +3,7 @@ import Link from "next/link";
 import { headers } from "next/headers";
 import { Building2, ExternalLink, Search } from "lucide-react";
 import { requireUserProfile, isApproved } from "@/lib/auth";
+import { daysAgoIso } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardBody } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -33,11 +34,6 @@ const VIEW_COLUMNS =
   "project_id, public_page_id, slug, project_name, city, neighbourhood, builder_name, hero_image_url, price_from_public, price_to_public";
 
 type Tone = "success" | "warning" | "neutral";
-
-/** ISO timestamp `days` ago — kept out of render bodies for the purity rule. */
-function daysAgoIso(days: number): string {
-  return new Date(Date.now() - days * 86_400_000).toISOString();
-}
 
 /**
  * Free-lead-campaign status from the stewardship expiry. NB: even after the
