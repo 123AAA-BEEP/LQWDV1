@@ -104,7 +104,7 @@ export default async function MyPagePage({
   const { data: fresh } = await supabase
     .from("profiles")
     .select(
-      "slug, is_public_profile_enabled, plan, realtor_tier, pro_until, banner_url, show_achievements",
+      "slug, is_public_profile_enabled, plan, realtor_tier, pro_until, banner_url, show_achievements, avatar_url, bio_short, phone",
     )
     .eq("id", profile.id)
     .maybeSingle();
@@ -160,6 +160,25 @@ export default async function MyPagePage({
 
   const pageUrl = slug ? `${SITE_URL}/realtors/${slug}` : null;
   const atCap = !pro && picks.length >= FREE_PICK_LIMIT;
+
+  // Completeness meter — every item links to where it gets fixed. Pages with
+  // a photo and real content convert better, and a visible meter finishes
+  // profiles (the LinkedIn All-Star effect).
+  const freshRow = fresh as {
+    avatar_url?: string | null;
+    bio_short?: string | null;
+    phone?: string | null;
+  } | null;
+  const checklist: { label: string; done: boolean; href: string }[] = [
+    { label: "Photo", done: Boolean(freshRow?.avatar_url), href: "/dashboard/profile" },
+    { label: "Bio", done: Boolean(freshRow?.bio_short), href: "/dashboard/profile" },
+    { label: "Phone", done: Boolean(freshRow?.phone), href: "/dashboard/profile" },
+    { label: "Banner", done: Boolean(bannerUrl), href: "/dashboard/my-page" },
+    { label: "1+ project", done: picks.length > 0, href: "/dashboard/my-page" },
+    { label: "1+ link", done: links.length > 0, href: "/dashboard/my-page" },
+  ];
+  const doneCount = checklist.filter((c) => c.done).length;
+  const pct = Math.round((doneCount / checklist.length) * 100);
 
   return (
     <div className="space-y-6">
@@ -302,6 +321,54 @@ export default async function MyPagePage({
                 </div>
               </>
             )}
+          </CardBody>
+        </Card>
+      ) : null}
+
+      {/* Completeness meter */}
+      {pageUrl && pct < 100 ? (
+        <Card>
+          <CardBody>
+            <div className="flex items-center justify-between">
+              <h2 className="font-semibold text-ink">Page strength</h2>
+              <span className="text-sm font-semibold text-brand-700">{pct}%</span>
+            </div>
+            <div
+              className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100"
+              role="progressbar"
+              aria-valuenow={pct}
+              aria-valuemin={0}
+              aria-valuemax={100}
+            >
+              <div
+                className="h-full rounded-full bg-brand-500 transition-all"
+                style={{ width: `${pct}%` }}
+              />
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {checklist.map((c) =>
+                c.done ? (
+                  <span
+                    key={c.label}
+                    className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700"
+                  >
+                    ✓ {c.label}
+                  </span>
+                ) : (
+                  <Link
+                    key={c.label}
+                    href={c.href}
+                    className="inline-flex items-center gap-1 rounded-full border border-dashed border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-500 hover:border-brand-300 hover:text-brand-700"
+                  >
+                    + {c.label}
+                  </Link>
+                ),
+              )}
+            </div>
+            <p className="mt-3 text-xs text-slate-500">
+              Complete pages get shared more and convert more of their visitors
+              into inquiries.
+            </p>
           </CardBody>
         </Card>
       ) : null}

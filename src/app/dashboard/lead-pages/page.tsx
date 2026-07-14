@@ -34,6 +34,11 @@ const VIEW_COLUMNS =
 
 type Tone = "success" | "warning" | "neutral";
 
+/** ISO timestamp `days` ago — kept out of render bodies for the purity rule. */
+function daysAgoIso(days: number): string {
+  return new Date(Date.now() - days * 86_400_000).toISOString();
+}
+
 /**
  * Free-lead-campaign status from the stewardship expiry. NB: even after the
  * campaign window ends, the realtor's *referral link still attributes leads to
@@ -113,6 +118,14 @@ export default async function LeadPagesPage({
   }
   const leadTotal = leadRows?.length ?? 0;
 
+  // Link views (30d) — proof the sharing works, from the visit log (RLS
+  // returns only this agent's rows).
+  const { count: viewCount } = await supabase
+    .from("link_visits")
+    .select("id", { count: "exact", head: true })
+    .eq("profile_id", profile.id)
+    .gte("created_at", daysAgoIso(30));
+
   // "Promote any project" search — every verified agent. The server-side lead
   // action attributes any approved agent's code, so gating this UI only taxed
   // the viral loop without protecting anything.
@@ -145,8 +158,9 @@ export default async function LeadPagesPage({
       ) : null}
 
       {/* Stat row */}
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label="Your project pages" value={String(bound.length)} />
+        <Stat label="Link views (30 days)" value={String(viewCount ?? 0)} />
         <Stat label="Leads attributed to you" value={String(leadTotal)} />
         <Stat label="From your referral links" value={String(referredTotal)} />
       </div>
