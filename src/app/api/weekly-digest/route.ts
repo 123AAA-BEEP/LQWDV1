@@ -150,7 +150,7 @@ export async function GET(req: Request) {
         body:
           `Here's what your shared links did over the last 7 days:<br><br>` +
           lines.map((l) => `• ${l}`).join("<br>") +
-          `<br><br>Keep the loop going — share a project or collection link ` +
+          `<br><br>Keep the loop going — share a project or shortlist link ` +
           `with a buyer today and it's attributed to you.`,
         ctaUrl: `${base}/dashboard/lead-pages`,
         ctaLabel: "See your Lead Pages",
