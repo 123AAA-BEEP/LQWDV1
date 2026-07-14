@@ -173,10 +173,15 @@ export default async function AdminProjectEditor({
         .select("id, plan_name, unit_type, sqft_interior, price_public, floorplan_image_url")
         .eq("project_id", id)
         .order("created_at", { ascending: true }),
+      // Only official documents here — realtor-shared materials
+      // (source_type='realtor_share') are managed by agents on their
+      // shortlists and must not be mixed in or accidentally deleted from the
+      // editor, where they'd read as admin-curated.
       supabase
         .from("project_documents")
         .select("id, title, document_type, file_url, created_at")
         .eq("project_id", id)
+        .neq("source_type", "realtor_share")
         .order("created_at", { ascending: true }),
     ]);
 

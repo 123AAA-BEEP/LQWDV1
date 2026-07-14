@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireUserProfile, isApproved } from "@/lib/auth";
+import { daysAgoIso } from "@/lib/dates";
 import { Card, CardBody } from "@/components/ui/card";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { CopyField } from "@/components/ui/copy-field";
@@ -70,12 +71,8 @@ interface NotesRow {
 interface FileRow {
   id: string;
   title: string;
+  document_type: string | null;
   uploaded_by_user_id: string | null;
-}
-
-/** ISO timestamp `days` ago — kept out of render bodies for the purity rule. */
-function daysAgoIso(days: number): string {
-  return new Date(Date.now() - days * 86_400_000).toISOString();
 }
 
 export default async function CollectionsPage({
@@ -167,11 +164,9 @@ export default async function CollectionsPage({
           .eq("project_id", item)
           .maybeSingle(),
         supabase
-          .from("project_documents")
-          .select("id, title, uploaded_by_user_id")
+          .from("shared_project_materials")
+          .select("id, title, document_type, uploaded_by_user_id")
           .eq("project_id", item)
-          .eq("source_type", "realtor_share")
-          .not("rights_confirmed_at", "is", null)
           .order("created_at", { ascending: true }),
       ]);
       detailNotes = (notes as NotesRow) ?? null;
@@ -386,12 +381,13 @@ export default async function CollectionsPage({
 
                                   <div className="border-t border-slate-200 pt-3">
                                     <p className="text-sm font-medium text-slate-700">
-                                      Project materials ({detailFiles.length}/10)
+                                      Project materials ({detailFiles.length})
                                     </p>
                                     <p className="mt-0.5 text-xs text-slate-500">
                                       Floor plans and brochures live with the
-                                      project — every LIQWD agent can use them
-                                      in their own shortlists.
+                                      project — every LIQWD agent can use them,
+                                      and they show on any shortlist with this
+                                      project. You can add up to 10 of your own.
                                     </p>
                                     {detailFiles.length > 0 ? (
                                       <ul className="mt-2 divide-y divide-slate-100">
@@ -428,7 +424,6 @@ export default async function CollectionsPage({
                                     ) : null}
                                     <div className="mt-3">
                                       <MaterialUpload
-                                        collectionId={coll.id}
                                         projectId={it.project_id}
                                         userId={profile.id}
                                       />

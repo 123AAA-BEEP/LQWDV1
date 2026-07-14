@@ -171,12 +171,14 @@ export async function saveProjectDetails(formData: FormData) {
 /**
  * Records an uploaded material (the file itself went browser-direct to the
  * private project-documents bucket) as a PROJECT document every approved
- * agent can reuse. The path must sit under this agent's own folder for the
- * project, and the rights confirmation is required — its timestamp is the
- * audit trail that gates buyer-facing rendering.
+ * realtor can reuse. Client-invoked, so it returns { error } for the
+ * component's own error surface rather than redirecting. The cap is per-agent
+ * (your OWN uploads), so one agent can never lock others out; on any rejection
+ * the just-uploaded object is removed so nothing is orphaned in the bucket.
  */
-export async function recordMaterial(formData: FormData) {
-  const collection_id = String(formData.get("collection_id") ?? "");
+export async function recordMaterial(
+  formData: FormData,
+): Promise<{ error?: string } | void> {
   const project_id = String(formData.get("project_id") ?? "");
   const path = String(formData.get("path") ?? "");
   const label = String(formData.get("label") ?? "").trim().slice(0, 80);
@@ -185,34 +187,43 @@ export async function recordMaterial(formData: FormData) {
     ? kindRaw
     : "other";
   const rights = String(formData.get("rights") ?? "") === "on";
-  if (!project_id || !path) redirect(COLLECTIONS);
-  const backTo = `${COLLECTIONS}?c=${collection_id}&item=${project_id}`;
 
   const { profile } = await requireUserProfile();
-  if (profile.role !== "realtor") redirect("/dashboard");
-
-  if (!rights) {
-    redirect(
-      `${backTo}&error=${encodeURIComponent("Please confirm you have the right to share this material.")}`,
-    );
-  }
-  // Only paths inside THIS agent's folder for THIS project can be recorded —
-  // otherwise a crafted form could surface arbitrary private documents
-  // through shortlist signed URLs.
-  if (!path.startsWith(`${project_id}/broker-${profile.id}/`)) {
-    redirect(`${backTo}&error=${encodeURIComponent("Upload failed. Please try again.")}`);
-  }
-
   const supabase = await createClient();
+  const cleanup = async () => {
+    if (path) await supabase.storage.from("project-documents").remove([path]);
+  };
+
+  if (profile.role !== "realtor") {
+    await cleanup();
+    return { error: "Only realtor accounts can share materials." };
+  }
+  if (!project_id || !path) return { error: "Upload failed. Please try again." };
+  if (!rights) {
+    await cleanup();
+    return { error: "Please confirm you have the right to share this material." };
+  }
+  // The path must sit in THIS agent's folder for THIS project — the same shape
+  // the DB insert policy (0071) now enforces, checked here too to fail fast
+  // and clean up before the round trip. A non-empty file segment is required.
+  const prefix = `${project_id}/broker-${profile.id}/`;
+  if (!path.startsWith(prefix) || path.length <= prefix.length) {
+    await cleanup();
+    return { error: "Upload failed. Please try again." };
+  }
+
+  // Per-agent cap on YOUR OWN shared uploads for this project.
   const { count } = await supabase
     .from("project_documents")
     .select("id", { count: "exact", head: true })
     .eq("project_id", project_id)
-    .eq("source_type", SHARE_SOURCE);
+    .eq("source_type", SHARE_SOURCE)
+    .eq("uploaded_by_user_id", profile.id);
   if ((count ?? 0) >= FILES_PER_PROJECT) {
-    redirect(
-      `${backTo}&error=${encodeURIComponent(`This project already has ${FILES_PER_PROJECT} shared materials — remove one of yours first.`)}`,
-    );
+    await cleanup();
+    return {
+      error: `You can share up to ${FILES_PER_PROJECT} files per project. Remove one of yours first.`,
+    };
   }
 
   const { error } = await supabase.from("project_documents").insert({
@@ -226,10 +237,10 @@ export async function recordMaterial(formData: FormData) {
     rights_confirmed_at: new Date().toISOString(),
   });
   if (error) {
-    redirect(`${backTo}&error=${encodeURIComponent("Couldn't save the file. Please try again.")}`);
+    await cleanup();
+    return { error: "Couldn't save the file. Please try again." };
   }
   revalidatePath(COLLECTIONS);
-  redirect(`${backTo}&message=file-added`);
 }
 
 export async function removeMaterial(formData: FormData) {
@@ -240,20 +251,19 @@ export async function removeMaterial(formData: FormData) {
   const { profile } = await requireUserProfile();
   const supabase = await createClient();
 
-  // RLS restricts the delete to the uploader's own rows; remove the storage
-  // object too (best-effort; the row is the gate).
+  // Delete + return the path in one round trip (also closes the select/delete
+  // race). RLS already restricts this to the uploader's own realtor_share
+  // rows; the filters here make that explicit.
   const { data: row } = await supabase
     .from("project_documents")
-    .select("file_url")
+    .delete()
     .eq("id", id)
     .eq("uploaded_by_user_id", profile.id)
     .eq("source_type", SHARE_SOURCE)
+    .select("file_url")
     .maybeSingle();
-  if (row) {
-    await supabase.from("project_documents").delete().eq("id", id);
-    if (row.file_url) {
-      await supabase.storage.from("project-documents").remove([row.file_url]);
-    }
+  if (row?.file_url) {
+    await supabase.storage.from("project-documents").remove([row.file_url]);
   }
   revalidatePath(COLLECTIONS);
   redirect(

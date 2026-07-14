@@ -133,31 +133,33 @@ export default async function CollectionPage({
       .filter((p): p is ProjRow => Boolean(p));
   }
 
-  // Depth per project: the sharing agent's OWN notes (their voice, their
-  // shortlists only) + PROJECT-level materials — floor plans/brochures any
-  // approved agent contributed with a rights confirmation. Files live in the
-  // PRIVATE project-documents bucket; buyers get 1-hour signed URLs minted
-  // here, so nothing gains a permanent public address. Only rights-confirmed
-  // 'realtor_share' rows ever render — admin/provenance documents in the same
-  // table never reach buyers, and the commercials table is never touched.
+  // Depth per project — scoped to the projects that actually rendered, so we
+  // never fetch or sign materials for a project the public view filtered out:
+  //   - the sharing agent's OWN notes (their voice, their shortlists only)
+  //   - PROJECT-level shared materials via the shared_project_materials VIEW,
+  //     which is the single gate: it contains only rights-confirmed
+  //     realtor_share rows whose path sits under a broker folder. Admin /
+  //     provenance documents in project_documents can never appear in it.
+  // Files live in the PRIVATE project-documents bucket; buyers get 1-hour
+  // signed URLs minted here, so nothing gains a permanent public address. The
+  // commercials table is never touched.
+  const renderedIds = projects.map((p) => p.project_id);
   const notesByProject = new Map<
     string,
     { incentive_note: string | null; deposit_note: string | null; extra_note: string | null }
   >();
   const filesByProject = new Map<string, { label: string; url: string }[]>();
-  if (ids.length > 0) {
+  if (renderedIds.length > 0) {
     const [{ data: noteRows }, { data: fileRows }] = await Promise.all([
       admin
         .from("agent_project_notes")
         .select("project_id, incentive_note, deposit_note, extra_note")
         .eq("profile_id", coll.profile_id)
-        .in("project_id", ids),
+        .in("project_id", renderedIds),
       admin
-        .from("project_documents")
+        .from("shared_project_materials")
         .select("project_id, title, file_url")
-        .in("project_id", ids)
-        .eq("source_type", "realtor_share")
-        .not("rights_confirmed_at", "is", null)
+        .in("project_id", renderedIds)
         .order("created_at", { ascending: true }),
     ]);
     for (const n of (noteRows ?? []) as {

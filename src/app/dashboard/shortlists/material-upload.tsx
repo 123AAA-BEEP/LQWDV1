@@ -16,11 +16,9 @@ import { recordMaterial } from "./actions";
  * only because the uploader confirmed their right to share it.
  */
 export function MaterialUpload({
-  collectionId,
   projectId,
   userId,
 }: {
-  collectionId: string;
   projectId: string;
   userId: string;
 }) {
@@ -63,13 +61,19 @@ export function MaterialUpload({
     }
 
     const fd = new FormData();
-    fd.set("collection_id", collectionId);
     fd.set("project_id", projectId);
     fd.set("path", path);
     fd.set("kind", kindInput.value);
     fd.set("label", labelInput.value.trim() || v.file.name.replace(/\.[^.]+$/, ""));
     fd.set("rights", "on");
-    await recordMaterial(fd);
+    // The action removes the just-uploaded object itself on any rejection, so
+    // a returned error never leaves an orphan in the bucket.
+    const res = await recordMaterial(fd);
+    if (res?.error) {
+      setError(res.error);
+      setBusy(false);
+      return;
+    }
     form.reset();
     router.refresh();
     setBusy(false);
@@ -82,7 +86,7 @@ export function MaterialUpload({
           type="file"
           name="file"
           required
-          accept="application/pdf,image/png,image/jpeg,image/webp"
+          accept={DOC_MIME.join(",")}
           className="block w-full text-sm text-slate-600 file:mr-3 file:rounded-md file:border-0 file:bg-slate-100 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-slate-700 hover:file:bg-slate-200"
         />
         <select
