@@ -119,3 +119,144 @@ export async function deleteCollection(formData: FormData) {
   revalidatePath(COLLECTIONS);
   redirect(`${COLLECTIONS}?message=deleted`);
 }
+
+// ---------------------------------------------------------------------------
+// Agent-supplied project depth (the buyer-portal layer).
+//  - NOTES key to (agent, project): the agent's own voice (incentive, deposit,
+//    client note), shown only on THAT agent's shortlists.
+//  - FILES key to the PROJECT (project_documents): a floor plan is a fact
+//    about the project, so one agent's upload becomes a community asset every
+//    LIQWD agent can use. Buyer exposure requires source_type='realtor_share'
+//    + the rights confirmation — admin docs in the same table never reach
+//    buyers.
+// ---------------------------------------------------------------------------
+
+const FILES_PER_PROJECT = 10;
+const SHARE_SOURCE = "realtor_share";
+const DOC_TYPES = ["floor_plan", "brochure", "price_sheet", "other"] as const;
+
+/** Saves the agent's incentive / deposit / note text for one project. */
+export async function saveProjectDetails(formData: FormData) {
+  const collection_id = String(formData.get("collection_id") ?? "");
+  const project_id = String(formData.get("project_id") ?? "");
+  if (!project_id) redirect(COLLECTIONS);
+  const backTo = `${COLLECTIONS}?c=${collection_id}&item=${project_id}`;
+
+  const incentive =
+    String(formData.get("incentive_note") ?? "").trim().slice(0, 500) || null;
+  const deposit =
+    String(formData.get("deposit_note") ?? "").trim().slice(0, 500) || null;
+  const extra =
+    String(formData.get("extra_note") ?? "").trim().slice(0, 1000) || null;
+
+  const { profile } = await requireUserProfile();
+  if (profile.role !== "realtor") redirect("/dashboard");
+  const supabase = await createClient();
+
+  await supabase.from("agent_project_notes").upsert(
+    {
+      profile_id: profile.id,
+      project_id,
+      incentive_note: incentive,
+      deposit_note: deposit,
+      extra_note: extra,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "profile_id,project_id" },
+  );
+  revalidatePath(COLLECTIONS);
+  redirect(`${backTo}&message=details-saved`);
+}
+
+/**
+ * Records an uploaded material (the file itself went browser-direct to the
+ * private project-documents bucket) as a PROJECT document every approved
+ * agent can reuse. The path must sit under this agent's own folder for the
+ * project, and the rights confirmation is required — its timestamp is the
+ * audit trail that gates buyer-facing rendering.
+ */
+export async function recordMaterial(formData: FormData) {
+  const collection_id = String(formData.get("collection_id") ?? "");
+  const project_id = String(formData.get("project_id") ?? "");
+  const path = String(formData.get("path") ?? "");
+  const label = String(formData.get("label") ?? "").trim().slice(0, 80);
+  const kindRaw = String(formData.get("kind") ?? "");
+  const kind = (DOC_TYPES as readonly string[]).includes(kindRaw)
+    ? kindRaw
+    : "other";
+  const rights = String(formData.get("rights") ?? "") === "on";
+  if (!project_id || !path) redirect(COLLECTIONS);
+  const backTo = `${COLLECTIONS}?c=${collection_id}&item=${project_id}`;
+
+  const { profile } = await requireUserProfile();
+  if (profile.role !== "realtor") redirect("/dashboard");
+
+  if (!rights) {
+    redirect(
+      `${backTo}&error=${encodeURIComponent("Please confirm you have the right to share this material.")}`,
+    );
+  }
+  // Only paths inside THIS agent's folder for THIS project can be recorded —
+  // otherwise a crafted form could surface arbitrary private documents
+  // through shortlist signed URLs.
+  if (!path.startsWith(`${project_id}/broker-${profile.id}/`)) {
+    redirect(`${backTo}&error=${encodeURIComponent("Upload failed. Please try again.")}`);
+  }
+
+  const supabase = await createClient();
+  const { count } = await supabase
+    .from("project_documents")
+    .select("id", { count: "exact", head: true })
+    .eq("project_id", project_id)
+    .eq("source_type", SHARE_SOURCE);
+  if ((count ?? 0) >= FILES_PER_PROJECT) {
+    redirect(
+      `${backTo}&error=${encodeURIComponent(`This project already has ${FILES_PER_PROJECT} shared materials — remove one of yours first.`)}`,
+    );
+  }
+
+  const { error } = await supabase.from("project_documents").insert({
+    project_id,
+    document_type: kind,
+    title: label || "Document",
+    file_url: path,
+    is_public: false,
+    source_type: SHARE_SOURCE,
+    uploaded_by_user_id: profile.id,
+    rights_confirmed_at: new Date().toISOString(),
+  });
+  if (error) {
+    redirect(`${backTo}&error=${encodeURIComponent("Couldn't save the file. Please try again.")}`);
+  }
+  revalidatePath(COLLECTIONS);
+  redirect(`${backTo}&message=file-added`);
+}
+
+export async function removeMaterial(formData: FormData) {
+  const id = String(formData.get("file_id") ?? "");
+  const collection_id = String(formData.get("collection_id") ?? "");
+  const project_id = String(formData.get("project_id") ?? "");
+  if (!id) redirect(COLLECTIONS);
+  const { profile } = await requireUserProfile();
+  const supabase = await createClient();
+
+  // RLS restricts the delete to the uploader's own rows; remove the storage
+  // object too (best-effort; the row is the gate).
+  const { data: row } = await supabase
+    .from("project_documents")
+    .select("file_url")
+    .eq("id", id)
+    .eq("uploaded_by_user_id", profile.id)
+    .eq("source_type", SHARE_SOURCE)
+    .maybeSingle();
+  if (row) {
+    await supabase.from("project_documents").delete().eq("id", id);
+    if (row.file_url) {
+      await supabase.storage.from("project-documents").remove([row.file_url]);
+    }
+  }
+  revalidatePath(COLLECTIONS);
+  redirect(
+    `${COLLECTIONS}${collection_id ? `?c=${collection_id}&item=${project_id}&message=file-removed` : ""}`,
+  );
+}

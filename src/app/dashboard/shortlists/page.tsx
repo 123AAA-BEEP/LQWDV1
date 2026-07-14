@@ -22,7 +22,10 @@ import {
   removeCollectionItem,
   setCollectionRevoked,
   deleteCollection,
+  saveProjectDetails,
+  removeMaterial,
 } from "./actions";
+import { MaterialUpload } from "./material-upload";
 
 export const metadata: Metadata = { title: "Shortlists" };
 export const dynamic = "force-dynamic";
@@ -38,6 +41,9 @@ const MESSAGES: Record<string, string> = {
   revoked: "Link revoked — the page no longer loads for anyone.",
   restored: "Link restored.",
   deleted: "Shortlist deleted.",
+  "details-saved": "Details saved — they'll show in every shortlist with this project.",
+  "file-added": "File attached.",
+  "file-removed": "File removed.",
 };
 
 interface CollectionRow {
@@ -55,6 +61,18 @@ interface ItemRow {
   projects: { project_name: string; city: string | null } | null;
 }
 
+interface NotesRow {
+  incentive_note: string | null;
+  deposit_note: string | null;
+  extra_note: string | null;
+}
+
+interface FileRow {
+  id: string;
+  title: string;
+  uploaded_by_user_id: string | null;
+}
+
 /** ISO timestamp `days` ago — kept out of render bodies for the purity rule. */
 function daysAgoIso(days: number): string {
   return new Date(Date.now() - days * 86_400_000).toISOString();
@@ -63,10 +81,16 @@ function daysAgoIso(days: number): string {
 export default async function CollectionsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ c?: string; q?: string; message?: string; error?: string }>;
+  searchParams: Promise<{
+    c?: string;
+    q?: string;
+    item?: string;
+    message?: string;
+    error?: string;
+  }>;
 }) {
   const { profile } = await requireUserProfile();
-  const { c, q, message, error } = await searchParams;
+  const { c, q, item, message, error } = await searchParams;
 
   if (profile.role !== "realtor") {
     return (
@@ -120,6 +144,8 @@ export default async function CollectionsPage({
   // Selected collection's items + project search for the picker.
   let items: ItemRow[] = [];
   let results: { project_id: string; project_name: string; city: string | null }[] = [];
+  let detailNotes: NotesRow | null = null;
+  let detailFiles: FileRow[] = [];
   const query = (q ?? "").trim();
   if (selected) {
     const { data: itemData } = await supabase
@@ -128,6 +154,29 @@ export default async function CollectionsPage({
       .eq("collection_id", selected.id)
       .order("sort_order", { ascending: true });
     items = (itemData ?? []) as unknown as ItemRow[];
+
+    // Details panel for one project. Notes are the agent's own; files are
+    // PROJECT-level community materials (any approved agent's rights-confirmed
+    // uploads — one agent uploads The Summit's floor plans, everyone benefits).
+    if (item && items.some((i) => i.project_id === item)) {
+      const [{ data: notes }, { data: files }] = await Promise.all([
+        supabase
+          .from("agent_project_notes")
+          .select("incentive_note, deposit_note, extra_note")
+          .eq("profile_id", profile.id)
+          .eq("project_id", item)
+          .maybeSingle(),
+        supabase
+          .from("project_documents")
+          .select("id, title, uploaded_by_user_id")
+          .eq("project_id", item)
+          .eq("source_type", "realtor_share")
+          .not("rights_confirmed_at", "is", null)
+          .order("created_at", { ascending: true }),
+      ]);
+      detailNotes = (notes as NotesRow) ?? null;
+      detailFiles = (files ?? []) as FileRow[];
+    }
 
     if (query) {
       const { data } = await supabase
@@ -247,27 +296,146 @@ export default async function CollectionsPage({
                       ) : (
                         <ul className="divide-y divide-slate-100">
                           {items.map((it) => (
-                            <li
-                              key={it.id}
-                              className="flex items-center justify-between gap-3 py-2.5"
-                            >
-                              <span className="min-w-0 truncate text-sm text-slate-700">
-                                {it.projects?.project_name ?? "Project"}
-                                {it.projects?.city ? (
-                                  <span className="text-slate-400"> · {it.projects.city}</span>
-                                ) : null}
-                              </span>
-                              <form action={removeCollectionItem}>
-                                <input type="hidden" name="item_id" value={it.id} />
-                                <input type="hidden" name="collection_id" value={coll.id} />
-                                <button
-                                  type="submit"
-                                  className="rounded-md p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600"
-                                  aria-label="Remove from shortlist"
-                                >
-                                  <Trash2 aria-hidden className="size-4" />
-                                </button>
-                              </form>
+                            <li key={it.id} className="py-2.5">
+                              <div className="flex items-center justify-between gap-3">
+                                <span className="min-w-0 truncate text-sm text-slate-700">
+                                  {it.projects?.project_name ?? "Project"}
+                                  {it.projects?.city ? (
+                                    <span className="text-slate-400"> · {it.projects.city}</span>
+                                  ) : null}
+                                </span>
+                                <div className="flex shrink-0 items-center gap-1.5">
+                                  <ButtonLink
+                                    href={
+                                      item === it.project_id
+                                        ? `/dashboard/shortlists?c=${coll.id}`
+                                        : `/dashboard/shortlists?c=${coll.id}&item=${it.project_id}`
+                                    }
+                                    variant="secondary"
+                                    size="sm"
+                                  >
+                                    {item === it.project_id ? "Close" : "Details"}
+                                  </ButtonLink>
+                                  <form action={removeCollectionItem}>
+                                    <input type="hidden" name="item_id" value={it.id} />
+                                    <input type="hidden" name="collection_id" value={coll.id} />
+                                    <button
+                                      type="submit"
+                                      className="rounded-md p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600"
+                                      aria-label="Remove from shortlist"
+                                    >
+                                      <Trash2 aria-hidden className="size-4" />
+                                    </button>
+                                  </form>
+                                </div>
+                              </div>
+
+                              {/* Agent-supplied depth — floor plans, incentives, deposit */}
+                              {item === it.project_id ? (
+                                <div className="mt-3 space-y-4 rounded-xl border border-slate-200 bg-slate-50/60 p-4">
+                                  <p className="text-xs text-slate-500">
+                                    What you add here shows in{" "}
+                                    <span className="font-medium text-slate-600">
+                                      every shortlist you share
+                                    </span>{" "}
+                                    that includes this project.
+                                  </p>
+                                  <form action={saveProjectDetails} className="space-y-3">
+                                    <input type="hidden" name="collection_id" value={coll.id} />
+                                    <input type="hidden" name="project_id" value={it.project_id} />
+                                    <div className="grid gap-3 sm:grid-cols-2">
+                                      <Field
+                                        label="Current incentive"
+                                        htmlFor={`inc-${it.id}`}
+                                      >
+                                        <Input
+                                          id={`inc-${it.id}`}
+                                          name="incentive_note"
+                                          maxLength={500}
+                                          placeholder="e.g. $20K décor credit until Aug 31"
+                                          defaultValue={detailNotes?.incentive_note ?? ""}
+                                        />
+                                      </Field>
+                                      <Field
+                                        label="Deposit structure"
+                                        htmlFor={`dep-${it.id}`}
+                                      >
+                                        <Input
+                                          id={`dep-${it.id}`}
+                                          name="deposit_note"
+                                          maxLength={500}
+                                          placeholder="e.g. 5% on signing, 5% in 90 days"
+                                          defaultValue={detailNotes?.deposit_note ?? ""}
+                                        />
+                                      </Field>
+                                    </div>
+                                    <Field label="Note for your client" htmlFor={`note-${it.id}`}>
+                                      <Textarea
+                                        id={`note-${it.id}`}
+                                        name="extra_note"
+                                        rows={2}
+                                        maxLength={1000}
+                                        placeholder="e.g. Corner units on floors 8-14 still available."
+                                        defaultValue={detailNotes?.extra_note ?? ""}
+                                      />
+                                    </Field>
+                                    <Button type="submit" variant="secondary" size="sm">
+                                      Save details
+                                    </Button>
+                                  </form>
+
+                                  <div className="border-t border-slate-200 pt-3">
+                                    <p className="text-sm font-medium text-slate-700">
+                                      Project materials ({detailFiles.length}/10)
+                                    </p>
+                                    <p className="mt-0.5 text-xs text-slate-500">
+                                      Floor plans and brochures live with the
+                                      project — every LIQWD agent can use them
+                                      in their own shortlists.
+                                    </p>
+                                    {detailFiles.length > 0 ? (
+                                      <ul className="mt-2 divide-y divide-slate-100">
+                                        {detailFiles.map((f) => (
+                                          <li
+                                            key={f.id}
+                                            className="flex items-center justify-between gap-3 py-1.5"
+                                          >
+                                            <span className="min-w-0 truncate text-sm text-slate-600">
+                                              {f.title}
+                                              <span className="ml-2 text-xs text-slate-400">
+                                                {f.uploaded_by_user_id === profile.id
+                                                  ? "added by you"
+                                                  : "added by another agent"}
+                                              </span>
+                                            </span>
+                                            {f.uploaded_by_user_id === profile.id ? (
+                                              <form action={removeMaterial}>
+                                                <input type="hidden" name="file_id" value={f.id} />
+                                                <input type="hidden" name="collection_id" value={coll.id} />
+                                                <input type="hidden" name="project_id" value={it.project_id} />
+                                                <button
+                                                  type="submit"
+                                                  className="rounded-md p-1 text-slate-400 hover:bg-rose-50 hover:text-rose-600"
+                                                  aria-label="Remove file"
+                                                >
+                                                  <Trash2 aria-hidden className="size-3.5" />
+                                                </button>
+                                              </form>
+                                            ) : null}
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    ) : null}
+                                    <div className="mt-3">
+                                      <MaterialUpload
+                                        collectionId={coll.id}
+                                        projectId={it.project_id}
+                                        userId={profile.id}
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+                              ) : null}
                             </li>
                           ))}
                         </ul>
