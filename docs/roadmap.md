@@ -3,6 +3,11 @@
 Agreed-but-deferred items. Flag here, build later. (Most recent on top.)
 
 ## Shipped
+- **Leads workspace (v1)** — realtor lead inbox at `/dashboard/leads` with the
+  status pipeline, plus a coming-soon-framed empty state around the free-leads
+  promise (capture stays on, no benchmark numbers). Migration 0073 fixed the
+  status check constraint that was silently rejecting Won/Lost. See
+  `docs/leads-workspace-spec.md`. Follow-ups flagged below.
 - **Onboarding walkthrough (v1)** — TurboTax-style, one-concept-per-slide,
   money-led guided tour at `/dashboard/start` (self-contained, no tour library).
   Ships the live NOW paths (free leads · more lead pages/Pro · refer an agent ·
@@ -35,6 +40,11 @@ v1 is live (see Shipped). Possible v2 work when we have appetite:
   guided overlay on top of the live UI, not just the standalone walkthrough.
 
 ## Realtor experience
+- **Leads workspace v2** — per-lead notes + follow-up reminders; in-app
+  notifications (the live-DB `notifications` table still has no code path);
+  realtor-set spam flag. Also: `vercel.json` never schedules
+  `/api/weekly-digest` despite the route's "Mondays 9am ET" comment — wire the
+  cron or document the external scheduler.
 - **Portal impressions** — accurate counts need a client-side beacon
   (server-render counts over-count via prefetch). Clicks are already tracked.
 - **Earnings dashboard / estimator** — lifetime + pending referral $ for agents.

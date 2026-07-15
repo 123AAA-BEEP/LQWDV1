@@ -21,6 +21,7 @@ import {
   Gift,
   Coins,
   Link2,
+  Inbox,
   Magnet,
   type LucideIcon,
 } from "lucide-react";
@@ -285,8 +286,11 @@ export default async function DashboardHome() {
           <ConfettiBurst variant="big" onFired={markFirstLeadCelebrated} />
           <Notice tone="success">
             <span className="font-semibold">Your first lead is in</span> — a
-            buyer asked to be connected with you. Check your inbox and follow
-            up fast; early follow-ups convert best.
+            buyer asked to be connected with you. Follow up fast; early
+            follow-ups convert best.{" "}
+            <Link href="/dashboard/leads" className="font-semibold underline">
+              Open your leads →
+            </Link>
           </Notice>
         </>
       ) : null}
@@ -407,6 +411,15 @@ export default async function DashboardHome() {
           body="See the project pages you're bound to and copy a direct referral link to hand a buyer — every lead it captures is attributed to you."
           href="/dashboard/lead-pages"
           cta="Open Lead Pages"
+          enabled={approved}
+          lockedHint="Available after verification"
+        />
+        <ActionCard
+          icon={Inbox}
+          title="Leads"
+          body="Every buyer inquiry routed to you, in one inbox — contact details, the page it came from, and a pipeline to work each lead from new to won."
+          href="/dashboard/leads"
+          cta="Open your leads"
           enabled={approved}
           lockedHint="Available after verification"
         />
