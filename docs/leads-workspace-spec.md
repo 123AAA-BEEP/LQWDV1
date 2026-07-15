@@ -42,7 +42,7 @@ at migration time; no data change. Fixes admin + unblocks the workspace.
   project link via `public_projects_view` (public-safe; unpublished projects
   lose the link, not the lead), and how it arrived — "via your referral link"
   (`referred_by_profile_id = me`) vs "from your project page" (steward).
-- Pipeline: stat row (Total / New / In progress / Won), status filter chips
+- Pipeline: stat row (Total / New / In progress / Deals closed), status filter chips
   with counts, `?q` search over name/email/phone, and a per-lead status
   select posting to `updateLeadStatus` (validates against `LEAD_STATUSES`,
   updates only own rows, flash-confirms). Mirrors the admin leads console.
@@ -65,6 +65,13 @@ at migration time; no data change. Fixes admin + unblocks the workspace.
 - `get-free-leads`: "Where leads land" info notice (links the inbox, sets the
   early-volume expectation) + a footer link. Lead Pages header links the
   inbox.
+
+### Status language (2026-07-15 direction: "speak agent, not CRM")
+UI labels in `src/lib/leads.ts` are written the way an agent reads a buyer,
+shared by the realtor inbox and admin console. DB values are storage keys —
+label changes never need a migration:
+`new` → **New** · `contacted` → **Contacted** · `qualified` → **Active
+buyer** · `won` → **Deal closed** · `lost` → **Went cold**.
 
 ## Deliberately out of scope (v1)
 - Notes / follow-up reminders on a lead (would need a new column or table).

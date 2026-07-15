@@ -417,7 +417,7 @@ export default async function DashboardHome() {
         <ActionCard
           icon={Inbox}
           title="Leads"
-          body="Every buyer inquiry routed to you, in one inbox — contact details, the page it came from, and a pipeline to work each lead from new to won."
+          body="Every buyer inquiry routed to you, in one inbox — contact details, the page it came from, and a pipeline to work each lead from first touch to deal closed."
           href="/dashboard/leads"
           cta="Open your leads"
           enabled={approved}

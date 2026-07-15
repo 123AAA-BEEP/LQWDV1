@@ -141,7 +141,7 @@ export default async function LeadsPage({
             <Stat label="Total leads" value={total} />
             <Stat label="New — reach out" value={newCount} accent={newCount > 0} />
             <Stat label="In progress" value={inProgress} />
-            <Stat label="Won" value={wonCount} />
+            <Stat label="Deals closed" value={wonCount} />
           </div>
 
           {/* Filters */}
@@ -214,8 +214,8 @@ function Header() {
       <h1 className="text-2xl font-semibold tracking-tight text-ink">Leads</h1>
       <p className="mt-1 text-slate-500">
         Every buyer inquiry routed to you, in one inbox — from your project
-        pages and referral links. Work each one from new to won; no referral
-        fee, you keep 100%.
+        pages and referral links. Work each one from first touch to deal
+        closed; no referral fee, you keep 100%.
       </p>
     </div>
   );
