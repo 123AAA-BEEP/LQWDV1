@@ -8,6 +8,7 @@ import {
   Medal,
   Plus,
   Sparkles,
+  Star,
   Trash2,
   Trophy,
 } from "lucide-react";
@@ -145,6 +146,18 @@ export default async function MyPagePage({
     .order("created_at", { ascending: true });
   const links = (linkData ?? []) as LinkRow[];
 
+  // Client reviews — RLS lets the agent read their own rows (any status).
+  const { data: reviewRows } = await supabase
+    .from("agent_reviews")
+    .select("status")
+    .eq("agent_profile_id", profile.id);
+  const approvedReviews = (reviewRows ?? []).filter(
+    (r) => r.status === "approved",
+  ).length;
+  const pendingReviews = (reviewRows ?? []).filter(
+    (r) => r.status === "pending",
+  ).length;
+
   // Project search for the picker (published only, excluding current picks).
   const query = (q ?? "").trim();
   let results: { project_id: string; project_name: string; city: string | null }[] = [];
@@ -243,6 +256,54 @@ export default async function MyPagePage({
                 Profile &amp; settings
               </Link>{" "}
               — pages with a photo convert better.
+            </p>
+          </CardBody>
+        </Card>
+      ) : null}
+
+      {/* Client reviews — the review-request link is the flywheel: agent sends
+          it to a past client, the review lands in the admin moderation queue,
+          approved reviews build the public page (and its star snippet). */}
+      {verified && slug ? (
+        <Card>
+          <CardBody>
+            <h2 className="inline-flex items-center gap-2 font-semibold text-ink">
+              <Star aria-hidden className="size-4 text-amber-500" />
+              Client reviews
+            </h2>
+            <p className="mt-1 text-sm text-slate-500">
+              {approvedReviews > 0 ? (
+                <>
+                  <span className="font-medium text-slate-700">
+                    {approvedReviews} live{" "}
+                    {approvedReviews === 1 ? "review" : "reviews"}
+                  </span>
+                  {pendingReviews > 0 ? (
+                    <> · {pendingReviews} awaiting verification</>
+                  ) : null}
+                  {" — "}reviews compound. Send your link to another past
+                  client.
+                </>
+              ) : pendingReviews > 0 ? (
+                <>
+                  {pendingReviews} {pendingReviews === 1 ? "review" : "reviews"}{" "}
+                  awaiting verification — reviews publish once we&apos;ve
+                  checked them.
+                </>
+              ) : (
+                <>
+                  Reviews are the strongest thing on this page — send this link
+                  to a past client and their review (verified by LIQWD) shows
+                  up right here.
+                </>
+              )}
+            </p>
+            <div className="mt-3">
+              <CopyField value={`${SITE_URL}/realtors/${slug}/review`} size="sm" />
+            </div>
+            <p className="mt-3 text-xs text-slate-500">
+              Only genuine clients — one review per client, and every review is
+              verified before it publishes.
             </p>
           </CardBody>
         </Card>

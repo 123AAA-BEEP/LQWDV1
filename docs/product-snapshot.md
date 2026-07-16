@@ -26,6 +26,10 @@ projects into your pipeline — no referral fees, no brokerage change, you keep
   email signature, website, and socials (regulator-accurate, TRESA-safe).
 - **Achievement medals** computed from real activity (Founding Agent, Project
   Steward, Project Scout, Network Builder) + self-reported awards.
+- **Verified client reviews** — Zillow-style: a personal review link (on My
+  Public Page + an onboarding path), one review per client, human-moderated
+  before publishing (admin Reviews queue), stars + AggregateRating schema on
+  the public profile.
 - **Attributed share links** — every project has your personal link; buyer
   inquiries route to you, attributed, no fee. Free for all verified agents,
   and attribution now survives the buyer clicking around (30-day cookie).

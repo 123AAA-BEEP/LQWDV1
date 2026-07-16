@@ -13,6 +13,7 @@ import {
   MessageSquare,
   Phone,
   Rocket,
+  Star,
   Trophy,
   Users,
   type LucideIcon,
@@ -71,6 +72,15 @@ interface AgentCard {
   banner_url: string | null;
   show_achievements: boolean | null;
   reco_verified_at: string | null;
+}
+
+interface ReviewRow {
+  id: string;
+  reviewer_name: string;
+  rating: number;
+  body: string;
+  worked_on: string | null;
+  created_at: string;
 }
 
 interface AwardRow {
@@ -218,7 +228,7 @@ export default async function RealtorProfilePage({
   // (submissions, referrals) come via the admin client — aggregates only,
   // never row data.
   const admin = createAdminClient();
-  const [pickRes, awardRes, linkRes, stewardRes, scoutRes, networkRes] =
+  const [pickRes, awardRes, linkRes, stewardRes, scoutRes, networkRes, reviewRes] =
     await Promise.all([
       supabase
         .from("realtor_page_projects")
@@ -258,12 +268,27 @@ export default async function RealtorProfilePage({
             .eq("referrer_profile_id", agent.profile_id)
             .neq("status", "void")
         : Promise.resolve({ count: 0 }),
+      // Approved client reviews (public-safe view, 0076). Newest first.
+      supabase
+        .from("public_agent_reviews_view")
+        .select("id, reviewer_name, rating, body, worked_on, created_at")
+        .eq("agent_profile_id", agent.profile_id)
+        .order("created_at", { ascending: false })
+        .limit(30),
     ]);
 
   const pickIds = ((pickRes.data ?? []) as { project_id: string }[]).map(
     (r) => r.project_id,
   );
   const awards = (awardRes.data ?? []) as AwardRow[];
+  const reviews = ((reviewRes.data ?? []) as ReviewRow[]);
+  const reviewCount = reviews.length;
+  const reviewAvg =
+    reviewCount > 0
+      ? Math.round(
+          (reviews.reduce((s, r) => s + r.rating, 0) / reviewCount) * 10,
+        ) / 10
+      : 0;
   // Only http(s) links ever render (validated on write too — belt and braces).
   const links = ((linkRes.data ?? []) as LinkRow[]).filter((l) =>
     /^https?:\/\//i.test(l.url),
@@ -373,6 +398,30 @@ export default async function RealtorProfilePage({
             award: awards.map((a) =>
               [a.title, a.issuer, a.year].filter(Boolean).join(", "),
             ),
+          }
+        : {}),
+      // Star-snippet eligibility: only real, moderated client reviews.
+      ...(reviewCount > 0
+        ? {
+            aggregateRating: {
+              "@type": "AggregateRating",
+              ratingValue: reviewAvg,
+              reviewCount,
+              bestRating: 5,
+              worstRating: 1,
+            },
+            review: reviews.slice(0, 3).map((r) => ({
+              "@type": "Review",
+              author: { "@type": "Person", name: r.reviewer_name },
+              reviewRating: {
+                "@type": "Rating",
+                ratingValue: r.rating,
+                bestRating: 5,
+                worstRating: 1,
+              },
+              reviewBody: r.body,
+              datePublished: r.created_at.slice(0, 10),
+            })),
           }
         : {}),
       knowsAbout: "New construction and pre-construction homes",
@@ -491,6 +540,30 @@ export default async function RealtorProfilePage({
           <p className="mt-1 text-slate-600">
             {[titleLabel, agent.brokerage].filter(Boolean).join(" · ")}
           </p>
+          {reviewCount > 0 ? (
+            <a
+              href="#reviews"
+              className="mt-2 inline-flex items-center gap-1.5 text-sm text-slate-600 hover:text-brand-700"
+            >
+              <span className="flex items-center" aria-hidden>
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <Star
+                    key={n}
+                    className={
+                      Math.round(reviewAvg) >= n
+                        ? "size-4 fill-amber-400 text-amber-400"
+                        : "size-4 text-slate-300"
+                    }
+                    strokeWidth={1.5}
+                  />
+                ))}
+              </span>
+              <span className="font-semibold text-ink">{reviewAvg}</span>
+              <span className="text-slate-500">
+                ({reviewCount} {reviewCount === 1 ? "review" : "reviews"})
+              </span>
+            </a>
+          ) : null}
           {agent.service_area ? (
             <p className="mt-2 inline-flex items-center gap-1.5 text-sm text-slate-500">
               <MapPin aria-hidden className="size-4" /> Serving {agent.service_area}
@@ -578,6 +651,85 @@ export default async function RealtorProfilePage({
             />
           </div>
         </div>
+      </section>
+
+      {/* Client reviews — moderated before publishing (0076); the write-a-review
+          door is always open so agents can send clients straight here. */}
+      <section id="reviews" className="mt-10">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 className="text-xl font-semibold text-ink">Client reviews</h2>
+            {reviewCount > 0 ? (
+              <p className="mt-1 flex items-center gap-1.5 text-sm text-slate-500">
+                <span className="flex items-center" aria-hidden>
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <Star
+                      key={n}
+                      className={
+                        Math.round(reviewAvg) >= n
+                          ? "size-4 fill-amber-400 text-amber-400"
+                          : "size-4 text-slate-300"
+                      }
+                      strokeWidth={1.5}
+                    />
+                  ))}
+                </span>
+                <span className="font-semibold text-ink">{reviewAvg}</span> ·{" "}
+                {reviewCount} verified {reviewCount === 1 ? "review" : "reviews"}
+              </p>
+            ) : (
+              <p className="mt-1 text-sm text-slate-500">
+                Worked with {name.split(" ")[0]}? Be the first to leave a
+                review — every review is verified before publishing.
+              </p>
+            )}
+          </div>
+          <Link
+            href={`/realtors/${slug}/review`}
+            className="inline-flex h-9 items-center rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-900 hover:bg-slate-50"
+          >
+            Write a review
+          </Link>
+        </div>
+
+        {reviewCount > 0 ? (
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            {reviews.map((r) => (
+              <div
+                key={r.id}
+                className="rounded-xl border border-slate-200 bg-white p-5"
+              >
+                <div className="flex items-center gap-1" aria-label={`${r.rating} out of 5 stars`}>
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <Star
+                      key={n}
+                      className={
+                        r.rating >= n
+                          ? "size-4 fill-amber-400 text-amber-400"
+                          : "size-4 text-slate-300"
+                      }
+                      strokeWidth={1.5}
+                      aria-hidden
+                    />
+                  ))}
+                </div>
+                <p className="mt-2 text-sm leading-relaxed text-slate-600">
+                  {r.body}
+                </p>
+                <p className="mt-3 text-xs text-slate-400">
+                  <span className="font-medium text-slate-600">
+                    {r.reviewer_name}
+                  </span>
+                  {r.worked_on ? <> · {r.worked_on}</> : null} ·{" "}
+                  {new Date(r.created_at).toLocaleDateString("en-CA", {
+                    year: "numeric",
+                    month: "long",
+                  })}
+                </p>
+              </div>
+            ))}
+          </div>
+        ) : null}
       </section>
 
       {/* Awards & achievements — medals are computed, awards are self-reported */}
