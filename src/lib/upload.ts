@@ -9,6 +9,8 @@ export const DOC_MAX = 25 * 1024 * 1024; // 25 MB (project-documents)
 
 export const IMAGE_MIME = ["image/png", "image/jpeg", "image/webp"];
 export const LOGO_MIME = [...IMAGE_MIME, "image/svg+xml"];
+/** Floor plans: PDF is the standard (what builders distribute); images fine. */
+export const FLOORPLAN_MIME = ["application/pdf", ...IMAGE_MIME];
 export const DOC_MIME = [
   "application/pdf",
   "application/msword",

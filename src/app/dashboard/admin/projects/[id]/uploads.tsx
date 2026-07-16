@@ -14,6 +14,7 @@ import {
   extFor,
   safeName,
   IMAGE_MIME,
+  FLOORPLAN_MIME,
   DOC_MIME,
   MEDIA_MAX,
   DOC_MAX,
@@ -129,7 +130,7 @@ export function ProjectUploads({
     const file = fileInput.files?.[0];
     setBusy("floorplan");
     if (file && file.size > 0) {
-      const v = validateUpload(file, { types: IMAGE_MIME, max: MEDIA_MAX });
+      const v = validateUpload(file, { types: FLOORPLAN_MIME, max: MEDIA_MAX });
       if (v.error || !v.file) {
         setError(v.error);
         setBusy(null);
@@ -316,30 +317,42 @@ export function ProjectUploads({
                         .join(" · ") || "—"}
                     </p>
                   </div>
-                  <form
-                    action={deleteFloorplan}
-                    onSubmit={(e) => {
-                      if (
-                        !window.confirm(
-                          "Delete this floorplan? This can't be undone.",
+                  <div className="flex shrink-0 items-center gap-3">
+                    {fp.floorplan_image_url ? (
+                      <a
+                        href={fp.floorplan_image_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs font-medium text-brand-700 hover:underline"
+                      >
+                        View
+                      </a>
+                    ) : null}
+                    <form
+                      action={deleteFloorplan}
+                      onSubmit={(e) => {
+                        if (
+                          !window.confirm(
+                            "Delete this floorplan? This can't be undone.",
+                          )
                         )
-                      )
-                        e.preventDefault();
-                    }}
-                  >
-                    <input
-                      type="hidden"
-                      name="project_id"
-                      value={projectId}
-                    />
-                    <input type="hidden" name="floorplan_id" value={fp.id} />
-                    <button
-                      type="submit"
-                      className="shrink-0 text-xs font-medium text-red-600 hover:underline"
+                          e.preventDefault();
+                      }}
                     >
-                      Delete
-                    </button>
-                  </form>
+                      <input
+                        type="hidden"
+                        name="project_id"
+                        value={projectId}
+                      />
+                      <input type="hidden" name="floorplan_id" value={fp.id} />
+                      <button
+                        type="submit"
+                        className="text-xs font-medium text-red-600 hover:underline"
+                      >
+                        Delete
+                      </button>
+                    </form>
+                  </div>
                 </div>
               ))}
             </div>
@@ -367,14 +380,18 @@ export function ProjectUploads({
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium text-slate-700">
-                Floorplan image (optional)
+                Floorplan file (optional)
               </label>
               <input
                 type="file"
                 name="file"
-                accept="image/png,image/jpeg,image/webp"
+                accept="application/pdf,image/png,image/jpeg,image/webp"
                 className={fileInputClass}
               />
+              <p className="mt-1 text-xs text-slate-400">
+                PDF is the standard — upload the builder&apos;s plan as-is.
+                Images work too.
+              </p>
             </div>
             <Button type="submit" size="sm" disabled={busy === "floorplan"}>
               {busy === "floorplan" ? "Saving…" : "Add floorplan"}
