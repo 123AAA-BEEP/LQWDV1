@@ -64,10 +64,15 @@ export default async function LeadsPage({
     );
   }
 
-  const statusFilter = LEAD_STATUSES.includes(sp.status as LeadStatus)
-    ? (sp.status as LeadStatus)
+  // Next delivers duplicated query params as arrays at runtime regardless of
+  // the declared type — normalize before calling string methods.
+  const first = (v: unknown): string =>
+    Array.isArray(v) ? String(v[0] ?? "") : typeof v === "string" ? v : "";
+  const rawQ = first(sp.q);
+  const statusFilter = LEAD_STATUSES.includes(first(sp.status) as LeadStatus)
+    ? (first(sp.status) as LeadStatus)
     : "";
-  const q = (sp.q ?? "").trim().toLowerCase();
+  const q = rawQ.trim().toLowerCase();
 
   const supabase = await createClient();
 
@@ -79,6 +84,7 @@ export default async function LeadsPage({
       "id, project_id, referred_by_profile_id, lead_name, lead_email, lead_phone, message, is_realtor, status, created_at",
     )
     .eq("assigned_realtor_profile_id", profile.id)
+    .neq("status", "spam")
     .order("created_at", { ascending: false })
     .limit(500);
   const allLeads = (leadData as Lead[] | null) ?? [];
@@ -122,7 +128,7 @@ export default async function LeadsPage({
   const chipHref = (s: string) => {
     const p = new URLSearchParams();
     if (s) p.set("status", s);
-    if (sp.q) p.set("q", sp.q);
+    if (rawQ) p.set("q", rawQ);
     const qs = p.toString();
     return qs ? `/dashboard/leads?${qs}` : "/dashboard/leads";
   };
@@ -170,7 +176,7 @@ export default async function LeadsPage({
               <Input
                 name="q"
                 placeholder="Search name, email, phone…"
-                defaultValue={sp.q ?? ""}
+                defaultValue={rawQ}
                 className="flex-1"
               />
               <Button type="submit" variant="secondary">
@@ -371,17 +377,19 @@ function LeadCard({
           <Badge tone={sm.tone}>{sm.label}</Badge>
         </div>
 
-        {/* Contact the lead */}
+        {/* Contact the lead. Hrefs are sanitized — these strings come from the
+            public form, and a crafted "email" could otherwise smuggle extra
+            mailto fields (?cc=…) into the compose window. */}
         <div className="flex flex-wrap gap-x-5 gap-y-1 rounded-lg border border-slate-100 bg-slate-50/70 px-3 py-2 text-sm">
           <a
-            href={`mailto:${lead.lead_email}`}
+            href={`mailto:${encodeURIComponent(lead.lead_email)}`}
             className="font-medium text-brand-700 hover:underline"
           >
             {lead.lead_email}
           </a>
           {lead.lead_phone ? (
             <a
-              href={`tel:${lead.lead_phone}`}
+              href={`tel:${lead.lead_phone.replace(/[^+\d]/g, "")}`}
               className="font-medium text-brand-700 hover:underline"
             >
               {lead.lead_phone}

@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireUserProfile } from "@/lib/auth";
+import { requireUserProfile, isApproved } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { LEAD_STATUSES, LEAD_STATUS_META, type LeadStatus } from "@/lib/leads";
 import { redirectWithFlash } from "@/lib/flash";
@@ -19,18 +19,30 @@ export async function updateLeadStatus(formData: FormData) {
   if (!id || !LEAD_STATUSES.includes(status as LeadStatus)) return;
 
   const { profile } = await requireUserProfile();
+  // Same gate as the page: working leads is a verified-agent tool.
+  if (!isApproved(profile)) {
+    redirectWithFlash(
+      "/dashboard/leads",
+      "Your verification needs to be active to work leads.",
+      "error",
+    );
+  }
+
   const supabase = await createClient();
-  const { error } = await supabase
+  // .select() so a zero-row match (lead reassigned/pulled to the admin pool
+  // mid-flight, or a forged id) reads as the failure it is, not a success.
+  const { data: updated, error } = await supabase
     .from("project_leads")
     .update({ status })
     .eq("id", id)
-    .eq("assigned_realtor_profile_id", profile.id);
+    .eq("assigned_realtor_profile_id", profile.id)
+    .select("id");
 
   revalidatePath("/dashboard/leads");
-  if (error) {
+  if (error || !updated?.length) {
     redirectWithFlash(
       "/dashboard/leads",
-      "Couldn't update that lead — please try again.",
+      "Couldn't update that lead — it may no longer be assigned to you.",
       "error",
     );
   }
