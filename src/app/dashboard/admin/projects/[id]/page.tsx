@@ -179,7 +179,7 @@ export default async function AdminProjectEditor({
       // editor, where they'd read as admin-curated.
       supabase
         .from("project_documents")
-        .select("id, title, document_type, file_url, created_at")
+        .select("id, title, document_type, file_url, is_public, created_at")
         .eq("project_id", id)
         .neq("source_type", "realtor_share")
         .order("created_at", { ascending: true }),
@@ -999,6 +999,7 @@ export default async function AdminProjectEditor({
           document_type: d.document_type as string,
           signedUrl: signedByPath.get(d.file_url as string) ?? null,
           path: d.file_url as string,
+          is_public: Boolean(d.is_public),
         }))}
       />
       </div>

@@ -121,10 +121,18 @@ export default async function ProjectDetailPage({
       project.website_url,
   );
 
-  // "Share with clients": the realtor's own attributing referral link for this
-  // project — free for every verified agent (each share is our distribution).
-  // Same `?ref=` mechanism the Lead Pages feature uses, surfaced right where
-  // the agent is working a lead.
+  // "Share this project": the generic public link (default) + the realtor's
+  // own attributing referral link — free for every verified agent (each share
+  // is our distribution). Same `?ref=` mechanism the Lead Pages feature uses,
+  // surfaced right where the agent is working a lead. Only shown when the
+  // project is actually live on the public site (broker_projects_view also
+  // returns drafts, whose public URL would 404).
+  const { data: livePage } = await supabase
+    .from("public_projects_view")
+    .select("project_id")
+    .eq("project_id", project.id)
+    .maybeSingle();
+  const isPubliclyLive = Boolean(livePage);
   const refCode = profile.referral_code;
   const h = await headers();
   const host = h.get("x-forwarded-host") ?? h.get("host") ?? "liqwd.com";
@@ -196,7 +204,13 @@ export default async function ProjectDetailPage({
         </div>
       ) : null}
 
-      <ShareWithClients hasCode={!!refCode} refUrl={refUrl} pageUrl={pageUrl} />
+      {isPubliclyLive ? (
+        <ShareWithClients
+          hasCode={!!refCode}
+          refUrl={refUrl}
+          pageUrl={pageUrl}
+        />
+      ) : null}
 
       <WorkThisLead />
 
