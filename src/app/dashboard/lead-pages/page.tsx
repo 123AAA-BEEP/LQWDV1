@@ -292,7 +292,12 @@ function Header() {
       </h1>
       <p className="mt-1 text-slate-500">
         Your project landing pages and the direct referral links you can hand to
-        a buyer. Every lead from your link is attributed to you.
+        a buyer. Every lead from your link is attributed to you and lands in
+        your{" "}
+        <Link href="/dashboard/leads" className="font-medium text-brand-700 hover:underline">
+          Leads inbox
+        </Link>
+        .
       </p>
     </div>
   );

@@ -35,6 +35,12 @@ projects into your pipeline — no referral fees, no brokerage change, you keep
   deposit terms for your client. Gated: sent/shared only, never on the public
   site or in search.
 - **Free leads** — claim or add a project and its buyer inquiries route to you.
+- **Leads inbox** (`/dashboard/leads`) — every inquiry routed to you in one
+  place, with contact details and an agent-speak pipeline (New → Contacted →
+  Active buyer → Deal closed / Went cold); instant email alert deep-links to
+  it. Empty state frames the
+  free-leads promise honestly ("inbox is live, volume ramping" — capture
+  always on, no benchmarks promised).
 - **Lead Pages + analytics** — see link views (30 days) and attributed leads;
   a weekly digest emails you what your links did.
 - **Off-market board** — agent-to-agent listings, gated to verified realtors.

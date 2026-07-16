@@ -15,6 +15,14 @@ export function LeadPathStatus({
   buyerInquiries: number;
 }) {
   const started = matchedPages > 0 || buyerInquiries > 0;
+  // Deepest live step wins: inquiries → the Leads inbox; pages only → Lead
+  // Pages (share a link); nothing yet → the setup guide.
+  const cta =
+    buyerInquiries > 0
+      ? { href: "/dashboard/leads", label: "Open your leads" }
+      : started
+        ? { href: "/dashboard/lead-pages", label: "Open Lead Pages" }
+        : { href: "/dashboard/get-free-leads", label: "Start getting leads" };
   return (
     <div className="overflow-hidden rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50/80 to-white p-6 sm:p-7">
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -26,11 +34,8 @@ export function LeadPathStatus({
             Free buyer leads from your project pages
           </h2>
         </div>
-        <ButtonLink
-          href={started ? "/dashboard/lead-pages" : "/dashboard/get-free-leads"}
-          size="sm"
-        >
-          {started ? "Open Lead Pages" : "Start getting leads"}
+        <ButtonLink href={cta.href} size="sm">
+          {cta.label}
         </ButtonLink>
       </div>
 

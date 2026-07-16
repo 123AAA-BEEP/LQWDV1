@@ -289,17 +289,16 @@ async function sendLeadAlertEmail(
 
   const { data: project } = await admin
     .from("projects")
-    .select("project_name, slug")
+    .select("project_name")
     .eq("id", opts.project_id)
     .maybeSingle();
   const projectName = (project?.project_name as string | undefined) ?? "your project";
-  const slug = project?.slug as string | undefined;
   const firstName =
     (realtor?.first_name as string | undefined)?.trim() || "there";
   const base = process.env.NEXT_PUBLIC_SITE_URL ?? "https://liqwd.ca";
-  const ctaUrl = slug
-    ? `${base}/dashboard/projects/${slug}`
-    : `${base}/dashboard/lead-pages`;
+  // Land the agent on their Leads inbox — the buyer's contact details and the
+  // pipeline controls live there, not on the project page.
+  const ctaUrl = `${base}/dashboard/leads`;
 
   const details = [
     `<strong>Name:</strong> ${esc(opts.lead_name)}`,
@@ -321,7 +320,7 @@ async function sendLeadAlertEmail(
         `${esc(projectName)} page — it's yours, with no referral fee. Reach ` +
         `out soon; early follow-ups convert best.<br><br>${details}`,
       ctaUrl,
-      ctaLabel: "Open the project",
+      ctaLabel: "Open your leads",
     }),
   });
 }

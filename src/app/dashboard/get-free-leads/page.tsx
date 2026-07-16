@@ -118,6 +118,20 @@ export default async function GetFreeLeadsPage() {
         </ol>
       </section>
 
+      {/* Expectation-setting: capture is live everywhere, volume ramps as the
+          consumer marketplace grows — deliberately no counts or benchmarks. */}
+      <Notice tone="info">
+        <span className="font-semibold">Where leads land:</span> every inquiry
+        routes to your{" "}
+        <Link href="/dashboard/leads" className="font-medium underline">
+          Leads inbox
+        </Link>{" "}
+        the moment it arrives — you get an email alert too. We&apos;re early:
+        buyer traffic on the marketplace builds week over week, so volume
+        starts light, and agents on the most active pages are first in line as
+        it grows.
+      </Notice>
+
       {/* Other ways to get set up */}
       <section>
         <Eyebrow as="h2">Other ways to get set up</Eyebrow>
@@ -148,6 +162,13 @@ export default async function GetFreeLeadsPage() {
           className="inline-flex items-center gap-1.5 font-medium text-brand-700 hover:underline"
         >
           See your pages &amp; referral links
+          <ArrowRight className="size-3.5" aria-hidden />
+        </Link>
+        <Link
+          href="/dashboard/leads"
+          className="inline-flex items-center gap-1.5 font-medium text-brand-700 hover:underline"
+        >
+          Open your Leads inbox
           <ArrowRight className="size-3.5" aria-hidden />
         </Link>
         <Link

@@ -328,6 +328,7 @@ export default async function ProjectDetailPage({
                       <th className="py-2 font-medium">Size</th>
                       <th className="py-2 font-medium">Public</th>
                       <th className="py-2 font-medium">Internal</th>
+                      <th className="py-2 font-medium">File</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -347,6 +348,20 @@ export default async function ProjectDetailPage({
                           {fp.price_internal
                             ? formatPriceBand(fp.price_internal, null)
                             : "—"}
+                        </td>
+                        <td className="py-2">
+                          {fp.floorplan_image_url ? (
+                            <a
+                              href={fp.floorplan_image_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="font-medium text-brand-700 hover:underline"
+                            >
+                              View ↗
+                            </a>
+                          ) : (
+                            "—"
+                          )}
                         </td>
                       </tr>
                     ))}

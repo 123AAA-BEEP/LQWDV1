@@ -63,7 +63,8 @@
   (`pending|approved|rejected`) for candidate images.
 - **project_floorplans**, **project_incentives**, **project_documents**.
 - **public_project_pages** — SEO public pages + lead routing.
-- **project_leads** — captured leads (`new|contacted|qualified|closed|spam`).
+- **project_leads** — captured leads (`new|contacted|qualified|won|lost|spam`,
+  realigned to the app pipeline in migration 0073).
 - **project_access_grants** — `realtor_only|developer_restricted|admin_only`.
 
 ### Curation / ops

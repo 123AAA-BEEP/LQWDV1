@@ -109,6 +109,7 @@ const REALTOR_SECTIONS: NavSection[] = [
       { href: "/dashboard/projects", label: "Projects", icon: Building2 },
       { href: "/dashboard/broker-portals", label: "Broker Portals", icon: DoorOpen },
       { href: "/dashboard/lead-pages", label: "Lead Pages", icon: Link2 },
+      { href: "/dashboard/leads", label: "Leads", icon: Inbox },
     ],
   },
   {
@@ -148,6 +149,7 @@ const ADMIN_SECTIONS: NavSection[] = [
       { href: "/dashboard/projects", label: "Projects", icon: Building2 },
       { href: "/dashboard/broker-portals", label: "Broker Portals", icon: DoorOpen },
       { href: "/dashboard/lead-pages", label: "Lead Pages", icon: Link2 },
+      { href: "/dashboard/leads", label: "Leads", icon: Inbox },
     ],
   },
   {
