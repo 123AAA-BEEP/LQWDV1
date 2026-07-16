@@ -27,6 +27,7 @@ import {
   deleteFloorplan,
   recordDocument,
   deleteDocument,
+  setDocumentVisibility,
 } from "./media-actions";
 
 interface MediaRow {
@@ -48,6 +49,7 @@ interface DocRow {
   document_type: string;
   signedUrl: string | null;
   path: string;
+  is_public: boolean;
 }
 
 const fileInputClass =
@@ -405,11 +407,14 @@ export function ProjectUploads({
         <CardBody>
           <div className="flex items-center justify-between">
             <h3 className="font-semibold text-ink">Documents &amp; brochures</h3>
-            <Badge tone="warning">Restricted</Badge>
+            <Badge tone="warning">Private by default</Badge>
           </div>
           <p className="mt-1 text-sm text-slate-500">
-            Stored privately. Links are short-lived and never publicly
-            accessible. PDF, Office docs, or images up to 25&nbsp;MB.
+            Stored privately — broker/admin only, short-lived links. Mark a
+            brochure <span className="font-medium">Public</span> to list it on
+            the project&apos;s public page (still served via expiring links, so
+            flipping it back cuts access instantly). PDF, Office docs, or
+            images up to 25&nbsp;MB.
           </p>
 
           {documents.length > 0 ? (
@@ -423,7 +428,12 @@ export function ProjectUploads({
                     <p className="truncate text-sm font-medium text-slate-800">
                       {d.title}
                     </p>
-                    <p className="text-xs text-slate-400">{d.document_type}</p>
+                    <p className="flex items-center gap-2 text-xs text-slate-400">
+                      {d.document_type}
+                      <Badge tone={d.is_public ? "success" : "neutral"}>
+                        {d.is_public ? "Public" : "Private"}
+                      </Badge>
+                    </p>
                   </div>
                   <div className="flex shrink-0 items-center gap-3">
                     {d.signedUrl ? (
@@ -436,6 +446,25 @@ export function ProjectUploads({
                         Open
                       </a>
                     ) : null}
+                    <form action={setDocumentVisibility}>
+                      <input
+                        type="hidden"
+                        name="project_id"
+                        value={projectId}
+                      />
+                      <input type="hidden" name="document_id" value={d.id} />
+                      <input
+                        type="hidden"
+                        name="make_public"
+                        value={d.is_public ? "0" : "1"}
+                      />
+                      <button
+                        type="submit"
+                        className="text-xs font-medium text-slate-600 hover:underline"
+                      >
+                        {d.is_public ? "Make private" : "Make public"}
+                      </button>
+                    </form>
                     <form
                       action={deleteDocument}
                       onSubmit={(e) => {

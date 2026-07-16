@@ -120,6 +120,49 @@ async function getGallery(projectId: string): Promise<GalleryImage[]> {
   return (data as GalleryImage[] | null) ?? [];
 }
 
+interface PublicFloorplan {
+  id: string;
+  plan_name: string | null;
+  unit_type: string | null;
+  sqft_interior: number | null;
+  price_public: number | null;
+  floorplan_image_url: string | null;
+}
+interface PublicDoc {
+  id: string;
+  title: string;
+  document_type: string;
+}
+
+/**
+ * Floor plans + admin-flagged public brochures for the shareable page. Reads
+ * the public-safe definer views (0075) with the anon client — same pattern as
+ * every other public read; the broker-only price_internal never leaves the
+ * base table. Brochure downloads go through /projects/[slug]/docs/[id].
+ */
+async function getPlansAndBrochures(
+  projectId: string,
+): Promise<{ floorplans: PublicFloorplan[]; docs: PublicDoc[] }> {
+  const supabase = await createClient();
+  const [fps, docs] = await Promise.all([
+    supabase
+      .from("public_project_floorplans_view")
+      .select(
+        "id, plan_name, unit_type, sqft_interior, price_public, floorplan_image_url",
+      )
+      .eq("project_id", projectId)
+      .order("sqft_interior", { ascending: true }),
+    supabase
+      .from("public_project_documents_view")
+      .select("id, title, document_type")
+      .eq("project_id", projectId),
+  ]);
+  return {
+    floorplans: (fps.data as PublicFloorplan[] | null) ?? [],
+    docs: (docs.data as PublicDoc[] | null) ?? [],
+  };
+}
+
 /** Nearby published projects (same city) — the internal-link mesh Google
  *  follows to discover new pages, and where visitors go next. */
 async function getNearbyProjects(
@@ -351,12 +394,15 @@ export default async function PublicProjectPage({
   }
 
   // One round-trip wave instead of four sequential ones — faster first paint.
-  const [realtor, moreFromBuilder, galleryAll, nearbyRaw] = await Promise.all([
-    getDisplayRealtor(ref, project.assigned_realtor_profile_id),
-    getMoreFromBuilder(project.builder_name, project.project_id),
-    getGallery(project.project_id),
-    getNearbyProjects(project.city, [project.project_id]),
-  ]);
+  const [realtor, moreFromBuilder, galleryAll, nearbyRaw, plansAndBrochures] =
+    await Promise.all([
+      getDisplayRealtor(ref, project.assigned_realtor_profile_id),
+      getMoreFromBuilder(project.builder_name, project.project_id),
+      getGallery(project.project_id),
+      getNearbyProjects(project.city, [project.project_id]),
+      getPlansAndBrochures(project.project_id),
+    ]);
+  const { floorplans, docs: publicDocs } = plansAndBrochures;
   const builderIds = new Set(moreFromBuilder.map((m) => m.project_id));
   const nearby = nearbyRaw.filter((n) => !builderIds.has(n.project_id));
   // Gallery: everything public except a duplicate of the hero itself.
@@ -525,6 +571,74 @@ export default async function PublicProjectPage({
                   alt: g.alt_text ?? project.project_name,
                 }))}
               />
+            </section>
+          ) : null}
+
+          {/* Floor plans & brochures — the shareable "everything in one link"
+              payload. Floor plan files live in the public bucket; brochures
+              are admin-flagged public docs served via expiring links. */}
+          {floorplans.length > 0 || publicDocs.length > 0 ? (
+            <section className="mt-8">
+              <h2 className="text-xl font-semibold tracking-tight text-ink">
+                Floor plans &amp; brochures
+              </h2>
+              {floorplans.length > 0 ? (
+                <div className="mt-4 divide-y divide-slate-100 rounded-xl border border-slate-200">
+                  {floorplans.map((fp) => (
+                    <div
+                      key={fp.id}
+                      className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-5 py-3"
+                    >
+                      <div className="min-w-0">
+                        <p className="font-medium text-slate-800">
+                          {fp.plan_name ?? "Floor plan"}
+                        </p>
+                        <p className="text-sm text-slate-500">
+                          {[
+                            fp.unit_type,
+                            fp.sqft_interior
+                              ? `${fp.sqft_interior.toLocaleString()} sq ft`
+                              : null,
+                            fp.price_public
+                              ? formatPriceBand(fp.price_public, null)
+                              : null,
+                          ]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </p>
+                      </div>
+                      {fp.floorplan_image_url ? (
+                        <a
+                          href={fp.floorplan_image_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="shrink-0 text-sm font-medium text-brand-700 hover:underline"
+                        >
+                          View plan ↗
+                        </a>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+              {publicDocs.length > 0 ? (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {publicDocs.map((d) => (
+                    <a
+                      key={d.id}
+                      href={`/projects/${project.slug}/docs/${d.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-sm font-medium text-slate-700 transition-colors hover:border-brand-300 hover:text-brand-700"
+                    >
+                      {d.title}
+                      <span aria-hidden className="text-slate-400">
+                        ↗
+                      </span>
+                    </a>
+                  ))}
+                </div>
+              ) : null}
             </section>
           ) : null}
 

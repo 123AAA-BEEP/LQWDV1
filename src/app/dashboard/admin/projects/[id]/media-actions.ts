@@ -162,6 +162,30 @@ export async function recordDocument(formData: FormData) {
   revalidatePath(editorPath(projectId));
 }
 
+/**
+ * Flips a document between private (broker/admin only, the default) and
+ * public. Public documents are listed on the project's public page and served
+ * through /projects/[slug]/docs/[id], which mints a short-lived signed URL per
+ * request — the bucket itself stays private, so flipping back to private cuts
+ * off public access immediately.
+ */
+export async function setDocumentVisibility(formData: FormData) {
+  const projectId = String(formData.get("project_id") ?? "");
+  const documentId = String(formData.get("document_id") ?? "");
+  const makePublic = String(formData.get("make_public") ?? "") === "1";
+  if (!projectId || !documentId) return;
+
+  const supabase = await createClient();
+  await assertAdmin(supabase);
+
+  await supabase
+    .from("project_documents")
+    .update({ is_public: makePublic })
+    .eq("id", documentId);
+
+  revalidatePath(editorPath(projectId));
+}
+
 export async function deleteDocument(formData: FormData) {
   const projectId = String(formData.get("project_id") ?? "");
   const documentId = String(formData.get("document_id") ?? "");

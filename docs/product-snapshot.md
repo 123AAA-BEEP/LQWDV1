@@ -29,6 +29,9 @@ projects into your pipeline — no referral fees, no brokerage change, you keep
 - **Attributed share links** — every project has your personal link; buyer
   inquiries route to you, attributed, no fee. Free for all verified agents,
   and attribution now survives the buyer clicking around (30-day cookie).
+  Each live project view also offers a **generic (unbranded) public link** —
+  the page now carries floor plans + admin-flagged public brochures, so one
+  link hands a buyer everything.
 - **Shortlists** — curate a handful of projects for a specific client, send one
   link; every inquiry on it is yours, even when the client forwards it around.
 - **Buyer portal** (on Shortlists) — attach floor plans, incentives, and
