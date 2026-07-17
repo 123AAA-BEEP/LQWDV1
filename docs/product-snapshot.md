@@ -36,6 +36,10 @@ projects into your pipeline — no referral fees, no brokerage change, you keep
   Each live project view also offers a **generic (unbranded) public link** —
   the page now carries floor plans + admin-flagged public brochures, so one
   link hands a buyer everything.
+- **Promote with ads (Meta ad kit)** — per-project, ready-to-run: generated
+  ad creative (agent + brokerage stamped, TRESA-safe), three copy variants,
+  attributed destination link, and a Housing-special-category launch
+  checklist. Agent controls spend; leads route back through LIQWD to them.
 - **Shortlists** — curate a handful of projects for a specific client, send one
   link; every inquiry on it is yours, even when the client forwards it around.
 - **Buyer portal** (on Shortlists) — attach floor plans, incentives, and

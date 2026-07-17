@@ -19,10 +19,13 @@ export function ShareWithClients({
   hasCode,
   refUrl,
   pageUrl,
+  promoteHref,
 }: {
   hasCode: boolean;
   refUrl: string;
   pageUrl: string;
+  /** When set, the card offers the paid-ads kit (Promote) for this project. */
+  promoteHref?: string;
 }) {
   return (
     <Card className="border-brand-200 bg-gradient-to-br from-brand-50 to-white">
@@ -84,6 +87,14 @@ export function ShareWithClients({
             <ExternalLink className="size-3.5" aria-hidden />
             Preview the page
           </a>
+          {promoteHref ? (
+            <Link
+              href={promoteHref}
+              className="font-medium text-brand-700 hover:underline"
+            >
+              Promote with ads →
+            </Link>
+          ) : null}
           <Link
             href="/dashboard/lead-pages"
             className="font-medium text-slate-500 hover:underline"
