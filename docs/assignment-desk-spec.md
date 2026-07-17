@@ -280,3 +280,19 @@ contract. Resale is a different asset class and a different company.
   fit; ties into `buyer_mandates`).
 
 Roughly a day for Phase 1 given how much infrastructure already exists.
+
+---
+
+## Addendum (2026-07-17): supply seeding — landing + intake (BUILT)
+
+Cold-outreach funnel for agents already marketing assignments/off-market
+inventory: `/agents/assignment-desk` (marketing route group; `?src=` tags the
+wave for attribution). Pitch = the give: founding agents list free, keep every
+inquiry, board is gated-never-public. No signup wall — the form captures
+contact + listing basics into `assignment_intake` (migration 0077: anon
+insert pinned to status 'new', everything else admin-only), fires an ops
+email (LEADS_NOTIFY_EMAIL), and the thanks state walks them into
+signup → RECO verification → posting the real listing on the gated board.
+Intake rows are never rendered publicly, preserving §1's gating invariant.
+Follow-up ops: rows are admin-only in the DB; wire an admin intake queue tab
+when volume justifies it.
