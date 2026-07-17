@@ -209,6 +209,7 @@ export default async function ProjectDetailPage({
           hasCode={!!refCode}
           refUrl={refUrl}
           pageUrl={pageUrl}
+          promoteHref={`/dashboard/projects/${slug}/promote`}
         />
       ) : null}
 

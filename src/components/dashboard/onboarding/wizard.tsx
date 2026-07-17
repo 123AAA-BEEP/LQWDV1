@@ -25,6 +25,7 @@ import {
   ArrowRight,
   ArrowLeft,
   Clock,
+  Star,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
@@ -77,6 +78,32 @@ const PATHS: EarnPath[] = [
       },
     ],
     cta: { label: "Add your first project", href: "/dashboard/submit" },
+  },
+  {
+    id: "reviews",
+    icon: Star,
+    tile: "Get your first review",
+    tagline: "A verified client review on your public page.",
+    status: "now",
+    accent: "emerald",
+    slides: [
+      {
+        eyebrow: "The payoff",
+        title: "Reviews win you the next client",
+        body: "Verified client reviews show on your public page with a star rating — social proof that works on every buyer who lands there, even while you sleep.",
+      },
+      {
+        eyebrow: "Step 1",
+        title: "Send your review link to a past client",
+        body: "Your personal review link lives on My Public Page. Text or email it to any client you've genuinely worked with — it takes them two minutes.",
+      },
+      {
+        eyebrow: "Step 2",
+        title: "We verify it, then it goes live",
+        body: "Every review passes a human check before publishing, so each one is credible — on your page, in Google results, and reusable in your own marketing.",
+      },
+    ],
+    cta: { label: "Get your review link", href: "/dashboard/my-page" },
   },
   {
     id: "pages",

@@ -15,6 +15,7 @@ const TABS = [
   { href: "/dashboard/admin/rfps", label: "RFPs" },
   { href: "/dashboard/admin/referrals", label: "Referrals" },
   { href: "/dashboard/admin/realtors", label: "Realtors" },
+  { href: "/dashboard/admin/reviews", label: "Reviews" },
   { href: "/dashboard/admin/media-candidates", label: "Media" },
   { href: "/dashboard/admin/suggestions", label: "Suggestions" },
   { href: "/dashboard/admin/projects", label: "Projects" },

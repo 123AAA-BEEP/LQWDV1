@@ -25,6 +25,7 @@ the one or two steps, then a do-it-now button.
 | Earn path | Status | Depends on |
 |---|---|---|
 | **Free buyer leads** — add or update a project, get its leads | ✅ **Now** | — |
+| **Get your first review** — verified client reviews on your public page | ✅ **Now** | — |
 | **More lead pages** — Pro unlocks up to 10 | ✅ **Now** | Pro upgrade |
 | **Refer an agent → free Pro** | ✅ **Now** | — |
 | **Find opportunities & broker portals** (data/research) | ✅ **Now** *(tool, not direct $)* | — |

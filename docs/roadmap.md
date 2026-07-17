@@ -40,6 +40,10 @@ v1 is live (see Shipped). Possible v2 work when we have appetite:
   guided overlay on top of the live UI, not just the standalone walkthrough.
 
 ## Realtor experience
+- **Promote Phase 1 (Meta Marketing API)** — one-click campaign creation in
+  the agent's own ad account + Lead Ads webhook into project_leads. BLOCKED on
+  founder-side Meta business verification + app review (see
+  `docs/meta-promote-spec.md`). Phase 0 ad kit is live.
 - **Leads workspace v2** — per-lead notes + follow-up reminders; in-app
   notifications (the live-DB `notifications` table still has no code path);
   realtor-set spam flag. Also: `vercel.json` never schedules

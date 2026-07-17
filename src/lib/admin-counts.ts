@@ -35,6 +35,7 @@ export async function getAdminQueueCounts(): Promise<AdminQueueCounts> {
     suggestions,
     intakeErrors,
     discoverySignals,
+    reviews,
   ] = await Promise.all([
     countWhere("project_leads", "status", ["new"]),
     countWhere("off_market_invites", "status", ["draft"]),
@@ -54,6 +55,7 @@ export async function getAdminQueueCounts(): Promise<AdminQueueCounts> {
     countWhere("platform_suggestions", "status", ["new"]),
     countWhere("email_intake_log", "action", ["error"]),
     countWhere("discovery_signals", "status", ["new", "error"]),
+    countWhere("agent_reviews", "status", ["pending"]),
   ]);
 
   return {
@@ -69,5 +71,6 @@ export async function getAdminQueueCounts(): Promise<AdminQueueCounts> {
     "/dashboard/admin/suggestions": suggestions,
     "/dashboard/admin/email-intake": intakeErrors,
     "/dashboard/admin/discovery": discoverySignals,
+    "/dashboard/admin/reviews": reviews,
   };
 }
