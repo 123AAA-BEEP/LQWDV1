@@ -43,9 +43,13 @@ export async function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * Match all request paths except static assets:
-     * _next/static, _next/image, favicon, and common image files.
+     * Match all request paths except static assets and CRAWLER-CRITICAL
+     * routes. robots.txt and sitemap.xml must never pass through session
+     * middleware: during the Jul 17-18 outage Googlebot got a 5xx on
+     * robots.txt, which makes Google halt crawling the ENTIRE site. Neither
+     * route needs a session or ref cookies — keep them out of the blast
+     * radius permanently.
      */
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
