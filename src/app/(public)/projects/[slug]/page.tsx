@@ -286,6 +286,8 @@ function jsonLd(project: PublicProject, galleryUrls: string[] = []): object[] {
         priceCurrency: project.price_currency ?? "CAD",
         lowPrice: project.price_from_public,
         highPrice: project.price_to_public ?? project.price_from_public,
+        // GSC "missing offerCount" nudge — the honest count we have is units.
+        ...(project.total_units ? { offerCount: project.total_units } : {}),
         url: pageUrl,
         availability: "https://schema.org/PreOrder",
       },
