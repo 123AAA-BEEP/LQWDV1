@@ -13,7 +13,17 @@ export async function proxy(request: NextRequest) {
     return NextResponse.rewrite(url);
   }
 
-  const response = await updateSession(request);
+  // Fail open: a session-refresh failure (Supabase hiccup, env issue, edge
+  // runtime quirk) must never 500 the entire site — public pages don't need a
+  // session at all, and /dashboard falls through to requireUserProfile, which
+  // redirects to /login server-side. Availability beats a perfect session.
+  let response: NextResponse;
+  try {
+    response = await updateSession(request);
+  } catch (e) {
+    console.error("proxy: updateSession failed, failing open", e);
+    response = NextResponse.next({ request });
+  }
 
   // Referral attribution survives navigation: an agent's shared ?ref= link
   // sets a 30-day cookie, so the buyer can browse before submitting and the
