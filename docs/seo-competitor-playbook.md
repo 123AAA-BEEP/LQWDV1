@@ -84,3 +84,100 @@ parsed with `data/semrush/parse_semrush.py`; see `data/semrush/README.md`
 for column semantics and the batch log. Highest-value future pulls: Keyword
 Gap vs. an Ontario competitor (BuzzBuzzHome/Livabl/Precondo), backlink
 profiles (authority gate), and more pages of the very-easy-KD export.
+
+## Addendum: mattamyhomes.com Top Pages (builder-site lens)
+
+Mattamy is the third species of site in the dataset — a **builder's own
+domain** — and its traffic shape is the portals' mirror image:
+
+- **~90% of its organic traffic is branded/navigational**: "mattamy homes",
+  "mattamy homes {community}", "mattamy homes {city}". The homepage alone is
+  25% of traffic (1.1K referring domains). Builders own their brand+community
+  queries; they barely register on generic "new homes {city}" terms — those
+  belong to the portals. Portals and builders split the SERP; they don't
+  really compete.
+- **The generic Commercial queries it *does* land come via Google Business
+  Profile listings**, not blue links: the URLs tagged
+  `?utm_campaign=GBPlisting` are the ones whose top keywords are
+  "new homes in fuquay varina nc", "port st lucie new construction",
+  "mattamy homes near me". Local-pack/Maps presence is a separate, measurable
+  organic channel for "near me"/"new homes {city}" intent — one a portal
+  can't fully replicate (no premises), but assigned agents' GBP profiles and
+  sales-centre listings can partially capture. It also means some head-term
+  SERP real estate is absorbed by the local pack regardless of ranking.
+- **Hygiene warning we should not copy:** those GBP UTM URLs are being
+  indexed and tracked as separate pages, splitting each community page's
+  equity across two URLs. Canonical tags must collapse query-string variants.
+- **Deep hierarchy ranks at every level**: state → metro → city → community →
+  sub-community/product line (`/tradition/seville`, `/cadence-townhomes`) and
+  even single-address pages ("denali drive"). Non-branded sub-community
+  queries ("brightmore at wellen park", "telaro at tradition", "avila jensen
+  beach") resolve to these deep pages — supports LIQWD's separate-page-per-
+  phase/product-line model, and suggests per-model/floor-plan pages have a
+  long-tail future.
+- **Referring domains concentrate on a few flagship communities** (Island
+  Village Celebration 112–120, Brightmore/Wellen Park 137, Waxhaw Landing
+  110, Townes at Cheyney 106). Where a builder page has that authority, don't
+  fight it for the brand+name query; target the unbranded variants and
+  informational angles (pricing, floor plans, FAQ) the builder page is thin
+  on. Conversely, projects from small builders with weak sites are where a
+  portal page takes position 1 outright — a prioritization signal worth
+  joining against the builder registry.
+- Their `/ontario/gta` page (142 referring domains, ranks "toronto gta
+  housing") is a reminder this export is US-database-heavy; Canada's largest
+  builder still concentrates link equity on a GTA hub.
+
+**Net for LIQWD:** project pages should expect to *lose* "{builder}
+{community}" to the builder's own site and *win* (a) unbranded
+"{community} {city}" variants, (b) comparison/pricing/FAQ intent the builder
+page doesn't serve, and (c) everything from builders without real websites.
+The builder registry already tracks who's who; a "builder web-strength" flag
+would rank every project by how winnable its name queries are.
+
+### Canadian database (Mattamy) — home-market corrections
+
+The Canadian pull confirms the builder-lens findings hold in LIQWD's home
+market (branded dominance, GBP-listing URLs carrying "new home construction
+in milton" / "new subdivision kitchener" / "new builds brampton"), and adds
+four things the US view missed:
+
+- **"{builder} broker portal" is a live query class with dedicated landing
+  pages** (`/wildflowers-broker-portal`, `/central-broker-portal` ranking
+  "mattamy broker portal"). Agents search for builders' broker portals by
+  name. That is LIQWD's own B2B acquisition surface: agent-facing pages
+  targeting "{builder} broker portal" / "{builder} agent commission" intent
+  are a direct funnel into the product.
+- **Incentive/promo pages rank generic terms**: `/promos/government-rebates`
+  pulls 792 visits on "hst rebate" (184 keywords); per-metro
+  `/promos/quick-move-in-homes` ranks "quick move in homes ottawa"; a solar
+  promo ranks "new homes with solar panels". Validates LIQWD's HST-rebate
+  calculator and argues for indexable quick-move-in / incentive hub pages.
+- **GTA condo pages rank by street address** ("1660 bloor street west" on
+  Westbend — 268 keywords; unit-level "603-720 whitlock avenue") and GTA
+  condo pages hold the site's biggest referring-domain counts (The Laurels
+  199, Blvd Q 175, Clockwork 138). Address queries are a first-class query
+  class in the GTA.
+- **Founder/entity queries carry real volume** ("peter gilgan" ≈ 1K
+  visits/mo to an about page) — builder pages answering "who is behind
+  {builder}" capture brand-research intent. A legacy `.aspx` URL still
+  ranking is another redirect-hygiene exhibit.
+
+### mycondopro.ca — the small-aggregator floor
+
+The closest structural comparable to LIQWD's public surface (GTA
+pre-construction aggregator, one `/project/{slug}` page per project):
+
+- **Address and intersection queries are its entire traffic base**: "270 the
+  kingsway", "357 king st w", "brimley and sheppard", "hurontario and
+  eglinton", "weston and major mackenzie". With ~zero referring domains it
+  still ranks — this query class is effectively uncontested. LIQWD already
+  stores `address_full` + `intersection_primary/secondary`; surfacing them
+  in titles, H1-adjacent copy, FAQs, and schema is the cheapest coverage win
+  available in the GTA.
+- **Assignment-sale pages are a distinct intent lane** ("{project}
+  assignment", per-bedroom variants) it monetizes with dedicated pages.
+- **The cautionary ceiling**: name/address entity pages alone, with no hubs,
+  no guides, and no authority, cap out around ~10K visits/mo with the top
+  page earning ~116. Entity pages are the floor, not the strategy — hubs,
+  guides, and referring-domain growth are what separate NHS-scale from
+  mycondopro-scale.

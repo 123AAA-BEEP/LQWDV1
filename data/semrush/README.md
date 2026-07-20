@@ -46,5 +46,18 @@ appear multiple times with different ranking URLs.
 | 01 | `newhomesource/raw/2026-07-13-toppages.tsv` | normalized TSV | Top Pages (traffic by URL), top ~120 rows + tail note |
 | 02 | `newhomesource/raw/2026-07-13-veryeasy-kd-by-volume.txt` | normalized table | Positions, KD = "very easy" only, sorted by volume (page 1 of 1,628) |
 
+## Ingestion log — mattamyhomes.com
+
+| Batch | File | Format | Export view |
+|---|---|---|---|
+| 01 | `mattamyhomes/raw/2026-07-13-toppages.tsv` | normalized TSV | Top Pages (traffic by URL), top ~100 rows — **US database** |
+| 02 | `mattamyhomes/raw/2026-07-13-toppages-ca.tsv` | normalized TSV | Top Pages (traffic by URL), top ~100 rows — **Canadian database** |
+
+## Ingestion log — mycondopro.ca
+
+| Batch | File | Format | Export view |
+|---|---|---|---|
+| 01 | `mycondopro/raw/2026-07-13-toppages.tsv` | normalized TSV | Top Pages (traffic by URL), top 100 rows |
+
 Analysis distilled in [`docs/seo-competitor-playbook.md`](../../docs/seo-competitor-playbook.md).
 More batches expected; append to the log as they land.
