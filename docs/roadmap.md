@@ -67,5 +67,20 @@ v1 is live (see Shipped). Possible v2 work when we have appetite:
 - **Broker-portal ad billing** — invoice featured placement off click counts
   (the `broker_portal_events` data is already being collected).
 
+## API cost (from Anthropic's low-cache-hit-rate email, 2026-07-19)
+- **Prompt caching audit done.** Added automatic caching to the two
+  multi-round web-search loops (project-audit, email-intake research) — the
+  only call sites where it engages: rounds resend a search-result-heavy
+  conversation seconds apart. The other 9 direct-API call sites have stable
+  prefixes of ~0.5–1.5K tokens, BELOW Opus 4.8's 4,096-token cacheable
+  minimum — markers there are silent no-ops. Do NOT pad prompts to game the
+  minimum.
+- **The bigger lever (future work): Message Batches API — flat 50% off** all
+  tokens, no prefix requirements. The audit/hero-audit/hero-sourcing/discovery
+  crons are non-latency-sensitive batch loops, exactly what it's for. Needs a
+  submit → poll → collect rearchitecture of those routes (batches finish
+  within ~1h; results keyed by custom_id). Worth doing when API spend is a
+  line item that matters.
+
 ## Notes
 When picking one up, sync with `main` first (the SessionStart hook does this).
