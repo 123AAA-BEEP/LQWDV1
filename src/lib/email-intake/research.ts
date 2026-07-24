@@ -144,6 +144,10 @@ export async function researchProject(
         {
           model: "claude-opus-4-8",
           max_tokens: 2000,
+          // Rounds 2-3 resend the whole conversation (web-search results
+          // included) — auto-cache the prefix so later rounds read it at
+          // ~0.1x. Seconds between rounds, well inside the 5-minute TTL.
+          cache_control: { type: "ephemeral" },
           tools,
           messages,
         },

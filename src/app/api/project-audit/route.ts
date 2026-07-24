@@ -176,6 +176,11 @@ async function auditFacts(
         {
           model: MODEL,
           max_tokens: 2000,
+          // Rounds 2-4 resend the whole conversation (web-search results
+          // included) — auto-cache the prefix so each round reads the prior
+          // rounds at ~0.1x instead of reprocessing at full price. Rounds are
+          // seconds apart, well inside the 5-minute cache TTL.
+          cache_control: { type: "ephemeral" },
           system:
             "You audit live listings on a new-construction home marketplace. Wrong or fabricated listings destroy buyer and agent trust. Verify against the open web (builder's own site first, then aggregators, news, municipal records). Report ONLY what sources state — never guess. A real company, neighbourhood, hotel, or decades-old building that got listed as a new development is CRITICAL. A real project with a wrong builder or stale price/status is ISSUES. Small stylistic differences (e.g. 'The Residences at X' vs 'X Residences', builder parent vs subsidiary) are MINOR — do not escalate them.",
           tools,
