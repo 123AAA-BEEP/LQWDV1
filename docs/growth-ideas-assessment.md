@@ -99,8 +99,10 @@ GTA visitors/mo) replayed for pre-con.
 - Build sheets:
   - *Interim occupancy* (Condominium Act s.80): interest on unpaid balance (prescribed rate) +
     est. property tax (municipal rate table) + est. common expenses ($/sqft) × months.
-  - *Assignment tax*: post-May-7-2022 rule (individual assignments GST/HST-taxable — 13% in ON,
-    including deposit-recovery portion) + federal anti-flipping (<12 months → business income) +
+  - *Assignment tax*: post-May-7-2022 rule (individual assignments GST/HST-taxable — 13% in ON;
+    the deposit-reimbursement portion is EXCLUDED from the taxable amount when the assignment
+    agreement papers it in writing — CRA Notice 323; corrected 2026-07-28, an earlier revision
+    said "including") + federal anti-flipping (<12 months → business income) +
     capital-vs-business toggle. Heavy disclaimers; educational only.
   - *Closing-cost stack*: LTT + Toronto MLTT + FTB rebates, NRST, HST rebate mechanics, builder
     adjustments/DC caps.
