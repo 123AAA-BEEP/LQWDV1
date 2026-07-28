@@ -167,6 +167,49 @@ GTA visitors/mo) replayed for pre-con.
 pages → developer relationships → $199 developer seats + featured placement. Keep the new
 public tools free.
 
+## Addendum (2026-07-28): PPSF without displaying sold comps
+
+Decision under evaluation: use MLS-derived per-square-foot logic but never display the
+underlying sold comps. What changes:
+
+**Doesn't change:** the need for licensed access, and the VOW feed's *use* restrictions. The
+TRREB/PropTx VOW agreement restricts use beyond brokerage services and prohibits derivative
+products/marketing reports built on the feed — so publishing MLS-feed-derived numbers on
+public (no-login) pages is still offside without explicit permission, comps shown or not.
+Defensible posture stays: derived estimates behind free registration under a member
+brokerage's VOW (the HouseSigma model).
+
+**Does change (in our favor):**
+1. Display-compliance surface shrinks — no listing-level content/photos/attribution/takedown
+   obligations to manage, no non-bona-fide-consumer listing display issues.
+2. Opens the **registry route**: Teranet/POLARIS sales data (and Teranet's own AVM products)
+   under a commercial license with no board rules — granular, public-display terms are a
+   contract negotiation, and registry covers non-MLS transactions. Note: a registrant's
+   personal GeoWarehouse access cannot be productized into the site; that requires a
+   commercial Teranet deal.
+3. The public tier can run entirely on strings-free data: TRREB Market Watch published
+   aggregates + CMHC/StatCan + **our own pre-con dataset** (launch prices, price sheets,
+   incentives — never MLS-sourced, fully ours).
+
+**Resulting architecture:** public pages show a range built from public aggregates + our own
+pre-con data → precise building-level estimate behind free signup (brokerage VOW umbrella when
+the feed is added) → MLS/VOW feed as a phase-2 accuracy layer, Teranet as the option if
+granular public display is ever wanted.
+
+## Addendum (2026-07-28): "Start here" shortlist from the 9
+
+1. **Calculators** — interim occupancy + assignment tax (open SERP lanes), verify C-4 on the
+   HST page. Days of work, zero data dependencies.
+2. **Assignment Value Estimate v1 + quarterly GTA Assignment Index** — public range from
+   own/public data, precise number behind free signup; feeds Assignment Desk supply.
+3. **Price/incentive event logging** — new snapshot tables fed by existing email-intake/
+   discovery machinery; free now, prerequisite for buy-now-vs-wait and fantasy scoring later.
+4. *(Ops pilot, no code)* one livestreamed launch on social with a single developer partner.
+
+Parked until audience/data exist: stacking view + standardized spec (needs floor-plan
+extraction), readiness gamification (needs buyer audience), fantasy season (needs the index),
+map-first UX (worthy, later). Killed: unauthorized QR on hoarding.
+
 ## What would make this fail
 - Gating the tools behind payment before traffic exists.
 - Publishing named-project value/underwater claims → TRESA/defamation exposure + developer war.
