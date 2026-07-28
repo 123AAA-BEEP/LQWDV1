@@ -71,6 +71,19 @@ Estimate = original contract vs. today's replacement cost, discounted for the as
 - **Accuracy criticism** → ranges + confidence labels + public methodology; log every estimate
   (inputs/outputs) so accuracy can be back-tested as real comps accrue.
 
+### Market-practice check (condos.ca, added 2026-07-28)
+condos.ca — itself a TRREB member brokerage — shows **building-level aggregates publicly**
+(avg $/sqft over N recent sales, historical PSF charts, ranks) while gating **unit-level
+sold/leased records behind a free VOW login**. This is the two-layer posture available to any
+member brokerage and confirms phase 2 for us: once LIQWD's data flows under a member
+brokerage's VOW/IDX agreements, our building-level PSF aggregates can be public (matching
+market practice), with unit-level comps behind the free login. It does NOT make condos.ca a
+data source: scraping or repurposing their computed stats is off-limits (their ToS + the
+compilation is theirs, underlying rights are TRREB's, and a third party cannot sublicense
+what we'd be taking). Legitimate uses only: replicate their access under our own brokerage
+agreements, and manual analyst calibration of our assumption constants against public stats
+(cite TRREB Market Watch / CMHC in published material, not competitor pages).
+
 ## 2. GTA Assignment Index (quarterly)
 
 - **URL:** `/reports/gta-assignment-index`, following the live `/reports/gta-pre-construction`
