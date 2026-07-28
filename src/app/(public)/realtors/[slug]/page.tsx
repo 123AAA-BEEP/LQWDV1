@@ -21,6 +21,7 @@ import {
 import { AgentContactForm } from "./contact-form";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { recordPageEvent } from "@/lib/analytics";
 import { Card, CardBody } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CardImage } from "@/components/public/card-image";
@@ -219,6 +220,10 @@ export default async function RealtorProfilePage({
     if (!prospect) notFound();
     return <UnclaimedProfile prospect={prospect} />;
   }
+
+  await recordPageEvent("page_view", "agent_profile", {
+    agentProfileId: agent.profile_id,
+  });
 
   const supabase = await createClient();
   const showAchievements = agent.show_achievements !== false;

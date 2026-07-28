@@ -3,6 +3,16 @@
 Agreed-but-deferred items. Flag here, build later. (Most recent on top.)
 
 ## Shipped
+- **Growth engine v1 (articles + analytics)** — Insights articles: AI-drafted
+  from PUBLIC-SAFE project data only (`src/lib/articles.ts`), human-reviewed in
+  Admin → Articles (draft → in_review → published), live at `/insights` with
+  Article JSON-LD + sitemap entries. First-party analytics: server-side
+  `page_events` (no script, no cookies, salted daily session hash) on project /
+  article / agent-profile pages + lead submits, admin Analytics tab, and
+  `first_responded_at` speed-to-lead stamping. Migrations 0078–0079. See
+  `docs/growth-engine-spec.md`. **Phase 2 of the original build prompt
+  (sponsored placement / paid lead routing) is intentionally NOT built — it
+  conflicts with the free-leads promise and needs an explicit founder call.**
 - **Leads workspace (v1)** — realtor lead inbox at `/dashboard/leads` with the
   status pipeline, plus a coming-soon-framed empty state around the free-leads
   promise (capture stays on, no benchmark numbers). Migration 0073 fixed the
