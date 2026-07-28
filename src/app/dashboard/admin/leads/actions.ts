@@ -16,6 +16,15 @@ export async function setLeadStatus(formData: FormData) {
   await assertAdmin(supabase);
   await supabase.from("project_leads").update({ status }).eq("id", id);
 
+  // Speed-to-lead: the first move off "new" stamps first_responded_at, once.
+  if (status !== "new") {
+    await supabase
+      .from("project_leads")
+      .update({ first_responded_at: new Date().toISOString() })
+      .eq("id", id)
+      .is("first_responded_at", null);
+  }
+
   revalidatePath("/dashboard/admin/leads");
   redirectWithFlash(
     "/dashboard/admin/leads",

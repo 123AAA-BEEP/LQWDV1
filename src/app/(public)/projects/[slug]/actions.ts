@@ -2,6 +2,7 @@
 
 import { cookies } from "next/headers";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { recordPageEvent } from "@/lib/analytics";
 import { resolveLeadSteward } from "@/lib/rewards";
 import { sendEmail, brandedEmail } from "@/lib/email";
 import { complianceFootnote, suppressedAmong } from "@/lib/email-compliance";
@@ -100,6 +101,12 @@ export async function submitLead(
   if (error) {
     return { error: "Something went wrong. Please try again." };
   }
+
+  // First-party analytics: one lead_submit event per successful capture
+  // (fire-and-forget, never blocks the buyer).
+  await recordPageEvent("lead_submit", "project", {
+    publicProjectPageId: public_page_id || null,
+  });
 
   // LIQWD owns every lead. Ops always gets a copy — regardless of whether an
   // agent is assigned to action it — so nothing routes away from our database.

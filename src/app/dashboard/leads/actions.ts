@@ -38,6 +38,17 @@ export async function updateLeadStatus(formData: FormData) {
     .eq("assigned_realtor_profile_id", profile.id)
     .select("id");
 
+  // Speed-to-lead: the first move off "new" stamps first_responded_at, once.
+  // Best-effort — the status change above is the outcome that matters.
+  if (!error && updated?.length && status !== "new") {
+    await supabase
+      .from("project_leads")
+      .update({ first_responded_at: new Date().toISOString() })
+      .eq("id", id)
+      .eq("assigned_realtor_profile_id", profile.id)
+      .is("first_responded_at", null);
+  }
+
   revalidatePath("/dashboard/leads");
   if (error || !updated?.length) {
     redirectWithFlash(

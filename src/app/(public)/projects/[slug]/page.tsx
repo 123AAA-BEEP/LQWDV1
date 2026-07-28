@@ -21,6 +21,7 @@ import {
   NeighbourhoodBlock,
   hasNeighbourhood,
 } from "@/components/projects/neighbourhood-block";
+import { recordPageEvent } from "@/lib/analytics";
 import { LeadForm } from "./lead-form";
 import { StickyCta } from "./sticky-cta";
 
@@ -345,12 +346,27 @@ export default async function PublicProjectPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ ref?: string }>;
+  searchParams: Promise<{
+    ref?: string;
+    utm_source?: string;
+    utm_medium?: string;
+    utm_campaign?: string;
+  }>;
 }) {
   const { slug } = await params;
-  const { ref } = await searchParams;
+  const sp = await searchParams;
+  const { ref } = sp;
   const project = await getProject(slug);
   if (!project) notFound();
+
+  await recordPageEvent("page_view", "project", {
+    publicProjectPageId: project.public_page_id,
+    utm: {
+      source: sp.utm_source,
+      medium: sp.utm_medium,
+      campaign: sp.utm_campaign,
+    },
+  });
 
   const rental = isRentalListing(project);
   const priceBand = formatPriceBand(

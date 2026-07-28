@@ -31,6 +31,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/tools/land-transfer-tax-calculator`, changeFrequency: "monthly", priority: 0.8 },
     { url: `${SITE_URL}/tools/pre-construction-deposit-calculator`, changeFrequency: "monthly", priority: 0.8 },
     { url: `${SITE_URL}/tools/hst-rebate-calculator`, changeFrequency: "monthly", priority: 0.8 },
+    // Insights — reviewed editorial grounded in listing data.
+    { url: `${SITE_URL}/insights`, changeFrequency: "weekly", priority: 0.7 },
     // Market reports — linkable data assets, refreshed live.
     { url: `${SITE_URL}/reports`, changeFrequency: "weekly", priority: 0.6 },
     { url: `${SITE_URL}/reports/gta-pre-construction`, changeFrequency: "daily", priority: 0.8 },
@@ -42,8 +44,29 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let cityRoutes: MetadataRoute.Sitemap = [];
   let builderRoutes: MetadataRoute.Sitemap = [];
   let realtorRoutes: MetadataRoute.Sitemap = [];
+  let articleRoutes: MetadataRoute.Sitemap = [];
   try {
     const supabase = await createClient();
+
+    // Published, indexable Insights articles.
+    const { data: articles } = await supabase
+      .from("public_articles_view")
+      .select("slug, published_at, indexable")
+      .limit(1000);
+    articleRoutes = (
+      (articles ?? []) as {
+        slug: string;
+        published_at: string | null;
+        indexable: boolean | null;
+      }[]
+    )
+      .filter((a) => a.indexable !== false)
+      .map((a) => ({
+        url: `${SITE_URL}/insights/${a.slug}`,
+        lastModified: a.published_at ? new Date(a.published_at) : undefined,
+        changeFrequency: "monthly" as const,
+        priority: 0.6,
+      }));
 
     // Public agent profiles — opted-in + verified agents with a slug.
     const { data: agents } = await supabase
@@ -116,5 +139,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // If the data layer is unavailable, still return the static routes.
   }
 
-  return [...staticRoutes, ...cityRoutes, ...builderRoutes, ...realtorRoutes, ...projectRoutes];
+  return [...staticRoutes, ...cityRoutes, ...builderRoutes, ...realtorRoutes, ...articleRoutes, ...projectRoutes];
 }
