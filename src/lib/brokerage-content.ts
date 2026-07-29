@@ -108,6 +108,58 @@ export const PLATFORM_PIECES: {
   },
 ];
 
+/**
+ * Toolkit pieces — buyer's guides for the tools of the job (cars, lockboxes,
+ * signs, printing…). HARD FRAMING RULE: these are buyer's guides, never
+ * "reviews" — we have no first-hand product experience and Google's reviews
+ * system demotes pretend hands-on content. Specs and prices only from
+ * published sources, cited. Canadian/Ontario specifics are the moat (CRA
+ * vehicle rates, TRESA sign rules, board lockbox systems). No affiliate
+ * links — the footer says so, which is a trust signal until that changes.
+ */
+export const TOOLKIT_PIECES: {
+  slug: string;
+  name: string;
+  brief: string;
+}[] = [
+  {
+    slug: "choosing-a-car-as-a-realtor-ontario",
+    name: "Choosing a car as a realtor (Ontario)",
+    brief:
+      "Write a buyer's guide for Ontario agents choosing a work vehicle. The durable value is the MONEY MATH: CRA's published per-kilometre allowance rates and the deduction rules for self-employed agents (lease payments vs capital cost allowance, the passenger-vehicle caps), cited to CRA's published figures. Then the job criteria: client comfort, sign/lockbox cargo, winter reliability, fuel vs EV for high-mileage showing days. Mention vehicle classes and example models only as illustrations with cited specs — no ratings, no 'best car' verdict.",
+  },
+  {
+    slug: "lockboxes-for-ontario-realtors",
+    name: "Lockboxes for Ontario realtors",
+    brief:
+      "Write a buyer's guide for Ontario agents on lockboxes: mechanical push-button vs electronic/Bluetooth systems, how board-managed lockbox programs work (e.g. systems commonly used by Ontario real-estate boards — cite what the boards publish), what each type costs per published pricing, access-logging and liability considerations for sellers, and questions to ask their board/brokerage before buying. No brand ratings; published facts only.",
+  },
+  {
+    slug: "real-estate-signs-ontario-rules-costs",
+    name: "Real estate signs in Ontario: rules & costs",
+    brief:
+      "Write a buyer's guide for Ontario agents on for-sale signs: the COMPLIANCE layer first — TRESA advertising requirements for what must appear on a sign (registrant name as registered, brokerage name), municipal sign bylaws and where signs can/can't go (cite examples from published municipal bylaws), then the buying layer: typical sign types (lawn frames, panels, riders), materials, and published price ranges from Canadian sign printers. No vendor ranking.",
+  },
+  {
+    slug: "print-marketing-for-realtors-canada",
+    name: "Print marketing for realtors (Canada)",
+    brief:
+      "Write a buyer's guide for Canadian agents on print: what agents actually print (feature sheets, just-listed/just-sold postcards, farming mail, business cards), trade printers vs online services vs local print shops and when each fits, published price ranges (cited), TRESA requirements for advertising materials (registrant + brokerage identification), and the compliance nuance that CASL governs ELECTRONIC messages — addressed direct mail follows different rules (Canada Post admail). No vendor ranking.",
+  },
+  {
+    slug: "phone-camera-setup-listing-photos",
+    name: "Phone & camera setup for listing media",
+    brief:
+      "Write a buyer's guide for agents on shooting listing photos and video tours: what actually matters (wide-angle capability, low-light performance for basements, stabilization for walkthroughs, storage/battery for long showing days), phone vs dedicated camera vs hiring a photographer and the price math of each (published prices, cited), and when MLS/board photo standards or measurement rules apply. Mention devices only as cited-spec illustrations — no 'best phone' verdict, no review framing.",
+  },
+  {
+    slug: "realtor-tech-stack-essentials-canada",
+    name: "The realtor tech stack (Canada)",
+    brief:
+      "Write a buyer's guide mapping the working tech stack for a Canadian agent: e-signature, transaction/deal tracking, CRM categories, lockbox apps, and what their board/brokerage typically already includes before they buy anything (the real advice: audit included tools first). Category-level guidance with published pricing cited where available; name products only as examples, no ratings, no verdicts.",
+  },
+];
+
 const bySlugName = new Map(BROKERAGES.map((b) => [b.name, b.slug]));
 
 export function profileSlug(name: string): string {
@@ -120,7 +172,7 @@ export function comparisonSlug(a: string, b: string): string {
   return `${s(a)}-vs-${s(b)}-for-new-agents-ontario`;
 }
 
-export type PieceKind = "profile" | "comparison" | "platform";
+export type PieceKind = "profile" | "comparison" | "platform" | "toolkit";
 
 /**
  * Every deterministic slug in backlog order. Interleaved by priority: the
@@ -143,19 +195,27 @@ export function backlogSlugs(): { slug: string; kind: PieceKind; names: string[]
     kind: "platform" as const,
     names: [p.slug],
   }));
+  const kit = TOOLKIT_PIECES.map((p) => ({
+    slug: p.slug,
+    kind: "toolkit" as const,
+    names: [p.slug],
+  }));
   return [
     ...profiles.slice(0, 7),
     ...comps.slice(0, 2),
     ...plats.slice(0, 2),
+    ...kit.slice(0, 2),
     ...profiles.slice(7),
     ...comps.slice(2),
     ...plats.slice(2),
+    ...kit.slice(2),
   ];
 }
 
 const SYSTEM =
   "You write neutral, factual editorial for LIQWD's Insights blog about named real-estate brands and consumer platforms in Ontario, Canada. Reader: an Ontario agent deciding where to hang their licence or focus their marketing. " +
   "DISCLOSURE RULE for pieces about consumer platforms/portals: LIQWD, which publishes the article, is itself a real-estate marketplace — state that plainly in one sentence, never evaluate or rank LIQWD against the platforms discussed, and never disparage them. " +
+  "TOOLKIT RULE for pieces about products/tools/services agents buy: frame as a BUYER'S GUIDE for the job, never a 'review' — no first-hand claims ('we tested', 'we found'), no ratings, no 'best X' verdicts. Products appear only as illustrations with specs/prices cited to published sources. Lead with the durable, checkable value (tax rules, regulations, cost math) over product talk. " +
   "NON-NEGOTIABLE RULES: " +
   "(1) Facts about a brand come ONLY from your web search results — the brand's own published pages or reputable coverage. Attribute plainly ('eXp publishes…', 'according to <outlet>…'). " +
   "(2) Specific splits, caps, and fees are welcome WHEN FRAMED AS RESEARCH FINDINGS: officially published terms stated plainly with attribution; office-specific or third-party-reported figures allowed but clearly framed as such ('one GTA office advertised…', 'a <year> report cited…', 'as of <date>') with the source in Sources. Where nothing is published, say exactly that — it is useful information, since terms are negotiated per office/franchise. NEVER state a bare unattributed number as fact, and never invent or estimate one. " +
@@ -201,6 +261,20 @@ const EMIT: Anthropic.Messages.ToolUnion[] = [
 
 function disclaimer(kind: PieceKind): string {
   const date = new Date().toISOString().slice(0, 10);
+  if (kind === "toolkit") {
+    return (
+      "\n\n---\n\n" +
+      "*Specs, prices, and program details come from the cited public " +
+      "sources as of " +
+      date +
+      " and change often — verify before you buy. This is a buyer's guide, " +
+      "not a review: we haven't tested these products, nothing here is " +
+      "advice or an endorsement, and LIQWD has no affiliate or paid " +
+      "relationship with anything mentioned. Brand names belong to their " +
+      "respective owners. Confirm tax treatment with your accountant and " +
+      "advertising/compliance rules with your brokerage.*"
+    );
+  }
   if (kind === "platform") {
     return (
       "\n\n---\n\n" +
@@ -241,24 +315,26 @@ export async function generateBrokeragePiece(
   names: string[],
 ): Promise<string | null> {
   if (!process.env.ANTHROPIC_API_KEY || names.length === 0) return null;
-  const platformPiece =
+  const briefedPiece =
     kind === "platform"
       ? PLATFORM_PIECES.find((p) => p.slug === names[0])
-      : undefined;
-  if (kind === "platform" && !platformPiece) return null;
+      : kind === "toolkit"
+        ? TOOLKIT_PIECES.find((p) => p.slug === names[0])
+        : undefined;
+  if ((kind === "platform" || kind === "toolkit") && !briefedPiece) return null;
   const slug =
     kind === "profile"
       ? profileSlug(names[0])
       : kind === "comparison"
         ? comparisonSlug(names[0], names[1])
-        : platformPiece!.slug;
+        : briefedPiece!.slug;
 
   const brief =
     kind === "profile"
       ? `Write a DEEP DIVE on ${names[0]} for a new Ontario agent deciding where to start: what the brand is (model, scale, history in Canada/Ontario), what it PUBLISHES about new-agent economics (splits, caps, fees — or state plainly that terms are negotiated per office and not published), training/mentorship programs it advertises, and what kind of agent the model tends to fit. Search for the brand's own Canadian pages first.`
       : kind === "comparison"
         ? `Write a HEAD-TO-HEAD of ${names[0]} vs ${names[1]} for a new Ontario agent cross-shopping them: each brand's model, what each PUBLISHES about new-agent economics (or state plainly that terms aren't published and are negotiated per office), training/support each advertises, and honest 'may fit you if…' guidance for both. No winner. Give both equal depth.`
-        : platformPiece!.brief;
+        : briefedPiece!.brief;
 
   const messages: Anthropic.Messages.MessageParam[] = [
     {
