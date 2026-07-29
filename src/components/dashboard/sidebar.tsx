@@ -34,6 +34,8 @@ import {
   Globe,
   FolderHeart,
   Repeat2,
+  Users,
+  Send,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
@@ -110,6 +112,16 @@ const REALTOR_SECTIONS: NavSection[] = [
       { href: "/dashboard/broker-portals", label: "Broker Portals", icon: DoorOpen },
       { href: "/dashboard/lead-pages", label: "Lead Pages", icon: Link2 },
       { href: "/dashboard/leads", label: "Leads", icon: Inbox },
+    ],
+  },
+  {
+    accent: "emerald",
+    label: "Clients",
+    description: "Your database & outreach",
+    icon: Users,
+    items: [
+      { href: "/dashboard/crm", label: "Clients", icon: Users },
+      { href: "/dashboard/newsletter", label: "Newsletter", icon: Send },
     ],
   },
   {
