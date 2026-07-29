@@ -175,6 +175,9 @@ export interface PublicProject {
   // Rentals lane (migration 0055)
   listing_type: string | null; // for_sale | for_rent | mixed_use
   price_period: string | null; // total | monthly
+  /** Audit machine trust rank: 2 verified clean / 1 unaudited / 0 flagged. */
+  audit_rank: number | null;
+  bathrooms_summary: string | null;
 }
 
 /** Purpose-built rental (or monthly-priced) — renders the rent-flavored UI. */

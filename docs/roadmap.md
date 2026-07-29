@@ -3,6 +3,20 @@
 Agreed-but-deferred items. Flag here, build later. (Most recent on top.)
 
 ## Shipped
+- **pSEO networks (playbook #86–88)** — City × Type pages
+  (`/new-homes/[city]/[type]`, `lib/city-types`, inventory gate ≥3; below
+  the gate combos stay browse-filter URLs), "[A] vs [B]" comparison pages
+  (`/compare/[pair]`, `lib/compare`: same-city same-type nearest-priced ≤3
+  peers per project, alphabetical canonical + 308 for reversed order,
+  no winner-crowning), "Compare with…" chips + a "How this listing is
+  verified" E-E-A-T module on project pages (describes what we check —
+  audit_rank-aware — NEVER where data came from; provenance stays
+  admin-only). Both networks in the sitemap; city hubs link gated type
+  pages. **Rejected from the playbook: #94 marketplace auto-syndication
+  (ToS violation — agent share rails are the legit substitute), #89
+  first-person AI stories (fabricated experience), #91 AI finder deferred
+  (cost/abuse; converts existing traffic, not new).** Next from playbook:
+  #90 consumer "Pre-Con Digest" (public subscribe + weekly cron).
 - **CRM spine + agent newsletter** (migrations 0087–0088) — agent-owned
   Clients book at `/dashboard/crm` (contacts with CASL consent attestation,
   project interests, follow-up tasks with a due-now surface, logged

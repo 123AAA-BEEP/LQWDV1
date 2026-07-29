@@ -10,6 +10,7 @@ import { Prose, Accordion, HubFaq, Stat } from "@/components/public/hub-sections
 import { plainSlug } from "@/lib/slug";
 import { formatPriceBand, primaryBuilderName } from "@/lib/types";
 import { regionForProvince } from "@/lib/regions";
+import { TYPE_GATE, segmentForDbType } from "@/lib/city-types";
 
 export const dynamic = "force-dynamic";
 
@@ -295,15 +296,24 @@ export default async function CityHubPage({
 
       {/* Shop by home type + price band — internal links into filtered browse */}
       <div className="mt-6 flex flex-wrap gap-2">
-        {TYPE_LABELS.filter((t) => typeCount(t.key) > 0).map((t) => (
-          <Link
-            key={t.key}
-            href={`/?city=${encodeURIComponent(city)}&type=${t.key}`}
-            className="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:border-brand-400 hover:text-brand-700"
-          >
-            {t.label} ({typeCount(t.key)})
-          </Link>
-        ))}
+        {TYPE_LABELS.filter((t) => typeCount(t.key) > 0).map((t) => {
+          // Past the inventory gate → the indexable City × Type page;
+          // thin combos stay browse-filter links (never doorway pages).
+          const seg = segmentForDbType(t.key);
+          const href =
+            seg && typeCount(t.key) >= TYPE_GATE
+              ? `/new-homes/${plainSlug(city)}/${seg}`
+              : `/?city=${encodeURIComponent(city)}&type=${t.key}`;
+          return (
+            <Link
+              key={t.key}
+              href={href}
+              className="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:border-brand-400 hover:text-brand-700"
+            >
+              {t.label} ({typeCount(t.key)})
+            </Link>
+          );
+        })}
         {PRICE_BANDS.map((b) => {
           const n = bandCount(b);
           if (n === 0) return null;
