@@ -133,6 +133,14 @@ rules are enforced in the prompt AND in code:
   states no affiliate relationships — when affiliate starts later, links
   need visible disclosure + rel="sponsored" and the footer changes.
 
+- **Consumer lane** (migration 0086, `consumer_guide` type): plain-language
+  explainers feeding the lead funnels — first wave is assignment content for
+  /assignment-value (assignments 101, costs/HST/taxes, interim occupancy,
+  assign-vs-close-then-sell). Rules enforced in prompt + editor + footer:
+  general information never advice, tax claims cited to CRA and hedged (an
+  unhedged tax claim forces needs_human), one matter-of-fact tool link max.
+  The assignments-101 flagship jumps the backlog queue.
+
 ## Operating notes
 
 - Generation costs one Opus call (~$0.10–0.15). The admin picks ≤6 projects;
