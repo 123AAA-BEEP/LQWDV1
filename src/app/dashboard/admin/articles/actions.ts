@@ -11,6 +11,7 @@ import {
   type ArticleType,
 } from "@/lib/articles";
 import { BROKERAGES, generateBrokeragePiece } from "@/lib/brokerage-content";
+import { pingIndexNow } from "@/lib/indexnow";
 
 const LIST_PATH = "/dashboard/admin/articles";
 const TYPE_VALUES = ARTICLE_TYPES.map((t) => t.value);
@@ -263,17 +264,22 @@ export async function setArticleStatus(formData: FormData) {
     status,
     updated_at: new Date().toISOString(),
   };
+  let slugForPing: string | null = null;
   if (status === "published") {
     // First publish stamps the byline date; re-publishing keeps it.
     const { data: existing } = await supabase
       .from("articles")
-      .select("published_at")
+      .select("published_at, slug")
       .eq("id", id)
       .maybeSingle();
     if (!existing?.published_at) patch.published_at = new Date().toISOString();
+    slugForPing = existing?.slug ?? null;
   }
 
   const { error } = await supabase.from("articles").update(patch).eq("id", id);
+  if (!error && slugForPing) {
+    void pingIndexNow([`/insights/${slugForPing}`, "/insights"]);
+  }
 
   revalidatePath(LIST_PATH);
   revalidatePath("/insights");

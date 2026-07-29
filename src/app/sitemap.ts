@@ -33,6 +33,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/tools/hst-rebate-calculator`, changeFrequency: "monthly", priority: 0.8 },
     // Insights — reviewed editorial grounded in listing data.
     { url: `${SITE_URL}/insights`, changeFrequency: "weekly", priority: 0.7 },
+    // Seller-lead funnel hub (+ per-city pages below).
+    { url: `${SITE_URL}/home-value`, changeFrequency: "weekly", priority: 0.7 },
     // Market reports — linkable data assets, refreshed live.
     { url: `${SITE_URL}/reports`, changeFrequency: "weekly", priority: 0.6 },
     { url: `${SITE_URL}/reports/gta-pre-construction`, changeFrequency: "daily", priority: 0.8 },
@@ -84,7 +86,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // `indexable` flag so noindex pages stay out of the sitemap.
     const { data } = await supabase
       .from("public_projects_view")
-      .select("slug, published_at, page_updated_at, indexable, city, builder_name")
+      .select("slug, published_at, page_updated_at, indexable, city, builder_name, province")
       .limit(5000);
 
     // Programmatic builder hubs — one per primary builder with 2+ projects
@@ -115,6 +117,26 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "daily" as const,
       priority: 0.8,
     }));
+
+    // Seller-lead city pages — Ontario only (the CMA promise is fulfilled by
+    // Ontario agents today).
+    const ontarioCities = [
+      ...new Set(
+        ((data ?? []) as { city: string | null; province: string | null }[])
+          .filter(
+            (r) => !r.province || /^(on|ontario)$/i.test(r.province.trim()),
+          )
+          .map((r) => r.city)
+          .filter((c): c is string => Boolean(c)),
+      ),
+    ];
+    cityRoutes = cityRoutes.concat(
+      ontarioCities.map((c) => ({
+        url: `${SITE_URL}/home-value/${plainSlug(c)}`,
+        changeFrequency: "weekly" as const,
+        priority: 0.7,
+      })),
+    );
     projectRoutes = (
       (data ?? []) as {
         slug: string | null;

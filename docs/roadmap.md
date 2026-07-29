@@ -3,6 +3,17 @@
 Agreed-but-deferred items. Flag here, build later. (Most recent on top.)
 
 ## Shipped
+- **Home-value seller funnel + discovery wiring** — `/home-value` hub +
+  programmatic Ontario `/home-value/[city]` pages (migration 0083,
+  `valuation_requests`, admin Home values queue + nav badge). Honest model:
+  free agent-prepared CMA, no fake instant estimate. Discovery: homepage
+  "Latest insights" strip, project-page "From our Insights" cross-links,
+  IndexNow pings on article publish (existing lib), footer links.
+  **Deferred (flagged, not built): resale glossary content set; "find an
+  agent in [city]" directory pages (thin until agent count grows); Nobul-style
+  agent-bidding marketplace (needs its own product decision); automatic
+  agent distribution of valuation leads (v2 — assigned_realtor_profile_id
+  is in place).**
 - **Brokerage content engine** — 20-brand deep-dive + 8-pair head-to-head
   backlog (migration 0081), web-search-grounded with published-facts-only /
   no-rankings / accurate-or-nothing rules and a server-appended disclaimer;
