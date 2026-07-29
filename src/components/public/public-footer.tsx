@@ -34,6 +34,9 @@ export function PublicFooter() {
           <Link href="/match" className="hover:text-white">
             Find an agent
           </Link>
+          <Link href="/assignment-value" className="hover:text-white">
+            Sell your assignment
+          </Link>
           <Link href="/insights" className="hover:text-white">
             Insights
           </Link>

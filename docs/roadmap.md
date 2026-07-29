@@ -3,6 +3,16 @@
 Agreed-but-deferred items. Flag here, build later. (Most recent on top.)
 
 ## Shipped
+- **Assignment-valuation capture (`/assignment-value`)** — consumer-side
+  wizard for pre-construction owners asking "what's my assignment worth"
+  (migration 0085): project → paid/year → unit → occupancy stage → APS
+  assignment clause → contact. Soft-matches the typed project against
+  tracked inventory (success-state context + admin quick-jump). Free
+  human-assessment promise (no fake instant number), ops + consumer emails,
+  admin Assignments queue + badge, footer/home-value cross-links, sitemap.
+  Demand side of the Assignment Desk loop: qualified leads become gated
+  listings via an agent — listings stay gated-never-public; the lead form is
+  public by design.
 - **Agent-match wizard (`/match`)** — our adaptation of the
   realestateagents.com / ReferralExchange funnel (migration 0084,
   `match_requests`): one question per screen (intent → price band → type →
