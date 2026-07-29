@@ -96,10 +96,15 @@ biggest Ontario brokerage brands + 8 head-to-heads new agents cross-shop,
 web-search-grounded. **Named-brand editorial is accurate-or-nothing**, so the
 rules are enforced in the prompt AND in code:
 
-- Only publicly published terms, attributed; where a brand doesn't publish
-  splits/fees (most franchise brokerages), the piece must say exactly that —
-  never estimate. If search corroborates nothing official, the piece is
-  SKIPPED, not inserted.
+- Figures are framed as research findings: official terms stated plainly
+  with attribution; office-specific / third-party-reported figures allowed
+  when clearly framed ("one GTA office advertised…", "as of <date>") — the
+  server-appended disclaimer tells readers a figure may reflect ONE location
+  at the time of writing and that confirming with the local brokerage in
+  writing is critical (founder calibration 2026-07-29). Bare unattributed
+  numbers stay banned; where nothing is published the piece says so (that's
+  useful info). Only pieces whose search corroborates essentially nothing
+  are skipped.
 - No rankings/winners ("may fit you if…" framing), non-disparaging (no
   lawsuits/rumours/review-site content) — these brands employ our users.
 - `## Sources` section validated in code; a verification + no-affiliation

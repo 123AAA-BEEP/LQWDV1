@@ -96,7 +96,7 @@ const SYSTEM =
   "You write neutral, factual editorial for LIQWD's Insights blog about named real-estate brokerage brands in Ontario, Canada. Reader: a newly licensed or prospective Ontario agent choosing where to hang their licence. " +
   "NON-NEGOTIABLE RULES: " +
   "(1) Facts about a brand come ONLY from your web search results — the brand's own published pages or reputable coverage. Attribute plainly ('eXp publishes…', 'according to <outlet>…'). " +
-  "(2) If commission splits, caps, or fees are NOT publicly published, write exactly that: they are negotiated per office/franchise and not published — NEVER estimate, infer, or repeat forum hearsay as fact. Numbers from third-party blogs may only appear clearly attributed as claims, not facts. " +
+  "(2) Specific splits, caps, and fees are welcome WHEN FRAMED AS RESEARCH FINDINGS: officially published terms stated plainly with attribution; office-specific or third-party-reported figures allowed but clearly framed as such ('one GTA office advertised…', 'a <year> report cited…', 'as of <date>') with the source in Sources. Where nothing is published, say exactly that — it is useful information, since terms are negotiated per office/franchise. NEVER state a bare unattributed number as fact, and never invent or estimate one. " +
   "(3) NO rankings, no 'best', no winner. For comparisons, use 'X may fit you if… / Y may fit you if…' framing, giving both brands a fair, complete treatment. " +
   "(4) Non-disparaging: no rumours, lawsuits, reviews-site complaints, or culture gossip. Stick to model, published terms, training/programs, scale, and history. " +
   "(5) Markdown only (## and ### headings, short paragraphs, lists). 700-1100 words. End the body with a '## Sources' section listing every URL used. " +
@@ -122,7 +122,7 @@ const EMIT: Anthropic.Messages.ToolUnion[] = [
         found_published_terms: {
           type: "boolean",
           description:
-            "true if you found at least some officially published information about the brand(s); false if search returned essentially nothing usable",
+            "true if search corroborated meaningful information about the brand(s) — official pages, published terms, or clearly attributable reporting; false ONLY if search returned essentially nothing usable about them",
         },
       },
       required: [
@@ -141,13 +141,16 @@ function disclaimer(): string {
   const date = new Date().toISOString().slice(0, 10);
   return (
     "\n\n---\n\n" +
-    "*Commission structures, fees, and programs vary by office and change over time. " +
-    "Facts above are drawn from the cited public sources as of " +
+    "*About the numbers in this article: figures come from our research of the " +
+    "cited public sources as of " +
     date +
-    " and may be out of date; nothing here is advice or an endorsement. " +
-    "Before joining any brokerage, confirm every term directly — in writing. " +
-    "All brand names belong to their respective owners; LIQWD is independent and " +
-    "not affiliated with the brokerages discussed.*"
+    ". Commission structures, caps, and fees in Ontario are frequently set " +
+    "office-by-office — a figure may reflect the structure of ONE location at " +
+    "the time of writing, and your local office's terms may differ. Before " +
+    "making any decision, getting in touch with the local brokerage and " +
+    "confirming every term in writing is critical. Nothing here is advice or " +
+    "an endorsement. All brand names belong to their respective owners; LIQWD " +
+    "is independent and not affiliated with the brokerages discussed.*"
   );
 }
 
