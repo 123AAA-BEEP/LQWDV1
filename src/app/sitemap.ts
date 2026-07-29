@@ -35,6 +35,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/insights`, changeFrequency: "weekly", priority: 0.7 },
     // Seller-lead funnel hub (+ per-city pages below).
     { url: `${SITE_URL}/home-value`, changeFrequency: "weekly", priority: 0.7 },
+    // Agent-match wizard.
+    { url: `${SITE_URL}/match`, changeFrequency: "monthly", priority: 0.7 },
     // Market reports — linkable data assets, refreshed live.
     { url: `${SITE_URL}/reports`, changeFrequency: "weekly", priority: 0.6 },
     { url: `${SITE_URL}/reports/gta-pre-construction`, changeFrequency: "daily", priority: 0.8 },

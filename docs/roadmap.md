@@ -3,6 +3,17 @@
 Agreed-but-deferred items. Flag here, build later. (Most recent on top.)
 
 ## Shipped
+- **Agent-match wizard (`/match`)** — our adaptation of the
+  realestateagents.com / ReferralExchange funnel (migration 0084,
+  `match_requests`): one question per screen (intent → price band → type →
+  location → timeline → name → contact), micro-commitments before PII,
+  "Not sure" escape hatches, ?city= ad-landing personalization, "finding
+  your agents" reveal. Our differences: matched public agents shown
+  INSTANTLY as real reviewable profiles (no email/SMS gate), CASL-clean
+  one-sentence consent, consumer shortlist email + ops email, admin Agent
+  match queue + badge. **v2 flags: SMS OTP lead verification (needs
+  Twilio), automatic agent assignment/round-robin, per-campaign ?intent=
+  preselect variants.**
 - **Home-value seller funnel + discovery wiring** — `/home-value` hub +
   programmatic Ontario `/home-value/[city]` pages (migration 0083,
   `valuation_requests`, admin Home values queue + nav badge). Honest model:
