@@ -3,6 +3,11 @@
 Agreed-but-deferred items. Flag here, build later. (Most recent on top.)
 
 ## Shipped
+- **Daily content pipeline** — cron drafts a project-of-the-day spotlight +
+  a sourced market note into the article review queue every morning (capped,
+  ops-emailed, never auto-publishes), plus hand-written `agent_guide` type
+  (migration 0080) with three seeded new-licensee pieces. See
+  `docs/growth-engine-spec.md` §3–4.
 - **Growth engine v1 (articles + analytics)** — Insights articles: AI-drafted
   from PUBLIC-SAFE project data only (`src/lib/articles.ts`), human-reviewed in
   Admin → Articles (draft → in_review → published), live at `/insights` with

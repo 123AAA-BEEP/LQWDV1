@@ -11,6 +11,10 @@
     {
       "path": "/api/market-radar",
       "schedule": "0 13 2 */3 *"
+    },
+    {
+      "path": "/api/cron/daily-content",
+      "schedule": "47 10 * * *"
     }
   ]
 }

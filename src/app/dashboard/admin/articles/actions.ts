@@ -95,6 +95,60 @@ export async function generateArticle(formData: FormData) {
   redirect(`${LIST_PATH}/${newId}?flash=${encodeURIComponent("Draft generated — review every fact before publishing.")}&flash_tone=success`);
 }
 
+/**
+ * Creates an empty hand-written draft (agent guides and other pieces that
+ * aren't project-grounded) and opens it in the editor.
+ */
+export async function createBlankArticle(formData: FormData) {
+  const supabase = await createClient();
+  await assertAdmin(supabase);
+
+  const title = String(formData.get("title") ?? "").trim();
+  const articleType = String(formData.get("article_type") ?? "agent_guide");
+  if (!title) {
+    redirectWithFlash(LIST_PATH, "Give the article a working title.", "error");
+  }
+  if (!TYPE_VALUES.includes(articleType as ArticleType)) {
+    redirectWithFlash(LIST_PATH, "Pick an article type.", "error");
+  }
+
+  const baseSlug =
+    title
+      .toLowerCase()
+      .replace(/[^a-z0-9-\s]+/g, "")
+      .trim()
+      .replace(/\s+/g, "-")
+      .slice(0, 100) || "untitled";
+  let newId: string | null = null;
+  for (const slug of [
+    baseSlug.length >= 3 ? baseSlug : `${baseSlug}-draft`,
+    `${baseSlug}-${Date.now().toString(36).slice(-4)}`.slice(0, 120),
+  ]) {
+    const { data, error } = await supabase
+      .from("articles")
+      .insert({
+        slug,
+        status: "draft",
+        article_type: articleType,
+        title,
+        body_md: "",
+        generated_by_ai: false,
+      })
+      .select("id")
+      .maybeSingle();
+    if (!error && data) {
+      newId = data.id as string;
+      break;
+    }
+    if (error?.code !== "23505") break;
+  }
+  if (!newId) {
+    redirectWithFlash(LIST_PATH, "Couldn't create the draft.", "error");
+  }
+  revalidatePath(LIST_PATH);
+  redirect(`${LIST_PATH}/${newId}`);
+}
+
 /** Saves editor changes. Never touches status — the status buttons own that. */
 export async function updateArticle(formData: FormData) {
   const supabase = await createClient();

@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Field, Input, Select, Checkbox } from "@/components/ui/field";
 import { FlashNotice } from "@/components/ui/flash-notice";
 import { ARTICLE_TYPES } from "@/lib/articles";
-import { generateArticle } from "./actions";
+import { generateArticle, createBlankArticle } from "./actions";
 
 export const metadata: Metadata = { title: "Articles" };
 export const dynamic = "force-dynamic";
@@ -143,7 +143,7 @@ export default async function AdminArticlesPage({
                   <div className="min-w-56">
                     <Field label="Article type" htmlFor="article_type">
                       <Select id="article_type" name="article_type" defaultValue="project_spotlight">
-                        {ARTICLE_TYPES.map((t) => (
+                        {ARTICLE_TYPES.filter((t) => t.generatable).map((t) => (
                           <option key={t.value} value={t.value}>
                             {t.label} — {t.hint}
                           </option>
@@ -160,6 +160,45 @@ export default async function AdminArticlesPage({
               </form>
             )
           ) : null}
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardBody>
+          <h3 className="font-semibold text-ink">Write from scratch</h3>
+          <p className="mt-1 text-sm text-slate-500">
+            For hand-written pieces — agent guides, brokerage frameworks,
+            anything not grounded in project data.
+          </p>
+          <form
+            action={createBlankArticle}
+            className="mt-3 flex flex-wrap items-end gap-2"
+          >
+            <div className="min-w-64 flex-1">
+              <Field label="Working title" htmlFor="new_title">
+                <Input
+                  id="new_title"
+                  name="title"
+                  placeholder="e.g. What to do after passing your real estate exam in Ontario"
+                  required
+                />
+              </Field>
+            </div>
+            <div className="min-w-48">
+              <Field label="Type" htmlFor="new_type">
+                <Select id="new_type" name="article_type" defaultValue="agent_guide">
+                  {ARTICLE_TYPES.map((t) => (
+                    <option key={t.value} value={t.value}>
+                      {t.label}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+            </div>
+            <Button type="submit" variant="secondary">
+              Create draft
+            </Button>
+          </form>
         </CardBody>
       </Card>
 

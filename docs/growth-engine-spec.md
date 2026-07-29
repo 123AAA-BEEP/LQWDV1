@@ -52,6 +52,35 @@ projects → **Generate draft** → human edits/fact-checks in the editor →
 - Complements `link_visits` (agent share-link attribution) and
   `broker_portal_events` (portal clicks) — different questions, kept separate.
 
+## 3. Daily automation (cron)
+
+`/api/cron/daily-content` (vercel.json, 10:47 UTC daily ≈ 6:47am ET; Bearer
+CRON_SECRET) → `src/lib/daily-content.ts`:
+
+- **Project of the day**: picks the newest published project with a hero +
+  public pricing that no spotlight has covered, and drafts a spotlight via
+  the same grounded generator.
+- **Market note**: drafts a 450–700-word `market_update` grounded in (a)
+  aggregate stats computed from our own published inventory and (b) fresh
+  Ontario news via the Anthropic web-search tool — every external fact must
+  be cited; the body ends with a `## Sources` section (review it before
+  publishing).
+- Both land as **`in_review`** (nav badge + morning ops email to
+  LEADS_NOTIFY_EMAIL). **Never auto-publishes.** The cron skips itself while
+  ≥ 8 articles sit unreviewed — automation must not manufacture a backlog of
+  unread AI content; the human gate is the point.
+
+## 4. Agent-facing evergreen (new-licensee funnel)
+
+`agent_guide` type (migration 0080): hand-written pieces targeting newly
+licensed Ontario agents — created via the admin "Write from scratch" form
+(not the AI generator; they aren't project-grounded). Three seeded drafts
+(in review): after-passing-the-exam next steps, a fact-first brokerage-
+selection framework (deliberately NO rankings — RECO requires comparative
+claims to be verifiable; we compare published facts, never crown winners),
+and a first-clients playbook. LIQWD mentions are factual feature statements
+only.
+
 ## Operating notes
 
 - Generation costs one Opus call (~$0.10–0.15). The admin picks ≤6 projects;
