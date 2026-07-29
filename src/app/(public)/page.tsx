@@ -205,7 +205,7 @@ export default async function MarketplacePage({
   // One parallel wave instead of four sequential round-trips (faster TTFB).
   // Featured strip runs only on the unfiltered browse (a curated highlight,
   // not search results) — capped at 3 for one clean desktop row.
-  const [{ data: cityRows }, mainRes, featuredRes, newestRes] =
+  const [{ data: cityRows }, mainRes, featuredRes, newestRes, articlesRes] =
     await Promise.all([
       supabase
         .from("public_projects_view")
@@ -231,7 +231,18 @@ export default async function MarketplacePage({
             .or("listing_type.is.null,listing_type.neq.for_rent")
             .order("published_at", { ascending: false })
             .limit(6),
+      hasFilter
+        ? Promise.resolve(null)
+        : supabase
+            .from("public_articles_view")
+            .select("slug, title, excerpt")
+            .order("published_at", { ascending: false })
+            .limit(3),
     ]);
+  const latestArticles =
+    ((articlesRes?.data ?? null) as
+      | { slug: string; title: string; excerpt: string | null }[]
+      | null) ?? [];
   const cities = [...new Set((cityRows ?? []).map((r) => r.city as string))];
   const isOntario = (p: Row) =>
     !p.province || /^(on|ontario)$/i.test(p.province.trim());
@@ -501,6 +512,48 @@ export default async function MarketplacePage({
         ) : null}
         </div>
       </section>
+
+      {/* Latest insights — internal discovery path for fresh articles (and
+          the crawler's shortest route to them from a daily-crawled page). */}
+      {latestArticles.length > 0 ? (
+        <section className="border-t border-slate-100 bg-white">
+          <div className="mx-auto max-w-6xl px-6 py-10">
+            <div className="flex items-baseline justify-between gap-4">
+              <h2 className="text-lg font-semibold text-ink">
+                Latest insights
+              </h2>
+              <Link
+                href="/insights"
+                className="text-sm text-brand-700 hover:underline"
+              >
+                All articles →
+              </Link>
+            </div>
+            <div className="mt-4 grid gap-4 sm:grid-cols-3">
+              {latestArticles.map((a) => (
+                <Link
+                  key={a.slug}
+                  href={`/insights/${a.slug}`}
+                  className="group block h-full"
+                >
+                  <Card className="h-full transition-all duration-300 group-hover:-translate-y-0.5 group-hover:shadow-lg">
+                    <CardBody>
+                      <h3 className="font-medium text-ink group-hover:text-brand-700">
+                        {a.title}
+                      </h3>
+                      {a.excerpt ? (
+                        <p className="mt-2 line-clamp-2 text-sm text-slate-600">
+                          {a.excerpt}
+                        </p>
+                      ) : null}
+                    </CardBody>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }

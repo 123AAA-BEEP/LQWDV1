@@ -28,6 +28,12 @@ export function PublicFooter() {
           <Link href="/tools" className="hover:text-white">
             Buyer tools
           </Link>
+          <Link href="/home-value" className="hover:text-white">
+            What&apos;s my home worth?
+          </Link>
+          <Link href="/insights" className="hover:text-white">
+            Insights
+          </Link>
           <Link href="/reports/gta-pre-construction" className="hover:text-white">
             Market data
           </Link>

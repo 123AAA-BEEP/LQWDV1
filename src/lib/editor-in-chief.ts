@@ -1,6 +1,7 @@
 import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { pingIndexNow } from "@/lib/indexnow";
 
 /**
  * The editor-in-chief pass — the quality gate that lets the pipeline publish
@@ -33,6 +34,7 @@ export interface EditorResult {
 
 interface ArticleRow {
   id: string;
+  slug?: string;
   article_type: string;
   title: string;
   excerpt: string | null;
@@ -223,7 +225,7 @@ export async function finishAndPublish(
   const { data } = await admin
     .from("articles")
     .select(
-      "id, article_type, title, excerpt, body_md, seo_title, seo_meta_description, related_project_ids",
+      "id, slug, article_type, title, excerpt, body_md, seo_title, seo_meta_description, related_project_ids",
     )
     .eq("id", articleId)
     .maybeSingle();
@@ -263,5 +265,8 @@ export async function finishAndPublish(
       updated_at: new Date().toISOString(),
     })
     .eq("id", articleId);
+  if (publish && article.slug) {
+    void pingIndexNow([`/insights/${article.slug}`, "/insights"]);
+  }
   return publish ? "published" : "in_review";
 }

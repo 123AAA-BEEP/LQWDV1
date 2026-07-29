@@ -412,14 +412,25 @@ export default async function PublicProjectPage({
   }
 
   // One round-trip wave instead of four sequential ones — faster first paint.
-  const [realtor, moreFromBuilder, galleryAll, nearbyRaw, plansAndBrochures] =
+  const [realtor, moreFromBuilder, galleryAll, nearbyRaw, plansAndBrochures, articlesRes] =
     await Promise.all([
       getDisplayRealtor(ref, project.assigned_realtor_profile_id),
       getMoreFromBuilder(project.builder_name, project.project_id),
       getGallery(project.project_id),
       getNearbyProjects(project.city, [project.project_id]),
       getPlansAndBrochures(project.project_id),
+      // Insights articles featuring this project — reader value plus the
+      // crawler's internal path from a high-crawl page to fresh articles.
+      (await createClient())
+        .from("public_articles_view")
+        .select("slug, title")
+        .contains("related_project_ids", [project.project_id])
+        .order("published_at", { ascending: false })
+        .limit(3),
     ]);
+  const projectArticles =
+    ((articlesRes?.data ?? null) as { slug: string; title: string }[] | null) ??
+    [];
   const { floorplans, docs: publicDocs } = plansAndBrochures;
   const builderIds = new Set(moreFromBuilder.map((m) => m.project_id));
   const nearby = nearbyRaw.filter((n) => !builderIds.has(n.project_id));
@@ -657,6 +668,26 @@ export default async function PublicProjectPage({
                   ))}
                 </div>
               ) : null}
+            </section>
+          ) : null}
+
+          {projectArticles.length > 0 ? (
+            <section className="mt-8">
+              <h2 className="text-xl font-semibold tracking-tight text-ink">
+                From our Insights
+              </h2>
+              <ul className="mt-3 space-y-2">
+                {projectArticles.map((a) => (
+                  <li key={a.slug}>
+                    <Link
+                      href={`/insights/${a.slug}`}
+                      className="text-brand-700 hover:underline"
+                    >
+                      {a.title} →
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </section>
           ) : null}
 
