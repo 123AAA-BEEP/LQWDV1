@@ -27,6 +27,7 @@ interface Article {
   related_project_ids: string[];
   generated_by_ai: boolean;
   indexable: boolean;
+  editor_notes: string | null;
   published_at: string | null;
   updated_at: string;
 }
@@ -78,7 +79,7 @@ export default async function AdminArticleEditor({
   const { data } = await supabase
     .from("articles")
     .select(
-      "id, slug, status, article_type, title, excerpt, body_md, seo_title, seo_meta_description, hero_image_url, related_project_ids, generated_by_ai, indexable, published_at, updated_at",
+      "id, slug, status, article_type, title, excerpt, body_md, seo_title, seo_meta_description, hero_image_url, related_project_ids, generated_by_ai, indexable, editor_notes, published_at, updated_at",
     )
     .eq("id", id)
     .maybeSingle();
@@ -168,6 +169,25 @@ export default async function AdminArticleEditor({
           </div>
         </CardBody>
       </Card>
+
+      {article.editor_notes ? (
+        <Card>
+          <CardBody>
+            <h3 className="text-sm font-semibold text-ink">
+              Editor-in-chief notes
+            </h3>
+            <p className="mt-1 whitespace-pre-wrap text-sm text-slate-600">
+              {article.editor_notes}
+            </p>
+            {article.status === "in_review" ? (
+              <p className="mt-2 text-xs text-amber-700">
+                The editor agent held this piece instead of publishing —
+                resolve the note above, then publish.
+              </p>
+            ) : null}
+          </CardBody>
+        </Card>
+      ) : null}
 
       {related.length > 0 ? (
         <Card>

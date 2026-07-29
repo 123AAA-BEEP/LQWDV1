@@ -3,6 +3,11 @@
 Agreed-but-deferred items. Flag here, build later. (Most recent on top.)
 
 ## Shipped
+- **Brokerage content engine** — 20-brand deep-dive + 8-pair head-to-head
+  backlog (migration 0081), web-search-grounded with published-facts-only /
+  no-rankings / accurate-or-nothing rules and a server-appended disclaimer;
+  fed by the daily cron (piece 3 of 3) and an on-demand admin generator. See
+  `docs/growth-engine-spec.md` §5.
 - **Daily content pipeline** — cron drafts a project-of-the-day spotlight +
   a sourced market note into the article review queue every morning (capped,
   ops-emailed, never auto-publishes), plus hand-written `agent_guide` type

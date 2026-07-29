@@ -7,7 +7,12 @@ import { Badge } from "@/components/ui/badge";
 import { Field, Input, Select, Checkbox } from "@/components/ui/field";
 import { FlashNotice } from "@/components/ui/flash-notice";
 import { ARTICLE_TYPES } from "@/lib/articles";
-import { generateArticle, createBlankArticle } from "./actions";
+import { BROKERAGES } from "@/lib/brokerage-content";
+import {
+  generateArticle,
+  createBlankArticle,
+  generateBrokerageArticle,
+} from "./actions";
 
 export const metadata: Metadata = { title: "Articles" };
 export const dynamic = "force-dynamic";
@@ -160,6 +165,49 @@ export default async function AdminArticlesPage({
               </form>
             )
           ) : null}
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardBody>
+          <h3 className="font-semibold text-ink">Brokerage deep dive / head-to-head</h3>
+          <p className="mt-1 text-sm text-slate-500">
+            Web-search-grounded, published-facts-only, no rankings — pieces
+            state plainly when a brand doesn&apos;t publish its terms. One
+            brand = deep dive; add a second to compare. The daily pipeline
+            also works through the full backlog on its own.
+          </p>
+          <form
+            action={generateBrokerageArticle}
+            className="mt-3 flex flex-wrap items-end gap-2"
+          >
+            <div className="min-w-56">
+              <Field label="Brokerage" htmlFor="brokerage_a">
+                <Select id="brokerage_a" name="brokerage_a" required>
+                  {BROKERAGES.map((b) => (
+                    <option key={b.slug} value={b.name}>
+                      {b.name}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+            </div>
+            <div className="min-w-56">
+              <Field label="Compare with (optional)" htmlFor="brokerage_b">
+                <Select id="brokerage_b" name="brokerage_b" defaultValue="">
+                  <option value="">— none (deep dive) —</option>
+                  {BROKERAGES.map((b) => (
+                    <option key={b.slug} value={b.name}>
+                      {b.name}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+            </div>
+            <Button type="submit" variant="secondary">
+              Generate
+            </Button>
+          </form>
         </CardBody>
       </Card>
 

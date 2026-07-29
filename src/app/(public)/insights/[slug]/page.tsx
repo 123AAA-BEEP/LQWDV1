@@ -195,10 +195,11 @@ export default async function InsightsArticlePage({
       ) : null}
 
       <p className="mt-10 rounded-xl bg-slate-50 p-4 text-xs leading-relaxed text-slate-500">
-        Facts in this article come from the project listings LIQWD tracks and
-        were accurate when published. Pricing, availability, and timelines for
-        pre-construction homes change — always confirm details on the live
-        listing or with the sales team before making decisions.
+        {["project_spotlight", "neighbourhood_guide", "comparison"].includes(
+          article.article_type,
+        )
+          ? "Facts in this article come from the project listings LIQWD tracks and were accurate when published. Pricing, availability, and timelines for pre-construction homes change — always confirm details on the live listing or with the sales team before making decisions."
+          : "This article was accurate to the cited sources when published and is provided for information only — it isn't advice. Details change; verify anything you plan to act on at the original source."}
       </p>
     </article>
   );
