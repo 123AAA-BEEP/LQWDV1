@@ -78,9 +78,9 @@ const TYPE_CONTEXT: Record<string, string> = {
   agent_guide:
     "This is an evergreen guide for new Ontario real-estate agents. Practical advice is fine; regulatory claims should be hedged toward 'confirm with RECO'.",
   brokerage_profile:
-    "This is a deep dive on a NAMED brokerage brand. HIGHEST scrutiny: use web_search (up to 3 searches) to spot-check the 2-3 most consequential claims (published splits/fees/caps). Any failed check, any number stated as fact without attribution, or any estimated/hearsay term forces needs_human.",
+    "This is a deep dive on a NAMED brokerage brand. HIGHEST scrutiny: use web_search (up to 3 searches) to spot-check the 2-3 most consequential claims (splits/fees/caps). Attributed, clearly framed figures are FINE — including office-specific or third-party-reported ones ('one GTA office advertised…', 'a 2025 report cited…'); a closing disclaimer already tells readers terms vary by office and to confirm locally. What forces needs_human: a bare number stated as unattributed fact, a figure that contradicts what your spot-check finds, or framing that presents one office's reported terms as the brand's universal policy.",
   brokerage_comparison:
-    "This compares two NAMED brokerage brands. HIGHEST scrutiny: use web_search (up to 3 searches) to spot-check the most consequential claims for each brand. Both brands must get fair, equal treatment with no winner declared. Any failure forces needs_human.",
+    "This compares two NAMED brokerage brands. HIGHEST scrutiny: use web_search (up to 3 searches) to spot-check the most consequential claims for each brand. Attributed, clearly framed figures are fine (see the office-variance disclaimer at the end); both brands must get fair, equal treatment with no winner declared. needs_human for: bare unattributed numbers, failed spot-checks, one-office terms framed as universal policy, or unequal treatment.",
 };
 
 /**
