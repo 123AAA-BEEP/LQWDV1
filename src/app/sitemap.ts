@@ -2,6 +2,8 @@ import type { MetadataRoute } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { REGION_KEYS, regionSlug } from "@/lib/regions";
 import { plainSlug } from "@/lib/slug";
+import { TYPE_GATE, segmentForDbType } from "@/lib/city-types";
+import { buildComparePairs } from "@/lib/compare";
 
 // Listings are published/updated over time, so build the sitemap per request
 // rather than freezing it at build time.
@@ -90,7 +92,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // `indexable` flag so noindex pages stay out of the sitemap.
     const { data } = await supabase
       .from("public_projects_view")
-      .select("slug, published_at, page_updated_at, indexable, city, builder_name, province")
+      .select(
+        "slug, published_at, page_updated_at, indexable, city, builder_name, province, project_type, price_from_public, listing_type",
+      )
       .limit(5000);
 
     // Programmatic builder hubs — one per primary builder with 2+ projects
@@ -121,6 +125,46 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "daily" as const,
       priority: 0.8,
     }));
+
+    // City × Type pSEO pages — only combos past the inventory gate (thin
+    // combos stay browse-filter URLs, never index-competing pages).
+    const forSale = ((data ?? []) as {
+      city: string | null;
+      project_type: string | null;
+      listing_type: string | null;
+    }[]).filter((r) => r.listing_type !== "for_rent");
+    const comboCounts = new Map<string, number>();
+    for (const r of forSale) {
+      const seg = segmentForDbType(r.project_type);
+      if (!r.city || !seg) continue;
+      const key = `${plainSlug(r.city)}/${seg}`;
+      comboCounts.set(key, (comboCounts.get(key) ?? 0) + 1);
+    }
+    const cityTypeRoutes: MetadataRoute.Sitemap = [...comboCounts.entries()]
+      .filter(([, n]) => n >= TYPE_GATE)
+      .map(([key]) => ({
+        url: `${SITE_URL}/new-homes/${key}`,
+        changeFrequency: "daily" as const,
+        priority: 0.8,
+      }));
+    cityRoutes = cityRoutes.concat(cityTypeRoutes);
+
+    // "[A] vs [B]" comparison network — nearest-priced same-city same-type
+    // pairs (the real cross-shop set), canonical ordering baked in.
+    const compareRoutes: MetadataRoute.Sitemap = buildComparePairs(
+      ((data ?? []) as {
+        slug: string | null;
+        city: string | null;
+        project_type: string | null;
+        price_from_public: number | null;
+        listing_type: string | null;
+      }[]).filter((r) => r.listing_type !== "for_rent"),
+    ).map((path) => ({
+      url: `${SITE_URL}${path}`,
+      changeFrequency: "weekly" as const,
+      priority: 0.6,
+    }));
+    cityRoutes = cityRoutes.concat(compareRoutes);
 
     // Seller-lead city pages — Ontario only (the CMA promise is fulfilled by
     // Ontario agents today).

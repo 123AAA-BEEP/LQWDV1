@@ -22,6 +22,7 @@ import {
   hasNeighbourhood,
 } from "@/components/projects/neighbourhood-block";
 import { recordPageEvent } from "@/lib/analytics";
+import { pairPath } from "@/lib/compare";
 import { LeadForm } from "./lead-form";
 import { StickyCta } from "./sticky-cta";
 
@@ -431,6 +432,35 @@ export default async function PublicProjectPage({
   const projectArticles =
     ((articlesRes?.data ?? null) as { slug: string; title: string }[] | null) ??
     [];
+
+  // "Compare with" — the ≤3 nearest-priced same-city, same-type peers (the
+  // cross-shop set that powers the /compare pair network).
+  let compareLinks: { name: string; path: string }[] = [];
+  if (project.city && project.project_type && project.price_from_public != null) {
+    const supabaseCmp = await createClient();
+    const { data: peers } = await supabaseCmp
+      .from("public_projects_view")
+      .select("slug, project_name, price_from_public")
+      .eq("city", project.city)
+      .eq("project_type", project.project_type)
+      .neq("slug", project.slug)
+      .not("price_from_public", "is", null)
+      .limit(50);
+    compareLinks = (
+      (peers as { slug: string; project_name: string; price_from_public: number }[] | null) ??
+      []
+    )
+      .sort(
+        (a, b) =>
+          Math.abs(a.price_from_public - (project.price_from_public as number)) -
+          Math.abs(b.price_from_public - (project.price_from_public as number)),
+      )
+      .slice(0, 3)
+      .map((p) => ({
+        name: p.project_name,
+        path: pairPath(project.slug, p.slug),
+      }));
+  }
   const { floorplans, docs: publicDocs } = plansAndBrochures;
   const builderIds = new Set(moreFromBuilder.map((m) => m.project_id));
   const nearby = nearbyRaw.filter((n) => !builderIds.has(n.project_id));
@@ -670,6 +700,56 @@ export default async function PublicProjectPage({
               ) : null}
             </section>
           ) : null}
+
+          {compareLinks.length > 0 ? (
+            <section className="mt-8">
+              <h2 className="text-xl font-semibold tracking-tight text-ink">
+                Compare {project.project_name} with…
+              </h2>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {compareLinks.map((c) => (
+                  <Link
+                    key={c.path}
+                    href={c.path}
+                    className="rounded-full border border-slate-200 px-3.5 py-1.5 text-sm font-medium text-slate-700 transition-colors hover:border-brand-300 hover:text-brand-700"
+                  >
+                    vs {c.name}
+                  </Link>
+                ))}
+              </div>
+            </section>
+          ) : null}
+
+          {/* E-E-A-T: what LIQWD checks — never WHERE data came from
+              (provenance stays admin-only, always). */}
+          <section className="mt-8 rounded-2xl border border-slate-200 bg-slate-50/60 p-5">
+            <h2 className="text-sm font-semibold text-ink">
+              How this listing is verified
+            </h2>
+            <ul className="mt-2 space-y-1.5 text-sm text-slate-600">
+              {(project.audit_rank ?? 1) >= 2 ? (
+                <li>
+                  ✓ Imagery AI-verified as an actual project rendering — not a
+                  floor plan, map, or logo
+                </li>
+              ) : null}
+              <li>
+                ✓ Listing facts compiled from multiple public sources and
+                cross-checked by LIQWD&apos;s audit system
+              </li>
+              <li>
+                ✓ Pricing and availability update as builders release them
+                {project.page_updated_at || project.published_at
+                  ? ` — last updated ${new Date(project.page_updated_at ?? project.published_at ?? "").toLocaleDateString("en-CA", { year: "numeric", month: "long", day: "numeric" })}`
+                  : ""}
+              </li>
+              <li>
+                ✓ Corrections from verified agents and builders are reviewed
+                by our team — pre-construction details change; confirm final
+                terms with the sales team
+              </li>
+            </ul>
+          </section>
 
           {projectArticles.length > 0 ? (
             <section className="mt-8">
