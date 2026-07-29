@@ -11,7 +11,11 @@ Agreed-but-deferred items. Flag here, build later. (Most recent on top.)
   your agents" reveal. Our differences: matched public agents shown
   INSTANTLY as real reviewable profiles (no email/SMS gate), CASL-clean
   one-sentence consent, consumer shortlist email + ops email, admin Agent
-  match queue + badge. **v2 flags: SMS OTP lead verification (needs
+  match queue + badge. **Speed-to-lead blast**: the (≤3) shown agents are
+  emailed the lead the moment it exists — reply-to goes straight to the
+  consumer, tel: CTA when a phone was given — replicating the incumbent's
+  real mechanic (their "list" is theatre; the product is agents calling in
+  minutes) without the pile-on or the per-lead fee. **v2 flags: SMS OTP lead verification (needs
   Twilio), automatic agent assignment/round-robin, per-campaign ?intent=
   preselect variants.**
 - **Home-value seller funnel + discovery wiring** — `/home-value` hub +
