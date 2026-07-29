@@ -22,7 +22,8 @@ export type ArticleType =
   | "market_update"
   | "agent_guide"
   | "brokerage_profile"
-  | "brokerage_comparison";
+  | "brokerage_comparison"
+  | "consumer_guide";
 
 export const ARTICLE_TYPES: {
   value: ArticleType;
@@ -71,6 +72,12 @@ export const ARTICLE_TYPES: {
     value: "brokerage_comparison",
     label: "Brokerage comparison",
     hint: "Side-by-side of two brands' published terms — via the brokerage generator",
+    generatable: false,
+  },
+  {
+    value: "consumer_guide",
+    label: "Guide",
+    hint: "Consumer-facing evergreen explainer (assignments, buying process) — via the backlog engine",
     generatable: false,
   },
 ];
@@ -161,6 +168,7 @@ const TYPE_BRIEF: Record<ArticleType, string> = {
   agent_guide: "Agent guides are hand-written; do not generate.",
   brokerage_profile: "Use the brokerage generator; do not generate here.",
   brokerage_comparison: "Use the brokerage generator; do not generate here.",
+  consumer_guide: "Use the backlog engine; do not generate here.",
 };
 
 /**

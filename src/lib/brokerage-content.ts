@@ -160,6 +160,44 @@ export const TOOLKIT_PIECES: {
   },
 ];
 
+/**
+ * Consumer pieces — plain-language evergreen explainers for buyers/owners.
+ * First wave: assignment-seller content that feeds /assignment-value. Rules:
+ * general information not legal/tax advice (the footer says so), facts
+ * cited, and where LIQWD has a relevant free tool the piece links it ONCE
+ * without salesy framing.
+ */
+export const CONSUMER_PIECES: {
+  slug: string;
+  name: string;
+  brief: string;
+}[] = [
+  {
+    slug: "sell-pre-construction-condo-before-closing-ontario",
+    name: "Selling before closing (assignments 101)",
+    brief:
+      "Write a plain-language guide for Ontario pre-construction owners asking: can I sell my condo/town before closing? Explain what an assignment sale IS (selling the purchase agreement, not the home), the three gates (does the APS permit it, builder consent + typical fee structure, marketing restrictions many builders impose), the rough process and timeline, and what affects the price. Cite sources for factual claims. Where relevant, link ONCE to LIQWD's free assignment assessment at /assignment-value, without salesy framing.",
+  },
+  {
+    slug: "assignment-sale-costs-hst-taxes-ontario",
+    name: "Assignment costs, HST & taxes (Ontario)",
+    brief:
+      "Write a plain-language guide on what selling an assignment in Ontario actually costs: builder consent/administration fees (typical published ranges, cited), legal fees, commission, and the TAX layer — HST now applies to assignment sales (cite CRA's published rule and effective date) and profit may be taxed as income rather than capital gains depending on intent (cite CRA guidance). Be rigorous: every tax claim cited to CRA or reputable coverage, repeatedly note this is general information and their accountant/lawyer decides their case. Link ONCE to /assignment-value.",
+  },
+  {
+    slug: "interim-occupancy-explained-ontario",
+    name: "Interim occupancy explained",
+    brief:
+      "Write a plain-language guide to interim occupancy for Ontario new-condo buyers: what it is (occupying before registration/final closing), how the monthly occupancy fee is calculated (the three components under the Condominium Act — cite), why it's called 'phantom rent', how long it typically lasts, and what owners can and can't do during it (leasing and assignment typically need builder permission — cite examples). Cite sources; general information, not advice.",
+  },
+  {
+    slug: "assignment-vs-close-then-sell-ontario",
+    name: "Assign now vs. close then sell",
+    brief:
+      "Write a plain-language decision guide for Ontario pre-construction owners weighing an assignment sale now against closing and reselling later: the cost stack of each path (assignment: consent fees + HST considerations; closing: land transfer tax, mortgage qualification at closing, carrying costs, resale commission), timing/risk trade-offs, and which situations tend to favour each. NO verdicts or predictions — 'tends to fit when…' framing, every factual cost cited. Link ONCE to /assignment-value.",
+  },
+];
+
 const bySlugName = new Map(BROKERAGES.map((b) => [b.name, b.slug]));
 
 export function profileSlug(name: string): string {
@@ -172,7 +210,12 @@ export function comparisonSlug(a: string, b: string): string {
   return `${s(a)}-vs-${s(b)}-for-new-agents-ontario`;
 }
 
-export type PieceKind = "profile" | "comparison" | "platform" | "toolkit";
+export type PieceKind =
+  | "profile"
+  | "comparison"
+  | "platform"
+  | "toolkit"
+  | "consumer";
 
 /**
  * Every deterministic slug in backlog order. Interleaved by priority: the
@@ -200,11 +243,20 @@ export function backlogSlugs(): { slug: string; kind: PieceKind; names: string[]
     kind: "toolkit" as const,
     names: [p.slug],
   }));
+  const consumer = CONSUMER_PIECES.map((p) => ({
+    slug: p.slug,
+    kind: "consumer" as const,
+    names: [p.slug],
+  }));
   return [
     ...profiles.slice(0, 7),
+    // The assignments-101 flagship feeds the just-launched /assignment-value
+    // funnel — it jumps the queue.
+    ...consumer.slice(0, 1),
     ...comps.slice(0, 2),
     ...plats.slice(0, 2),
     ...kit.slice(0, 2),
+    ...consumer.slice(1),
     ...profiles.slice(7),
     ...comps.slice(2),
     ...plats.slice(2),
@@ -216,6 +268,7 @@ const SYSTEM =
   "You write neutral, factual editorial for LIQWD's Insights blog about named real-estate brands and consumer platforms in Ontario, Canada. Reader: an Ontario agent deciding where to hang their licence or focus their marketing. " +
   "DISCLOSURE RULE for pieces about consumer platforms/portals: LIQWD, which publishes the article, is itself a real-estate marketplace — state that plainly in one sentence, never evaluate or rank LIQWD against the platforms discussed, and never disparage them. " +
   "TOOLKIT RULE for pieces about products/tools/services agents buy: frame as a BUYER'S GUIDE for the job, never a 'review' — no first-hand claims ('we tested', 'we found'), no ratings, no 'best X' verdicts. Products appear only as illustrations with specs/prices cited to published sources. Lead with the durable, checkable value (tax rules, regulations, cost math) over product talk. " +
+  "CONSUMER-GUIDE RULE: when the brief says the reader is a consumer (buyer/owner, not an agent), write in plain everyday language, define jargon on first use, keep it general information — never legal, tax, or financial advice (say so where tax/legal topics arise) — and if the brief points to a LIQWD tool, link it exactly once, matter-of-factly. " +
   "NON-NEGOTIABLE RULES: " +
   "(1) Facts about a brand come ONLY from your web search results — the brand's own published pages or reputable coverage. Attribute plainly ('eXp publishes…', 'according to <outlet>…'). " +
   "(2) Specific splits, caps, and fees are welcome WHEN FRAMED AS RESEARCH FINDINGS: officially published terms stated plainly with attribution; office-specific or third-party-reported figures allowed but clearly framed as such ('one GTA office advertised…', 'a <year> report cited…', 'as of <date>') with the source in Sources. Where nothing is published, say exactly that — it is useful information, since terms are negotiated per office/franchise. NEVER state a bare unattributed number as fact, and never invent or estimate one. " +
@@ -261,6 +314,19 @@ const EMIT: Anthropic.Messages.ToolUnion[] = [
 
 function disclaimer(kind: PieceKind): string {
   const date = new Date().toISOString().slice(0, 10);
+  if (kind === "consumer") {
+    return (
+      "\n\n---\n\n" +
+      "*This article is general information drawn from the cited public " +
+      "sources as of " +
+      date +
+      " — it is not legal, tax, or financial advice, and rules change. " +
+      "Assignment sales in particular can have significant HST and income-tax " +
+      "consequences that depend on your situation: confirm the numbers with " +
+      "your accountant and the terms with your real-estate lawyer before " +
+      "acting. Nothing here is an endorsement.*"
+    );
+  }
   if (kind === "toolkit") {
     return (
       "\n\n---\n\n" +
@@ -320,8 +386,10 @@ export async function generateBrokeragePiece(
       ? PLATFORM_PIECES.find((p) => p.slug === names[0])
       : kind === "toolkit"
         ? TOOLKIT_PIECES.find((p) => p.slug === names[0])
-        : undefined;
-  if ((kind === "platform" || kind === "toolkit") && !briefedPiece) return null;
+        : kind === "consumer"
+          ? CONSUMER_PIECES.find((p) => p.slug === names[0])
+          : undefined;
+  if (kind !== "profile" && kind !== "comparison" && !briefedPiece) return null;
   const slug =
     kind === "profile"
       ? profileSlug(names[0])
@@ -382,7 +450,9 @@ export async function generateBrokeragePiece(
                 ? "brokerage_profile"
                 : kind === "comparison"
                   ? "brokerage_comparison"
-                  : "agent_guide",
+                  : kind === "consumer"
+                    ? "consumer_guide"
+                    : "agent_guide",
             title: str("title"),
             excerpt: str("excerpt") || null,
             body_md: str("body_md") + disclaimer(kind),
