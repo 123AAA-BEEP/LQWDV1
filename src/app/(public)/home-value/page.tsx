@@ -73,6 +73,21 @@ export default async function HomeValuePage() {
           </Card>
           <Card>
             <CardBody>
+              <h2 className="font-semibold text-ink">Looking for an agent instead?</h2>
+              <p className="mt-2 text-sm leading-relaxed text-slate-600">
+                Buying, selling, or both — answer a few quick questions and
+                get matched with a verified local agent.
+              </p>
+              <Link
+                href="/match"
+                className="mt-3 inline-block text-sm font-medium text-brand-700 hover:underline"
+              >
+                Find your agent →
+              </Link>
+            </CardBody>
+          </Card>
+          <Card>
+            <CardBody>
               <h2 className="font-semibold text-ink">Why not an instant estimate?</h2>
               <p className="mt-2 text-sm leading-relaxed text-slate-600">
                 Automated numbers can miss renovations, lot differences, and

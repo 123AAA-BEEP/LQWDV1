@@ -31,6 +31,9 @@ export function PublicFooter() {
           <Link href="/home-value" className="hover:text-white">
             What&apos;s my home worth?
           </Link>
+          <Link href="/match" className="hover:text-white">
+            Find an agent
+          </Link>
           <Link href="/insights" className="hover:text-white">
             Insights
           </Link>
