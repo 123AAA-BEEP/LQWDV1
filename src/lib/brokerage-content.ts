@@ -28,16 +28,21 @@ export interface BrokerageBrand {
   slug: string;
 }
 
-/** The 20 brands, roughly biggest-presence-first — the cron works top-down. */
+/**
+ * The brands, founder-priority-first (2026-07-29: eXp, Real, RE/MAX,
+ * HomeLife, Right at Home, Century 21, Royal LePage lead) — the cron works
+ * top-down.
+ */
 export const BROKERAGES: BrokerageBrand[] = [
-  { name: "RE/MAX", slug: "remax" },
-  { name: "Royal LePage", slug: "royal-lepage" },
-  { name: "Century 21", slug: "century-21" },
-  { name: "Keller Williams", slug: "keller-williams" },
   { name: "eXp Realty", slug: "exp-realty" },
   { name: "Real Broker", slug: "real-broker" },
-  { name: "Right at Home Realty", slug: "right-at-home-realty" },
+  { name: "RE/MAX", slug: "remax" },
   { name: "HomeLife", slug: "homelife" },
+  { name: "Right at Home Realty", slug: "right-at-home-realty" },
+  { name: "Century 21", slug: "century-21" },
+  { name: "Royal LePage", slug: "royal-lepage" },
+  { name: "Compass", slug: "compass" },
+  { name: "Keller Williams", slug: "keller-williams" },
   { name: "Sutton Group", slug: "sutton-group" },
   { name: "Coldwell Banker", slug: "coldwell-banker" },
   { name: "iPro Realty", slug: "ipro-realty" },
@@ -55,6 +60,7 @@ export const BROKERAGES: BrokerageBrand[] = [
 /** The head-to-heads new agents actually search, worked after the profiles. */
 export const COMPARISONS: [string, string][] = [
   ["eXp Realty", "Real Broker"],
+  ["Compass", "Real Broker"],
   ["eXp Realty", "Keller Williams"],
   ["RE/MAX", "Royal LePage"],
   ["Keller Williams", "RE/MAX"],
@@ -62,6 +68,44 @@ export const COMPARISONS: [string, string][] = [
   ["Royal LePage", "Century 21"],
   ["One Percent Realty", "Right at Home Realty"],
   ["Real Broker", "Keller Williams"],
+  ["eXp Realty", "Compass"],
+];
+
+/**
+ * Platform pieces — consumer-portal landscape explained FOR AGENTS (where
+ * attention actually is, what each platform charges agents, where to focus).
+ * Published as agent_guide; the disclosure rule below applies: LIQWD is
+ * itself a marketplace, and every piece must say so plainly.
+ */
+export const PLATFORM_PIECES: {
+  slug: string;
+  name: string;
+  brief: string;
+}[] = [
+  {
+    slug: "zillow-vs-realtor-ca-for-canadian-agents",
+    name: "Zillow vs realtor.ca (for Canadian agents)",
+    brief:
+      "Write a piece for Ontario agents comparing Zillow's Canadian presence with realtor.ca: where Canadian buyer attention actually is (cite traffic/usage claims to sources), how listings get on each (MLS/DDF syndication), what each offers or charges agents, and where each is strong or weak for a Canadian agent's marketing. No winner-crowning.",
+  },
+  {
+    slug: "where-ontario-home-buyers-actually-search",
+    name: "Where Ontario buyers actually search",
+    brief:
+      "Write a piece for Ontario agents mapping the consumer search landscape: realtor.ca, HouseSigma, Zolo, Wahi, condos.ca, and portals like Zillow — what each is, who uses it, what data each shows (cite sources), and what that means for where an agent should maintain presence. No winner-crowning.",
+  },
+  {
+    slug: "portal-fees-and-agent-programs-canada",
+    name: "Portal fees & agent programs in Canada",
+    brief:
+      "Write a piece for Canadian agents on what the major consumer platforms offer or charge agents (advertising programs, lead products, featured placements) — ONLY publicly published offerings, cited. Where a platform doesn't publish pricing, say so. No winner-crowning.",
+  },
+  {
+    slug: "new-construction-portals-ontario-agents",
+    name: "New-construction portals for Ontario agents",
+    brief:
+      "Write a piece for Ontario agents on where pre-construction inventory lives online (builder sites, aggregators like BuzzBuzzHome, marketplaces) and how access differs from resale MLS. Disclose plainly that LIQWD, which publishes this article, is itself a new-construction marketplace with free agent access — one transparent sentence, no self-promotion beyond it, and do not evaluate or rank LIQWD against the others.",
+  },
 ];
 
 const bySlugName = new Map(BROKERAGES.map((b) => [b.name, b.slug]));
@@ -76,24 +120,42 @@ export function comparisonSlug(a: string, b: string): string {
   return `${s(a)}-vs-${s(b)}-for-new-agents-ontario`;
 }
 
-/** Every deterministic slug in backlog order (profiles first, then pairs). */
-export function backlogSlugs(): { slug: string; kind: "profile" | "comparison"; names: string[] }[] {
+export type PieceKind = "profile" | "comparison" | "platform";
+
+/**
+ * Every deterministic slug in backlog order. Interleaved by priority: the
+ * founder's 7 starter brands, then the flagship comparisons (eXp vs Real,
+ * Compass vs Real), then the first platform pieces — then the long tail.
+ */
+export function backlogSlugs(): { slug: string; kind: PieceKind; names: string[] }[] {
+  const profiles = BROKERAGES.map((b) => ({
+    slug: profileSlug(b.name),
+    kind: "profile" as const,
+    names: [b.name],
+  }));
+  const comps = COMPARISONS.map(([a, b]) => ({
+    slug: comparisonSlug(a, b),
+    kind: "comparison" as const,
+    names: [a, b],
+  }));
+  const plats = PLATFORM_PIECES.map((p) => ({
+    slug: p.slug,
+    kind: "platform" as const,
+    names: [p.slug],
+  }));
   return [
-    ...BROKERAGES.map((b) => ({
-      slug: profileSlug(b.name),
-      kind: "profile" as const,
-      names: [b.name],
-    })),
-    ...COMPARISONS.map(([a, b]) => ({
-      slug: comparisonSlug(a, b),
-      kind: "comparison" as const,
-      names: [a, b],
-    })),
+    ...profiles.slice(0, 7),
+    ...comps.slice(0, 2),
+    ...plats.slice(0, 2),
+    ...profiles.slice(7),
+    ...comps.slice(2),
+    ...plats.slice(2),
   ];
 }
 
 const SYSTEM =
-  "You write neutral, factual editorial for LIQWD's Insights blog about named real-estate brokerage brands in Ontario, Canada. Reader: a newly licensed or prospective Ontario agent choosing where to hang their licence. " +
+  "You write neutral, factual editorial for LIQWD's Insights blog about named real-estate brands and consumer platforms in Ontario, Canada. Reader: an Ontario agent deciding where to hang their licence or focus their marketing. " +
+  "DISCLOSURE RULE for pieces about consumer platforms/portals: LIQWD, which publishes the article, is itself a real-estate marketplace — state that plainly in one sentence, never evaluate or rank LIQWD against the platforms discussed, and never disparage them. " +
   "NON-NEGOTIABLE RULES: " +
   "(1) Facts about a brand come ONLY from your web search results — the brand's own published pages or reputable coverage. Attribute plainly ('eXp publishes…', 'according to <outlet>…'). " +
   "(2) Specific splits, caps, and fees are welcome WHEN FRAMED AS RESEARCH FINDINGS: officially published terms stated plainly with attribution; office-specific or third-party-reported figures allowed but clearly framed as such ('one GTA office advertised…', 'a <year> report cited…', 'as of <date>') with the source in Sources. Where nothing is published, say exactly that — it is useful information, since terms are negotiated per office/franchise. NEVER state a bare unattributed number as fact, and never invent or estimate one. " +
@@ -137,8 +199,22 @@ const EMIT: Anthropic.Messages.ToolUnion[] = [
   },
 ];
 
-function disclaimer(): string {
+function disclaimer(kind: PieceKind): string {
   const date = new Date().toISOString().slice(0, 10);
+  if (kind === "platform") {
+    return (
+      "\n\n---\n\n" +
+      "*Facts in this article come from our research of the cited public " +
+      "sources as of " +
+      date +
+      ". Platforms change their features, programs, and pricing — verify " +
+      "anything you plan to act on at the source. Disclosure: LIQWD, which " +
+      "publishes this article, is itself a real-estate marketplace; the " +
+      "platforms discussed are not affiliated with LIQWD and all brand names " +
+      "belong to their respective owners. Nothing here is advice or an " +
+      "endorsement.*"
+    );
+  }
   return (
     "\n\n---\n\n" +
     "*About the numbers in this article: figures come from our research of the " +
@@ -161,16 +237,28 @@ function disclaimer(): string {
  */
 export async function generateBrokeragePiece(
   client: SupabaseClient,
-  kind: "profile" | "comparison",
+  kind: PieceKind,
   names: string[],
 ): Promise<string | null> {
   if (!process.env.ANTHROPIC_API_KEY || names.length === 0) return null;
-  const slug = kind === "profile" ? profileSlug(names[0]) : comparisonSlug(names[0], names[1]);
+  const platformPiece =
+    kind === "platform"
+      ? PLATFORM_PIECES.find((p) => p.slug === names[0])
+      : undefined;
+  if (kind === "platform" && !platformPiece) return null;
+  const slug =
+    kind === "profile"
+      ? profileSlug(names[0])
+      : kind === "comparison"
+        ? comparisonSlug(names[0], names[1])
+        : platformPiece!.slug;
 
   const brief =
     kind === "profile"
       ? `Write a DEEP DIVE on ${names[0]} for a new Ontario agent deciding where to start: what the brand is (model, scale, history in Canada/Ontario), what it PUBLISHES about new-agent economics (splits, caps, fees — or state plainly that terms are negotiated per office and not published), training/mentorship programs it advertises, and what kind of agent the model tends to fit. Search for the brand's own Canadian pages first.`
-      : `Write a HEAD-TO-HEAD of ${names[0]} vs ${names[1]} for a new Ontario agent cross-shopping them: each brand's model, what each PUBLISHES about new-agent economics (or state plainly that terms aren't published and are negotiated per office), training/support each advertises, and honest 'may fit you if…' guidance for both. No winner. Give both equal depth.`;
+      : kind === "comparison"
+        ? `Write a HEAD-TO-HEAD of ${names[0]} vs ${names[1]} for a new Ontario agent cross-shopping them: each brand's model, what each PUBLISHES about new-agent economics (or state plainly that terms aren't published and are negotiated per office), training/support each advertises, and honest 'may fit you if…' guidance for both. No winner. Give both equal depth.`
+        : platformPiece!.brief;
 
   const messages: Anthropic.Messages.MessageParam[] = [
     {
@@ -214,10 +302,14 @@ export async function generateBrokeragePiece(
             slug,
             status: "in_review",
             article_type:
-              kind === "profile" ? "brokerage_profile" : "brokerage_comparison",
+              kind === "profile"
+                ? "brokerage_profile"
+                : kind === "comparison"
+                  ? "brokerage_comparison"
+                  : "agent_guide",
             title: str("title"),
             excerpt: str("excerpt") || null,
-            body_md: str("body_md") + disclaimer(),
+            body_md: str("body_md") + disclaimer(kind),
             seo_title: str("seo_title") || null,
             seo_meta_description: str("seo_meta_description") || null,
             generated_by_ai: true,
@@ -252,9 +344,10 @@ export async function generateBrokeragePiece(
  * The next backlog piece with no existing article (any status) at its slug.
  * One query; returns null when the backlog is fully covered.
  */
-export async function nextUncoveredPiece(
+export async function nextUncoveredPieces(
   client: SupabaseClient,
-): Promise<{ kind: "profile" | "comparison"; names: string[] } | null> {
+  count = 1,
+): Promise<{ kind: PieceKind; names: string[] }[]> {
   const backlog = backlogSlugs();
   const { data } = await client
     .from("articles")
@@ -266,6 +359,8 @@ export async function nextUncoveredPiece(
   const covered = new Set(
     ((data as { slug: string }[] | null) ?? []).map((r) => r.slug),
   );
-  const next = backlog.find((b) => !covered.has(b.slug));
-  return next ? { kind: next.kind, names: next.names } : null;
+  return backlog
+    .filter((b) => !covered.has(b.slug))
+    .slice(0, count)
+    .map((b) => ({ kind: b.kind, names: b.names }));
 }

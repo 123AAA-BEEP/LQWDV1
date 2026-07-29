@@ -4,7 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { generateArticleDraft } from "@/lib/articles";
 import {
   generateBrokeragePiece,
-  nextUncoveredPiece,
+  nextUncoveredPieces,
 } from "@/lib/brokerage-content";
 import { finishAndPublish } from "@/lib/editor-in-chief";
 import { sendEmail, brandedEmail } from "@/lib/email";
@@ -346,28 +346,33 @@ export async function runDailyContent(admin: Admin): Promise<DailyContentResult>
     await finish(result.marketNote);
   }
 
-  // 3. Brokerage backlog: one deep dive or head-to-head per day until the
-  // 20-brand + 8-pair list is covered (accurate-or-nothing: pieces whose
-  // search corroborates no official terms are skipped, not inserted).
-  if (queued >= QUEUE_CAP) {
-    result.skipped.push("brokerage piece: queue at cap");
-  } else {
-    const next = await nextUncoveredPiece(admin);
-    if (!next) {
-      result.skipped.push("brokerage piece: backlog fully covered");
-    } else {
-      result.brokeragePiece = await generateBrokeragePiece(
-        admin,
-        next.kind,
-        next.names,
-      );
-      if (result.brokeragePiece) queued += 1;
-      else
-        result.skipped.push(
-          `brokerage piece (${next.names.join(" vs ")}): generation failed or nothing corroborated`,
-        );
-      await finish(result.brokeragePiece);
+  // 3. Brokerage/platform backlog: up to TWO pieces per day (founder wants
+  // the starter brands live this week) until the profiles + head-to-heads +
+  // platform pieces are covered. Time-guarded — the second piece only runs
+  // with comfortable headroom; accurate-or-nothing skips still apply.
+  const backlogNext = await nextUncoveredPieces(admin, 2);
+  if (backlogNext.length === 0) {
+    result.skipped.push("brokerage piece: backlog fully covered");
+  }
+  for (const [i, next] of backlogNext.entries()) {
+    if (queued >= QUEUE_CAP) {
+      result.skipped.push("brokerage piece: queue at cap");
+      break;
     }
+    if (i > 0 && Date.now() - startedAt > 150_000) {
+      result.skipped.push("second backlog piece: out of time — tomorrow");
+      break;
+    }
+    const id = await generateBrokeragePiece(admin, next.kind, next.names);
+    if (id) {
+      result.brokeragePiece = id;
+      queued += 1;
+    } else {
+      result.skipped.push(
+        `backlog piece (${next.names.join(" vs ")}): generation failed or nothing corroborated`,
+      );
+    }
+    await finish(id);
   }
 
   result.queued = queued;

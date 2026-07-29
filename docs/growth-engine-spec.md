@@ -109,10 +109,20 @@ rules are enforced in the prompt AND in code:
   lawsuits/rumours/review-site content) — these brands employ our users.
 - `## Sources` section validated in code; a verification + no-affiliation
   disclaimer is appended server-side; deterministic slugs prevent duplicates.
-- Reaches the queue two ways: the daily cron works through the backlog one
-  piece per day (third daily article), and Admin → Articles has an on-demand
-  generator (pick one brand, or two to compare). Same review gate as
-  everything else.
+- Reaches the queue two ways: the daily cron works through the backlog at
+  up to TWO pieces per day (time-guarded), and Admin → Articles has an
+  on-demand generator (pick one brand, or two to compare). Same editor gate
+  as everything else.
+- Backlog order (founder priority 2026-07-29): eXp, Real, RE/MAX, HomeLife,
+  Right at Home, Century 21, Royal LePage first; then eXp vs Real and
+  Compass vs Real; then the first PLATFORM pieces (Zillow vs realtor.ca,
+  where Ontario buyers actually search); then the long tail (incl. Compass
+  profile, more pairs, portal-fees + precon-portals pieces).
+- **Platform lane**: consumer-portal pieces written FOR agents (published as
+  agent_guide) with a hard disclosure rule — LIQWD is itself a marketplace,
+  said plainly in one sentence; LIQWD is never ranked against the platforms
+  discussed and none are disparaged. Platform pieces get their own
+  disclaimer footer.
 
 ## Operating notes
 
