@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -18,32 +19,45 @@ export type ArticleType =
   | "project_spotlight"
   | "neighbourhood_guide"
   | "comparison"
-  | "market_update";
+  | "market_update"
+  | "agent_guide";
 
 export const ARTICLE_TYPES: {
   value: ArticleType;
   label: string;
   hint: string;
+  /** false = not project-grounded, so the AI generate flow excludes it. */
+  generatable: boolean;
 }[] = [
   {
     value: "project_spotlight",
     label: "Project spotlight",
     hint: "Deep dive on one project — pick exactly 1 project",
+    generatable: true,
   },
   {
     value: "neighbourhood_guide",
     label: "Neighbourhood guide",
     hint: "Area-led piece anchored on 1-4 projects in the same city",
+    generatable: true,
   },
   {
     value: "comparison",
     label: "Comparison",
     hint: "Head-to-head across 2-4 projects buyers actually cross-shop",
+    generatable: true,
   },
   {
     value: "market_update",
     label: "Market update",
     hint: "What's new/moving — 2-6 projects, one city or region",
+    generatable: true,
+  },
+  {
+    value: "agent_guide",
+    label: "Agent guide",
+    hint: "Evergreen piece for agents (new-licensee funnel) — hand-written",
+    generatable: false,
   },
 ];
 
@@ -127,6 +141,10 @@ const TYPE_BRIEF: Record<ArticleType, string> = {
     "Write a COMPARISON of the projects below for a buyer cross-shopping them: honest trade-offs on price, type, location, and timeline. No winner-crowning — help them choose for their situation.",
   market_update:
     "Write a MARKET UPDATE built from the projects below: what's actively selling, price ranges, and what that mix says about the local new-construction market right now. No forecasts.",
+  // Not generatable from project facts — created blank and hand-written; the
+  // brief exists only to satisfy the type (the UI never offers it).
+  agent_guide:
+    "Agent guides are hand-written; do not generate.",
 };
 
 /**
@@ -137,11 +155,13 @@ const TYPE_BRIEF: Record<ArticleType, string> = {
 export async function generateArticleDraft(
   articleType: ArticleType,
   projectIds: string[],
+  /** Injectable for cron contexts (service role); defaults to the request client. */
+  client?: SupabaseClient,
 ): Promise<(ArticleDraft & { related_project_ids: string[] }) | null> {
   if (!process.env.ANTHROPIC_API_KEY) return null;
   if (projectIds.length === 0) return null;
 
-  const supabase = await createClient();
+  const supabase = client ?? (await createClient());
   // Public-safe view ONLY — this is the grounding boundary. Provenance and
   // broker-only commercials structurally cannot reach the prompt.
   const { data } = await supabase
