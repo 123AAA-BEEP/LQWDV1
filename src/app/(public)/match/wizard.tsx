@@ -158,8 +158,9 @@ export function MatchWizard({
             </p>
             <p className="mt-1 text-sm text-slate-500">
               Verified LIQWD agents{city ? ` for ${city}` : ""} — read their
-              reviews and reach out directly. We&apos;ve also emailed you this
-              shortlist.
+              reviews and reach out directly. They&apos;ve been notified about
+              your request and may reach out shortly; we&apos;ve also emailed
+              you this shortlist.
             </p>
             <div className="mt-5 grid gap-4 sm:grid-cols-3">
               {agents.map((a) => (

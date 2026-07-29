@@ -76,11 +76,12 @@ export async function submitMatchRequest(
     slug: string | null;
     avatar_url: string | null;
     service_area: string | null;
+    email: string | null;
   }
   const { data: cardData } = await admin
     .from("public_realtor_cards")
     .select(
-      "profile_id, first_name, last_name, title, brokerage, slug, avatar_url, service_area",
+      "profile_id, first_name, last_name, title, brokerage, slug, avatar_url, service_area, email",
     )
     .limit(200);
   const cards = ((cardData ?? []) as CardRow[]).filter((c) => c.slug);
@@ -146,6 +147,54 @@ export async function submitMatchRequest(
     }),
   });
 
+  // The speed-to-lead blast: every shown agent gets the lead the moment it
+  // exists, so the first call happens in minutes, not days. Free — the
+  // consumer consented to matched-agent contact on the form. Capped at the
+  // 3 shown agents so the consumer gets a race, not a pile-on.
+  const bandLabel: Record<string, string> = {
+    "under-500k": "Under $500K",
+    "500k-750k": "$500K–$750K",
+    "750k-1m": "$750K–$1M",
+    "1m-1.5m": "$1M–$1.5M",
+    "1.5m-2m": "$1.5M–$2M",
+    "over-2m": "$2M+",
+    "not-sure": "price TBD",
+  };
+  const leadLines = [
+    `<strong>${esc(name)}</strong> is <strong>${esc(intent === "both" ? "buying & selling" : intent)}</strong>${city ? ` in <strong>${esc(city)}</strong>` : ""}.`,
+    [
+      property_type ? esc(property_type) : null,
+      price_band ? esc(bandLabel[price_band] ?? price_band) : null,
+      timeline ? `timeline: ${esc(timeline.replace(/-/g, " "))}` : null,
+    ]
+      .filter(Boolean)
+      .join(" · "),
+    address ? `Property: ${esc(address)}` : null,
+    `Reach them: ${esc(email)}${phone ? ` · ${esc(phone)}` : ""}`,
+  ]
+    .filter(Boolean)
+    .join("<br>");
+  for (const m of matched) {
+    if (!m.email) continue;
+    void sendEmail({
+      to: m.email,
+      replyTo: email,
+      subject: `New ${intent === "both" ? "buy+sell" : intent} lead${city ? `: ${city}` : ""} — first to respond usually wins`,
+      html: brandedEmail({
+        heading: "You've been matched with a new lead",
+        body:
+          `${leadLines}<br><br>` +
+          `They just saw your public profile on LIQWD's agent match. ` +
+          `Speed decides these — call or reply to this email now (it goes ` +
+          `straight to them). This lead is free; LIQWD never charges for leads.`,
+        ctaUrl: phone
+          ? `tel:${phone.replace(/[^+\d]/g, "")}`
+          : `mailto:${email}`,
+        ctaLabel: phone ? "Call them now" : "Email them now",
+      }),
+    });
+  }
+
   // Consumer confirmation — transactional response to their own request.
   void sendEmail({
     to: email,
@@ -164,7 +213,7 @@ export async function submitMatchRequest(
                   : esc(a.name),
               )
               .join(", ") +
-            ". You can read their reviews and reach out directly from their profiles — or reply to this email and we'll make the introduction."
+            ". They've been notified about your request and may reach out directly. You can also read their reviews and contact them from their profiles — or reply to this email and we'll make the introduction."
           : "We're preparing your shortlist and will follow up shortly — or reply to this email and we'll make the introduction directly.") +
         " Our matching is free with no obligation.",
       ctaUrl: agents[0]?.slug ? `${base}/realtors/${agents[0].slug}` : `${base}/projects`,

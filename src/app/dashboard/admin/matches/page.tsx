@@ -189,9 +189,10 @@ export default async function AdminMatchesPage({
       <div>
         <h2 className="text-lg font-semibold text-ink">Agent-match requests</h2>
         <p className="mt-1 text-sm text-slate-500">
-          Consumers from the /match wizard. They&apos;ve already seen their
-          matched public agents — your job is the warm introduction (and
-          routing when no public agent matched). Same-day beats everything.
+          Consumers from the /match wizard. Shown agents were emailed the
+          lead instantly (speed race) — your job is making sure someone
+          actually followed up, and routing when no public agent matched.
+          Same-day beats everything.
         </p>
       </div>
 
