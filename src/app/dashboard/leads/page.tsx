@@ -17,6 +17,7 @@ import {
   type LeadStatus,
 } from "@/lib/leads";
 import { updateLeadStatus } from "./actions";
+import { saveLeadToClients } from "../crm/actions";
 
 export const metadata: Metadata = { title: "Leads" };
 export const dynamic = "force-dynamic";
@@ -418,6 +419,12 @@ function LeadCard({
             </Select>
             <Button type="submit" size="sm" variant="secondary">
               Update status
+            </Button>
+          </form>
+          <form action={saveLeadToClients} className="ml-auto">
+            <input type="hidden" name="lead_id" value={lead.id} />
+            <Button type="submit" size="sm" variant="secondary">
+              Save to clients
             </Button>
           </form>
         </div>

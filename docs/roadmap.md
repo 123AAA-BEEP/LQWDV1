@@ -3,6 +3,20 @@
 Agreed-but-deferred items. Flag here, build later. (Most recent on top.)
 
 ## Shipped
+- **CRM spine + agent newsletter** (migrations 0087–0088) — agent-owned
+  Clients book at `/dashboard/crm` (contacts with CASL consent attestation,
+  project interests, follow-up tasks with a due-now surface, logged
+  call/email/text/meeting history, one-click "Save to clients" from the
+  Leads inbox), and the curated blast at `/dashboard/newsletter`: pick 1–7
+  published Insights articles + personal intro → co-branded email to
+  consented contacts only. Compliance enforced server-side: global
+  suppression checked at send time, HMAC unsubscribe on every email, CASL
+  sender block, TRESA agent+brokerage identification, one send per 24h,
+  500-recipient cap. Article links carry the agent's ref code — clicks that
+  become inquiries are the agent's attributed leads. **Worksheet objects
+  (livestream-launch build, deferred) will hang off crm_contacts.**
+  Founder-side before volume: a dedicated sending domain/subdomain for
+  agent blasts so list quality never touches core deliverability.
 - **Assignment-valuation capture (`/assignment-value`)** — consumer-side
   wizard for pre-construction owners asking "what's my assignment worth"
   (migration 0085): project → paid/year → unit → occupancy stage → APS
