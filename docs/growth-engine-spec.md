@@ -65,10 +65,18 @@ CRON_SECRET) → `src/lib/daily-content.ts`:
   Ontario news via the Anthropic web-search tool — every external fact must
   be cited; the body ends with a `## Sources` section (review it before
   publishing).
-- Both land as **`in_review`** (nav badge + morning ops email to
-  LEADS_NOTIFY_EMAIL). **Never auto-publishes.** The cron skips itself while
-  ≥ 8 articles sit unreviewed — automation must not manufacture a backlog of
-  unread AI content; the human gate is the point.
+- A third daily piece works through the brokerage backlog (§5).
+- **Auto-publish via the editor-in-chief gate (founder decision 2026-07-29):**
+  every generated piece is finished by `src/lib/editor-in-chief.ts` — a
+  second adversarial model pass that edits like a Google quality rater
+  (E-E-A-T / helpful-content), may NEVER add facts, attaches a hero from our
+  own image library (never web-ripped — copyright), and returns a verdict.
+  `publish` → live immediately; anything else (incl. any API failure — the
+  gate fails closed) → held `in_review` with `editor_notes` (migration 0082)
+  shown in the admin editor. Brokerage pieces get web_search in the editor
+  pass to spot-check claims against sources. Morning ops email digests
+  published vs held. The cron still skips itself at ≥ 8 unreviewed held
+  pieces.
 
 ## 4. Agent-facing evergreen (new-licensee funnel)
 
@@ -80,6 +88,26 @@ selection framework (deliberately NO rankings — RECO requires comparative
 claims to be verifiable; we compare published facts, never crown winners),
 and a first-clients playbook. LIQWD mentions are factual feature statements
 only.
+
+## 5. Brokerage content engine
+
+`src/lib/brokerage-content.ts` (migration 0081): deep dives on the 20
+biggest Ontario brokerage brands + 8 head-to-heads new agents cross-shop,
+web-search-grounded. **Named-brand editorial is accurate-or-nothing**, so the
+rules are enforced in the prompt AND in code:
+
+- Only publicly published terms, attributed; where a brand doesn't publish
+  splits/fees (most franchise brokerages), the piece must say exactly that —
+  never estimate. If search corroborates nothing official, the piece is
+  SKIPPED, not inserted.
+- No rankings/winners ("may fit you if…" framing), non-disparaging (no
+  lawsuits/rumours/review-site content) — these brands employ our users.
+- `## Sources` section validated in code; a verification + no-affiliation
+  disclaimer is appended server-side; deterministic slugs prevent duplicates.
+- Reaches the queue two ways: the daily cron works through the backlog one
+  piece per day (third daily article), and Admin → Articles has an on-demand
+  generator (pick one brand, or two to compare). Same review gate as
+  everything else.
 
 ## Operating notes
 

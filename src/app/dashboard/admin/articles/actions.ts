@@ -10,6 +10,7 @@ import {
   ARTICLE_TYPES,
   type ArticleType,
 } from "@/lib/articles";
+import { BROKERAGES, generateBrokeragePiece } from "@/lib/brokerage-content";
 
 const LIST_PATH = "/dashboard/admin/articles";
 const TYPE_VALUES = ARTICLE_TYPES.map((t) => t.value);
@@ -93,6 +94,45 @@ export async function generateArticle(formData: FormData) {
   }
   revalidatePath(LIST_PATH);
   redirect(`${LIST_PATH}/${newId}?flash=${encodeURIComponent("Draft generated — review every fact before publishing.")}&flash_tone=success`);
+}
+
+/**
+ * On-demand brokerage piece: deep dive (one brand) or head-to-head (two).
+ * Web-search-grounded with published-facts-only rules; lands in review and
+ * opens in the editor. Slugs are deterministic, so re-generating an existing
+ * piece fails cleanly instead of duplicating.
+ */
+export async function generateBrokerageArticle(formData: FormData) {
+  const supabase = await createClient();
+  await assertAdmin(supabase);
+
+  const valid = new Set(BROKERAGES.map((b) => b.name));
+  const a = String(formData.get("brokerage_a") ?? "");
+  const b = String(formData.get("brokerage_b") ?? "");
+  if (!valid.has(a) || (b && !valid.has(b)) || a === b) {
+    redirectWithFlash(
+      LIST_PATH,
+      "Pick one brokerage for a deep dive, or two different ones to compare.",
+      "error",
+    );
+  }
+
+  const id = await generateBrokeragePiece(
+    supabase,
+    b ? "comparison" : "profile",
+    b ? [a, b] : [a],
+  );
+  if (!id) {
+    redirectWithFlash(
+      LIST_PATH,
+      "Couldn't generate that piece — it may already exist, or search couldn't corroborate published terms (we skip rather than guess).",
+      "error",
+    );
+  }
+  revalidatePath(LIST_PATH);
+  redirect(
+    `${LIST_PATH}/${id}?flash=${encodeURIComponent("Draft generated — check every claim against its Sources list before publishing.")}&flash_tone=success`,
+  );
 }
 
 /**

@@ -20,7 +20,9 @@ export type ArticleType =
   | "neighbourhood_guide"
   | "comparison"
   | "market_update"
-  | "agent_guide";
+  | "agent_guide"
+  | "brokerage_profile"
+  | "brokerage_comparison";
 
 export const ARTICLE_TYPES: {
   value: ArticleType;
@@ -57,6 +59,18 @@ export const ARTICLE_TYPES: {
     value: "agent_guide",
     label: "Agent guide",
     hint: "Evergreen piece for agents (new-licensee funnel) — hand-written",
+    generatable: false,
+  },
+  {
+    value: "brokerage_profile",
+    label: "Brokerage deep dive",
+    hint: "Published-facts profile of one brokerage brand — via the brokerage generator",
+    generatable: false,
+  },
+  {
+    value: "brokerage_comparison",
+    label: "Brokerage comparison",
+    hint: "Side-by-side of two brands' published terms — via the brokerage generator",
     generatable: false,
   },
 ];
@@ -141,10 +155,12 @@ const TYPE_BRIEF: Record<ArticleType, string> = {
     "Write a COMPARISON of the projects below for a buyer cross-shopping them: honest trade-offs on price, type, location, and timeline. No winner-crowning — help them choose for their situation.",
   market_update:
     "Write a MARKET UPDATE built from the projects below: what's actively selling, price ranges, and what that mix says about the local new-construction market right now. No forecasts.",
-  // Not generatable from project facts — created blank and hand-written; the
-  // brief exists only to satisfy the type (the UI never offers it).
-  agent_guide:
-    "Agent guides are hand-written; do not generate.",
+  // Not generatable from project facts — these briefs exist only to satisfy
+  // the type (the UI never offers them here). Agent guides are hand-written;
+  // brokerage pieces go through src/lib/brokerage-content.ts.
+  agent_guide: "Agent guides are hand-written; do not generate.",
+  brokerage_profile: "Use the brokerage generator; do not generate here.",
+  brokerage_comparison: "Use the brokerage generator; do not generate here.",
 };
 
 /**

@@ -2,6 +2,11 @@ import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { generateArticleDraft } from "@/lib/articles";
+import {
+  generateBrokeragePiece,
+  nextUncoveredPiece,
+} from "@/lib/brokerage-content";
+import { finishAndPublish } from "@/lib/editor-in-chief";
 import { sendEmail, brandedEmail } from "@/lib/email";
 
 /**
@@ -27,6 +32,9 @@ const QUEUE_CAP = 8;
 export interface DailyContentResult {
   spotlight: string | null; // article id or null
   marketNote: string | null;
+  brokeragePiece: string | null;
+  published: number;
+  heldForReview: number;
   skipped: string[];
   queued: number;
 }
@@ -264,13 +272,35 @@ async function generateMarketNote(admin: Admin): Promise<string | null> {
   }
 }
 
+/** Leave headroom under the route's maxDuration=300 for the last DB writes. */
+const RUN_BUDGET_MS = 270_000;
+
 /** The cron body. Never throws; the route reports the result. */
 export async function runDailyContent(admin: Admin): Promise<DailyContentResult> {
+  const startedAt = Date.now();
   const result: DailyContentResult = {
     spotlight: null,
     marketNote: null,
+    brokeragePiece: null,
+    published: 0,
+    heldForReview: 0,
     skipped: [],
     queued: 0,
+  };
+
+  // Editor-in-chief finishing move: hero + edit + publish-or-hold. Skipped
+  // (piece stays safely in the review queue) when the run is out of time —
+  // the gate fails closed, never open.
+  const finish = async (id: string | null) => {
+    if (!id) return;
+    if (Date.now() - startedAt > RUN_BUDGET_MS) {
+      result.heldForReview += 1;
+      result.skipped.push("editor pass skipped (out of time) — piece held for review");
+      return;
+    }
+    const status = await finishAndPublish(admin, id);
+    if (status === "published") result.published += 1;
+    else result.heldForReview += 1;
   };
 
   let queued = await unreviewedCount(admin);
@@ -303,6 +333,7 @@ export async function runDailyContent(admin: Admin): Promise<DailyContentResult>
       if (result.spotlight) queued += 1;
     }
     if (!result.spotlight) result.skipped.push("spotlight: generation failed");
+    await finish(result.spotlight);
   }
 
   // 2. Market note (respect the cap if the spotlight just filled the queue).
@@ -312,29 +343,56 @@ export async function runDailyContent(admin: Admin): Promise<DailyContentResult>
     result.marketNote = await generateMarketNote(admin);
     if (result.marketNote) queued += 1;
     else result.skipped.push("market note: generation failed");
+    await finish(result.marketNote);
+  }
+
+  // 3. Brokerage backlog: one deep dive or head-to-head per day until the
+  // 20-brand + 8-pair list is covered (accurate-or-nothing: pieces whose
+  // search corroborates no official terms are skipped, not inserted).
+  if (queued >= QUEUE_CAP) {
+    result.skipped.push("brokerage piece: queue at cap");
+  } else {
+    const next = await nextUncoveredPiece(admin);
+    if (!next) {
+      result.skipped.push("brokerage piece: backlog fully covered");
+    } else {
+      result.brokeragePiece = await generateBrokeragePiece(
+        admin,
+        next.kind,
+        next.names,
+      );
+      if (result.brokeragePiece) queued += 1;
+      else
+        result.skipped.push(
+          `brokerage piece (${next.names.join(" vs ")}): generation failed or nothing corroborated`,
+        );
+      await finish(result.brokeragePiece);
+    }
   }
 
   result.queued = queued;
 
-  // Morning ops email — the human loop. Fire-and-forget.
-  const drafted = [
-    result.spotlight ? "project spotlight" : null,
-    result.marketNote ? "market note" : null,
-  ].filter(Boolean);
-  if (drafted.length) {
+  // Morning ops digest — what went live, what the editor held. Fire-and-forget.
+  if (result.published + result.heldForReview > 0) {
     const base = process.env.NEXT_PUBLIC_SITE_URL ?? "https://liqwd.ca";
     const to = process.env.LEADS_NOTIFY_EMAIL ?? "leads@getliqwd.com";
+    const held = result.heldForReview;
     void sendEmail({
       to,
-      subject: `Today's ${drafted.join(" + ")} ready for review`,
+      subject:
+        held > 0
+          ? `Insights: ${result.published} published, ${held} held for your review`
+          : `Insights: ${result.published} article${result.published === 1 ? "" : "s"} published`,
       html: brandedEmail({
-        heading: "Fresh Insights drafts are waiting",
+        heading: "Today's content run",
         body:
-          `The daily pipeline drafted a ${drafted.join(" and a ")}. ` +
-          `${result.queued} article${result.queued === 1 ? " is" : "s are"} in the review queue — ` +
-          "approve, edit, or archive. Nothing publishes without you.",
-        ctaUrl: `${base}/dashboard/admin/articles`,
-        ctaLabel: "Review drafts",
+          `The pipeline published ${result.published} article${result.published === 1 ? "" : "s"} ` +
+          `(each passed the editor-in-chief gate). ` +
+          (held > 0
+            ? `${held} piece${held === 1 ? " was" : "s were"} HELD — the editor flagged something a human should check; its notes are on each draft.`
+            : "Nothing was held back."),
+        ctaUrl: held > 0 ? `${base}/dashboard/admin/articles` : `${base}/insights`,
+        ctaLabel: held > 0 ? "Review held drafts" : "See what's live",
       }),
     });
   }
