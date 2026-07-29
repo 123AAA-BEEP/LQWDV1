@@ -39,6 +39,7 @@ export async function getAdminQueueCounts(): Promise<AdminQueueCounts> {
     articles,
     valuations,
     matches,
+    assignmentValues,
   ] = await Promise.all([
     countWhere("project_leads", "status", ["new"]),
     countWhere("off_market_invites", "status", ["draft"]),
@@ -62,6 +63,7 @@ export async function getAdminQueueCounts(): Promise<AdminQueueCounts> {
     countWhere("articles", "status", ["in_review"]),
     countWhere("valuation_requests", "status", ["new"]),
     countWhere("match_requests", "status", ["new"]),
+    countWhere("assignment_valuation_requests", "status", ["new"]),
   ]);
 
   return {
@@ -81,5 +83,6 @@ export async function getAdminQueueCounts(): Promise<AdminQueueCounts> {
     "/dashboard/admin/articles": articles,
     "/dashboard/admin/valuations": valuations,
     "/dashboard/admin/matches": matches,
+    "/dashboard/admin/assignment-values": assignmentValues,
   };
 }
