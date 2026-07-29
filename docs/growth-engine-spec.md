@@ -123,6 +123,15 @@ rules are enforced in the prompt AND in code:
   said plainly in one sentence; LIQWD is never ranked against the platforms
   discussed and none are disparaged. Platform pieces get their own
   disclaimer footer.
+- **Toolkit lane** (founder-approved 2026-07-29): buyer's guides for the
+  tools of the job — car (CRA mileage/CCA math), lockboxes, signs
+  (TRESA/municipal rules + costs), print marketing, phone/camera for listing
+  media, tech stack. HARD RULE enforced in prompt + footer: buyer's guide,
+  NEVER "review" — no first-hand claims, no ratings, no "best X" verdicts
+  (Google's reviews system demotes pretend hands-on content and the
+  helpful-content classifier is site-wide). Specs/prices cited; footer
+  states no affiliate relationships — when affiliate starts later, links
+  need visible disclosure + rel="sponsored" and the footer changes.
 
 ## Operating notes
 
