@@ -202,12 +202,18 @@ export default async function AdminLeadsPage({
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div>
                       <p className="font-semibold text-slate-800">
-                        {l.lead_name}
-                        {l.is_realtor ? (
-                          <Badge tone="brand" className="ml-2 align-middle">
-                            Agent — recruit
-                          </Badge>
-                        ) : null}
+                        <Link
+                          href={`/dashboard/admin/leads/${l.id}`}
+                          className="hover:text-brand-700 hover:underline"
+                        >
+                          {l.lead_name}
+                        </Link>
+                        <Badge
+                          tone={l.is_realtor ? "brand" : "neutral"}
+                          className="ml-2 align-middle"
+                        >
+                          {l.is_realtor ? "Agent — recruit" : "Consumer"}
+                        </Badge>
                       </p>
                       <p className="text-xs text-slate-400">
                         {new Date(l.created_at).toLocaleString("en-CA")}
@@ -305,6 +311,12 @@ export default async function AdminLeadsPage({
                         </ConfirmButton>
                       </form>
                     ) : null}
+                    <Link
+                      href={`/dashboard/admin/leads/${l.id}`}
+                      className="ml-auto text-sm font-medium text-brand-700 hover:underline"
+                    >
+                      Open lead →
+                    </Link>
                   </div>
                 </CardBody>
               </Card>

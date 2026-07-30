@@ -68,8 +68,15 @@ export function LeadForm({
           autoComplete="email"
         />
       </Field>
-      <Field label="Phone (optional)" htmlFor="lead_phone">
-        <Input id="lead_phone" name="lead_phone" autoComplete="tel" />
+      <Field label="Phone" htmlFor="lead_phone">
+        <Input
+          id="lead_phone"
+          name="lead_phone"
+          type="tel"
+          required
+          minLength={7}
+          autoComplete="tel"
+        />
       </Field>
       {rental ? (
         <div className="grid grid-cols-2 gap-3">
@@ -96,17 +103,19 @@ export function LeadForm({
       <Field label="Message (optional)" htmlFor="message">
         <Textarea id="message" name="message" />
       </Field>
+      {/* Required active choice — no pre-checked default, so every lead
+          arrives with a real answer. */}
       <fieldset>
         <legend className="text-sm font-medium text-slate-700">
-          Are you a real estate agent?
+          Are you a real estate agent? <span aria-hidden>*</span>
         </legend>
         <div className="mt-1.5 flex gap-4 text-sm text-slate-600">
           <label className="flex items-center gap-1.5">
-            <Radio name="is_realtor" value="no" defaultChecked />
+            <Radio name="is_realtor" value="no" required />
             No
           </label>
           <label className="flex items-center gap-1.5">
-            <Radio name="is_realtor" value="yes" />
+            <Radio name="is_realtor" value="yes" required />
             Yes
           </label>
         </div>

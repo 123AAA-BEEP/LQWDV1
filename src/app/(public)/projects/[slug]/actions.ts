@@ -55,10 +55,21 @@ export async function submitLead(
     const jar = await cookies();
     ref = (jar.get("liqwd_ref")?.value ?? "").trim().toUpperCase();
   }
-  const isRealtor = String(formData.get("is_realtor") ?? "") === "yes";
+  const isRealtorRaw = String(formData.get("is_realtor") ?? "");
+  const isRealtor = isRealtorRaw === "yes";
 
   if (!project_id || !lead_name || !lead_email) {
     return { error: "Please provide your name and email." };
+  }
+  // Phone + the agent question are required (founder call 2026-07-30): a
+  // lead without a phone can't be called, and an unanswered agent question
+  // pollutes recruit routing. Server-side so the browser check can't be
+  // stripped.
+  if (!lead_phone || lead_phone.replace(/\D/g, "").length < 7) {
+    return { error: "Please provide a phone number so we can reach you." };
+  }
+  if (!["yes", "no"].includes(isRealtorRaw)) {
+    return { error: "Please tell us whether you're a real estate agent." };
   }
 
   const admin = createAdminClient();
