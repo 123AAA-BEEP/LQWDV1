@@ -36,6 +36,7 @@ import {
   Repeat2,
   Users,
   Send,
+  KeyRound,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
@@ -183,6 +184,7 @@ const DEVELOPER_SECTIONS: NavSection[] = [
       { href: "/dashboard/deal-requests", label: "Move Inventory", icon: Handshake },
       { href: "/dashboard/buyer-mandates", label: "Ready Buyers", icon: ClipboardList },
       { href: "/dashboard/referrals", label: "Rental referrals", icon: Inbox },
+      { href: "/dashboard/rental-partners", label: "Rental Lead Partners", icon: KeyRound },
       { href: "/dashboard/developer", label: "Connections", icon: CreditCard },
     ],
   },
@@ -193,6 +195,7 @@ const DEVELOPER_SECTIONS: NavSection[] = [
     icon: Megaphone,
     items: [
       { href: "/dashboard/promote", label: "Featured & eBlasts", icon: Megaphone },
+      { href: "/dashboard/launch-services", label: "Launch Services", icon: Rocket },
     ],
   },
   {

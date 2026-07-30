@@ -145,6 +145,23 @@ v1 is live (see Shipped). Possible v2 work when we have appetite:
   admin-scoped) if we want one reusable feed query.
 
 ## Developer experience
+- **Launch Services framework (the kitty — founder-flagged 2026-07-30).**
+  Surface is live at `/dashboard/launch-services` (three-flavour menu +
+  interest capture, ops-emailed); the DELIVERY framework is deliberately
+  unbuilt. When demand signals justify it, standardize per Dan's
+  pick-a-direction method: **Launch Essentials** (self-serve playbook:
+  listing optimization + agent eBlast + launch-night + lead routing),
+  **Full Launch Engine** (done-for-you campaign w/ weekly absorption
+  reporting), **Rescue & Re-Launch** (stalled-project diagnostic + reset).
+  Target: mid-sized developers, low-rise projects. Build the flavour the
+  interest form votes for first; the livestream-launch build (deferred
+  playbook item) becomes a deliverable inside these packages.
+- **PBR lead partnerships** — surface live at `/dashboard/rental-partners`
+  (pitch + interest capture). Framework when a pilot signs: qualified-lead
+  definition (move-in/beds/budget), per-lead vs per-signed-lease pricing
+  (marketing-services model — clean; % -of-lease referral would drag in
+  registrant/TRESA territory, avoid), delivery via the existing
+  rental_referrals loop + renter capture, monthly reporting.
 - **Promote now** (Featured listing, eBlast to agents/buyers) and **Research**
   (project analytics, buyer-demand signals) — "coming soon" hubs at
   `/dashboard/promote` and `/dashboard/research`.
