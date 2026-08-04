@@ -145,6 +145,16 @@ v1 is live (see Shipped). Possible v2 work when we have appetite:
   admin-scoped) if we want one reusable feed query.
 
 ## Developer experience
+- **Research Module (Zonda-style) — future project (founder-flagged
+  2026-07-31).** Full spec + data-gap assessment in
+  `docs/research-module-spec.md`. Short version: software is ~90% buildable
+  on existing rails; build the FREE-data subset first (StatCan census +
+  CMHC rentals + HCRA/Tarion builder registry + our tracking) as the
+  `/dashboard/research` module; Teranet closings / MLS resale / parcel data
+  are the paid blockers, decided later from revenue. **Independent first
+  step whenever ready: the append-only price/status history log — every
+  week unbuilt is history lost.** Also: floorplans (4 rows) + incentives
+  (1 row) need pipeline backfill before any CMA-report feature.
 - **Launch Services framework (the kitty — founder-flagged 2026-07-30).**
   Surface is live at `/dashboard/launch-services` (three-flavour menu +
   interest capture, ops-emailed); the DELIVERY framework is deliberately

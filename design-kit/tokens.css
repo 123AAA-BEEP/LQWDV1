@@ -1,0 +1,119 @@
+@import "tailwindcss";
+
+/*
+ * LIQWD design tokens — premium, minimal, broker-facing.
+ * Neutral foundation (slate ink + light backgrounds) with one confident
+ * accent (teal). No purple gradients, no neon. See liqwd_visual_direction.md.
+ */
+@theme {
+  --color-brand-50: #f0fdfa;
+  --color-brand-100: #ccfbf1;
+  --color-brand-200: #99f6e4;
+  --color-brand-300: #5eead4;
+  --color-brand-400: #2dd4bf;
+  --color-brand-500: #14b8a6;
+  --color-brand-600: #0d9488;
+  --color-brand-700: #0f766e;
+  --color-brand-800: #115e59;
+  --color-brand-900: #134e4a;
+
+  --color-ink: #0b1220;
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-inter-tight), var(--font-geist-sans),
+    ui-sans-serif, system-ui, sans-serif;
+}
+
+/*
+ * Contemporary display type on consumer + marketing surfaces (the
+ * .display-type wrapper lives on those route-group layouts): a grotesque cut
+ * for large sizes, set heavy with negative tracking. Dashboards stay in
+ * Geist. Uppercase kickers and .font-sans elements opt out automatically.
+ */
+.display-type :where(h1, h2):not(.font-sans):not([class*="uppercase"]) {
+  font-family: var(--font-display);
+  letter-spacing: -0.025em;
+  font-weight: 650;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  background: #ffffff;
+  color: #0f172a; /* slate-900 */
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Subtle, premium focus ring used across interactive elements. */
+:where(a, button, input, select, textarea):focus-visible {
+  outline: 2px solid var(--color-brand-600);
+  outline-offset: 2px;
+}
+
+/* Faint dotted grid behind the hero (masked so it fades out). */
+.hero-grid {
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    rgba(15, 23, 42, 0.05) 1px,
+    transparent 0
+  );
+  background-size: 28px 28px;
+  -webkit-mask-image: radial-gradient(
+    ellipse 80% 60% at 50% 0%,
+    #000 40%,
+    transparent 100%
+  );
+  mask-image: radial-gradient(
+    ellipse 80% 60% at 50% 0%,
+    #000 40%,
+    transparent 100%
+  );
+}
+
+/* Low-alpha teal glow behind the dark signup CTA (restrained, no neon). */
+.cta-glow {
+  background: radial-gradient(
+    60% 60% at 50% 0%,
+    rgba(20, 184, 166, 0.18),
+    transparent 70%
+  );
+}
+
+/* Continuous logo marquee — see components/marketing/logo-marquee.tsx. */
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+.animate-marquee {
+  animation: marquee 45s linear infinite;
+}
+
+/* Fade logos in/out at the container edges. */
+.marquee-mask {
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 8%,
+    #000 92%,
+    transparent
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 8%,
+    #000 92%,
+    transparent
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee {
+    animation: none;
+  }
+}
