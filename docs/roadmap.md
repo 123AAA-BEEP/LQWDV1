@@ -144,6 +144,19 @@ v1 is live (see Shipped). Possible v2 work when we have appetite:
 - **Re-point `referral_opportunities_view`** at `broker_projects_view` (currently
   admin-scoped) if we want one reusable feed query.
 
+## Scoped, not scheduled (founder session 2026-08-02)
+Full scoping in `docs/scoping-ingestion-microsites-florida.md` — three
+concepts, no build authorized:
+- **Ingestion tool** (Instagram via Business Discovery API — blocked on the
+  same Meta verification as Promote Phase 1; email intake aliases = near-
+  free v1; Meta Ad Library = manual ops sweep, API doesn't cover housing).
+- **Single-project lead-gen microsites** (standalone lead machines, NOT a
+  PBN; unique generated content, no impersonation, nightly redeploys from
+  live data; post-sellout pivot to assignments; Cloudflare/Porkbun + .ca).
+- **Florida coming-soon pilot** (Miami-first: portal-free pre-launch SERPs,
+  reuses discovery feeds already running; TCPA consent variant; flat
+  per-lead monetization per FS 475).
+
 ## Developer experience
 - **Research Module (Zonda-style) — future project (founder-flagged
   2026-07-31).** Full spec + data-gap assessment in
