@@ -32,12 +32,22 @@ const QUEUE_CAP = 8;
 export interface DailyContentResult {
   spotlight: string | null; // article id or null
   marketNote: string | null;
+  comparison: string | null;
   brokeragePiece: string | null;
   published: number;
   heldForReview: number;
   skipped: string[];
   queued: number;
 }
+
+/**
+ * Market notes are MONTHLY, not daily (founder call 2026-08-11): one per
+ * calendar month, attempted only from this day of the month onward so the
+ * note lands after TRREB publishes its Market Watch stats (first week of
+ * the month) and can cite fresh numbers.
+ */
+const MARKET_NOTE_EARLIEST_DAY = 5;
+const MARKET_NOTE_MIN_GAP_DAYS = 21;
 
 /** Service-role client typed loosely — tables aren't in generated types yet. */
 type Admin = SupabaseClient;
@@ -80,6 +90,99 @@ async function pickSpotlightProject(admin: Admin): Promise<string | null> {
     if (!coveredIds.has(row.project_id)) return row.project_id;
   }
   return null;
+}
+
+/** True when it's time for this month's market note. */
+async function marketNoteDue(admin: Admin): Promise<boolean> {
+  if (new Date().getUTCDate() < MARKET_NOTE_EARLIEST_DAY) return false;
+  // Any recent attempt counts (held drafts included) — one note per cycle.
+  const { data } = await admin
+    .from("articles")
+    .select("created_at")
+    .eq("article_type", "market_update")
+    .order("created_at", { ascending: false })
+    .limit(1);
+  const last = (data as { created_at: string }[] | null)?.[0]?.created_at;
+  if (!last) return true;
+  const ageDays = (Date.now() - new Date(last).getTime()) / 86_400_000;
+  return ageDays >= MARKET_NOTE_MIN_GAP_DAYS;
+}
+
+/**
+ * Picks the newest uncovered cross-shop pair for a comparison article: same
+ * city, same type, both priced with heroes, nearest-priced peer — and not
+ * already the subject of an existing comparison piece.
+ */
+async function pickComparisonPair(admin: Admin): Promise<[string, string] | null> {
+  const { data: covered } = await admin
+    .from("articles")
+    .select("related_project_ids")
+    .eq("article_type", "comparison");
+  const coveredPairs = new Set<string>();
+  for (const r of (covered as { related_project_ids: string[] }[] | null) ?? []) {
+    const ids = r.related_project_ids ?? [];
+    for (let i = 0; i < ids.length; i++) {
+      for (let j = i + 1; j < ids.length; j++) {
+        coveredPairs.add([ids[i], ids[j]].sort().join("|"));
+      }
+    }
+  }
+
+  const { data } = await admin
+    .from("public_projects_view")
+    .select("project_id, city, project_type, price_from_public, published_at")
+    .not("price_from_public", "is", null)
+    .not("hero_image_url", "is", null)
+    .not("city", "is", null)
+    .not("project_type", "is", null)
+    .order("published_at", { ascending: false })
+    .limit(400);
+  const rows = (data as
+    | {
+        project_id: string;
+        city: string;
+        project_type: string;
+        price_from_public: number;
+      }[]
+    | null) ?? [];
+
+  const groups = new Map<string, typeof rows>();
+  for (const r of rows) {
+    const key = `${r.city}|${r.project_type}`;
+    const g = groups.get(key) ?? [];
+    g.push(r);
+    groups.set(key, g);
+  }
+  // Newest-first: fresh launches get compared while they're news.
+  for (const p of rows) {
+    const peers = (groups.get(`${p.city}|${p.project_type}`) ?? [])
+      .filter((o) => o.project_id !== p.project_id)
+      .sort(
+        (a, b) =>
+          Math.abs(a.price_from_public - p.price_from_public) -
+          Math.abs(b.price_from_public - p.price_from_public),
+      );
+    for (const peer of peers.slice(0, 3)) {
+      const key = [p.project_id, peer.project_id].sort().join("|");
+      if (!coveredPairs.has(key)) return [p.project_id, peer.project_id];
+    }
+  }
+  return null;
+}
+
+/** Drafts a project-comparison article into the review queue. */
+async function generateComparisonPiece(admin: Admin): Promise<string | null> {
+  const pair = await pickComparisonPair(admin);
+  if (!pair) return null;
+  const draft = await generateArticleDraft("comparison", pair, admin);
+  if (!draft) return null;
+  return insertReviewDraft(admin, {
+    ...draft,
+    article_type: "comparison",
+    excerpt: draft.excerpt || null,
+    seo_title: draft.seo_title || null,
+    seo_meta_description: draft.seo_meta_description || null,
+  });
 }
 
 /** Inserts a draft into the review queue; returns the new article id. */
@@ -281,6 +384,7 @@ export async function runDailyContent(admin: Admin): Promise<DailyContentResult>
   const result: DailyContentResult = {
     spotlight: null,
     marketNote: null,
+    comparison: null,
     brokeragePiece: null,
     published: 0,
     heldForReview: 0,
@@ -336,43 +440,59 @@ export async function runDailyContent(admin: Admin): Promise<DailyContentResult>
     await finish(result.spotlight);
   }
 
-  // 2. Market note (respect the cap if the spotlight just filled the queue).
+  // 2. Market note — MONTHLY, timed to land after TRREB's Market Watch
+  // release (founder call 2026-08-11: daily market notes were overkill; one
+  // per month, citing fresh stats, beats thirty thin ones).
   if (queued >= QUEUE_CAP) {
-    result.skipped.push("market note: queue reached cap after spotlight");
-  } else {
+    result.skipped.push("market note: queue at cap");
+  } else if (await marketNoteDue(admin)) {
     result.marketNote = await generateMarketNote(admin);
     if (result.marketNote) queued += 1;
     else result.skipped.push("market note: generation failed");
     await finish(result.marketNote);
+  } else {
+    result.skipped.push("market note: not due (monthly cadence)");
   }
 
-  // 3. Brokerage/platform backlog: up to TWO pieces per day (founder wants
-  // the starter brands live this week) until the profiles + head-to-heads +
-  // platform pieces are covered. Time-guarded — the second piece only runs
-  // with comfortable headroom; accurate-or-nothing skips still apply.
-  const backlogNext = await nextUncoveredPieces(admin, 2);
-  if (backlogNext.length === 0) {
-    result.skipped.push("brokerage piece: backlog fully covered");
-  }
-  for (const [i, next] of backlogNext.entries()) {
-    if (queued >= QUEUE_CAP) {
-      result.skipped.push("brokerage piece: queue at cap");
-      break;
-    }
-    if (i > 0 && Date.now() - startedAt > 150_000) {
-      result.skipped.push("second backlog piece: out of time — tomorrow");
-      break;
-    }
-    const id = await generateBrokeragePiece(admin, next.kind, next.names);
-    if (id) {
-      result.brokeragePiece = id;
-      queued += 1;
-    } else {
+  // 3. Second post of the day — the cadence is TWO posts/day: the spotlight
+  // above plus one of these, weighted toward project comparisons. Even UTC
+  // days try a comparison first and fall back to the positioned backlog
+  // (brokerage/platform/toolkit/consumer); odd days the reverse. When the
+  // backlog is exhausted this slot becomes comparisons every day.
+  if (queued >= QUEUE_CAP) {
+    result.skipped.push("second post: queue at cap");
+  } else if (Date.now() - startedAt > 150_000) {
+    result.skipped.push("second post: out of time — tomorrow");
+  } else {
+    const preferComparison = new Date().getUTCDate() % 2 === 0;
+    const tryComparison = async () => {
+      result.comparison = await generateComparisonPiece(admin);
+      if (result.comparison) {
+        queued += 1;
+        await finish(result.comparison);
+        return true;
+      }
+      return false;
+    };
+    const tryBacklog = async () => {
+      const [next] = await nextUncoveredPieces(admin, 1);
+      if (!next) return false;
+      const id = await generateBrokeragePiece(admin, next.kind, next.names);
+      if (id) {
+        result.brokeragePiece = id;
+        queued += 1;
+        await finish(id);
+        return true;
+      }
       result.skipped.push(
         `backlog piece (${next.names.join(" vs ")}): generation failed or nothing corroborated`,
       );
-    }
-    await finish(id);
+      return false;
+    };
+    const done = preferComparison
+      ? (await tryComparison()) || (await tryBacklog())
+      : (await tryBacklog()) || (await tryComparison());
+    if (!done) result.skipped.push("second post: nothing available to generate");
   }
 
   result.queued = queued;

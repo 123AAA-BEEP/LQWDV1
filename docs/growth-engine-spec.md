@@ -65,7 +65,17 @@ CRON_SECRET) → `src/lib/daily-content.ts`:
   Ontario news via the Anthropic web-search tool — every external fact must
   be cited; the body ends with a `## Sources` section (review it before
   publishing).
-- A third daily piece works through the brokerage backlog (§5).
+- **Cadence (founder call 2026-08-11): TWO posts/day + monthly market note.**
+  Daily = the spotlight plus ONE second post weighted toward project
+  comparisons: even UTC days try an uncovered cross-shop comparison first
+  (same city+type, nearest-priced pair, dedup vs existing comparison
+  articles' related ids) and fall back to the positioned backlog (§5); odd
+  days the reverse. When the backlog exhausts, the slot is comparisons
+  daily. The market note runs ONCE per month — attempted only from the 5th
+  onward (after TRREB's Market Watch drop) and only if none was generated
+  in the last 21 days — so it cites fresh monthly stats instead of thirty
+  thin dailies. Manual generation from Admin → Articles is always
+  available regardless of cadence.
 - **Auto-publish via the editor-in-chief gate (founder decision 2026-07-29):**
   every generated piece is finished by `src/lib/editor-in-chief.ts` — a
   second adversarial model pass that edits like a Google quality rater
