@@ -80,7 +80,7 @@ export function MicrositeLeadForm({
           <Input id={id("phone")} name="lead_phone" type="tel" required minLength={7} autoComplete="tel" maxLength={40} />
         </Field>
       </div>
-      <Field label="Address (optional)" htmlFor={id("address")}>
+      <Field label="Address" htmlFor={id("address")}>
         <Input
           id={id("address")}
           name="lead_address"
@@ -90,7 +90,7 @@ export function MicrositeLeadForm({
       </Field>
       <fieldset>
         <legend className="text-sm font-medium text-slate-700">
-          Are you a real estate agent? <span aria-hidden>*</span>
+          Are you a real estate agent?
         </legend>
         <div className="mt-1.5 flex gap-4 text-sm text-slate-600">
           <label className="flex items-center gap-1.5">
