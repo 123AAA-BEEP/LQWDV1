@@ -39,32 +39,51 @@ export async function loadLiveMicrosite(
 export function MicrositeFooter({
   slug,
   links,
+  name,
+  primary,
 }: {
   /** The grounding project's liqwd.ca slug. */
   slug: string;
   /** Site navigation — the founder wants nav in the footer, not the hero. */
   links?: { href: string; label: string }[];
+  /** Project wordmark shown in the footer. */
+  name?: string;
+  /** Brand colour for the accent bar. */
+  primary?: string;
 }) {
   return (
-    <footer className="border-t border-slate-200 bg-slate-50">
-      {links?.length ? (
-        <nav aria-label="Site links" className="border-b border-slate-200/70">
-          <div className="mx-auto max-w-3xl px-6 py-6">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
-              Useful links
+    <footer className="bg-ink text-slate-300">
+      <div
+        className="h-1 w-full"
+        style={{ backgroundColor: primary ?? "#0d9488" }}
+      />
+      <div className="mx-auto max-w-5xl px-6 py-12">
+        <div className="flex flex-wrap items-start justify-between gap-8">
+          {name ? (
+            <p className="text-2xl font-semibold tracking-tight text-white">
+              {name}
             </p>
-            <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate-600">
-              {links.map((l) => (
-                <a key={l.href} href={l.href} className="hover:text-slate-900">
-                  {l.label}
-                </a>
-              ))}
-            </div>
-          </div>
-        </nav>
-      ) : null}
-      <div className="mx-auto max-w-3xl px-6 py-8 text-xs leading-relaxed text-slate-500">
-        <p>
+          ) : null}
+          {links?.length ? (
+            <nav aria-label="Site links" className="max-w-md">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                Useful links
+              </p>
+              <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2.5 text-sm">
+                {links.map((l) => (
+                  <a
+                    key={l.href}
+                    href={l.href}
+                    className="transition-colors hover:text-white"
+                  >
+                    {l.label}
+                  </a>
+                ))}
+              </div>
+            </nav>
+          ) : null}
+        </div>
+        <p className="mt-10 border-t border-white/10 pt-6 text-xs leading-relaxed text-slate-400">
           Independent information page operated by LIQWD. This is not the
           builder&apos;s official website. Details reflect publicly available
           information and change as the project progresses, so confirm
@@ -72,7 +91,7 @@ export function MicrositeFooter({
           builder&apos;s marketing material.{" "}
           <a
             href={`https://liqwd.ca/projects/${slug}`}
-            className="underline hover:text-slate-700"
+            className="underline transition-colors hover:text-white"
           >
             See the full listing on LIQWD
           </a>
@@ -296,7 +315,8 @@ export function makeSubpage(pageKey: MicrositeSubPageKey) {
           {/* Register */}
           <section
             id="register"
-            className="mt-14 scroll-mt-16 rounded-2xl border border-slate-200 bg-slate-50/60 p-6 sm:p-8"
+            className="mt-14 scroll-mt-16 rounded-3xl border p-6 sm:p-8"
+            style={{ backgroundColor: `${primary}0d`, borderColor: `${primary}2e` }}
           >
             <h2
               className="text-2xl font-semibold tracking-tight"
@@ -337,6 +357,8 @@ export function makeSubpage(pageKey: MicrositeSubPageKey) {
 
         <MicrositeFooter
           slug={project.slug}
+          name={project.project_name}
+          primary={primary}
           links={[
             { href: "/", label: `${project.project_name} overview` },
             ...others.map((p) => ({ href: `/${p.slug}`, label: p.label })),

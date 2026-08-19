@@ -108,7 +108,7 @@ export function MicrositeLeadForm({
       <Button
         type="submit"
         size="lg"
-        className="w-full"
+        className="w-full rounded-xl shadow-sm transition hover:brightness-110"
         disabled={status === "sending"}
         style={accentColor ? { backgroundColor: accentColor } : undefined}
       >
