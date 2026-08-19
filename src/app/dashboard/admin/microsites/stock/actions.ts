@@ -14,25 +14,35 @@ const PAGE = "/dashboard/admin/microsites/stock";
  * stock-images bucket (same direct-upload pattern as project media — storage
  * RLS independently enforces admin-only writes).
  */
-export async function recordStockImage(formData: FormData) {
+export async function recordStockImage(
+  formData: FormData,
+): Promise<{ error?: string }> {
   const supabase = await createClient();
   await assertAdmin(supabase);
 
   const path = String(formData.get("path") ?? "");
   const theme = String(formData.get("theme") ?? "");
-  if (!path || !(STOCK_THEMES as readonly string[]).includes(theme)) return;
+  if (!path || !(STOCK_THEMES as readonly string[]).includes(theme)) {
+    return { error: "Bad upload payload." };
+  }
 
   const {
     data: { publicUrl },
   } = supabase.storage.from("stock-images").getPublicUrl(path);
 
-  await supabase.from("microsite_stock_images").insert({
+  const { error } = await supabase.from("microsite_stock_images").insert({
     theme,
     url: publicUrl,
     alt_text: String(formData.get("alt_text") ?? "").trim().slice(0, 200) || null,
     city: String(formData.get("city") ?? "").trim().slice(0, 80) || null,
   });
+  if (error) {
+    // Surface loudly — a silent failure here strands files in the bucket
+    // with no library row (the 0092 grants bug).
+    return { error: `Uploaded, but recording failed: ${error.message}` };
+  }
   revalidatePath(PAGE);
+  return {};
 }
 
 /** Adds a stock image by URL (e.g. an Unsplash/Pexels CDN link). */
@@ -48,12 +58,15 @@ export async function addStockByUrl(formData: FormData) {
   if (!(STOCK_THEMES as readonly string[]).includes(theme)) {
     redirectWithFlash(PAGE, "Pick a theme.", "error");
   }
-  await supabase.from("microsite_stock_images").insert({
+  const { error } = await supabase.from("microsite_stock_images").insert({
     theme,
     url,
     alt_text: String(formData.get("alt_text") ?? "").trim().slice(0, 200) || null,
     city: String(formData.get("city") ?? "").trim().slice(0, 80) || null,
   });
+  if (error) {
+    redirectWithFlash(PAGE, `Couldn't add it: ${error.message}`, "error");
+  }
   revalidatePath(PAGE);
   redirectWithFlash(PAGE, "Added to the library.");
 }

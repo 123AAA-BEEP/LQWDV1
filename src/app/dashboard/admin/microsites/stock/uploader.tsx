@@ -52,7 +52,8 @@ export function StockUploader({ themes }: { themes: string[] }) {
       fd.set("theme", theme);
       fd.set("alt_text", alt);
       fd.set("city", city);
-      await recordStockImage(fd);
+      const res = await recordStockImage(fd);
+      if (res?.error) setError(res.error);
     }
     setBusy(false);
     form.reset();
