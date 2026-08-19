@@ -14,11 +14,14 @@ export function MicrositeLeadForm({
   domain,
   captureKey,
   ctaLabel,
+  accentColor,
 }: {
   idPrefix?: string;
   domain: string;
   captureKey: string;
   ctaLabel: string;
+  /** Brand-extracted button colour; falls back to the app palette. */
+  accentColor?: string;
 }) {
   const id = (name: string) => `${idPrefix}_${name}`;
   const [status, setStatus] = useState<"idle" | "sending" | "done" | "error">(
@@ -97,7 +100,13 @@ export function MicrositeLeadForm({
           {error}
         </p>
       ) : null}
-      <Button type="submit" size="lg" className="w-full" disabled={status === "sending"}>
+      <Button
+        type="submit"
+        size="lg"
+        className="w-full"
+        disabled={status === "sending"}
+        style={accentColor ? { backgroundColor: accentColor } : undefined}
+      >
         {status === "sending" ? "Sending…" : ctaLabel}
       </Button>
       <p className="text-xs leading-relaxed text-slate-500">

@@ -235,14 +235,16 @@ export async function saveMicrositeContent(input: {
     return { error: "Headline, subhead, and intro are required before saving." };
   }
 
-  // The editor covers the home page; keep the generated sub-pages intact.
+  // The editor covers the home page copy; keep the generated sub-pages and
+  // extracted brand intact.
   const { data: existing } = await supabase
     .from("microsite_configs")
     .select("content")
     .eq("id", id)
     .maybeSingle();
-  const prevPages = (existing?.content as MicrositeContent | null)?.pages;
-  if (prevPages) clean.pages = prevPages;
+  const prev = existing?.content as MicrositeContent | null;
+  if (prev?.pages) clean.pages = prev.pages;
+  if (prev?.brand) clean.brand = prev.brand;
 
   const { error } = await supabase
     .from("microsite_configs")
