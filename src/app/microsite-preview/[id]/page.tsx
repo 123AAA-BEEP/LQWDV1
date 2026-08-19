@@ -7,6 +7,7 @@ import { assertAdmin } from "@/lib/admin";
 import {
   getMicrositeProject,
   getMicrositeGallery,
+  getMicrositeStock,
   type MicrositeConfig,
 } from "@/lib/microsites";
 import { MicrositeSiteView } from "@/app/sites/[domain]/site-view";
@@ -62,12 +63,16 @@ export default async function MicrositePreview({
     );
   }
 
-  const gallery = await getMicrositeGallery(project.project_id);
+  const [gallery, stock] = await Promise.all([
+    getMicrositeGallery(project.project_id),
+    getMicrositeStock(),
+  ]);
   return (
     <MicrositeSiteView
       config={config}
       project={project}
       gallery={gallery}
+      stock={stock}
       previewNote={`Preview of ${config.domain} (${config.status}) · exactly what visitors get${config.status !== "live" ? " · lead form inactive until live" : ""}`}
     />
   );

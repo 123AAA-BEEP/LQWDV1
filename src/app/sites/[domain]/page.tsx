@@ -3,6 +3,7 @@ import {
   getMicrositeByDomain,
   getMicrositeProject,
   getMicrositeGallery,
+  getMicrositeStock,
   isPrimaryHost,
 } from "@/lib/microsites";
 import { headers } from "next/headers";
@@ -83,6 +84,16 @@ export default async function MicrositePage({
     utm: { source: config.domain, medium: "microsite" },
   });
 
-  const gallery = await getMicrositeGallery(project.project_id);
-  return <MicrositeSiteView config={config} project={project} gallery={gallery} />;
+  const [gallery, stock] = await Promise.all([
+    getMicrositeGallery(project.project_id),
+    getMicrositeStock(),
+  ]);
+  return (
+    <MicrositeSiteView
+      config={config}
+      project={project}
+      gallery={gallery}
+      stock={stock}
+    />
+  );
 }

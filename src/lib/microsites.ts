@@ -42,36 +42,17 @@ export interface MicrositeSubPage {
 
 export type MicrositeSubPageKey = "floor_plans" | "pricing" | "neighbourhood";
 
-/**
- * Visual identity pulled from the project's own marketing renderings (the
- * samples that arrive through the ingestion machine): the microsite mimics
- * the builder's palette and typography vibe instead of wearing LIQWD's.
- */
-export interface MicrositeBrand {
-  /** CTA/button colour, from the imagery, must carry white text. */
-  primary: string;
-  /** Secondary accent (chips, hovers). */
-  accent: string;
-  /** Google font name from BRAND_FONTS. */
-  heading_font: string;
-  font_stack: "serif" | "sans-serif";
-}
-
-/** Safe Google-font allowlist the brand extractor picks from. */
-export const BRAND_FONTS = [
-  "Playfair Display",
-  "Cormorant Garamond",
-  "Libre Baskerville",
-  "Lora",
-  "Merriweather",
-  "Source Serif 4",
-  "Montserrat",
-  "Poppins",
-  "DM Sans",
-  "Work Sans",
-  "Inter",
-  "Jost",
-] as const;
+export {
+  BRAND_FONTS,
+  BRAND_HEX,
+  cleanBrandInput,
+  type MicrositeBrand,
+} from "./microsite-brand";
+import {
+  BRAND_FONTS,
+  cleanBrandInput,
+  type MicrositeBrand,
+} from "./microsite-brand";
 
 export interface MicrositeContent {
   headline: string;
@@ -232,6 +213,91 @@ export async function getMicrositeGallery(
   } catch {
     return [];
   }
+}
+
+// ---------------------------------------------------------------------------
+// Stock image library — themed fallback photography for thin-media projects
+// ---------------------------------------------------------------------------
+
+export const STOCK_THEMES = [
+  "hero",
+  "neighbourhood",
+  "transit",
+  "amenities",
+  "parks",
+  "homes",
+  "lifestyle",
+  "generic",
+] as const;
+export type StockTheme = (typeof STOCK_THEMES)[number];
+
+export interface StockImage {
+  id: string;
+  theme: StockTheme;
+  url: string;
+  alt_text: string | null;
+  city: string | null;
+}
+
+/** Which stock theme fills a section's image slot when no rendering is left. */
+export const SECTION_STOCK_THEME: Record<string, StockTheme> = {
+  overview: "homes",
+  location_neighbourhood: "neighbourhood",
+  connectivity: "transit",
+  lifestyle_amenities: "amenities",
+  builder: "homes",
+  pricing_value: "homes",
+  homes_floorplans: "lifestyle",
+  top_reasons: "parks",
+  deposit_incentives: "generic",
+  investment: "generic",
+  buying_process: "generic",
+  why_register: "lifestyle",
+};
+
+export async function getMicrositeStock(): Promise<StockImage[]> {
+  try {
+    const admin = createAdminClient();
+    const { data } = await admin
+      .from("microsite_stock_images")
+      .select("id, theme, url, alt_text, city")
+      .eq("active", true)
+      .order("sort_order", { ascending: true });
+    return (data as StockImage[] | null) ?? [];
+  } catch {
+    return [];
+  }
+}
+
+const strHash = (s: string): number => {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  return h;
+};
+
+/**
+ * Deterministic themed pick: same domain always gets the same images (no
+ * layout shift between crawls), different domains get different ones (so the
+ * network doesn't share one obvious footprint). City-tagged images beat
+ * generic when they match; `used` prevents repeats within a page.
+ */
+export function pickStock(
+  stock: StockImage[],
+  theme: StockTheme,
+  city: string | null,
+  seed: string,
+  used: Set<string>,
+): StockImage | null {
+  const pool = stock.filter((s) => s.theme === theme && !used.has(s.id));
+  if (!pool.length) return null;
+  const local = city
+    ? pool.filter((s) => s.city && s.city.toLowerCase() === city.toLowerCase())
+    : [];
+  const candidates = local.length ? local : pool.filter((s) => !s.city);
+  const finalPool = candidates.length ? candidates : pool;
+  const pick = finalPool[strHash(`${seed}|${theme}|${used.size}`) % finalPool.length];
+  used.add(pick.id);
+  return pick;
 }
 
 // ---------------------------------------------------------------------------
@@ -583,22 +649,8 @@ const T_BRAND: Anthropic.Messages.Tool = {
   },
 };
 
-const HEX = /^#[0-9a-fA-F]{6}$/;
-
-function cleanBrand(raw: Record<string, unknown> | null): MicrositeBrand | null {
-  if (!raw) return null;
-  const primary = String(raw.primary_hex ?? "");
-  const accent = String(raw.accent_hex ?? "");
-  const font = String(raw.heading_font ?? "");
-  if (!HEX.test(primary) || !HEX.test(accent)) return null;
-  if (!(BRAND_FONTS as readonly string[]).includes(font)) return null;
-  return {
-    primary: primary.toLowerCase(),
-    accent: accent.toLowerCase(),
-    heading_font: font,
-    font_stack: raw.font_stack === "serif" ? "serif" : "sans-serif",
-  };
-}
+const cleanBrand = (raw: Record<string, unknown> | null): MicrositeBrand | null =>
+  raw ? cleanBrandInput(raw) : null;
 
 type VisionImage = {
   type: "image";
