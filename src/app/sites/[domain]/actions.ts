@@ -49,6 +49,9 @@ export async function submitMicrositeLead(
   if (!["yes", "no"].includes(isRealtorRaw)) {
     return { error: "Please tell us whether you're a real estate agent." };
   }
+  if (formData.get("casl_consent") !== "on") {
+    return { error: "Please tick the consent box so we're allowed to contact you." };
+  }
 
   const admin = createAdminClient();
   const project = await getMicrositeProject(config.project_id);
@@ -78,6 +81,7 @@ export async function submitMicrositeLead(
     address: address || null,
     message: message || null,
     is_realtor: isRealtorRaw === "yes",
+    casl_consent: true,
     status: "new",
     source: config.domain,
   });
