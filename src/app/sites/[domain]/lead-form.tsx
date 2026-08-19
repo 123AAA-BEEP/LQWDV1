@@ -5,16 +5,22 @@ import { Button } from "@/components/ui/button";
 import { Field, Input, Radio, Textarea } from "@/components/ui/field";
 import { submitMicrositeLead } from "./actions";
 
-/** Microsite lead form — same quality bar as the main site's form. */
+/**
+ * Microsite lead form — same quality bar as the main site's form. Rendered
+ * twice per page (top + bottom), so ids are prefixed per instance.
+ */
 export function MicrositeLeadForm({
+  idPrefix = "ms",
   domain,
   captureKey,
   ctaLabel,
 }: {
+  idPrefix?: string;
   domain: string;
   captureKey: string;
   ctaLabel: string;
 }) {
+  const id = (name: string) => `${idPrefix}_${name}`;
   const [status, setStatus] = useState<"idle" | "sending" | "done" | "error">(
     "idle",
   );
@@ -57,19 +63,19 @@ export function MicrositeLeadForm({
           <input name="company" tabIndex={-1} autoComplete="off" />
         </label>
       </div>
-      <Field label="Full name" htmlFor="ms_name">
-        <Input id="ms_name" name="lead_name" required autoComplete="name" maxLength={120} />
+      <Field label="Full name" htmlFor={id("name")}>
+        <Input id={id("name")} name="lead_name" required autoComplete="name" maxLength={120} />
       </Field>
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Email" htmlFor="ms_email">
-          <Input id="ms_email" name="lead_email" type="email" required autoComplete="email" maxLength={320} />
+        <Field label="Email" htmlFor={id("email")}>
+          <Input id={id("email")} name="lead_email" type="email" required autoComplete="email" maxLength={320} />
         </Field>
-        <Field label="Phone" htmlFor="ms_phone">
-          <Input id="ms_phone" name="lead_phone" type="tel" required minLength={7} autoComplete="tel" maxLength={40} />
+        <Field label="Phone" htmlFor={id("phone")}>
+          <Input id={id("phone")} name="lead_phone" type="tel" required minLength={7} autoComplete="tel" maxLength={40} />
         </Field>
       </div>
-      <Field label="Message (optional)" htmlFor="ms_message">
-        <Textarea id="ms_message" name="message" className="min-h-16" maxLength={2000} />
+      <Field label="Message (optional)" htmlFor={id("message")}>
+        <Textarea id={id("message")} name="message" className="min-h-16" maxLength={2000} />
       </Field>
       <fieldset>
         <legend className="text-sm font-medium text-slate-700">
