@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import {
   getMicrositeByDomain,
   getMicrositeProject,
+  getMicrositeGallery,
   isPrimaryHost,
+  type MicrositeImage,
 } from "@/lib/microsites";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
@@ -15,10 +17,20 @@ export const dynamic = "force-dynamic";
 
 /**
  * The microsite renderer — one standalone landing page per config, served on
- * its own domain via the proxy's host rewrite. SEO contract enforced here:
- * only `live` configs render (and index); anything else gets a minimal
- * noindex holding page so a freshly-attached domain NEVER mirrors liqwd.ca.
+ * its own domain via the proxy's host rewrite. Format modeled on the proven
+ * VIP-registration pre-con landing page: hero + register form up top, deep
+ * scannable sections with photography, FAQ, register again at the bottom.
+ * SEO contract enforced here: only `live` configs render (and index);
+ * anything else gets a minimal noindex holding page so a freshly-attached
+ * domain NEVER mirrors liqwd.ca.
  */
+
+const anchor = (title: string) =>
+  title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 60) || "section";
 
 export async function generateMetadata({
   params,
@@ -31,9 +43,10 @@ export async function generateMetadata({
     return { title: "Coming soon", robots: { index: false, follow: false } };
   }
   const project = await getMicrositeProject(config.project_id);
+  const name = project?.project_name ?? config.content.headline;
   const title =
     config.content.seo_title ||
-    `${project?.project_name ?? config.content.headline}${project?.city ? ` — ${project.city}` : ""} | Pricing, Floor Plans & Launch Details`;
+    `${name}${project?.city ? ` in ${project.city}` : ""} | Pricing, Floor Plans & Launch Details`;
   const description = config.content.seo_description || config.content.subhead;
   return {
     title,
@@ -83,14 +96,53 @@ export default async function MicrositePage({
   });
 
   const c = config.content;
+  const gallery = await getMicrositeGallery(project.project_id);
+  const altFor = (img: MicrositeImage, i: number) =>
+    img.alt_text ?? `${project.project_name} new construction rendering ${i + 1}`;
+  const stripOne = gallery.slice(0, 3);
+  const stripTwo = gallery.slice(3, 9);
+
   const price = formatPriceBand(project.price_from_public, project.price_to_public, {
     currency: project.price_currency,
   });
   const location = [project.neighbourhood, project.city, project.province]
     .filter(Boolean)
     .join(", ");
+  const typeLabel = project.project_type
+    ? project.project_type.replace(/_/g, " ")
+    : null;
+
+  const navItems = [
+    ...c.sections.map((s) => ({ id: anchor(s.title), label: s.title })),
+    ...(stripTwo.length ? [{ id: "gallery", label: "Gallery" }] : []),
+    ...(c.faq.length ? [{ id: "faq", label: "FAQ" }] : []),
+    { id: "register", label: "Register" },
+  ];
 
   const jsonLd = [
+    {
+      "@context": "https://schema.org",
+      "@type": "ApartmentComplex",
+      name: project.project_name,
+      url: `https://${config.domain}/`,
+      ...(project.hero_image_url ? { image: project.hero_image_url } : {}),
+      address: {
+        "@type": "PostalAddress",
+        ...(project.address_full ? { streetAddress: project.address_full } : {}),
+        ...(project.city ? { addressLocality: project.city } : {}),
+        ...(project.province ? { addressRegion: project.province } : {}),
+        addressCountry: "CA",
+      },
+      ...(project.price_from_public
+        ? {
+            offers: {
+              "@type": "AggregateOffer",
+              lowPrice: Math.round(project.price_from_public),
+              priceCurrency: project.price_currency ?? "CAD",
+            },
+          }
+        : {}),
+    },
     c.faq.length
       ? {
           "@context": "https://schema.org",
@@ -124,7 +176,7 @@ export default async function MicrositePage({
             className="absolute inset-0 h-full w-full object-cover opacity-40"
           />
         ) : null}
-        <div className="relative mx-auto max-w-3xl px-6 py-24 text-center sm:py-32">
+        <div className="relative mx-auto max-w-3xl px-6 py-20 text-center sm:py-28">
           {project.sales_status === "coming_soon" ? (
             <span className="inline-flex items-center rounded-full bg-white/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] backdrop-blur">
               Coming soon{location ? ` · ${location}` : ""}
@@ -147,9 +199,14 @@ export default async function MicrositePage({
                 {project.bedrooms_summary}
               </span>
             ) : null}
+            {typeLabel ? (
+              <span className="rounded-full border border-white/30 px-4 py-1.5 capitalize">
+                {typeLabel}
+              </span>
+            ) : null}
           </div>
           <a
-            href="#register"
+            href="#register-top"
             className="mt-8 inline-flex h-12 items-center justify-center rounded-lg bg-brand-500 px-8 text-base font-semibold text-white transition-colors hover:bg-brand-400"
           >
             {c.cta_label}
@@ -157,12 +214,66 @@ export default async function MicrositePage({
         </div>
       </header>
 
+      {/* Register — top */}
+      <section id="register-top" className="border-b border-slate-100 bg-slate-50/60">
+        <div className="mx-auto max-w-3xl px-6 py-10">
+          <h2 className="text-2xl font-semibold tracking-tight text-ink">
+            Get pricing and floor plans first
+          </h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Register below. You get the price list, floor plans, and launch
+            details as soon as they come out.
+          </p>
+          <div className="mt-5">
+            <MicrositeLeadForm
+              idPrefix="top"
+              domain={config.domain}
+              captureKey={config.capture_key}
+              ctaLabel={c.cta_label}
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* On this page */}
+      <nav
+        aria-label="On this page"
+        className="sticky top-0 z-10 border-b border-slate-100 bg-white/95 backdrop-blur"
+      >
+        <div className="mx-auto flex max-w-3xl gap-4 overflow-x-auto px-6 py-3 text-sm text-slate-500">
+          {navItems.map((n) => (
+            <a
+              key={n.id}
+              href={`#${n.id}`}
+              className="whitespace-nowrap hover:text-brand-700"
+            >
+              {n.label}
+            </a>
+          ))}
+        </div>
+      </nav>
+
       {/* Body */}
       <div className="mx-auto max-w-3xl px-6 py-12 sm:py-16">
         <div dangerouslySetInnerHTML={{ __html: renderMarkdown(c.intro_md) }} />
 
+        {stripOne.length ? (
+          <div className="mt-8 grid gap-3 sm:grid-cols-3">
+            {stripOne.map((img, i) => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                key={img.url}
+                src={img.url}
+                alt={altFor(img, i)}
+                loading="lazy"
+                className="h-44 w-full rounded-xl object-cover"
+              />
+            ))}
+          </div>
+        ) : null}
+
         {c.sections.map((s) => (
-          <section key={s.title} className="mt-10">
+          <section key={s.title} id={anchor(s.title)} className="mt-10 scroll-mt-16">
             <h2 className="text-2xl font-semibold tracking-tight text-ink">
               {s.title}
             </h2>
@@ -170,8 +281,31 @@ export default async function MicrositePage({
           </section>
         ))}
 
+        {stripTwo.length ? (
+          <section id="gallery" className="mt-12 scroll-mt-16">
+            <h2 className="text-2xl font-semibold tracking-tight text-ink">
+              Renderings and photos
+            </h2>
+            <p className="mt-1 text-sm text-slate-500">
+              The builder&apos;s marketing material. Final homes can differ.
+            </p>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              {stripTwo.map((img, i) => (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  key={img.url}
+                  src={img.url}
+                  alt={altFor(img, i + stripOne.length)}
+                  loading="lazy"
+                  className="h-56 w-full rounded-xl object-cover"
+                />
+              ))}
+            </div>
+          </section>
+        ) : null}
+
         {c.faq.length > 0 ? (
-          <section className="mt-12">
+          <section id="faq" className="mt-12 scroll-mt-16">
             <h2 className="text-2xl font-semibold tracking-tight text-ink">
               Frequently asked questions
             </h2>
@@ -190,20 +324,21 @@ export default async function MicrositePage({
           </section>
         ) : null}
 
-        {/* Register */}
+        {/* Register — bottom */}
         <section
           id="register"
-          className="mt-14 rounded-2xl border border-slate-200 bg-slate-50/60 p-6 sm:p-8"
+          className="mt-14 scroll-mt-16 rounded-2xl border border-slate-200 bg-slate-50/60 p-6 sm:p-8"
         >
           <h2 className="text-2xl font-semibold tracking-tight text-ink">
             Get first access
           </h2>
           <p className="mt-1 text-sm text-slate-500">
-            Pricing, floor plans, and launch timing — sent as they&apos;re
-            released, before the general public.
+            Pricing, floor plans, and launch timing, sent to you as they come
+            out and before the general public.
           </p>
           <div className="mt-5">
             <MicrositeLeadForm
+              idPrefix="bottom"
               domain={config.domain}
               captureKey={config.capture_key}
               ctaLabel={c.cta_label}
@@ -216,10 +351,10 @@ export default async function MicrositePage({
       <footer className="border-t border-slate-200 bg-slate-50">
         <div className="mx-auto max-w-3xl px-6 py-8 text-xs leading-relaxed text-slate-500">
           <p>
-            Independent information page operated by LIQWD — not the
+            Independent information page operated by LIQWD. This is not the
             builder&apos;s official website. Details reflect publicly
-            available information and change as the project progresses;
-            confirm all details with the builder&apos;s sales team. Renderings
+            available information and change as the project progresses, so
+            confirm everything with the builder&apos;s sales team. Renderings
             are the builder&apos;s marketing material.{" "}
             <a
               href={`https://liqwd.ca/projects/${project.slug}`}

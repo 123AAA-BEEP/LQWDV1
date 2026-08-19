@@ -5,10 +5,16 @@ import { createClient } from "@/lib/supabase/server";
 import { Card, CardBody } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Field, Textarea } from "@/components/ui/field";
+import { Checkbox, Field, Textarea } from "@/components/ui/field";
 import { FlashNotice } from "@/components/ui/flash-notice";
 import { renderMarkdown } from "@/lib/markdown";
-import type { MicrositeContent } from "@/lib/microsites";
+import {
+  MICROSITE_SECTIONS,
+  resolveSectionKeys,
+  type MicrositeConfig,
+  type MicrositeContent,
+} from "@/lib/microsites";
+import type { PublicProject } from "@/lib/types";
 import {
   vercelDomainsConfigured,
   checkDomain,
@@ -67,10 +73,15 @@ export default async function AdminMicrositeDetail({
 
   const { data: projData } = await supabase
     .from("public_projects_view")
-    .select("project_name, slug, city")
+    .select("project_name, slug, city, builder_name")
     .eq("project_id", site.project_id)
     .maybeSingle();
-  const project = projData as { project_name: string; slug: string; city: string | null } | null;
+  const project = projData as {
+    project_name: string;
+    slug: string;
+    city: string | null;
+    builder_name: string | null;
+  } | null;
 
   const contextText =
     typeof site.context?.notes === "string"
@@ -79,7 +90,14 @@ export default async function AdminMicrositeDetail({
         ? JSON.stringify(site.context, null, 2)
         : "";
   const c = site.content;
-  const defaultSeoTitle = `${project?.project_name ?? "Project"}${project?.city ? ` — ${project.city}` : ""} | Pricing, Floor Plans & Launch Details`;
+  const defaultSeoTitle = `${project?.project_name ?? "Project"}${project?.city ? ` in ${project.city}` : ""} | Pricing, Floor Plans & Launch Details`;
+  const checkedSections = resolveSectionKeys(
+    { context: site.context ?? {} } as MicrositeConfig,
+    {
+      city: project?.city ?? null,
+      builder_name: project?.builder_name ?? null,
+    } as PublicProject,
+  );
 
   // Domain automation (only when Vercel env is configured): is the domain on
   // the project yet, and if not, can we buy it right here?
@@ -254,6 +272,30 @@ export default async function AdminMicrositeDetail({
                 maxLength={8000}
               />
             </Field>
+            <fieldset>
+              <legend className="text-sm font-medium text-slate-700">
+                Sections to generate
+              </legend>
+              <p className="mt-0.5 text-xs text-slate-400">
+                Each section has its own writing prompt. Leave your picks and
+                regenerate; none checked = auto based on the project facts.
+              </p>
+              <div className="mt-2 grid gap-1.5 sm:grid-cols-3">
+                {MICROSITE_SECTIONS.map((s) => (
+                  <label
+                    key={s.key}
+                    className="flex items-center gap-2 text-sm text-slate-600"
+                  >
+                    <Checkbox
+                      name="sections"
+                      value={s.key}
+                      defaultChecked={checkedSections.includes(s.key)}
+                    />
+                    {s.label}
+                  </label>
+                ))}
+              </div>
+            </fieldset>
             <Button type="submit" variant="secondary">
               Save context
             </Button>

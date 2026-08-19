@@ -9,6 +9,7 @@ import {
   getMicrositeProject,
   generateMicrositeContent,
   normalizeDomain,
+  MICROSITE_SECTIONS,
   type MicrositeConfig,
   type MicrositeContent,
 } from "@/lib/microsites";
@@ -66,6 +67,16 @@ export async function saveMicrositeContext(formData: FormData) {
       context = { notes: raw };
     }
   }
+
+  // Section picker: checked keys become the explicit section list; checking
+  // everything off falls back to the facts-driven auto pick.
+  const valid = new Set(MICROSITE_SECTIONS.map((s) => s.key));
+  const picked = formData
+    .getAll("sections")
+    .map(String)
+    .filter((k) => valid.has(k));
+  if (picked.length) context.sections = picked;
+  else delete context.sections;
   await supabase
     .from("microsite_configs")
     .update({ context, updated_at: new Date().toISOString() })
@@ -190,8 +201,12 @@ export async function saveMicrositeContent(input: {
     subhead: s(c.subhead, 500),
     intro_md: s(c.intro_md, 8000),
     sections: (Array.isArray(c.sections) ? c.sections : [])
-      .slice(0, 6)
-      .map((x) => ({ title: s(x?.title, 160), body_md: s(x?.body_md, 8000) }))
+      .slice(0, 14)
+      .map((x) => ({
+        ...(x?.key ? { key: s(x.key, 40) } : {}),
+        title: s(x?.title, 160),
+        body_md: s(x?.body_md, 8000),
+      }))
       .filter((x) => x.title || x.body_md),
     faq: (Array.isArray(c.faq) ? c.faq : [])
       .slice(0, 8)

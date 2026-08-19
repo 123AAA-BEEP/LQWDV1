@@ -173,7 +173,7 @@ export function MicrositeContentEditor({
             />
           </div>
         ))}
-        {draft.sections.length < 6 ? (
+        {draft.sections.length < 14 ? (
           <Button
             type="button"
             size="sm"
