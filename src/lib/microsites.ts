@@ -85,6 +85,9 @@ export interface MicrositeConfig {
   context: Record<string, unknown>;
   content: MicrositeContent | null;
   capture_key: string;
+  /** Lead automation (migration 0091) — optional so slim selects still cast. */
+  auto_send_details?: boolean;
+  details_url?: string | null;
 }
 
 /** Lowercase bare domain, or null when it doesn't look like one. */
@@ -164,7 +167,9 @@ export async function getMicrositeByDomain(
     const admin = createAdminClient();
     const { data } = await admin
       .from("microsite_configs")
-      .select("id, domain, project_id, skin, status, context, content, capture_key")
+      .select(
+        "id, domain, project_id, skin, status, context, content, capture_key, auto_send_details, details_url",
+      )
       .eq("domain", domain.toLowerCase().replace(/^www\./, ""))
       .maybeSingle();
     return (data as MicrositeConfig | null) ?? null;
