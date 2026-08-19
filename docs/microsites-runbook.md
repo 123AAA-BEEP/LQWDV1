@@ -71,14 +71,66 @@ Order doesn't strictly matter for 5 vs 6: attaching the domain while the
 config is still `draft` just serves the noindex holding page until you flip
 it live.
 
+## Editing the generated page
+
+Everything the generator produces is editable in Admin → Microsites → (site) →
+**Page content**: SEO title + meta description overrides, H1, subhead, CTA
+label, intro markdown, sections (add/remove/reorder by editing), FAQ.
+Regenerating replaces the body copy but **keeps the SEO overrides**; hand
+edits are stamped (`edited_at`) in the preview footer.
+
+## Email-triggered ingestion ("the deals inbox flow")
+
+The email→project intake (`/api/inbound-email`, SendGrid Inbound Parse — the
+same inbox you already forward hot-drops to) now understands a microsite
+directive. Forward the developer's email and add either:
+
+- **`microsite: somedomain.com`** — in the subject line (preferred) or body.
+  After the project ingests, the config is created, content is generated
+  immediately when the project auto-published, and ops gets a "review the
+  microsite" email linking straight to the admin screen. If the domain sat in
+  the **subject** line and auto-buy is enabled (below), the domain is bought
+  and attached too — the whole chain from one forwarded email.
+- **`microsite`** (bare word, no domain) — ops gets a ping with suggested
+  domain candidates derived from the project name/city; create the config
+  from the admin after buying one.
+
+Going **live is always a human click** — the machine stops at a reviewable
+draft.
+
+## Vercel domain automation (opt-in via env)
+
+Set in Vercel env:
+
+- `VERCEL_TOKEN` — account/team API token (Vercel → Settings → Tokens)
+- `VERCEL_PROJECT_ID` — the LIQWD project id (Project → Settings → General)
+- `VERCEL_TEAM_ID` — only if the project lives under a team
+- `MICROSITE_AUTO_BUY_MAX_USD` — optional; enables **unattended** purchase
+  from the email directive, capped at this first-year price. Unset = every
+  purchase needs an admin click.
+
+What it unlocks:
+
+- **Domain card** on the microsite screen: shows attach state; if the domain
+  is unregistered, shows the live price with a one-click **Buy & attach**
+  (billed to the Vercel account's payment method, auto-renew on,
+  `expectedPrice` passed so a price change fails instead of overspending).
+- **Auto-attach on "Set live"** — flipping a site live attaches the domain to
+  the Vercel project automatically.
+- **Email auto-buy** — with the cap set, `microsite: x.com` in a forwarded
+  email's SUBJECT line buys + attaches unattended. Three explicit gates
+  (subject-line domain, env configured, price ≤ cap) so a stray "microsite"
+  in marketing copy can never spend money.
+
 ## What's manual vs automated
 
 | Step | Status |
 | --- | --- |
-| Buy domain | Manual (~2 min) — registrars require a human + payment |
-| Create config, context, generate, review, go live | Admin UI, minutes |
+| Buy domain | One admin click when Vercel env is set (or unattended via email subject + auto-buy cap); otherwise manual at any registrar |
+| Create config, context, generate, review, go live | Admin UI, minutes — or config+content auto-created from a forwarded email with `microsite: domain.com` |
+| Edit any generated copy / SEO fields | Admin UI (Page content editor) |
 | Routing, rendering, SEO tags, JSON-LD, lead capture, source attribution, analytics | Fully automatic |
-| Attach domain to Vercel | Manual (~1 min) — or v2: Vercel API (`POST /v10/projects/{id}/domains` with a `VERCEL_TOKEN`) to auto-attach on "Set live" |
+| Attach domain to Vercel | Automatic on Set live / Buy (when env set); manual otherwise |
 | GSC property + index request | Manual (~3 min per domain) |
 
 ## Known tradeoffs (v1)

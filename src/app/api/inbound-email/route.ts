@@ -5,6 +5,7 @@ import {
   type InboundImage,
 } from "@/lib/email-intake/extract";
 import { ingestExtractedProject } from "@/lib/email-intake/ingest";
+import { handleMicrositeDirective } from "@/lib/email-intake/microsite";
 import {
   extractCandidateUrls,
   fetchLinkContext,
@@ -110,6 +111,18 @@ export async function POST(request: Request) {
               "Extraction returned nothing (API key unset or the model emitted no tool call).",
           };
 
+      // Founder directive: "microsite: somedomain.com" (or a bare
+      // "microsite" mention) spins up the standalone landing-page rail for
+      // this project — config + generated draft + optional domain buy. See
+      // docs/microsites-runbook.md.
+      const micrositeNote = await handleMicrositeDirective({
+        subject,
+        text: mergedText,
+        projectId: result.project_id,
+        projectName: ex?.project_name ?? null,
+        city: ex?.city ?? null,
+      });
+
       await admin.from("email_intake_log").insert({
         from_email: from,
         subject,
@@ -121,7 +134,7 @@ export async function POST(request: Request) {
         action: result.action,
         project_id: result.project_id,
         published: result.published,
-        notes: result.notes,
+        notes: [result.notes, micrositeNote].filter(Boolean).join(" | "),
       });
 
       // The owner asked to be pinged whenever an intake CAN'T go live on its

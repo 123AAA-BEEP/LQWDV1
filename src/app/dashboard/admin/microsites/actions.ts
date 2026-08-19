@@ -8,8 +8,16 @@ import { redirectWithFlash } from "@/lib/flash";
 import {
   getMicrositeProject,
   generateMicrositeContent,
+  normalizeDomain,
   type MicrositeConfig,
+  type MicrositeContent,
 } from "@/lib/microsites";
+import {
+  vercelDomainsConfigured,
+  checkDomain,
+  buyDomain,
+  attachDomainToProject,
+} from "@/lib/vercel-domains";
 
 const LIST = "/dashboard/admin/microsites";
 
@@ -17,15 +25,9 @@ export async function createMicrosite(formData: FormData) {
   const supabase = await createClient();
   await assertAdmin(supabase);
 
-  const domain = String(formData.get("domain") ?? "")
-    .trim()
-    .toLowerCase()
-    .replace(/^https?:\/\//, "")
-    .replace(/^www\./, "")
-    .replace(/\/.*$/, "")
-    .slice(0, 253);
+  const domain = normalizeDomain(String(formData.get("domain") ?? "")) ?? "";
   const projectId = String(formData.get("project_id") ?? "");
-  if (!/^[a-z0-9.-]{4,253}$/.test(domain) || !domain.includes(".")) {
+  if (!domain) {
     redirectWithFlash(LIST, "Enter the bare domain, e.g. echotownswaterdown.com", "error");
   }
   if (!projectId) redirectWithFlash(LIST, "Pick the project this site is for.", "error");
@@ -103,6 +105,9 @@ export async function generateMicrosite(formData: FormData) {
       "error",
     );
   }
+  // Hand-set SEO overrides survive a regenerate; body copy is replaced.
+  content.seo_title = config.content?.seo_title ?? null;
+  content.seo_description = config.content?.seo_description ?? null;
   await supabase
     .from("microsite_configs")
     .update({ content, updated_at: new Date().toISOString() })
@@ -139,12 +144,140 @@ export async function setMicrositeStatus(formData: FormData) {
     .from("microsite_configs")
     .update({ status, updated_at: new Date().toISOString() })
     .eq("id", id);
+
+  // Going live: best-effort auto-attach the domain to the Vercel project so
+  // the only manual step left is buying the domain.
+  let attachNote = " (attach it to the Vercel project if you haven't).";
+  if (status === "live" && vercelDomainsConfigured()) {
+    const { data: row } = await supabase
+      .from("microsite_configs")
+      .select("domain")
+      .eq("id", id)
+      .maybeSingle();
+    if (row?.domain) {
+      const attached = await attachDomainToProject(row.domain);
+      attachNote = attached.ok
+        ? " and the domain is attached to the Vercel project."
+        : ` — auto-attach failed (${attached.error}); attach it in Vercel manually.`;
+    }
+  }
   revalidatePath(LIST);
   revalidatePath(`${LIST}/${id}`);
   redirectWithFlash(
     `${LIST}/${id}`,
     status === "live"
-      ? "Live — the domain now serves the page (attach it to the Vercel project if you haven't)."
+      ? `Live — the domain now serves the page${attachNote}`
       : `Moved to ${status}.`,
+  );
+}
+
+/** Full manual override of the page content, from the admin editor. */
+export async function saveMicrositeContent(input: {
+  micrositeId: string;
+  content: MicrositeContent;
+}): Promise<{ error?: string }> {
+  const supabase = await createClient();
+  await assertAdmin(supabase);
+
+  const id = String(input.micrositeId ?? "");
+  const c = input.content;
+  if (!id || !c || typeof c !== "object") return { error: "Bad request." };
+
+  const s = (v: unknown, max: number) =>
+    typeof v === "string" ? v.trim().slice(0, max) : "";
+  const clean: MicrositeContent = {
+    headline: s(c.headline, 200),
+    subhead: s(c.subhead, 500),
+    intro_md: s(c.intro_md, 8000),
+    sections: (Array.isArray(c.sections) ? c.sections : [])
+      .slice(0, 6)
+      .map((x) => ({ title: s(x?.title, 160), body_md: s(x?.body_md, 8000) }))
+      .filter((x) => x.title || x.body_md),
+    faq: (Array.isArray(c.faq) ? c.faq : [])
+      .slice(0, 8)
+      .map((x) => ({ question: s(x?.question, 200), answer: s(x?.answer, 2000) }))
+      .filter((x) => x.question && x.answer),
+    cta_label: s(c.cta_label, 80) || "Get first access",
+    generated_at: s(c.generated_at, 40) || new Date().toISOString(),
+    seo_title: s(c.seo_title, 120) || null,
+    seo_description: s(c.seo_description, 300) || null,
+    edited_at: new Date().toISOString(),
+  };
+  if (!clean.headline || !clean.subhead || !clean.intro_md) {
+    return { error: "Headline, subhead, and intro are required before saving." };
+  }
+
+  const { error } = await supabase
+    .from("microsite_configs")
+    .update({ content: clean, updated_at: new Date().toISOString() })
+    .eq("id", id);
+  if (error) return { error: "Couldn't save — try again." };
+  revalidatePath(`${LIST}/${id}`);
+  return {};
+}
+
+/** One-click domain purchase through the Vercel account (admin-confirmed). */
+export async function buyMicrositeDomain(formData: FormData) {
+  const supabase = await createClient();
+  await assertAdmin(supabase);
+  const id = String(formData.get("microsite_id") ?? "");
+  if (!id) redirectWithFlash(LIST, "Missing microsite.", "error");
+
+  const { data } = await supabase
+    .from("microsite_configs")
+    .select("domain")
+    .eq("id", id)
+    .maybeSingle();
+  const domain = data?.domain as string | undefined;
+  if (!domain) redirectWithFlash(LIST, "Microsite not found.", "error");
+
+  const check = await checkDomain(domain);
+  if (!check) {
+    redirectWithFlash(`${LIST}/${id}`, "Couldn't reach the Vercel API.", "error");
+  }
+  if (!check.available || check.price == null) {
+    redirectWithFlash(
+      `${LIST}/${id}`,
+      "The domain isn't available to buy through Vercel.",
+      "error",
+    );
+  }
+  const bought = await buyDomain(domain, check.price);
+  if (!bought.ok) {
+    redirectWithFlash(`${LIST}/${id}`, `Purchase failed: ${bought.error}`, "error");
+  }
+  const attached = await attachDomainToProject(domain);
+  revalidatePath(`${LIST}/${id}`);
+  redirectWithFlash(
+    `${LIST}/${id}`,
+    attached.ok
+      ? `Bought ${domain} (US$${check.price}) and attached it to the Vercel project.`
+      : `Bought ${domain} (US$${check.price}) — attach failed (${attached.error}); attach it in Vercel.`,
+  );
+}
+
+/** Attach an already-owned domain to the Vercel project. */
+export async function attachMicrositeDomain(formData: FormData) {
+  const supabase = await createClient();
+  await assertAdmin(supabase);
+  const id = String(formData.get("microsite_id") ?? "");
+  if (!id) redirectWithFlash(LIST, "Missing microsite.", "error");
+
+  const { data } = await supabase
+    .from("microsite_configs")
+    .select("domain")
+    .eq("id", id)
+    .maybeSingle();
+  const domain = data?.domain as string | undefined;
+  if (!domain) redirectWithFlash(LIST, "Microsite not found.", "error");
+
+  const attached = await attachDomainToProject(domain);
+  revalidatePath(`${LIST}/${id}`);
+  redirectWithFlash(
+    `${LIST}/${id}`,
+    attached.ok
+      ? `${domain} is attached to the Vercel project.`
+      : `Attach failed: ${attached.error}`,
+    attached.ok ? undefined : "error",
   );
 }
