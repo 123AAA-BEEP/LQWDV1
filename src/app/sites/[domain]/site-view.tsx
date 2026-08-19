@@ -12,12 +12,14 @@ import { MicrositeFooter } from "./subpage";
 /**
  * The microsite landing page itself, shared verbatim between the public
  * domain route and the admin preview — what you preview IS what ships.
- * Format follows the proven VIP-registration landing style: the hero IS the
- * lead form (name + photo + form, nothing else above the fold), education
- * sections next, photography breaking up the text, register again at the
- * bottom. Branding (palette + typography) comes from the project's own
- * renderings via the generation-time brand extractor; defaults kick in when
- * no brand was extracted.
+ *
+ * Format (founder-specified, The Valley pattern):
+ *  - hero: location chip + the project NAME + the register form. Nothing
+ *    else — the form must render above the fold;
+ *  - body: education sections with large photography scattered between them;
+ *  - map with the address pin near the bottom;
+ *  - navigation lives in the footer, not the hero.
+ * Branding (palette + typography) comes from the project's own renderings.
  */
 
 const anchor = (title: string) =>
@@ -51,26 +53,33 @@ export function MicrositeSiteView({
 
   const altFor = (img: MicrositeImage, i: number) =>
     img.alt_text ?? `${project.project_name} new construction rendering ${i + 1}`;
-  const stripOne = gallery.slice(0, 3);
-  const bandImages = gallery.slice(3);
 
   const price = formatPriceBand(project.price_from_public, project.price_to_public, {
     currency: project.price_currency,
   });
-  const location = [project.neighbourhood, project.city, project.province]
-    .filter(Boolean)
-    .join(", ");
-  const typeLabel = project.project_type
-    ? project.project_type.replace(/_/g, " ")
-    : null;
+  const chip = [project.city, project.province].filter(Boolean).join(", ");
+  const mapQuery =
+    project.address_full ??
+    [project.project_name, project.city, project.province]
+      .filter(Boolean)
+      .join(", ");
 
   const subpages = MICROSITE_SUBPAGES.filter((p) => c.pages?.[p.key]);
-  const navItems = [
+  const footerLinks = [
     ...subpages.map((p) => ({ href: `/${p.slug}`, label: p.label })),
-    ...c.sections.map((s) => ({ href: `#${anchor(s.title)}`, label: s.title })),
+    ...c.sections
+      .slice(0, 5)
+      .map((s) => ({ href: `#${anchor(s.title)}`, label: s.title })),
     ...(c.faq.length ? [{ href: "#faq", label: "FAQ" }] : []),
-    { href: "#register", label: "Register" },
+    { href: "#map", label: "Location" },
+    { href: "#register", label: "Register Now" },
   ];
+
+  // Photography rhythm: one large image after the intro, then a large band
+  // after each section while images remain; leftovers pair up before the map.
+  const introImage = gallery[0] ?? null;
+  const bandImages = gallery.slice(1);
+  const leftovers = bandImages.slice(c.sections.length);
 
   const jsonLd = [
     {
@@ -109,10 +118,6 @@ export function MicrositeSiteView({
       : null,
   ].filter(Boolean);
 
-  // Insert a full-width photo band after every second section.
-  const bandAfter = (i: number): MicrositeImage | null =>
-    (i + 1) % 2 === 0 ? (bandImages[Math.floor(i / 2)] ?? null) : null;
-
   return (
     <main className="min-h-screen bg-white" style={fontFamily ? { fontFamily } : undefined}>
       {fontHref ? (
@@ -136,7 +141,7 @@ export function MicrositeSiteView({
         </div>
       ) : null}
 
-      {/* Hero — the lead form IS the hero (The Valley format). */}
+      {/* Hero — chip, NAME, form. The form renders above the fold. */}
       <header id="register-top" className="relative overflow-hidden bg-ink text-white">
         {project.hero_image_url ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -146,47 +151,33 @@ export function MicrositeSiteView({
             className="absolute inset-0 h-full w-full object-cover"
           />
         ) : null}
-        <div className="absolute inset-0 bg-black/55" />
-        <div className="relative mx-auto max-w-xl px-6 py-14 text-center sm:py-18">
-          {project.sales_status === "coming_soon" ? (
-            <span className="inline-flex items-center rounded-full bg-white/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] backdrop-blur">
-              Coming soon{location ? ` · ${location}` : ""}
+        <div className="absolute inset-0 bg-black/60" />
+        <div className="relative mx-auto max-w-md px-6 py-10 text-center sm:py-12">
+          {chip ? (
+            <span className="inline-flex items-center rounded-full bg-white/15 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] backdrop-blur">
+              {chip}
             </span>
           ) : null}
           <h1 className="mt-4 text-balance text-4xl font-semibold tracking-tight sm:text-5xl">
-            {c.headline}
+            {project.project_name}
           </h1>
-          <p className="mx-auto mt-3 max-w-lg text-lg text-white/90">{c.subhead}</p>
-          <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-sm">
-            {price ? (
-              <span className="rounded-full bg-white px-4 py-1.5 font-semibold text-ink">
-                {price}
-              </span>
-            ) : null}
-            {project.bedrooms_summary ? (
-              <span className="rounded-full border border-white/40 px-4 py-1.5">
-                {project.bedrooms_summary}
-              </span>
-            ) : null}
-            {typeLabel ? (
-              <span className="rounded-full border border-white/40 px-4 py-1.5 capitalize">
-                {typeLabel}
-              </span>
-            ) : null}
-          </div>
-          <div className="mt-7 rounded-2xl bg-white/95 p-6 text-left shadow-xl backdrop-blur sm:p-7">
-            <p className="text-center text-lg font-semibold text-ink">
-              {c.cta_label}
+          <div className="mt-6 rounded-2xl bg-white p-6 text-left shadow-2xl sm:p-7">
+            <p
+              className="text-center text-xl font-semibold"
+              style={{ color: primary }}
+            >
+              Register Now
             </p>
             <p className="mt-1 text-center text-sm text-slate-500">
-              Pricing, floor plans, and launch details, sent as they come out.
+              Get available floor plans, pricing and details.
             </p>
             <div className="mt-4">
               <MicrositeLeadForm
                 idPrefix="hero"
+                compact
                 domain={config.domain}
                 captureKey={config.capture_key}
-                ctaLabel={c.cta_label}
+                ctaLabel="Register Now"
                 accentColor={primary}
               />
             </div>
@@ -194,48 +185,35 @@ export function MicrositeSiteView({
         </div>
       </header>
 
-      {/* On this page */}
-      <nav
-        aria-label="On this page"
-        className="sticky top-0 z-10 border-b border-slate-100 bg-white/95 backdrop-blur"
-      >
-        <div className="mx-auto flex max-w-3xl gap-4 overflow-x-auto px-6 py-3 text-sm text-slate-500">
-          {navItems.map((n) => (
-            <a
-              key={n.href}
-              href={n.href}
-              className="whitespace-nowrap hover:text-slate-900"
-            >
-              {n.label}
-            </a>
-          ))}
-        </div>
-      </nav>
-
       {/* Body */}
       <div className="mx-auto max-w-3xl px-6 py-12 sm:py-16">
-        <div dangerouslySetInnerHTML={{ __html: renderMarkdown(c.intro_md) }} />
+        <p className="text-xl leading-relaxed text-slate-700">{c.subhead}</p>
+        {price ? (
+          <p className="mt-3 text-sm font-semibold uppercase tracking-[0.14em] text-slate-400">
+            {price}
+            {project.bedrooms_summary ? ` · ${project.bedrooms_summary}` : ""}
+          </p>
+        ) : null}
+        <div
+          className="mt-6"
+          dangerouslySetInnerHTML={{ __html: renderMarkdown(c.intro_md) }}
+        />
 
-        {stripOne.length ? (
-          <div className="mt-8 grid gap-3 sm:grid-cols-3">
-            {stripOne.map((img, i) => (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                key={img.url}
-                src={img.url}
-                alt={altFor(img, i)}
-                loading="lazy"
-                className="h-44 w-full rounded-xl object-cover"
-              />
-            ))}
-          </div>
+        {introImage ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={introImage.url}
+            alt={altFor(introImage, 0)}
+            loading="lazy"
+            className="mt-10 h-72 w-full rounded-2xl object-cover sm:h-96"
+          />
         ) : null}
 
         {c.sections.map((s, i) => {
-          const band = bandAfter(i);
+          const band = bandImages[i] ?? null;
           return (
             <div key={s.title}>
-              <section id={anchor(s.title)} className="mt-10 scroll-mt-16">
+              <section id={anchor(s.title)} className="mt-12 scroll-mt-10">
                 <h2 className="text-2xl font-semibold tracking-tight text-ink">
                   {s.title}
                 </h2>
@@ -245,14 +223,29 @@ export function MicrositeSiteView({
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={band.url}
-                  alt={altFor(band, gallery.indexOf(band))}
+                  alt={altFor(band, i + 1)}
                   loading="lazy"
-                  className="mt-10 h-64 w-full rounded-2xl object-cover sm:h-80"
+                  className="mt-12 h-72 w-full rounded-2xl object-cover sm:h-96"
                 />
               ) : null}
             </div>
           );
         })}
+
+        {leftovers.length ? (
+          <div className="mt-12 grid gap-4 sm:grid-cols-2">
+            {leftovers.map((img, i) => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                key={img.url}
+                src={img.url}
+                alt={altFor(img, c.sections.length + 1 + i)}
+                loading="lazy"
+                className="h-64 w-full rounded-2xl object-cover"
+              />
+            ))}
+          </div>
+        ) : null}
 
         {subpages.length ? (
           <section className="mt-12">
@@ -279,7 +272,7 @@ export function MicrositeSiteView({
         ) : null}
 
         {c.faq.length > 0 ? (
-          <section id="faq" className="mt-12 scroll-mt-16">
+          <section id="faq" className="mt-12 scroll-mt-10">
             <h2 className="text-2xl font-semibold tracking-tight text-ink">
               Frequently asked questions
             </h2>
@@ -301,28 +294,47 @@ export function MicrositeSiteView({
         {/* Register — bottom */}
         <section
           id="register"
-          className="mt-14 scroll-mt-16 rounded-2xl border border-slate-200 bg-slate-50/60 p-6 sm:p-8"
+          className="mt-14 scroll-mt-10 rounded-2xl border border-slate-200 bg-slate-50/60 p-6 sm:p-8"
         >
-          <h2 className="text-2xl font-semibold tracking-tight text-ink">
-            Get first access
+          <h2
+            className="text-2xl font-semibold tracking-tight"
+            style={{ color: primary }}
+          >
+            Register Now
           </h2>
           <p className="mt-1 text-sm text-slate-500">
-            Pricing, floor plans, and launch timing, sent to you as they come
-            out and before the general public.
+            Get available floor plans, pricing and details.
           </p>
           <div className="mt-5">
             <MicrositeLeadForm
               idPrefix="bottom"
               domain={config.domain}
               captureKey={config.capture_key}
-              ctaLabel={c.cta_label}
+              ctaLabel="Register Now"
               accentColor={primary}
             />
           </div>
         </section>
+
+        {/* Location map */}
+        <section id="map" className="mt-14 scroll-mt-10">
+          <h2 className="text-2xl font-semibold tracking-tight text-ink">
+            Location
+          </h2>
+          <p className="mt-1 text-sm text-slate-500">
+            {project.address_full ?? chip}
+          </p>
+          <iframe
+            title={`Map of ${project.project_name}`}
+            src={`https://maps.google.com/maps?q=${encodeURIComponent(mapQuery)}&z=14&output=embed`}
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            className="mt-4 h-80 w-full rounded-2xl border-0"
+          />
+        </section>
       </div>
 
-      <MicrositeFooter slug={project.slug} />
+      <MicrositeFooter slug={project.slug} links={footerLinks} />
     </main>
   );
 }

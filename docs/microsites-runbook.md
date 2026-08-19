@@ -84,8 +84,15 @@ AggregateOffer + FAQPage.
 ### Page format rules (v4)
 
 - **The hero IS the lead form** (The Valley pattern): full-bleed rendering,
-  project name, hook line, quick-fact pills, then the form itself in a card,
-  all above the fold. A second form closes the page.
+  a "{City}, {Province}" chip, the project NAME as the only headline, then
+  the register card ("Register Now" / "Get available floor plans, pricing
+  and details.", compact form with no message field) — all above the fold.
+  A second form closes the page. Buttons and accents wear the extracted
+  brand colour.
+- **Map**: a Google Maps embed with the address pin sits near the bottom
+  (`#map`), using the project's full address when we have it.
+- **Navigation lives in the footer** ("Useful links": sub-pages, section
+  anchors, FAQ, Location, Register Now) — the hero stays clean.
 - **Canonical section order — educate first, sell second**: About the
   project → Neighbourhood → Getting around → Nearby amenities → About the
   developer, then the commercial block (pricing story, homes, top reasons,

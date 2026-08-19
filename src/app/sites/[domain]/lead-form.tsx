@@ -15,6 +15,7 @@ export function MicrositeLeadForm({
   captureKey,
   ctaLabel,
   accentColor,
+  compact = false,
 }: {
   idPrefix?: string;
   domain: string;
@@ -22,6 +23,8 @@ export function MicrositeLeadForm({
   ctaLabel: string;
   /** Brand-extracted button colour; falls back to the app palette. */
   accentColor?: string;
+  /** Hero variant: tighter spacing, no message field — fits above the fold. */
+  compact?: boolean;
 }) {
   const id = (name: string) => `${idPrefix}_${name}`;
   const [status, setStatus] = useState<"idle" | "sending" | "done" | "error">(
@@ -36,7 +39,7 @@ export function MicrositeLeadForm({
         aria-live="polite"
         className="rounded-xl border border-emerald-200 bg-emerald-50 p-5 text-sm text-emerald-800"
       >
-        Thanks — you&apos;re on the list. Expect pricing, floor plans, and
+        Thanks, you&apos;re on the list. Expect pricing, floor plans, and
         launch details as they&apos;re released.
       </div>
     );
@@ -55,7 +58,7 @@ export function MicrositeLeadForm({
           setStatus("done");
         }
       }}
-      className="space-y-4"
+      className={compact ? "space-y-3" : "space-y-4"}
     >
       <input type="hidden" name="domain" value={domain} />
       <input type="hidden" name="capture_key" value={captureKey} />
@@ -77,9 +80,11 @@ export function MicrositeLeadForm({
           <Input id={id("phone")} name="lead_phone" type="tel" required minLength={7} autoComplete="tel" maxLength={40} />
         </Field>
       </div>
-      <Field label="Message (optional)" htmlFor={id("message")}>
-        <Textarea id={id("message")} name="message" className="min-h-16" maxLength={2000} />
-      </Field>
+      {compact ? null : (
+        <Field label="Message (optional)" htmlFor={id("message")}>
+          <Textarea id={id("message")} name="message" className="min-h-16" maxLength={2000} />
+        </Field>
+      )}
       <fieldset>
         <legend className="text-sm font-medium text-slate-700">
           Are you a real estate agent? <span aria-hidden>*</span>
@@ -110,7 +115,7 @@ export function MicrositeLeadForm({
         {status === "sending" ? "Sending…" : ctaLabel}
       </Button>
       <p className="text-xs leading-relaxed text-slate-500">
-        No spam — your details go only to this project&apos;s representative.
+        No spam. Your details go only to this project&apos;s representative.
         By submitting, you agree to be contacted about this project by email
         or phone.
       </p>
