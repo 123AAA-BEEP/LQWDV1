@@ -286,13 +286,18 @@ export function MicrositeSiteView({
         </div>
 
         {introImage ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={introImage.url}
-            alt={introImage.alt}
-            loading="lazy"
-            className="mt-12 h-72 w-full rounded-3xl object-cover shadow-sm ring-1 ring-black/5 sm:h-[28rem]"
-          />
+          <div
+            className="mt-12 flex items-center justify-center rounded-3xl p-5 sm:p-10"
+            style={{ backgroundColor: `${primary}0a` }}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={introImage.url}
+              alt={introImage.alt}
+              loading="lazy"
+              className="max-h-[30rem] w-auto max-w-full rounded-2xl object-contain shadow-sm"
+            />
+          </div>
         ) : null}
 
         {/* Sections alternate text/image sides — never a linear stack. */}
@@ -354,13 +359,20 @@ export function MicrositeSiteView({
               />
             </div>
           ) : img ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={img.url}
-              alt={img.alt}
-              loading="lazy"
-              className={`h-64 w-full rounded-3xl object-cover shadow-sm ring-1 ring-black/5 sm:h-full sm:min-h-96 ${imageLeft ? "sm:order-1" : ""}`}
-            />
+            // Contained, never cropped: the full rendering sits centred on a
+            // soft brand-tinted panel (the founder's reference pattern).
+            <div
+              className={`flex min-h-64 items-center justify-center rounded-3xl p-5 sm:min-h-96 sm:p-8 ${imageLeft ? "sm:order-1" : ""}`}
+              style={{ backgroundColor: `${primary}0a` }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={img.url}
+                alt={img.alt}
+                loading="lazy"
+                className="max-h-80 w-auto max-w-full rounded-2xl object-contain shadow-sm sm:max-h-[26rem]"
+              />
+            </div>
           ) : null;
           return (
             <section
@@ -385,14 +397,19 @@ export function MicrositeSiteView({
         {leftovers.length ? (
           <div className="mt-16 grid gap-4 sm:grid-cols-2">
             {leftovers.map((img) => (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
+              <div
                 key={img.url}
-                src={img.url}
-                alt={img.alt}
-                loading="lazy"
-                className="h-64 w-full rounded-3xl object-cover shadow-sm ring-1 ring-black/5"
-              />
+                className="flex min-h-64 items-center justify-center rounded-3xl p-5"
+                style={{ backgroundColor: `${primary}0a` }}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={img.url}
+                  alt={img.alt}
+                  loading="lazy"
+                  className="max-h-72 w-auto max-w-full rounded-2xl object-contain shadow-sm"
+                />
+              </div>
             ))}
           </div>
         ) : null}
