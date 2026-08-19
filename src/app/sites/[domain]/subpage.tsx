@@ -37,13 +37,10 @@ export async function loadLiveMicrosite(
 }
 
 export function MicrositeFooter({
-  slug,
   links,
   name,
   primary,
 }: {
-  /** The grounding project's liqwd.ca slug. */
-  slug: string;
   /** Site navigation — the founder wants nav in the footer, not the hero. */
   links?: { href: string; label: string }[];
   /** Project wordmark shown in the footer. */
@@ -84,18 +81,12 @@ export function MicrositeFooter({
           ) : null}
         </div>
         <p className="mt-10 border-t border-white/10 pt-6 text-xs leading-relaxed text-slate-400">
-          Independent information page operated by LIQWD. This is not the
-          builder&apos;s official website. Details reflect publicly available
-          information and change as the project progresses, so confirm
-          everything with the builder&apos;s sales team. Renderings are the
-          builder&apos;s marketing material.{" "}
-          <a
-            href={`https://liqwd.ca/projects/${slug}`}
-            className="underline transition-colors hover:text-white"
-          >
-            See the full listing on LIQWD
-          </a>
-          .
+          We do not represent the developer or builder. This is an
+          independent information page operated by LIQWD. Details reflect
+          publicly available information and change as the project
+          progresses, so confirm everything with the builder&apos;s sales
+          team. Renderings are the builder&apos;s marketing material and
+          illustrations are artist&apos;s concept. E.&amp;O.E.
         </p>
       </div>
     </footer>
@@ -356,7 +347,6 @@ export function makeSubpage(pageKey: MicrositeSubPageKey) {
         </div>
 
         <MicrositeFooter
-          slug={project.slug}
           name={project.project_name}
           primary={primary}
           links={[

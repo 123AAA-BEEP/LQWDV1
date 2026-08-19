@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Card, CardBody } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox, Field, Textarea } from "@/components/ui/field";
+import { Checkbox, Field, Input, Textarea } from "@/components/ui/field";
 import { FlashNotice } from "@/components/ui/flash-notice";
 import {
   MICROSITE_SECTIONS,
@@ -26,6 +26,7 @@ import {
   setMicrositeStatus,
   buyMicrositeDomain,
   attachMicrositeDomain,
+  saveMicrositeLeadAutomation,
 } from "../actions";
 import { MicrositeContentEditor } from "./content-editor";
 
@@ -40,6 +41,8 @@ interface Row {
   context: Record<string, unknown>;
   content: MicrositeContent | null;
   updated_at: string;
+  auto_send_details: boolean;
+  details_url: string | null;
 }
 
 const first = (v: unknown): string =>
@@ -68,7 +71,9 @@ export default async function AdminMicrositeDetail({
 
   const { data } = await supabase
     .from("microsite_configs")
-    .select("id, domain, project_id, status, context, content, updated_at")
+    .select(
+      "id, domain, project_id, status, context, content, updated_at, auto_send_details, details_url",
+    )
     .eq("id", id)
     .maybeSingle();
   const site = (data as Row | null) ?? null;
@@ -235,6 +240,48 @@ export default async function AdminMicrositeDetail({
               Open full preview ↗
             </a>
           ) : null}
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardBody>
+          <h3 className="font-semibold text-ink">Lead automation</h3>
+          <p className="mt-1 text-sm text-slate-500">
+            Every microsite lead is assigned to the admin account (current
+            policy) and lands in the Leads queue, source-tagged with this
+            domain. Optionally auto-email each new lead the project details.
+          </p>
+          <form
+            action={saveMicrositeLeadAutomation}
+            className="mt-3 flex flex-wrap items-end gap-3"
+          >
+            <input type="hidden" name="microsite_id" value={site.id} />
+            <label className="flex items-center gap-2 pb-2.5 text-sm font-medium text-slate-700">
+              <Checkbox
+                name="auto_send_details"
+                defaultChecked={site.auto_send_details}
+              />
+              Auto-send details to new leads
+            </label>
+            <div className="min-w-72 flex-1">
+              <Field
+                label="Details link"
+                htmlFor="ms_details_url"
+                hint="A Google Drive package or any https link. Blank = the LIQWD listing."
+              >
+                <Input
+                  id="ms_details_url"
+                  name="details_url"
+                  defaultValue={site.details_url ?? ""}
+                  placeholder="https://drive.google.com/…"
+                  maxLength={2000}
+                />
+              </Field>
+            </div>
+            <Button type="submit" variant="secondary">
+              Save
+            </Button>
+          </form>
         </CardBody>
       </Card>
 

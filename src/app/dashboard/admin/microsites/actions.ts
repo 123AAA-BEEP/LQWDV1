@@ -258,6 +258,39 @@ export async function saveMicrositeContent(input: {
   return {};
 }
 
+/** Lead follow-up automation: toggle + details link (Drive or LIQWD). */
+export async function saveMicrositeLeadAutomation(formData: FormData) {
+  const supabase = await createClient();
+  await assertAdmin(supabase);
+  const id = String(formData.get("microsite_id") ?? "");
+  if (!id) redirectWithFlash(LIST, "Missing microsite.", "error");
+
+  const enabled = formData.get("auto_send_details") === "on";
+  const url = String(formData.get("details_url") ?? "").trim().slice(0, 2000);
+  if (url && !/^https:\/\/.+/.test(url)) {
+    redirectWithFlash(
+      `${LIST}/${id}`,
+      "The details link must be a full https URL.",
+      "error",
+    );
+  }
+  await supabase
+    .from("microsite_configs")
+    .update({
+      auto_send_details: enabled,
+      details_url: url || null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id);
+  revalidatePath(`${LIST}/${id}`);
+  redirectWithFlash(
+    `${LIST}/${id}`,
+    enabled
+      ? `Auto-send is ON — new leads get ${url ? "your details link" : "the LIQWD listing link"} instantly.`
+      : "Auto-send is off — leads are captured but not emailed.",
+  );
+}
+
 /** One-click domain purchase through the Vercel account (admin-confirmed). */
 export async function buyMicrositeDomain(formData: FormData) {
   const supabase = await createClient();

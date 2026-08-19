@@ -498,7 +498,6 @@ export function MicrositeSiteView({
       </div>
 
       <MicrositeFooter
-        slug={project.slug}
         links={footerLinks}
         name={project.project_name}
         primary={primary}

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Field, Input, Radio, Textarea } from "@/components/ui/field";
+import { Field, Input, Radio } from "@/components/ui/field";
 import { submitMicrositeLead } from "./actions";
 
 /**
@@ -80,11 +80,14 @@ export function MicrositeLeadForm({
           <Input id={id("phone")} name="lead_phone" type="tel" required minLength={7} autoComplete="tel" maxLength={40} />
         </Field>
       </div>
-      {compact ? null : (
-        <Field label="Message (optional)" htmlFor={id("message")}>
-          <Textarea id={id("message")} name="message" className="min-h-16" maxLength={2000} />
-        </Field>
-      )}
+      <Field label="Address (optional)" htmlFor={id("address")}>
+        <Input
+          id={id("address")}
+          name="lead_address"
+          autoComplete="street-address"
+          maxLength={200}
+        />
+      </Field>
       <fieldset>
         <legend className="text-sm font-medium text-slate-700">
           Are you a real estate agent? <span aria-hidden>*</span>
