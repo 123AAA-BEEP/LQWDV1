@@ -40,7 +40,11 @@ export interface MicrositeSubPage {
   faq: { question: string; answer: string }[];
 }
 
-export type MicrositeSubPageKey = "floor_plans" | "pricing" | "neighbourhood";
+export type MicrositeSubPageKey =
+  | "floor_plans"
+  | "pricing"
+  | "neighbourhood"
+  | "site_plan";
 
 export {
   BRAND_FONTS,
@@ -450,7 +454,13 @@ const SECTION_DEFS: SectionDef[] = [
   },
 ];
 
-/** Sub-page registry: slug on the domain, admin label, custom page prompt. */
+/**
+ * Sub-page registry: slug on the domain, admin label, custom page prompt.
+ * Slugs and title wording are calibrated against the founder's real GSC
+ * data from a past project microsite: every top query was branded, and the
+ * modifiers that ranked were "homes", "site plan", "prices" (in that
+ * order) — so those exact words anchor the pages.
+ */
 export const MICROSITE_SUBPAGES: {
   key: MicrositeSubPageKey;
   slug: string;
@@ -465,18 +475,25 @@ export const MICROSITE_SUBPAGES: {
       "Write the /floor-plans page. HARD RULE: floor plans are gate-kept. Never describe specific layouts, square footage, or per-plan pricing, even if you could guess. This page is a text PREVIEW: what home types and bedroom mixes are coming (from the fact block), who each general layout suits, what the home type is like to live in, and when plans typically come out for a project at this stage. Every part of the page steers to one action: register to get the floor plans the moment any are available. heading: like 'PROJECT floor plans'. seo_title: like 'PROJECT Floor Plans | 1 and 3 Bedroom Stacked Towns in CITY'.",
   },
   {
+    key: "site_plan",
+    slug: "site-plan",
+    label: "Site plan",
+    brief:
+      "Write the /site-plan page. HARD RULE: the site plan is gate-kept and may not even be released. Never invent lot counts, block layouts, phasing, or orientations. Explain in plain words what a site plan shows for a community like this (where homes sit, green space, parking, visitor access), why buyers use it (picking a lot or unit position early), and its release status from the fact block. The one action: register to get the site plan the moment it's available. Use the words 'site plan' naturally throughout. heading: like 'PROJECT site plan'. seo_title: like 'PROJECT Site Plan | Lots, Layout and Phasing in CITY'.",
+  },
+  {
     key: "pricing",
     slug: "pricing",
-    label: "Pricing",
+    label: "Prices",
     brief:
-      "Write the /pricing page. Go deep on the price story: what the starting price means, what it buys in this market, how pre-construction pricing typically moves from first release to later releases, and what is not released yet. Use deposit or incentive details ONLY if the positioning context provides them. Full price lists are gate-kept: the page's one action is registering to get the price list first. heading: like 'PROJECT pricing'. seo_title: like 'PROJECT Pricing and Price List | From $X in CITY'.",
+      "Write the /pricing page. Go deep on the price story: what the starting price means, what it buys in this market, how pre-construction prices typically move from first release to later releases, and what is not released yet. Use the word 'prices' naturally (that is what buyers type), alongside 'price list'. Use deposit or incentive details ONLY if the positioning context provides them. Full price lists are gate-kept: the page's one action is registering to get the price list first. heading: like 'PROJECT prices'. seo_title: like 'PROJECT Prices and Price List | From $X in CITY'.",
   },
   {
     key: "neighbourhood",
     slug: "neighbourhood",
     label: "Neighbourhood",
     brief:
-      "Write the /neighbourhood page: a genuinely useful area guide for someone deciding whether they could live here. The community's feel, who lives there, commuting (real named highways and transit), schools and parks and shopping, what a normal week looks like. Use real general knowledge of the place plus any local nuggets in the positioning context. heading: like 'Living in CITY | around PROJECT'. seo_title: like 'PROJECT Location | Living in CITY'.",
+      "Write the /neighbourhood page: a genuinely useful area guide for someone deciding whether they could live here. The community's feel, who lives there, commuting (real named highways and transit), schools and parks and shopping, what a normal week looks like. Use real general knowledge of the place plus any local nuggets in the positioning context. Work in the inverted phrasing 'CITY's PROJECT' or 'the PROJECT community in CITY' naturally once or twice, since people search the name both ways. heading: like 'Living in CITY | around PROJECT'. seo_title: like 'PROJECT Location | Living in CITY'.",
   },
 ];
 
@@ -487,7 +504,7 @@ const INTRO_BRIEF =
   "Write the page intro: two short paragraphs. First, what this project is, where it is, and the one thing that makes it worth a serious look (use the positioning hook if given). Second, tell the reader this page has the full rundown and that the form gets them pricing and floor plans as they come out.";
 
 const FAQ_BRIEF =
-  "Write 6 to 8 FAQ entries matching what real buyers type into Google about a project like this: how much it costs, where it is, when it launches, who the builder is, what home types there are, how deposits work, and whether it suits first-time buyers or investors. Answers are 1 to 3 sentences, factual, plain. If a detail is not released, the answer says so.";
+  "Write 6 to 8 FAQ entries matching what real buyers type into Google about a project like this: how much homes cost (use the word 'prices'), where it is, when it launches, who the builder is, what home types there are, whether the site plan and floor plans are out yet, how deposits work, and whether it suits first-time buyers or investors. Answers are 1 to 3 sentences, factual, plain. If a detail is not released, the answer says so.";
 
 // ---------------------------------------------------------------------------
 // Generation

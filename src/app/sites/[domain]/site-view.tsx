@@ -363,7 +363,7 @@ export function MicrositeSiteView({
             <h2 className="text-2xl font-semibold tracking-tight text-ink">
               Go deeper
             </h2>
-            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {subpages.map((p) => (
                 <a
                   key={p.slug}

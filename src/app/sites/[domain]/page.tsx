@@ -33,9 +33,11 @@ export async function generateMetadata({
   }
   const project = await getMicrositeProject(config.project_id);
   const name = project?.project_name ?? config.content.headline;
+  // Modifier order mirrors what actually ranked on the founder's past
+  // project microsite (GSC): homes, site plan, prices, floor plans.
   const title =
     config.content.seo_title ||
-    `${name}${project?.city ? ` in ${project.city}` : ""} | Pricing, Floor Plans & Launch Details`;
+    `${name}${project?.city ? ` in ${project.city}` : ""} | Homes, Prices & Floor Plans`;
   const description = config.content.seo_description || config.content.subhead;
   return {
     title,
