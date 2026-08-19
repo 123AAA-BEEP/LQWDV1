@@ -31,14 +31,17 @@ export async function generateMetadata({
     return { title: "Coming soon", robots: { index: false, follow: false } };
   }
   const project = await getMicrositeProject(config.project_id);
-  const title = `${project?.project_name ?? config.content.headline}${project?.city ? ` — ${project.city}` : ""} | Pricing, Floor Plans & Launch Details`;
+  const title =
+    config.content.seo_title ||
+    `${project?.project_name ?? config.content.headline}${project?.city ? ` — ${project.city}` : ""} | Pricing, Floor Plans & Launch Details`;
+  const description = config.content.seo_description || config.content.subhead;
   return {
     title,
-    description: config.content.subhead,
+    description,
     alternates: { canonical: `https://${config.domain}/` },
     openGraph: {
       title,
-      description: config.content.subhead,
+      description,
       ...(project?.hero_image_url ? { images: [project.hero_image_url] } : {}),
     },
   };

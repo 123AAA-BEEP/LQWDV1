@@ -10,10 +10,18 @@ import { FlashNotice } from "@/components/ui/flash-notice";
 import { renderMarkdown } from "@/lib/markdown";
 import type { MicrositeContent } from "@/lib/microsites";
 import {
+  vercelDomainsConfigured,
+  checkDomain,
+  domainAttached,
+} from "@/lib/vercel-domains";
+import {
   saveMicrositeContext,
   generateMicrosite,
   setMicrositeStatus,
+  buyMicrositeDomain,
+  attachMicrositeDomain,
 } from "../actions";
+import { MicrositeContentEditor } from "./content-editor";
 
 export const metadata: Metadata = { title: "Microsite" };
 export const dynamic = "force-dynamic";
@@ -71,6 +79,13 @@ export default async function AdminMicrositeDetail({
         ? JSON.stringify(site.context, null, 2)
         : "";
   const c = site.content;
+  const defaultSeoTitle = `${project?.project_name ?? "Project"}${project?.city ? ` — ${project.city}` : ""} | Pricing, Floor Plans & Launch Details`;
+
+  // Domain automation (only when Vercel env is configured): is the domain on
+  // the project yet, and if not, can we buy it right here?
+  const vercelOn = vercelDomainsConfigured();
+  const attached = vercelOn ? await domainAttached(site.domain) : null;
+  const check = vercelOn && attached === false ? await checkDomain(site.domain) : null;
 
   return (
     <div className="space-y-6">
@@ -166,6 +181,62 @@ export default async function AdminMicrositeDetail({
 
       <Card>
         <CardBody>
+          <h3 className="font-semibold text-ink">Domain</h3>
+          {!vercelOn ? (
+            <p className="mt-1 text-sm text-slate-500">
+              Manual mode: buy the domain anywhere, then attach it to the LIQWD
+              project in the Vercel dashboard (Settings → Domains). To buy and
+              attach from this screen instead, set{" "}
+              <code className="rounded bg-slate-100 px-1">VERCEL_TOKEN</code> and{" "}
+              <code className="rounded bg-slate-100 px-1">VERCEL_PROJECT_ID</code>{" "}
+              in Vercel env.
+            </p>
+          ) : attached ? (
+            <p className="mt-1 text-sm text-emerald-700">
+              {site.domain} is attached to the Vercel project — DNS is handled.
+            </p>
+          ) : (
+            <div className="mt-2 flex flex-wrap items-center gap-3">
+              {check?.available && check.price != null ? (
+                <>
+                  <p className="text-sm text-slate-600">
+                    Available to register for{" "}
+                    <span className="font-semibold text-ink">
+                      US${check.price}/yr
+                    </span>{" "}
+                    on the Vercel account.
+                  </p>
+                  <form action={buyMicrositeDomain}>
+                    <input type="hidden" name="microsite_id" value={site.id} />
+                    <Button type="submit" size="sm">
+                      Buy &amp; attach
+                    </Button>
+                  </form>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm text-slate-600">
+                    Not attached to the Vercel project yet
+                    {check && !check.available
+                      ? " (already registered — if you own it, attach it)"
+                      : ""}
+                    .
+                  </p>
+                  <form action={attachMicrositeDomain}>
+                    <input type="hidden" name="microsite_id" value={site.id} />
+                    <Button type="submit" size="sm" variant="secondary">
+                      Attach to Vercel project
+                    </Button>
+                  </form>
+                </>
+              )}
+            </div>
+          )}
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardBody>
           <h3 className="font-semibold text-ink">Positioning context</h3>
           <p className="mt-1 text-sm text-slate-500">
             The questionnaire answers that steer generation — free text or
@@ -192,7 +263,25 @@ export default async function AdminMicrositeDetail({
 
       <Card>
         <CardBody>
-          <h3 className="font-semibold text-ink">Generated page (review before going live)</h3>
+          <h3 className="font-semibold text-ink">Page content — every field is editable</h3>
+          <p className="mt-1 text-sm text-slate-500">
+            {c
+              ? "Rewrite anything the generator produced, then save. Regenerating replaces the body copy but keeps your SEO overrides."
+              : "Generate first (recommended), or write the page by hand from scratch."}
+          </p>
+          <div className="mt-4">
+            <MicrositeContentEditor
+              micrositeId={site.id}
+              initial={c}
+              defaultSeoTitle={defaultSeoTitle}
+            />
+          </div>
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardBody>
+          <h3 className="font-semibold text-ink">Preview (as the page renders)</h3>
           {!c ? (
             <p className="mt-2 text-sm text-slate-500">
               No content yet — add context above (optional) and hit Generate.
@@ -228,6 +317,9 @@ export default async function AdminMicrositeDetail({
               ) : null}
               <p className="text-xs text-slate-400">
                 Generated {new Date(c.generated_at).toLocaleString("en-CA")}
+                {c.edited_at
+                  ? ` · hand-edited ${new Date(c.edited_at).toLocaleString("en-CA")}`
+                  : ""}
               </p>
             </div>
           )}

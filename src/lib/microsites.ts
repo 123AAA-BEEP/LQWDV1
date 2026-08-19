@@ -26,6 +26,10 @@ export interface MicrositeContent {
   faq: { question: string; answer: string }[];
   cta_label: string;
   generated_at: string;
+  /** Admin overrides — survive regeneration; fall back to the template/subhead. */
+  seo_title?: string | null;
+  seo_description?: string | null;
+  edited_at?: string | null;
 }
 
 export interface MicrositeConfig {
@@ -37,6 +41,64 @@ export interface MicrositeConfig {
   context: Record<string, unknown>;
   content: MicrositeContent | null;
   capture_key: string;
+}
+
+/** Lowercase bare domain, or null when it doesn't look like one. */
+export function normalizeDomain(raw: string): string | null {
+  const d = raw
+    .trim()
+    .toLowerCase()
+    .replace(/^https?:\/\//, "")
+    .replace(/^www\./, "")
+    .replace(/\/.*$/, "")
+    .slice(0, 253);
+  return /^[a-z0-9][a-z0-9.-]{2,}\.[a-z]{2,}$/.test(d) ? d : null;
+}
+
+/**
+ * Detects a founder microsite directive in a forwarded intake email —
+ * "microsite: echotownswaterdown.com", "microsite for x.ca", or a bare
+ * "[microsite]" tag. `domainInSubject` marks the only form trusted enough to
+ * trigger a domain PURCHASE (the founder controls the subject when
+ * forwarding; body text can contain a marketer's stray copy).
+ */
+export function parseMicrositeDirective(
+  subject: string | null,
+  text: string | null,
+): { requested: boolean; domain: string | null; domainInSubject: boolean } {
+  const find = (s: string | null) =>
+    s?.match(/microsite(?:\s*(?:for|:|=))?\s+((?:www\.)?[a-z0-9][a-z0-9.-]*\.[a-z]{2,})/i) ??
+    null;
+  const inSubject = find(subject);
+  const inText = find(text);
+  const hit = inSubject ?? inText;
+  if (hit) {
+    return {
+      requested: true,
+      domain: normalizeDomain(hit[1]),
+      domainInSubject: Boolean(inSubject),
+    };
+  }
+  const tagged = /\[microsite\]|\bmicrosite\b/i.test(
+    `${subject ?? ""}\n${text ?? ""}`,
+  );
+  return { requested: tagged, domain: null, domainInSubject: false };
+}
+
+/** Brandable domain candidates for a project — shown in the intake ping. */
+export function suggestDomains(name: string, city?: string | null): string[] {
+  const slug = (s: string) =>
+    s
+      .toLowerCase()
+      .normalize("NFKD")
+      .replace(/[^a-z0-9]+/g, "")
+      .slice(0, 40);
+  const n = slug(name);
+  if (!n) return [];
+  const c = city ? slug(city) : "";
+  const out = [`${n}.com`, `${n}.ca`];
+  if (c && !n.includes(c)) out.push(`${n}${c}.com`);
+  return out;
 }
 
 /** Hosts that belong to the primary app — everything else is a microsite. */
