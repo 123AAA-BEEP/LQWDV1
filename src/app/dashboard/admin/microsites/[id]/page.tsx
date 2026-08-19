@@ -10,6 +10,7 @@ import { FlashNotice } from "@/components/ui/flash-notice";
 import { renderMarkdown } from "@/lib/markdown";
 import {
   MICROSITE_SECTIONS,
+  MICROSITE_SUBPAGES,
   resolveSectionKeys,
   type MicrositeConfig,
   type MicrositeContent,
@@ -362,6 +363,10 @@ export default async function AdminMicrositeDetail({
                 {c.edited_at
                   ? ` · hand-edited ${new Date(c.edited_at).toLocaleString("en-CA")}`
                   : ""}
+                {" · sub-pages: "}
+                {MICROSITE_SUBPAGES.filter((p) => c.pages?.[p.key])
+                  .map((p) => `/${p.slug}`)
+                  .join(", ") || "none (regenerate to create them)"}
               </p>
             </div>
           )}

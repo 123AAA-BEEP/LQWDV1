@@ -163,16 +163,28 @@ What it unlocks:
 | Attach domain to Vercel | Automatic on Set live / Buy (when env set); manual otherwise |
 | GSC property + index request | Manual (~3 min per domain) |
 
-## Known tradeoffs (v1)
+## Multi-page depth, crawler files, IndexNow (v3)
 
-- **robots.txt / sitemap.xml**: the proxy matcher excludes these paths, so a
-  microsite domain serves liqwd.ca's robots.txt. Harmless in practice (it
-  disallows only dashboard/api paths and points at liqwd.ca's sitemap, which
-  Google treats as a cross-host reference to ignore) — but per-domain
-  robots + one-URL sitemap is a small v1.1 win alongside multi-page.
-- **Single page**: v1 is one URL with `#register` anchor. Organic sitelinks
-  need real multi-page depth — `/floor-plans`, `/pricing`, `/neighbourhood`
-  are the v1.1 fast-follow (also gives Google Ads sitelink assets real
-  targets).
+- **Sub-pages** ship with every generation: `/floor-plans`, `/pricing`,
+  `/neighbourhood`, each with its own prompt, H1, SEO title, meta
+  description, page-specific FAQ + BreadcrumbList schema, a lead form, and
+  cross-links. This is the real path to organic sitelinks and gives Google
+  Ads sitelink assets real targets. **Floor plans are gate-kept**: that page
+  never shows layouts, square footage, or per-plan pricing. It is a text
+  preview whose one job is registration; plans go to registrants.
+- **Per-domain robots.txt** — live sites: `Allow: /` + their own sitemap;
+  draft/retired/unknown domains: `Disallow: /` (the crawler-level twin of
+  the noindex holding page). liqwd.ca's own robots/sitemap still bypass all
+  session middleware (Jul 17-18 outage guard preserved via an early return).
+- **Per-domain sitemap.xml** — home + whichever sub-pages exist, lastmod
+  from the content timestamps.
+- **IndexNow auto-ping** on "Set live" and on regenerating a live site
+  (Bing/Yandex + the indexes behind AI search). The shared key file is
+  served on every microsite domain at `/{key}.txt`. Google doesn't consume
+  IndexNow: add the domain as a GSC property and submit the sitemap once.
 - **Skin**: `skin` column exists (`classic` only for now) so alternate visual
   treatments can ship without schema changes.
+
+Configs generated before v3 have no sub-pages (links and sitemap entries
+simply don't appear; sub-page URLs redirect home) — hit Regenerate to create
+them.

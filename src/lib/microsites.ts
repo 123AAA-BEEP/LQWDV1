@@ -31,6 +31,17 @@ export interface MicrositeSection {
   body_md: string;
 }
 
+export interface MicrositeSubPage {
+  heading: string;
+  seo_title: string;
+  meta_description: string;
+  intro_md: string;
+  sections: MicrositeSection[];
+  faq: { question: string; answer: string }[];
+}
+
+export type MicrositeSubPageKey = "floor_plans" | "pricing" | "neighbourhood";
+
 export interface MicrositeContent {
   headline: string;
   subhead: string;
@@ -39,6 +50,8 @@ export interface MicrositeContent {
   faq: { question: string; answer: string }[];
   cta_label: string;
   generated_at: string;
+  /** Sub-pages (/floor-plans, /pricing, /neighbourhood) — the organic-sitelink depth. */
+  pages?: Partial<Record<MicrositeSubPageKey, MicrositeSubPage>>;
   /** Admin overrides — survive regeneration; fall back to the template/subhead. */
   seo_title?: string | null;
   seo_description?: string | null;
@@ -329,6 +342,36 @@ const SECTION_DEFS: SectionDef[] = [
   },
 ];
 
+/** Sub-page registry: slug on the domain, admin label, custom page prompt. */
+export const MICROSITE_SUBPAGES: {
+  key: MicrositeSubPageKey;
+  slug: string;
+  label: string;
+  brief: string;
+}[] = [
+  {
+    key: "floor_plans",
+    slug: "floor-plans",
+    label: "Floor plans",
+    brief:
+      "Write the /floor-plans page. HARD RULE: floor plans are gate-kept. Never describe specific layouts, square footage, or per-plan pricing, even if you could guess. This page is a text PREVIEW: what home types and bedroom mixes are coming (from the fact block), who each general layout suits, what the home type is like to live in, and when plans typically come out for a project at this stage. Every part of the page steers to one action: register to get the floor plans the moment any are available. heading: like 'PROJECT floor plans'. seo_title: like 'PROJECT Floor Plans | 1 and 3 Bedroom Stacked Towns in CITY'.",
+  },
+  {
+    key: "pricing",
+    slug: "pricing",
+    label: "Pricing",
+    brief:
+      "Write the /pricing page. Go deep on the price story: what the starting price means, what it buys in this market, how pre-construction pricing typically moves from first release to later releases, and what is not released yet. Use deposit or incentive details ONLY if the positioning context provides them. Full price lists are gate-kept: the page's one action is registering to get the price list first. heading: like 'PROJECT pricing'. seo_title: like 'PROJECT Pricing and Price List | From $X in CITY'.",
+  },
+  {
+    key: "neighbourhood",
+    slug: "neighbourhood",
+    label: "Neighbourhood",
+    brief:
+      "Write the /neighbourhood page: a genuinely useful area guide for someone deciding whether they could live here. The community's feel, who lives there, commuting (real named highways and transit), schools and parks and shopping, what a normal week looks like. Use real general knowledge of the place plus any local nuggets in the positioning context. heading: like 'Living in CITY | around PROJECT'. seo_title: like 'PROJECT Location | Living in CITY'.",
+  },
+];
+
 const HERO_BRIEF =
   "Write the hero for this landing page. headline: led by the project name, under 65 characters, include the city or the starting price if it fits naturally. subhead: one sentence with the single strongest hook for this buyer audience. cta_label: 3 to 5 words for the lead form button, like 'Get the price list'.";
 
@@ -431,6 +474,83 @@ const T_FAQ: Anthropic.Messages.Tool = {
   },
 };
 
+const T_PAGE: Anthropic.Messages.Tool = {
+  name: "emit_page",
+  description: "Return the finished sub-page. Call exactly once.",
+  input_schema: {
+    type: "object" as const,
+    properties: {
+      heading: { type: "string", description: "The page H1, no dashes" },
+      seo_title: { type: "string", description: "Browser/Google title, under 65 chars" },
+      meta_description: { type: "string", description: "Google snippet, under 160 chars" },
+      intro_md: { type: "string", description: "1-2 opening paragraphs, markdown" },
+      sections: {
+        type: "array",
+        maxItems: 4,
+        items: {
+          type: "object",
+          properties: {
+            title: { type: "string" },
+            body_md: { type: "string" },
+          },
+          required: ["title", "body_md"],
+        },
+        description: "2-4 sections",
+      },
+      faq: {
+        type: "array",
+        maxItems: 4,
+        items: {
+          type: "object",
+          properties: {
+            question: { type: "string" },
+            answer: { type: "string" },
+          },
+          required: ["question", "answer"],
+        },
+        description: "0-4 page-specific FAQ entries (do not repeat the home page's)",
+      },
+    },
+    required: ["heading", "seo_title", "meta_description", "intro_md", "sections", "faq"],
+  },
+};
+
+function cleanSubPage(raw: Record<string, unknown> | null): MicrositeSubPage | null {
+  if (!raw || typeof raw.heading !== "string" || typeof raw.intro_md !== "string") {
+    return null;
+  }
+  const sections = (Array.isArray(raw.sections) ? raw.sections : [])
+    .filter(
+      (s): s is { title: string; body_md: string } =>
+        typeof (s as { title?: unknown })?.title === "string" &&
+        typeof (s as { body_md?: unknown })?.body_md === "string",
+    )
+    .slice(0, 4)
+    .map((s) => ({
+      title: stripDashes(s.title, "title"),
+      body_md: stripDashes(s.body_md, "body"),
+    }));
+  if (!sections.length) return null;
+  return {
+    heading: stripDashes(String(raw.heading), "title"),
+    seo_title: stripDashes(String(raw.seo_title ?? raw.heading), "title"),
+    meta_description: stripDashes(String(raw.meta_description ?? ""), "body"),
+    intro_md: stripDashes(String(raw.intro_md), "body"),
+    sections,
+    faq: (Array.isArray(raw.faq) ? raw.faq : [])
+      .filter(
+        (f): f is { question: string; answer: string } =>
+          typeof (f as { question?: unknown })?.question === "string" &&
+          typeof (f as { answer?: unknown })?.answer === "string",
+      )
+      .slice(0, 4)
+      .map((f) => ({
+        question: stripDashes(f.question, "title"),
+        answer: stripDashes(f.answer, "body"),
+      })),
+  };
+}
+
 /** The sections a config generates: explicit picks, else facts-driven defaults. */
 export function resolveSectionKeys(
   config: MicrositeConfig,
@@ -466,7 +586,7 @@ export async function generateMicrositeContent(
     `FACT BLOCK (the only source of project facts):\n${factBlock(project)}\n\n` +
     `POSITIONING CONTEXT (founder questionnaire, may be sparse; steer emphasis with it):\n${ctx}\n\n`;
 
-  const [hero, intro, faq, ...sections] = await Promise.all([
+  const [hero, intro, faq, ...rest] = await Promise.all([
     callTool(client, T_HERO, `${base}${HERO_BRIEF}`, 400),
     callTool(client, T_SECTION, `${base}${INTRO_BRIEF}\nUse title "Intro" (it is not shown).`, 800),
     callTool(client, T_FAQ, `${base}${FAQ_BRIEF}`, 1800),
@@ -478,7 +598,17 @@ export async function generateMicrositeContent(
         1200,
       ),
     ),
+    ...MICROSITE_SUBPAGES.map((p) =>
+      callTool(
+        client,
+        T_PAGE,
+        `${base}This is a SUB-PAGE of the project's landing site (the home page covers the overview). PAGE BRIEF:\n${p.brief}`,
+        2000,
+      ),
+    ),
   ]);
+  const sections = rest.slice(0, defs.length);
+  const subpageRaw = rest.slice(defs.length);
 
   if (!hero || typeof hero.headline !== "string" || !intro) return null;
 
@@ -495,6 +625,12 @@ export async function generateMicrositeContent(
   });
   if (builtSections.length < 3) return null;
 
+  const pages: Partial<Record<MicrositeSubPageKey, MicrositeSubPage>> = {};
+  MICROSITE_SUBPAGES.forEach((p, i) => {
+    const page = cleanSubPage(subpageRaw[i]);
+    if (page) pages[p.key] = page;
+  });
+
   return {
     headline: stripDashes(String(hero.headline), "title"),
     subhead: stripDashes(String(hero.subhead ?? ""), "body"),
@@ -509,5 +645,6 @@ export async function generateMicrositeContent(
     })),
     cta_label: stripDashes(String(hero.cta_label ?? "Get the price list"), "title"),
     generated_at: new Date().toISOString(),
+    ...(Object.keys(pages).length ? { pages } : {}),
   };
 }
