@@ -58,6 +58,15 @@ export function MicrositeContentEditor({
       faq: d.faq.map((f, j) => (j === i ? { ...f, ...patch } : f)),
     }));
 
+  const move = (list: "sections" | "faq", i: number, dir: -1 | 1) =>
+    setDraft((d) => {
+      const arr = [...d[list]];
+      const j = i + dir;
+      if (j < 0 || j >= arr.length) return d;
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+      return { ...d, [list]: arr };
+    });
+
   const save = () =>
     startTransition(async () => {
       setNotice(null);
@@ -157,6 +166,26 @@ export function MicrositeContentEditor({
                 type="button"
                 size="sm"
                 variant="ghost"
+                aria-label={`Move section ${i + 1} up`}
+                disabled={i === 0}
+                onClick={() => move("sections", i, -1)}
+              >
+                ↑
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                aria-label={`Move section ${i + 1} down`}
+                disabled={i === draft.sections.length - 1}
+                onClick={() => move("sections", i, 1)}
+              >
+                ↓
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
                 onClick={() =>
                   set("sections", draft.sections.filter((_, j) => j !== i))
                 }
@@ -202,6 +231,26 @@ export function MicrositeContentEditor({
                   />
                 </Field>
               </div>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                aria-label={`Move question ${i + 1} up`}
+                disabled={i === 0}
+                onClick={() => move("faq", i, -1)}
+              >
+                ↑
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                aria-label={`Move question ${i + 1} down`}
+                disabled={i === draft.faq.length - 1}
+                onClick={() => move("faq", i, 1)}
+              >
+                ↓
+              </Button>
               <Button
                 type="button"
                 size="sm"

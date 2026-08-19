@@ -42,6 +42,37 @@ export interface MicrositeSubPage {
 
 export type MicrositeSubPageKey = "floor_plans" | "pricing" | "neighbourhood";
 
+/**
+ * Visual identity pulled from the project's own marketing renderings (the
+ * samples that arrive through the ingestion machine): the microsite mimics
+ * the builder's palette and typography vibe instead of wearing LIQWD's.
+ */
+export interface MicrositeBrand {
+  /** CTA/button colour, from the imagery, must carry white text. */
+  primary: string;
+  /** Secondary accent (chips, hovers). */
+  accent: string;
+  /** Google font name from BRAND_FONTS. */
+  heading_font: string;
+  font_stack: "serif" | "sans-serif";
+}
+
+/** Safe Google-font allowlist the brand extractor picks from. */
+export const BRAND_FONTS = [
+  "Playfair Display",
+  "Cormorant Garamond",
+  "Libre Baskerville",
+  "Lora",
+  "Merriweather",
+  "Source Serif 4",
+  "Montserrat",
+  "Poppins",
+  "DM Sans",
+  "Work Sans",
+  "Inter",
+  "Jost",
+] as const;
+
 export interface MicrositeContent {
   headline: string;
   subhead: string;
@@ -52,6 +83,8 @@ export interface MicrositeContent {
   generated_at: string;
   /** Sub-pages (/floor-plans, /pricing, /neighbourhood) — the organic-sitelink depth. */
   pages?: Partial<Record<MicrositeSubPageKey, MicrositeSubPage>>;
+  /** Extracted visual identity; renderer falls back to defaults when absent. */
+  brand?: MicrositeBrand | null;
   /** Admin overrides — survive regeneration; fall back to the template/subhead. */
   seo_title?: string | null;
   seo_description?: string | null;
@@ -207,12 +240,15 @@ export async function getMicrositeGallery(
 
 /**
  * Em/en dashes are banned sitewide (founder rule). Titles get " | ",
- * body copy gets ", ", numeric ranges become "X to Y".
+ * body copy gets ", ", numeric ranges become "X to Y". Markdown bold is
+ * banned too (reads like machine copy) — doubled asterisks/underscores are
+ * stripped; single asterisks stay so list syntax survives.
  */
 export function stripDashes(s: string, mode: "title" | "body"): string {
   return s
     .replace(/(\d)\s*[—–]\s*(\d)/g, "$1 to $2")
     .replace(/\s*[—–]\s*/g, mode === "title" ? " | " : ", ")
+    .replace(/\*\*|__/g, "")
     .replace(/ {2,}/g, " ")
     .trim();
 }
@@ -222,6 +258,7 @@ const VOICE =
   "Grade 6 to 8 reading level: short sentences, everyday words, active voice. Talk to the reader as 'you'. Contractions are fine. " +
   "NEVER use an em dash or en dash anywhere, in any field. Use a period, a comma, or the word 'and' instead. In headings use ' | ' as a divider only if you truly need one. " +
   "Banned words and phrases: stunning, luxurious, luxury living, nestled, boasts, unparalleled, seamless, vibrant, prestigious, exquisite, look no further, dream home. No exclamation marks. No hype. " +
+  "Never use markdown bold or italics (no ** or _). Numbers and names carry their own weight in plain sentences. Bullet lists are fine where they genuinely help. " +
   "Facts about THIS PROJECT come ONLY from the fact block. If a project detail is not released yet, say so in plain words, like 'The builder has not released this yet.' " +
   "You MAY use general knowledge about the city and region (real highways, transit lines, landmarks, how the area feels) when you are sure it is true. Never invent project details, prices, dates, sizes, or incentives. " +
   "Never present the page as the builder's official site. Markdown allowed in body fields: short paragraphs, bold for key numbers, lists where they help.";
@@ -240,17 +277,22 @@ interface SectionDef {
   auto: (p: PublicProject, ctx: string) => boolean;
 }
 
+/**
+ * Canonical order (founder rule): the page EDUCATES first, sells second.
+ * Sections 1-5 are the educational block (project, neighbourhood, getting
+ * around, amenities, developer); the sales/commercial sections follow.
+ */
 export const MICROSITE_SECTIONS: { key: string; label: string }[] = [
   { key: "overview", label: "About the project" },
-  { key: "pricing_value", label: "Pricing story" },
-  { key: "homes_floorplans", label: "Homes & floor plans" },
-  { key: "top_reasons", label: "Top 5 reasons" },
   { key: "location_neighbourhood", label: "Neighbourhood" },
   { key: "connectivity", label: "Getting around" },
   { key: "lifestyle_amenities", label: "Nearby amenities" },
+  { key: "builder", label: "About the developer" },
+  { key: "pricing_value", label: "Pricing story" },
+  { key: "homes_floorplans", label: "Homes & floor plans" },
+  { key: "top_reasons", label: "Top 5 reasons" },
   { key: "deposit_incentives", label: "Deposit & incentives" },
   { key: "investment", label: "Investor angle" },
-  { key: "builder", label: "About the builder" },
   { key: "buying_process", label: "How pre-con buying works" },
   { key: "why_register", label: "Why register now" },
 ];
@@ -303,7 +345,7 @@ const SECTION_DEFS: SectionDef[] = [
     label: "Nearby amenities",
     brief:
       "Write the nearby-amenities section: schools, parks, trails, shopping, recreation. Lead with anything the positioning context names. General knowledge about the city is fine when you are sure. If you have little to work with, keep this short and honest rather than padding it.",
-    auto: (_p, ctx) => /amenit|park|trail|school|shop|rec |recreation|grocer/.test(ctx),
+    auto: () => true,
   },
   {
     key: "deposit_incentives",
@@ -515,6 +557,124 @@ const T_PAGE: Anthropic.Messages.Tool = {
   },
 };
 
+const T_BRAND: Anthropic.Messages.Tool = {
+  name: "emit_brand",
+  description: "Return the visual identity read from the marketing imagery. Call exactly once.",
+  input_schema: {
+    type: "object" as const,
+    properties: {
+      primary_hex: {
+        type: "string",
+        description:
+          "Main CTA/button colour drawn from the imagery's palette. Dark or saturated enough to carry WHITE text. 6-digit hex like #1f3a2e.",
+      },
+      accent_hex: {
+        type: "string",
+        description: "Secondary accent from the palette. 6-digit hex.",
+      },
+      heading_font: {
+        type: "string",
+        enum: [...BRAND_FONTS],
+        description: "The Google font that best matches the marketing's typography vibe.",
+      },
+      font_stack: { type: "string", enum: ["serif", "sans-serif"] },
+    },
+    required: ["primary_hex", "accent_hex", "heading_font", "font_stack"],
+  },
+};
+
+const HEX = /^#[0-9a-fA-F]{6}$/;
+
+function cleanBrand(raw: Record<string, unknown> | null): MicrositeBrand | null {
+  if (!raw) return null;
+  const primary = String(raw.primary_hex ?? "");
+  const accent = String(raw.accent_hex ?? "");
+  const font = String(raw.heading_font ?? "");
+  if (!HEX.test(primary) || !HEX.test(accent)) return null;
+  if (!(BRAND_FONTS as readonly string[]).includes(font)) return null;
+  return {
+    primary: primary.toLowerCase(),
+    accent: accent.toLowerCase(),
+    heading_font: font,
+    font_stack: raw.font_stack === "serif" ? "serif" : "sans-serif",
+  };
+}
+
+type VisionImage = {
+  type: "image";
+  source: { type: "base64"; media_type: "image/png" | "image/jpeg" | "image/webp" | "image/gif"; data: string };
+};
+
+const VISION_TYPES = ["image/png", "image/jpeg", "image/webp", "image/gif"];
+
+/** Pulls a public rendering into a vision block; null on any trouble. */
+async function fetchVisionImage(url: string): Promise<VisionImage | null> {
+  try {
+    const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
+    if (!res.ok) return null;
+    const mt = (res.headers.get("content-type") ?? "")
+      .split(";")[0]
+      .trim()
+      .replace("image/jpg", "image/jpeg");
+    if (!VISION_TYPES.includes(mt)) return null;
+    const buf = Buffer.from(await res.arrayBuffer());
+    if (buf.byteLength === 0 || buf.byteLength > 8 * 1024 * 1024) return null;
+    return {
+      type: "image",
+      source: {
+        type: "base64",
+        media_type: mt as VisionImage["source"]["media_type"],
+        data: buf.toString("base64"),
+      },
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Reads the palette + typography vibe off the project's own renderings so
+ * the microsite dresses like the builder's marketing, not like LIQWD.
+ * Null (no imagery, fetch failure, bad output) = renderer defaults.
+ */
+async function extractBrand(
+  client: Anthropic,
+  project: PublicProject,
+): Promise<MicrositeBrand | null> {
+  const urls = [project.hero_image_url].filter((u): u is string => Boolean(u));
+  if (!urls.length) return null;
+  const images = (await Promise.all(urls.map(fetchVisionImage))).filter(
+    (i): i is VisionImage => i !== null,
+  );
+  if (!images.length) return null;
+  try {
+    const message = await client.messages.create({
+      model: MICROSITE_MODEL,
+      max_tokens: 300,
+      tools: [T_BRAND],
+      tool_choice: { type: "tool", name: "emit_brand" },
+      messages: [
+        {
+          role: "user",
+          content: [
+            ...images,
+            {
+              type: "text",
+              text: "This is the marketing rendering for a new-construction project. Extract a landing-page identity that mimics it: a primary colour for buttons (from the imagery, dark/saturated enough for white text), a secondary accent, and the closest-matching font. Call emit_brand exactly once.",
+            },
+          ],
+        },
+      ],
+    });
+    const block = message.content.find((b) => b.type === "tool_use");
+    return block && block.type === "tool_use"
+      ? cleanBrand(block.input as Record<string, unknown>)
+      : null;
+  } catch {
+    return null;
+  }
+}
+
 function cleanSubPage(raw: Record<string, unknown> | null): MicrositeSubPage | null {
   if (!raw || typeof raw.heading !== "string" || typeof raw.intro_md !== "string") {
     return null;
@@ -580,33 +740,42 @@ export async function generateMicrositeContent(
 
   const client = new Anthropic();
   const keys = resolveSectionKeys(config, project);
-  const defs = SECTION_DEFS.filter((d) => keys.includes(d.key));
+  // Page order always follows the canonical educate-first sequence,
+  // regardless of pick order (the admin can still hand-reorder afterwards).
+  const orderOf = (k: string) => MICROSITE_SECTIONS.findIndex((s) => s.key === k);
+  const defs = SECTION_DEFS.filter((d) => keys.includes(d.key)).sort(
+    (a, b) => orderOf(a.key) - orderOf(b.key),
+  );
   const ctx = JSON.stringify(config.context ?? {}, null, 2);
   const base =
     `FACT BLOCK (the only source of project facts):\n${factBlock(project)}\n\n` +
     `POSITIONING CONTEXT (founder questionnaire, may be sparse; steer emphasis with it):\n${ctx}\n\n`;
 
-  const [hero, intro, faq, ...rest] = await Promise.all([
-    callTool(client, T_HERO, `${base}${HERO_BRIEF}`, 400),
-    callTool(client, T_SECTION, `${base}${INTRO_BRIEF}\nUse title "Intro" (it is not shown).`, 800),
-    callTool(client, T_FAQ, `${base}${FAQ_BRIEF}`, 1800),
-    ...defs.map((d) =>
-      callTool(
-        client,
-        T_SECTION,
-        `${base}SECTION BRIEF:\n${d.brief}`,
-        1200,
+  const [brand, copy] = await Promise.all([
+    extractBrand(client, project),
+    Promise.all([
+      callTool(client, T_HERO, `${base}${HERO_BRIEF}`, 400),
+      callTool(client, T_SECTION, `${base}${INTRO_BRIEF}\nUse title "Intro" (it is not shown).`, 800),
+      callTool(client, T_FAQ, `${base}${FAQ_BRIEF}`, 1800),
+      ...defs.map((d) =>
+        callTool(
+          client,
+          T_SECTION,
+          `${base}SECTION BRIEF:\n${d.brief}`,
+          1200,
+        ),
       ),
-    ),
-    ...MICROSITE_SUBPAGES.map((p) =>
-      callTool(
-        client,
-        T_PAGE,
-        `${base}This is a SUB-PAGE of the project's landing site (the home page covers the overview). PAGE BRIEF:\n${p.brief}`,
-        2000,
+      ...MICROSITE_SUBPAGES.map((p) =>
+        callTool(
+          client,
+          T_PAGE,
+          `${base}This is a SUB-PAGE of the project's landing site (the home page covers the overview). PAGE BRIEF:\n${p.brief}`,
+          2000,
+        ),
       ),
-    ),
+    ]),
   ]);
+  const [hero, intro, faq, ...rest] = copy;
   const sections = rest.slice(0, defs.length);
   const subpageRaw = rest.slice(defs.length);
 
@@ -646,5 +815,6 @@ export async function generateMicrositeContent(
     cta_label: stripDashes(String(hero.cta_label ?? "Get the price list"), "title"),
     generated_at: new Date().toISOString(),
     ...(Object.keys(pages).length ? { pages } : {}),
+    brand,
   };
 }

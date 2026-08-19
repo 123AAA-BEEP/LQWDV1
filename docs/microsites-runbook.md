@@ -81,6 +81,29 @@ bottom** → disclosure footer. Photography comes from the project's public
 `project_media` (floor plans excluded); JSON-LD carries ApartmentComplex +
 AggregateOffer + FAQPage.
 
+### Page format rules (v4)
+
+- **The hero IS the lead form** (The Valley pattern): full-bleed rendering,
+  project name, hook line, quick-fact pills, then the form itself in a card,
+  all above the fold. A second form closes the page.
+- **Canonical section order — educate first, sell second**: About the
+  project → Neighbourhood → Getting around → Nearby amenities → About the
+  developer, then the commercial block (pricing story, homes, top reasons,
+  deposit/incentives, investor angle, buying process, why register).
+  Generation always emits in this order; the admin editor has ↑/↓ controls
+  to hand-reorder afterwards.
+- **Photography everywhere**: 3-image strip after the intro, a full-width
+  image band after every second section, all pulled from the project's
+  public media (which is fed by the ingestion machine).
+- **Branding is borrowed from the project's own renderings**: at generation
+  time a vision pass reads the hero rendering and extracts a primary button
+  colour, an accent, and the closest Google font (from a safe allowlist).
+  The page then wears the builder's palette/typography, not LIQWD's.
+  Stored in `content.brand`; defaults apply when no rendering exists.
+- **True preview**: Admin → microsite → "Open full preview" renders the
+  EXACT public component at any status (`/microsite-preview/{id}`,
+  admin-only, noindex). What you preview is what ships.
+
 ### Copy standards (enforced in code, not just prompt)
 
 - Writing model: **claude-opus-5** (the microsite is the storefront).
@@ -97,6 +120,8 @@ AggregateOffer + FAQPage.
   scrubs any that slip through: titles get " | ", body copy gets ", ",
   numeric ranges become "X to Y". SEO title template is
   "{Project} in {City} | Pricing, Floor Plans & Launch Details".
+- **Markdown bold/italics are banned in copy** (machine-writing tell): the
+  prompt forbids `**`/`_` and the scrubber strips any that slip through.
 - Project facts only from the public fact block; general city/region
   knowledge (real highways, transit, landmarks) is allowed; unpublished
   details are stated as "not released yet", never guessed.

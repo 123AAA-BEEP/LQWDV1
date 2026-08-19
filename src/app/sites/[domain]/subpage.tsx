@@ -126,6 +126,14 @@ export function makeSubpage(pageKey: MicrositeSubPageKey) {
 
     const { config, project } = live;
     const c = config.content!;
+    const brand = c.brand ?? null;
+    const primary = brand?.primary ?? "#0d9488";
+    const fontFamily = brand
+      ? `'${brand.heading_font}', ${brand.font_stack}`
+      : undefined;
+    const fontHref = brand
+      ? `https://fonts.googleapis.com/css2?family=${brand.heading_font.replace(/ /g, "+")}:wght@400;500;600;700&display=swap`
+      : null;
 
     await recordPageEvent("page_view", "project", {
       publicProjectPageId: project.public_page_id,
@@ -169,7 +177,21 @@ export function makeSubpage(pageKey: MicrositeSubPageKey) {
     ].filter(Boolean);
 
     return (
-      <main className="min-h-screen bg-white">
+      <main
+        className="min-h-screen bg-white"
+        style={fontFamily ? { fontFamily } : undefined}
+      >
+        {fontHref ? (
+          <>
+            <link rel="preconnect" href="https://fonts.googleapis.com" />
+            <link
+              rel="preconnect"
+              href="https://fonts.gstatic.com"
+              crossOrigin="anonymous"
+            />
+            <link rel="stylesheet" href={fontHref} />
+          </>
+        ) : null}
         {jsonLd.map((block, i) => (
           <script
             key={i}
@@ -196,7 +218,8 @@ export function makeSubpage(pageKey: MicrositeSubPageKey) {
               ))}
               <a
                 href="#register"
-                className="rounded-lg bg-brand-500 px-4 py-2 font-semibold text-white transition-colors hover:bg-brand-400"
+                className="rounded-lg px-4 py-2 font-semibold text-white transition-opacity hover:opacity-90"
+                style={{ backgroundColor: primary }}
               >
                 Register
               </a>
@@ -269,6 +292,7 @@ export function makeSubpage(pageKey: MicrositeSubPageKey) {
                 domain={config.domain}
                 captureKey={config.capture_key}
                 ctaLabel={c.cta_label}
+                accentColor={primary}
               />
             </div>
           </section>

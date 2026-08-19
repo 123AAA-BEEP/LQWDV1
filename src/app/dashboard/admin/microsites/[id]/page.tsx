@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox, Field, Textarea } from "@/components/ui/field";
 import { FlashNotice } from "@/components/ui/flash-notice";
-import { renderMarkdown } from "@/lib/markdown";
 import {
   MICROSITE_SECTIONS,
   MICROSITE_SUBPAGES,
@@ -199,6 +198,44 @@ export default async function AdminMicrositeDetail({
       </Card>
 
       <Card>
+        <CardBody className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 className="font-semibold text-ink">Preview</h3>
+            <p className="mt-0.5 text-sm text-slate-500">
+              {c ? (
+                <>
+                  The real page, exactly as visitors get it. Generated{" "}
+                  {new Date(c.generated_at).toLocaleString("en-CA")}
+                  {c.edited_at
+                    ? `, hand-edited ${new Date(c.edited_at).toLocaleString("en-CA")}`
+                    : ""}
+                  {" · sub-pages: "}
+                  {MICROSITE_SUBPAGES.filter((p) => c.pages?.[p.key])
+                    .map((p) => `/${p.slug}`)
+                    .join(", ") || "none yet (regenerate to create them)"}
+                  {c.brand
+                    ? ` · brand: ${c.brand.heading_font}, ${c.brand.primary}`
+                    : " · brand: defaults (no rendering to extract from)"}
+                </>
+              ) : (
+                "Generate content first, then preview the real page here."
+              )}
+            </p>
+          </div>
+          {c ? (
+            <a
+              href={`/microsite-preview/${site.id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex h-10 items-center rounded-lg bg-ink px-5 text-sm font-semibold text-white hover:bg-slate-700"
+            >
+              Open full preview ↗
+            </a>
+          ) : null}
+        </CardBody>
+      </Card>
+
+      <Card>
         <CardBody>
           <h3 className="font-semibold text-ink">Domain</h3>
           {!vercelOn ? (
@@ -322,56 +359,6 @@ export default async function AdminMicrositeDetail({
         </CardBody>
       </Card>
 
-      <Card>
-        <CardBody>
-          <h3 className="font-semibold text-ink">Preview (as the page renders)</h3>
-          {!c ? (
-            <p className="mt-2 text-sm text-slate-500">
-              No content yet — add context above (optional) and hit Generate.
-            </p>
-          ) : (
-            <div className="mt-3 space-y-5">
-              <div className="rounded-xl bg-ink p-6 text-white">
-                <p className="text-2xl font-semibold tracking-tight">{c.headline}</p>
-                <p className="mt-2 text-white/80">{c.subhead}</p>
-                <p className="mt-3 inline-block rounded-full bg-brand-500 px-4 py-1.5 text-sm font-semibold">
-                  {c.cta_label}
-                </p>
-              </div>
-              <div dangerouslySetInnerHTML={{ __html: renderMarkdown(c.intro_md) }} />
-              {c.sections.map((s) => (
-                <section key={s.title}>
-                  <h4 className="text-lg font-semibold text-ink">{s.title}</h4>
-                  <div dangerouslySetInnerHTML={{ __html: renderMarkdown(s.body_md) }} />
-                </section>
-              ))}
-              {c.faq.length > 0 ? (
-                <section>
-                  <h4 className="text-lg font-semibold text-ink">FAQ</h4>
-                  <ul className="mt-2 space-y-2">
-                    {c.faq.map((f) => (
-                      <li key={f.question} className="rounded-lg bg-slate-50 p-3 text-sm">
-                        <p className="font-medium text-slate-800">{f.question}</p>
-                        <p className="mt-1 text-slate-600">{f.answer}</p>
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-              ) : null}
-              <p className="text-xs text-slate-400">
-                Generated {new Date(c.generated_at).toLocaleString("en-CA")}
-                {c.edited_at
-                  ? ` · hand-edited ${new Date(c.edited_at).toLocaleString("en-CA")}`
-                  : ""}
-                {" · sub-pages: "}
-                {MICROSITE_SUBPAGES.filter((p) => c.pages?.[p.key])
-                  .map((p) => `/${p.slug}`)
-                  .join(", ") || "none (regenerate to create them)"}
-              </p>
-            </div>
-          )}
-        </CardBody>
-      </Card>
     </div>
   );
 }
