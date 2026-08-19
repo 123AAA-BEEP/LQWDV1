@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Field, Input, Radio } from "@/components/ui/field";
+import { Checkbox, Field, Input, Radio } from "@/components/ui/field";
 import { submitMicrositeLead } from "./actions";
 
 /**
@@ -117,11 +117,16 @@ export function MicrositeLeadForm({
       >
         {status === "sending" ? "Sending…" : ctaLabel}
       </Button>
-      <p className="text-xs leading-relaxed text-slate-500">
-        No spam. Your details go only to this project&apos;s representative.
-        By submitting, you agree to be contacted about this project by email
-        or phone.
-      </p>
+      {/* CASL express consent — affirmative, never pre-checked. */}
+      <label className="flex items-start gap-2.5 text-xs leading-relaxed text-slate-500">
+        <Checkbox name="casl_consent" required className="mt-0.5" />
+        <span>
+          I agree to receive emails, calls and texts about this project and
+          similar new construction opportunities from LIQWD. I can withdraw
+          my consent at any time. No spam, and my details go only to this
+          project&apos;s representative.
+        </span>
+      </label>
     </form>
   );
 }

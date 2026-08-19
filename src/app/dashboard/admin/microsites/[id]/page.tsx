@@ -29,6 +29,7 @@ import {
   saveMicrositeLeadAutomation,
 } from "../actions";
 import { MicrositeContentEditor } from "./content-editor";
+import { BuilderLogoUploader } from "./logo-uploader";
 
 export const metadata: Metadata = { title: "Microsite" };
 export const dynamic = "force-dynamic";
@@ -43,6 +44,7 @@ interface Row {
   updated_at: string;
   auto_send_details: boolean;
   details_url: string | null;
+  builder_logo_url: string | null;
 }
 
 const first = (v: unknown): string =>
@@ -72,7 +74,7 @@ export default async function AdminMicrositeDetail({
   const { data } = await supabase
     .from("microsite_configs")
     .select(
-      "id, domain, project_id, status, context, content, updated_at, auto_send_details, details_url",
+      "id, domain, project_id, status, context, content, updated_at, auto_send_details, details_url, builder_logo_url",
     )
     .eq("id", id)
     .maybeSingle();
@@ -282,6 +284,23 @@ export default async function AdminMicrositeDetail({
               Save
             </Button>
           </form>
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardBody>
+          <h3 className="font-semibold text-ink">Developer logo</h3>
+          <p className="mt-1 text-sm text-slate-500">
+            Shown in the &quot;About the developer&quot; section. Upload it or
+            paste a URL (the builder&apos;s site almost always has one).
+          </p>
+          <div className="mt-3">
+            <BuilderLogoUploader
+              micrositeId={site.id}
+              projectId={site.project_id}
+              currentUrl={site.builder_logo_url}
+            />
+          </div>
         </CardBody>
       </Card>
 

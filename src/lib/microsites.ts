@@ -88,6 +88,8 @@ export interface MicrositeConfig {
   /** Lead automation (migration 0091) — optional so slim selects still cast. */
   auto_send_details?: boolean;
   details_url?: string | null;
+  /** Developer logo (migration 0093) shown in About the developer. */
+  builder_logo_url?: string | null;
 }
 
 /** Lowercase bare domain, or null when it doesn't look like one. */
@@ -168,7 +170,7 @@ export async function getMicrositeByDomain(
     const { data } = await admin
       .from("microsite_configs")
       .select(
-        "id, domain, project_id, skin, status, context, content, capture_key, auto_send_details, details_url",
+        "id, domain, project_id, skin, status, context, content, capture_key, auto_send_details, details_url, builder_logo_url",
       )
       .eq("domain", domain.toLowerCase().replace(/^www\./, ""))
       .maybeSingle();

@@ -103,8 +103,11 @@ export function MicrositeSiteView({
   // Evergreen explainers render as drop-downs, not full sections — they're
   // reference material, not the pitch. They don't consume an image slot.
   const collapsible = (key?: string) => key === "buying_process";
+  // The developer's logo owns the builder section's visual slot when set.
+  const hasLogo = (key?: string) =>
+    key === "builder" && Boolean(config.builder_logo_url);
   const sectionImages = c.sections.map((s) =>
-    collapsible(s.key)
+    collapsible(s.key) || hasLogo(s.key)
       ? null
       : (realQueue.shift() ??
         stockImage(SECTION_STOCK_THEME[s.key ?? ""] ?? "generic")),
@@ -338,24 +341,39 @@ export function MicrositeSiteView({
               <div dangerouslySetInnerHTML={{ __html: renderMarkdown(s.body_md) }} />
             </div>
           );
+          const visual = hasLogo(s.key) ? (
+            <div
+              className={`flex h-64 items-center justify-center rounded-3xl border border-slate-200 bg-white p-10 shadow-sm sm:h-full sm:min-h-80 ${imageLeft ? "sm:order-1" : ""}`}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={config.builder_logo_url!}
+                alt={`${project.builder_name ?? "Developer"} logo`}
+                loading="lazy"
+                className="max-h-36 w-auto max-w-full object-contain"
+              />
+            </div>
+          ) : img ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={img.url}
+              alt={img.alt}
+              loading="lazy"
+              className={`h-64 w-full rounded-3xl object-cover shadow-sm ring-1 ring-black/5 sm:h-full sm:min-h-96 ${imageLeft ? "sm:order-1" : ""}`}
+            />
+          ) : null;
           return (
             <section
               key={s.title}
               id={anchor(s.title)}
               className="mt-16 scroll-mt-10 sm:mt-20"
             >
-              {img ? (
+              {visual ? (
                 <div className="grid items-center gap-8 sm:grid-cols-2 sm:gap-12">
                   <div className={imageLeft ? "sm:order-2" : undefined}>
                     {textBlock}
                   </div>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={img.url}
-                    alt={img.alt}
-                    loading="lazy"
-                    className={`h-64 w-full rounded-3xl object-cover shadow-sm ring-1 ring-black/5 sm:h-full sm:min-h-96 ${imageLeft ? "sm:order-1" : ""}`}
-                  />
+                  {visual}
                 </div>
               ) : (
                 <div className="mx-auto max-w-3xl">{textBlock}</div>

@@ -291,6 +291,42 @@ export async function saveMicrositeLeadAutomation(formData: FormData) {
   );
 }
 
+/**
+ * Developer logo: records an upload (direct-to-storage path in
+ * project-media) or a pasted https URL, or clears it.
+ */
+export async function saveBuilderLogo(
+  formData: FormData,
+): Promise<{ error?: string } | void> {
+  const supabase = await createClient();
+  await assertAdmin(supabase);
+  const id = String(formData.get("microsite_id") ?? "");
+  if (!id) return { error: "Missing microsite." };
+
+  let url: string | null = null;
+  const path = String(formData.get("path") ?? "");
+  const pasted = String(formData.get("url") ?? "").trim().slice(0, 2000);
+  const clear = formData.get("clear") === "1";
+  if (!clear) {
+    if (path) {
+      url = supabase.storage.from("project-media").getPublicUrl(path).data.publicUrl;
+    } else if (pasted) {
+      if (!/^https:\/\/.+/.test(pasted)) {
+        return { error: "Paste a full https image URL." };
+      }
+      url = pasted;
+    } else {
+      return { error: "Upload a file or paste a URL." };
+    }
+  }
+  const { error } = await supabase
+    .from("microsite_configs")
+    .update({ builder_logo_url: url, updated_at: new Date().toISOString() })
+    .eq("id", id);
+  if (error) return { error: `Couldn't save the logo: ${error.message}` };
+  revalidatePath(`${LIST}/${id}`);
+}
+
 /** One-click domain purchase through the Vercel account (admin-confirmed). */
 export async function buyMicrositeDomain(formData: FormData) {
   const supabase = await createClient();
