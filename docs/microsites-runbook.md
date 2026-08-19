@@ -211,6 +211,23 @@ What it unlocks:
 | Attach domain to Vercel | Automatic on Set live / Buy (when env set); manual otherwise |
 | GSC property + index request | Manual (~3 min per domain) |
 
+## SEO evidence (founder's real GSC data)
+
+Search Console data from the founder's past project microsite
+(thevalleyinwoodbridge.com, 2,300+ clicks on the head term at position 1.8)
+is the calibration source for this rail. What it proved:
+
+- **Every top query is branded**: "{project} {city}" and close variants.
+  There is no generic-keyword play at this stage; the brand IS the keyword.
+- **The modifiers that rank and click**: "homes", "site plan", "prices"
+  (in that order). "Site plan" beat "prices" on both clicks and position —
+  hence the dedicated /site-plan sub-page (gate-kept like floor plans).
+- **Inverted word order gets searched too** ("woodbridge valley" sat at
+  position 14.5 = a coverage gap) — the neighbourhood page brief works the
+  "{City}'s {Project}" phrasing in naturally.
+- Title template accordingly: "{Project} in {City} | Homes, Prices &
+  Floor Plans".
+
 ## Multi-page depth, crawler files, IndexNow (v3)
 
 - **Sub-pages** ship with every generation: `/floor-plans`, `/pricing`,

@@ -93,7 +93,7 @@ export default async function AdminMicrositeDetail({
         ? JSON.stringify(site.context, null, 2)
         : "";
   const c = site.content;
-  const defaultSeoTitle = `${project?.project_name ?? "Project"}${project?.city ? ` in ${project.city}` : ""} | Pricing, Floor Plans & Launch Details`;
+  const defaultSeoTitle = `${project?.project_name ?? "Project"}${project?.city ? ` in ${project.city}` : ""} | Homes, Prices & Floor Plans`;
   const checkedSections = resolveSectionKeys(
     { context: site.context ?? {} } as MicrositeConfig,
     {
