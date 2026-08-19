@@ -13,6 +13,36 @@ const SITE_URL = (
 ).replace(/\/+$/, "");
 
 /**
+ * Host-scoped IndexNow ping — for microsite domains, which serve the same
+ * key file at https://{host}/{key}.txt via the /sites key route. Paths are
+ * host-relative ("/", "/pricing"). Fire-and-forget: never throws.
+ */
+export async function pingIndexNowForHost(
+  host: string,
+  paths: string[],
+): Promise<void> {
+  const base = `https://${host.replace(/^www\./, "")}`;
+  const urlList = [...new Set(paths)]
+    .filter((p) => p.startsWith("/"))
+    .map((p) => (p === "/" ? `${base}/` : `${base}${p}`));
+  if (urlList.length === 0) return;
+  try {
+    await fetch("https://api.indexnow.org/indexnow", {
+      method: "POST",
+      headers: { "content-type": "application/json; charset=utf-8" },
+      body: JSON.stringify({
+        host: new URL(base).host,
+        key: INDEXNOW_KEY,
+        keyLocation: `${base}/${INDEXNOW_KEY}.txt`,
+        urlList,
+      }),
+    });
+  } catch {
+    /* search-engine ping must never affect the caller */
+  }
+}
+
+/**
  * Pings IndexNow with site-relative paths (e.g. "/projects/slug"). Call from
  * after() on publish. Fire-and-forget: never throws, no-op on empty input.
  */

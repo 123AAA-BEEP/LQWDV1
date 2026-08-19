@@ -4,8 +4,10 @@ import {
   getMicrositeProject,
   getMicrositeGallery,
   isPrimaryHost,
+  MICROSITE_SUBPAGES,
   type MicrositeImage,
 } from "@/lib/microsites";
+import { MicrositeFooter } from "./subpage";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { recordPageEvent } from "@/lib/analytics";
@@ -112,11 +114,13 @@ export default async function MicrositePage({
     ? project.project_type.replace(/_/g, " ")
     : null;
 
+  const subpages = MICROSITE_SUBPAGES.filter((p) => c.pages?.[p.key]);
   const navItems = [
-    ...c.sections.map((s) => ({ id: anchor(s.title), label: s.title })),
-    ...(stripTwo.length ? [{ id: "gallery", label: "Gallery" }] : []),
-    ...(c.faq.length ? [{ id: "faq", label: "FAQ" }] : []),
-    { id: "register", label: "Register" },
+    ...subpages.map((p) => ({ href: `/${p.slug}`, label: p.label })),
+    ...c.sections.map((s) => ({ href: `#${anchor(s.title)}`, label: s.title })),
+    ...(stripTwo.length ? [{ href: "#gallery", label: "Gallery" }] : []),
+    ...(c.faq.length ? [{ href: "#faq", label: "FAQ" }] : []),
+    { href: "#register", label: "Register" },
   ];
 
   const jsonLd = [
@@ -243,8 +247,8 @@ export default async function MicrositePage({
         <div className="mx-auto flex max-w-3xl gap-4 overflow-x-auto px-6 py-3 text-sm text-slate-500">
           {navItems.map((n) => (
             <a
-              key={n.id}
-              href={`#${n.id}`}
+              key={n.href}
+              href={n.href}
               className="whitespace-nowrap hover:text-brand-700"
             >
               {n.label}
@@ -304,6 +308,30 @@ export default async function MicrositePage({
           </section>
         ) : null}
 
+        {subpages.length ? (
+          <section className="mt-12">
+            <h2 className="text-2xl font-semibold tracking-tight text-ink">
+              Go deeper
+            </h2>
+            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+              {subpages.map((p) => (
+                <a
+                  key={p.slug}
+                  href={`/${p.slug}`}
+                  className="rounded-xl border border-slate-200 p-4 transition-colors hover:border-brand-300 hover:bg-brand-50/40"
+                >
+                  <p className="font-semibold text-ink">
+                    {project.project_name} {p.label.toLowerCase()}
+                  </p>
+                  <p className="mt-1 text-sm text-slate-500">
+                    {c.pages?.[p.key]?.meta_description}
+                  </p>
+                </a>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
         {c.faq.length > 0 ? (
           <section id="faq" className="mt-12 scroll-mt-16">
             <h2 className="text-2xl font-semibold tracking-tight text-ink">
@@ -348,24 +376,7 @@ export default async function MicrositePage({
       </div>
 
       {/* Disclosure — the passing-off + PBN guards, both. */}
-      <footer className="border-t border-slate-200 bg-slate-50">
-        <div className="mx-auto max-w-3xl px-6 py-8 text-xs leading-relaxed text-slate-500">
-          <p>
-            Independent information page operated by LIQWD. This is not the
-            builder&apos;s official website. Details reflect publicly
-            available information and change as the project progresses, so
-            confirm everything with the builder&apos;s sales team. Renderings
-            are the builder&apos;s marketing material.{" "}
-            <a
-              href={`https://liqwd.ca/projects/${project.slug}`}
-              className="underline hover:text-slate-700"
-            >
-              See the full listing on LIQWD
-            </a>
-            .
-          </p>
-        </div>
-      </footer>
+      <MicrositeFooter slug={project.slug} />
     </main>
   );
 }

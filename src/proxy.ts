@@ -7,8 +7,10 @@ export async function proxy(request: NextRequest) {
 
   // ---- Microsite host routing ---------------------------------------------
   // Foreign hosts (echotownswaterdown.com, …) are standalone project
-  // microsites served by THIS app: rewrite every path to /sites/{host}.
-  // The /sites page renders only `live` configs; unknown/draft domains get a
+  // microsites served by THIS app: rewrite every path to /sites/{host}{path},
+  // preserving the path so sub-pages (/floor-plans, /pricing, /neighbourhood)
+  // and per-domain robots.txt / sitemap.xml / IndexNow key all resolve.
+  // The /sites tree renders only `live` configs; unknown/draft domains get a
   // noindex holding page — never liqwd.ca content (duplicate-content guard).
   // Keep this cheap: a string check, no DB in the edge path.
   const host = (request.headers.get("host") ?? "").toLowerCase().split(":")[0];
@@ -21,8 +23,16 @@ export async function proxy(request: NextRequest) {
     host === "";
   if (!isPrimary) {
     const url = request.nextUrl.clone();
-    url.pathname = `/sites/${host.replace(/^www\./, "")}`;
+    url.pathname = `/sites/${host.replace(/^www\./, "")}${pathname === "/" ? "" : pathname}`;
     return NextResponse.rewrite(url);
+  }
+  // Primary-host robots.txt / sitemap.xml: pass straight through with ZERO
+  // session work. During the Jul 17-18 outage Googlebot got a 5xx on
+  // robots.txt (session middleware failure), which halts crawling for the
+  // ENTIRE site — these paths are matched only so microsite domains can
+  // serve their own copies above; liqwd.ca's stay outside the blast radius.
+  if (pathname === "/robots.txt" || pathname === "/sitemap.xml") {
+    return NextResponse.next();
   }
   // The /sites tree is internal — direct hits on the primary domain 404 via
   // the renderer's own host check, but don't even let crawlers find it.
@@ -71,13 +81,14 @@ export async function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * Match all request paths except static assets and CRAWLER-CRITICAL
-     * routes. robots.txt and sitemap.xml must never pass through session
-     * middleware: during the Jul 17-18 outage Googlebot got a 5xx on
-     * robots.txt, which makes Google halt crawling the ENTIRE site. Neither
-     * route needs a session or ref cookies — keep them out of the blast
-     * radius permanently.
+     * Match all request paths except static assets. robots.txt and
+     * sitemap.xml ARE matched — microsite domains need their own copies via
+     * the host rewrite — but on the primary host they return immediately
+     * before any session work (see above): during the Jul 17-18 outage
+     * Googlebot got a 5xx on robots.txt from session middleware, which makes
+     * Google halt crawling the ENTIRE site. That early return keeps them out
+     * of the blast radius permanently.
      */
-    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

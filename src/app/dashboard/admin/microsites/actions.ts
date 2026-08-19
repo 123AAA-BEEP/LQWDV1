@@ -10,6 +10,7 @@ import {
   generateMicrositeContent,
   normalizeDomain,
   MICROSITE_SECTIONS,
+  MICROSITE_SUBPAGES,
   type MicrositeConfig,
   type MicrositeContent,
 } from "@/lib/microsites";
@@ -19,6 +20,17 @@ import {
   buyDomain,
   attachDomainToProject,
 } from "@/lib/vercel-domains";
+import { pingIndexNowForHost } from "@/lib/indexnow";
+
+/** Every indexable path a content payload yields — for IndexNow pings. */
+function livePaths(content: MicrositeContent | null): string[] {
+  return [
+    "/",
+    ...MICROSITE_SUBPAGES.filter((p) => content?.pages?.[p.key]).map(
+      (p) => `/${p.slug}`,
+    ),
+  ];
+}
 
 const LIST = "/dashboard/admin/microsites";
 
@@ -123,6 +135,9 @@ export async function generateMicrosite(formData: FormData) {
     .from("microsite_configs")
     .update({ content, updated_at: new Date().toISOString() })
     .eq("id", id);
+  if (config.status === "live") {
+    await pingIndexNowForHost(config.domain, livePaths(content));
+  }
   revalidatePath(`${LIST}/${id}`);
   redirectWithFlash(
     `${LIST}/${id}`,
@@ -137,19 +152,19 @@ export async function setMicrositeStatus(formData: FormData) {
   const status = String(formData.get("status") ?? "");
   if (!id || !["draft", "live", "retired"].includes(status)) return;
 
-  if (status === "live") {
-    const { data } = await supabase
-      .from("microsite_configs")
-      .select("content")
-      .eq("id", id)
-      .maybeSingle();
-    if (!data?.content) {
-      redirectWithFlash(
-        `${LIST}/${id}`,
-        "Generate and review content before going live.",
-        "error",
-      );
-    }
+  const { data: row } = await supabase
+    .from("microsite_configs")
+    .select("domain, content")
+    .eq("id", id)
+    .maybeSingle();
+  const domain = row?.domain as string | undefined;
+  const content = (row?.content as MicrositeContent | null) ?? null;
+  if (status === "live" && !content) {
+    redirectWithFlash(
+      `${LIST}/${id}`,
+      "Generate and review content before going live.",
+      "error",
+    );
   }
   await supabase
     .from("microsite_configs")
@@ -159,18 +174,16 @@ export async function setMicrositeStatus(formData: FormData) {
   // Going live: best-effort auto-attach the domain to the Vercel project so
   // the only manual step left is buying the domain.
   let attachNote = " (attach it to the Vercel project if you haven't).";
-  if (status === "live" && vercelDomainsConfigured()) {
-    const { data: row } = await supabase
-      .from("microsite_configs")
-      .select("domain")
-      .eq("id", id)
-      .maybeSingle();
-    if (row?.domain) {
-      const attached = await attachDomainToProject(row.domain);
-      attachNote = attached.ok
-        ? " and the domain is attached to the Vercel project."
-        : ` — auto-attach failed (${attached.error}); attach it in Vercel manually.`;
-    }
+  if (status === "live" && domain && vercelDomainsConfigured()) {
+    const attached = await attachDomainToProject(domain);
+    attachNote = attached.ok
+      ? " and the domain is attached to the Vercel project."
+      : ` (auto-attach failed: ${attached.error}; attach it in Vercel manually).`;
+  }
+  // Tell IndexNow-fed engines (Bing and friends) the moment it's live;
+  // Google discovers via the per-domain sitemap + GSC.
+  if (status === "live" && domain) {
+    await pingIndexNowForHost(domain, livePaths(content));
   }
   revalidatePath(LIST);
   revalidatePath(`${LIST}/${id}`);
@@ -221,6 +234,15 @@ export async function saveMicrositeContent(input: {
   if (!clean.headline || !clean.subhead || !clean.intro_md) {
     return { error: "Headline, subhead, and intro are required before saving." };
   }
+
+  // The editor covers the home page; keep the generated sub-pages intact.
+  const { data: existing } = await supabase
+    .from("microsite_configs")
+    .select("content")
+    .eq("id", id)
+    .maybeSingle();
+  const prevPages = (existing?.content as MicrositeContent | null)?.pages;
+  if (prevPages) clean.pages = prevPages;
 
   const { error } = await supabase
     .from("microsite_configs")
