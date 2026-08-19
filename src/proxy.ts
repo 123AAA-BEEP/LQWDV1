@@ -3,10 +3,38 @@ import { updateSession } from "@/lib/supabase/middleware";
 
 // Next.js 16 "proxy" convention (formerly "middleware").
 export async function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // ---- Microsite host routing ---------------------------------------------
+  // Foreign hosts (echotownswaterdown.com, …) are standalone project
+  // microsites served by THIS app: rewrite every path to /sites/{host}.
+  // The /sites page renders only `live` configs; unknown/draft domains get a
+  // noindex holding page — never liqwd.ca content (duplicate-content guard).
+  // Keep this cheap: a string check, no DB in the edge path.
+  const host = (request.headers.get("host") ?? "").toLowerCase().split(":")[0];
+  const isPrimary =
+    host === "liqwd.ca" ||
+    host === "www.liqwd.ca" ||
+    host.endsWith(".vercel.app") ||
+    host === "localhost" ||
+    host === "127.0.0.1" ||
+    host === "";
+  if (!isPrimary) {
+    const url = request.nextUrl.clone();
+    url.pathname = `/sites/${host.replace(/^www\./, "")}`;
+    return NextResponse.rewrite(url);
+  }
+  // The /sites tree is internal — direct hits on the primary domain 404 via
+  // the renderer's own host check, but don't even let crawlers find it.
+  if (pathname.startsWith("/sites/")) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/";
+    return NextResponse.redirect(url);
+  }
+
   // Vanity agent handles: liqwd.ca/@jane-smith serves /realtors/jane-smith
   // (rewrite, not redirect — the pretty URL is the point; the page's canonical
   // still declares /realtors/{slug} so search engines never see a duplicate).
-  const { pathname } = request.nextUrl;
   if (pathname.startsWith("/@") && pathname.length > 2) {
     const url = request.nextUrl.clone();
     url.pathname = `/realtors/${pathname.slice(2)}`;

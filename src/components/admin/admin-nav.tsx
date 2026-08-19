@@ -24,6 +24,7 @@ const TABS = [
   { href: "/dashboard/admin/projects", label: "Projects" },
   { href: "/dashboard/admin/articles", label: "Articles" },
   { href: "/dashboard/admin/analytics", label: "Analytics" },
+  { href: "/dashboard/admin/microsites", label: "Microsites" },
   { href: "/dashboard/admin/discovery", label: "Discovery" },
   { href: "/dashboard/admin/email-intake", label: "Email intake" },
   { href: "/dashboard/admin/rewards", label: "Rewards" },
