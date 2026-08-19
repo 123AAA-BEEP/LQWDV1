@@ -38,12 +38,31 @@ export async function loadLiveMicrosite(
 
 export function MicrositeFooter({
   slug,
+  links,
 }: {
   /** The grounding project's liqwd.ca slug. */
   slug: string;
+  /** Site navigation — the founder wants nav in the footer, not the hero. */
+  links?: { href: string; label: string }[];
 }) {
   return (
     <footer className="border-t border-slate-200 bg-slate-50">
+      {links?.length ? (
+        <nav aria-label="Site links" className="border-b border-slate-200/70">
+          <div className="mx-auto max-w-3xl px-6 py-6">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+              Useful links
+            </p>
+            <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate-600">
+              {links.map((l) => (
+                <a key={l.href} href={l.href} className="hover:text-slate-900">
+                  {l.label}
+                </a>
+              ))}
+            </div>
+          </div>
+        </nav>
+      ) : null}
       <div className="mx-auto max-w-3xl px-6 py-8 text-xs leading-relaxed text-slate-500">
         <p>
           Independent information page operated by LIQWD. This is not the
@@ -279,19 +298,21 @@ export function makeSubpage(pageKey: MicrositeSubPageKey) {
             id="register"
             className="mt-14 scroll-mt-16 rounded-2xl border border-slate-200 bg-slate-50/60 p-6 sm:p-8"
           >
-            <h2 className="text-2xl font-semibold tracking-tight text-ink">
-              Get first access
+            <h2
+              className="text-2xl font-semibold tracking-tight"
+              style={{ color: primary }}
+            >
+              Register Now
             </h2>
             <p className="mt-1 text-sm text-slate-500">
-              Pricing, floor plans, and launch timing, sent to you as they
-              come out and before the general public.
+              Get available floor plans, pricing and details.
             </p>
             <div className="mt-5">
               <MicrositeLeadForm
                 idPrefix={def.slug}
                 domain={config.domain}
                 captureKey={config.capture_key}
-                ctaLabel={c.cta_label}
+                ctaLabel="Register Now"
                 accentColor={primary}
               />
             </div>
@@ -314,7 +335,14 @@ export function makeSubpage(pageKey: MicrositeSubPageKey) {
           </nav>
         </div>
 
-        <MicrositeFooter slug={project.slug} />
+        <MicrositeFooter
+          slug={project.slug}
+          links={[
+            { href: "/", label: `${project.project_name} overview` },
+            ...others.map((p) => ({ href: `/${p.slug}`, label: p.label })),
+            { href: "#register", label: "Register Now" },
+          ]}
+        />
       </main>
     );
   };
