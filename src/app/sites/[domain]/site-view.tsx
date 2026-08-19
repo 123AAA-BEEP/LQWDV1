@@ -1,7 +1,11 @@
 import {
   MICROSITE_SUBPAGES,
+  SECTION_STOCK_THEME,
+  pickStock,
   type MicrositeConfig,
   type MicrositeImage,
+  type StockImage,
+  type StockTheme,
 } from "@/lib/microsites";
 import type { PublicProject } from "@/lib/types";
 import { formatPriceBand } from "@/lib/types";
@@ -14,11 +18,13 @@ import { MicrositeFooter } from "./subpage";
  * domain route and the admin preview — what you preview IS what ships.
  *
  * Format (founder-specified, The Valley pattern):
- *  - hero: location chip + the project NAME + the register form. Nothing
- *    else — the form must render above the fold;
- *  - body: education sections with large photography scattered between them;
- *  - map with the address pin near the bottom;
- *  - navigation lives in the footer, not the hero.
+ *  - hero: location chip + the project NAME + the register form, above the
+ *    fold. `context.hero_style = "colour"` swaps the photo for a branded
+ *    gradient (for projects whose hero image is a placeholder graphic);
+ *  - body: sections alternate text/image columns (left-right-left), never a
+ *    plain linear stack; real renderings first, themed stock images fill
+ *    the gaps (transit for getting-around, parks/cafés for amenities, …);
+ *  - map with the address pin near the bottom; navigation in the footer.
  * Branding (palette + typography) comes from the project's own renderings.
  */
 
@@ -29,15 +35,33 @@ const anchor = (title: string) =>
     .replace(/^-|-$/g, "")
     .slice(0, 60) || "section";
 
+const STOCK_ALT: Record<StockTheme, string> = {
+  hero: "Scenic view",
+  neighbourhood: "Neighbourhood streetscape",
+  transit: "Local transit",
+  amenities: "Local shops and cafés",
+  parks: "Parks and trails",
+  homes: "New construction homes",
+  lifestyle: "Everyday life",
+  generic: "Community scene",
+};
+
+interface PageImage {
+  url: string;
+  alt: string;
+}
+
 export function MicrositeSiteView({
   config,
   project,
   gallery,
+  stock,
   previewNote,
 }: {
   config: MicrositeConfig;
   project: PublicProject;
   gallery: MicrositeImage[];
+  stock: StockImage[];
   /** Set on the admin preview: renders a banner, disables nothing else. */
   previewNote?: string;
 }) {
@@ -51,8 +75,40 @@ export function MicrositeSiteView({
     ? `https://fonts.googleapis.com/css2?family=${brand.heading_font.replace(/ /g, "+")}:wght@400;500;600;700&display=swap`
     : null;
 
-  const altFor = (img: MicrositeImage, i: number) =>
-    img.alt_text ?? `${project.project_name} new construction rendering ${i + 1}`;
+  // ---- Imagery: real renderings first, themed stock fills the gaps. -------
+  const used = new Set<string>();
+  const seed = config.domain;
+  const city = project.city ?? null;
+  const stockImage = (theme: StockTheme): PageImage | null => {
+    const s = pickStock(stock, theme, city, seed, used);
+    if (!s) return null;
+    const base = s.alt_text ?? STOCK_ALT[s.theme];
+    return { url: s.url, alt: s.city ? `${base} in ${s.city}` : base };
+  };
+  const realQueue: PageImage[] = gallery.map((g, i) => ({
+    url: g.url,
+    alt: g.alt_text ?? `${project.project_name} new construction rendering ${i + 1}`,
+  }));
+
+  const heroStyle =
+    config.context?.hero_style === "colour" ? "colour" : "image";
+  const heroImage: PageImage | null =
+    heroStyle === "colour"
+      ? null
+      : project.hero_image_url
+        ? {
+            url: project.hero_image_url,
+            alt: project.hero_image_alt ?? project.project_name,
+          }
+        : stockImage("hero");
+
+  const introImage = realQueue.shift() ?? stockImage("homes");
+  const sectionImages = c.sections.map(
+    (s) =>
+      realQueue.shift() ??
+      stockImage(SECTION_STOCK_THEME[s.key ?? ""] ?? "generic"),
+  );
+  const leftovers = realQueue.splice(0);
 
   const price = formatPriceBand(project.price_from_public, project.price_to_public, {
     currency: project.price_currency,
@@ -74,12 +130,6 @@ export function MicrositeSiteView({
     { href: "#map", label: "Location" },
     { href: "#register", label: "Register Now" },
   ];
-
-  // Photography rhythm: one large image after the intro, then a large band
-  // after each section while images remain; leftovers pair up before the map.
-  const introImage = gallery[0] ?? null;
-  const bandImages = gallery.slice(1);
-  const leftovers = bandImages.slice(c.sections.length);
 
   const jsonLd = [
     {
@@ -142,16 +192,24 @@ export function MicrositeSiteView({
       ) : null}
 
       {/* Hero — chip, NAME, form. The form renders above the fold. */}
-      <header id="register-top" className="relative overflow-hidden bg-ink text-white">
-        {project.hero_image_url ? (
+      <header
+        id="register-top"
+        className="relative overflow-hidden text-white"
+        style={
+          heroImage
+            ? undefined
+            : { background: `linear-gradient(160deg, ${primary} 0%, #101828 100%)` }
+        }
+      >
+        {heroImage ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={project.hero_image_url}
-            alt={project.hero_image_alt ?? project.project_name}
-            className="absolute inset-0 h-full w-full object-cover"
+            src={heroImage.url}
+            alt={heroImage.alt}
+            className="absolute inset-0 h-full w-full object-cover object-center"
           />
         ) : null}
-        <div className="absolute inset-0 bg-black/60" />
+        {heroImage ? <div className="absolute inset-0 bg-black/60" /> : null}
         <div className="relative mx-auto max-w-md px-6 py-10 text-center sm:py-12">
           {chip ? (
             <span className="inline-flex items-center rounded-full bg-white/15 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] backdrop-blur">
@@ -186,60 +244,81 @@ export function MicrositeSiteView({
       </header>
 
       {/* Body */}
-      <div className="mx-auto max-w-3xl px-6 py-12 sm:py-16">
-        <p className="text-xl leading-relaxed text-slate-700">{c.subhead}</p>
-        {price ? (
-          <p className="mt-3 text-sm font-semibold uppercase tracking-[0.14em] text-slate-400">
-            {price}
-            {project.bedrooms_summary ? ` · ${project.bedrooms_summary}` : ""}
-          </p>
-        ) : null}
-        <div
-          className="mt-6"
-          dangerouslySetInnerHTML={{ __html: renderMarkdown(c.intro_md) }}
-        />
+      <div className="mx-auto max-w-5xl px-6 py-12 sm:py-16">
+        <div className="mx-auto max-w-3xl">
+          <p className="text-xl leading-relaxed text-slate-700">{c.subhead}</p>
+          {price ? (
+            <p className="mt-3 text-sm font-semibold uppercase tracking-[0.14em] text-slate-400">
+              {price}
+              {project.bedrooms_summary ? ` · ${project.bedrooms_summary}` : ""}
+            </p>
+          ) : null}
+          <div
+            className="mt-6"
+            dangerouslySetInnerHTML={{ __html: renderMarkdown(c.intro_md) }}
+          />
+        </div>
 
         {introImage ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={introImage.url}
-            alt={altFor(introImage, 0)}
+            alt={introImage.alt}
             loading="lazy"
             className="mt-10 h-72 w-full rounded-2xl object-cover sm:h-96"
           />
         ) : null}
 
+        {/* Sections alternate text/image sides — never a linear stack. */}
         {c.sections.map((s, i) => {
-          const band = bandImages[i] ?? null;
+          const img = sectionImages[i];
+          const imageLeft = i % 2 === 1;
           return (
-            <div key={s.title}>
-              <section id={anchor(s.title)} className="mt-12 scroll-mt-10">
-                <h2 className="text-2xl font-semibold tracking-tight text-ink">
-                  {s.title}
-                </h2>
-                <div dangerouslySetInnerHTML={{ __html: renderMarkdown(s.body_md) }} />
-              </section>
-              {band ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={band.url}
-                  alt={altFor(band, i + 1)}
-                  loading="lazy"
-                  className="mt-12 h-72 w-full rounded-2xl object-cover sm:h-96"
-                />
-              ) : null}
-            </div>
+            <section
+              key={s.title}
+              id={anchor(s.title)}
+              className="mt-14 scroll-mt-10"
+            >
+              {img ? (
+                <div className="grid items-center gap-8 sm:grid-cols-2">
+                  <div className={imageLeft ? "sm:order-2" : undefined}>
+                    <h2 className="text-2xl font-semibold tracking-tight text-ink">
+                      {s.title}
+                    </h2>
+                    <div
+                      dangerouslySetInnerHTML={{ __html: renderMarkdown(s.body_md) }}
+                    />
+                  </div>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={img.url}
+                    alt={img.alt}
+                    loading="lazy"
+                    className={`h-64 w-full rounded-2xl object-cover sm:h-full sm:min-h-80 ${imageLeft ? "sm:order-1" : ""}`}
+                  />
+                </div>
+              ) : (
+                <div className="mx-auto max-w-3xl">
+                  <h2 className="text-2xl font-semibold tracking-tight text-ink">
+                    {s.title}
+                  </h2>
+                  <div
+                    dangerouslySetInnerHTML={{ __html: renderMarkdown(s.body_md) }}
+                  />
+                </div>
+              )}
+            </section>
           );
         })}
 
         {leftovers.length ? (
-          <div className="mt-12 grid gap-4 sm:grid-cols-2">
-            {leftovers.map((img, i) => (
+          <div className="mt-14 grid gap-4 sm:grid-cols-2">
+            {leftovers.map((img) => (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 key={img.url}
                 src={img.url}
-                alt={altFor(img, c.sections.length + 1 + i)}
+                alt={img.alt}
                 loading="lazy"
                 className="h-64 w-full rounded-2xl object-cover"
               />
@@ -248,7 +327,7 @@ export function MicrositeSiteView({
         ) : null}
 
         {subpages.length ? (
-          <section className="mt-12">
+          <section className="mt-14">
             <h2 className="text-2xl font-semibold tracking-tight text-ink">
               Go deeper
             </h2>
@@ -272,7 +351,7 @@ export function MicrositeSiteView({
         ) : null}
 
         {c.faq.length > 0 ? (
-          <section id="faq" className="mt-12 scroll-mt-10">
+          <section id="faq" className="mx-auto mt-14 max-w-3xl scroll-mt-10">
             <h2 className="text-2xl font-semibold tracking-tight text-ink">
               Frequently asked questions
             </h2>
@@ -294,7 +373,7 @@ export function MicrositeSiteView({
         {/* Register — bottom */}
         <section
           id="register"
-          className="mt-14 scroll-mt-10 rounded-2xl border border-slate-200 bg-slate-50/60 p-6 sm:p-8"
+          className="mx-auto mt-14 max-w-3xl scroll-mt-10 rounded-2xl border border-slate-200 bg-slate-50/60 p-6 sm:p-8"
         >
           <h2
             className="text-2xl font-semibold tracking-tight"

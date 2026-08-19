@@ -93,6 +93,22 @@ AggregateOffer + FAQPage.
   (`#map`), using the project's full address when we have it.
 - **Navigation lives in the footer** ("Useful links": sub-pages, section
   anchors, FAQ, Location, Register Now) — the hero stays clean.
+- **Non-linear layout**: sections alternate text/image columns
+  (left-right-left, The Valley pattern); a section without an image falls
+  back to centred full-width text.
+- **Stock image library** (Admin → Microsites → Stock image library):
+  themed fallback photography — hero / neighbourhood / transit / amenities /
+  parks / homes / lifestyle / generic — for projects with thin media. Real
+  renderings ALWAYS win; stock fills the remaining slots, picked
+  deterministically per domain (stable per site, varied across the network),
+  city-tagged images beat generic for matching projects, honest alt text
+  (never labelled as the project's rendering). Upload directly or paste
+  Unsplash/Pexels URLs; only use images licensed for commercial use.
+- **Hero style**: `{"hero_style": "colour"}` in the context swaps the hero
+  photo for a branded gradient — for projects whose hero is a placeholder
+  graphic that looks bad blown up.
+- **Brand override**: the extracted palette/font is editable in the content
+  editor (button colour, accent, font, Reset to defaults).
 - **Canonical section order — educate first, sell second**: About the
   project → Neighbourhood → Getting around → Nearby amenities → About the
   developer, then the commercial block (pricing story, homes, top reasons,

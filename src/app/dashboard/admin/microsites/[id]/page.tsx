@@ -50,7 +50,10 @@ const CONTEXT_PLACEHOLDER = `Answer any of the staple questions (free text is fi
 • The one-line hook — why this project matters
 • Lead with… / avoid…
 • Local knowledge nuggets ("backs onto the ravine, rec centre opening 2027")
-• Deposit structure / incentives we may publish, launch timeline, exclusives`;
+• Deposit structure / incentives we may publish, launch timeline, exclusives
+
+Tip: {"hero_style": "colour"} (JSON) swaps the hero photo for a branded
+gradient — use it when the project's hero image is a placeholder graphic.`;
 
 export default async function AdminMicrositeDetail({
   params,

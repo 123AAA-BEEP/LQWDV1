@@ -21,6 +21,7 @@ import {
   attachDomainToProject,
 } from "@/lib/vercel-domains";
 import { pingIndexNowForHost } from "@/lib/indexnow";
+import { cleanBrandInput } from "@/lib/microsite-brand";
 
 /** Every indexable path a content payload yields — for IndexNow pings. */
 function livePaths(content: MicrositeContent | null): string[] {
@@ -235,8 +236,9 @@ export async function saveMicrositeContent(input: {
     return { error: "Headline, subhead, and intro are required before saving." };
   }
 
-  // The editor covers the home page copy; keep the generated sub-pages and
-  // extracted brand intact.
+  // The editor covers the home page copy; keep the generated sub-pages
+  // intact. Brand: an explicit null clears it (Reset to defaults), a valid
+  // override wins, anything malformed falls back to what was stored.
   const { data: existing } = await supabase
     .from("microsite_configs")
     .select("content")
@@ -244,7 +246,8 @@ export async function saveMicrositeContent(input: {
     .maybeSingle();
   const prev = existing?.content as MicrositeContent | null;
   if (prev?.pages) clean.pages = prev.pages;
-  if (prev?.brand) clean.brand = prev.brand;
+  clean.brand =
+    c.brand === null ? null : (cleanBrandInput(c.brand) ?? prev?.brand ?? null);
 
   const { error } = await supabase
     .from("microsite_configs")

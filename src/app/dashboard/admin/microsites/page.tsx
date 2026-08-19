@@ -75,7 +75,8 @@ export default async function AdminMicrositesPage({
       <FlashNotice
         searchParams={{ flash: first(sp.flash), flash_tone: first(sp.flash_tone) }}
       />
-      <div>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
         <h2 className="text-lg font-semibold text-ink">Microsites</h2>
         <p className="mt-1 text-sm text-slate-500">
           Standalone single-project landing sites on their own domains — the
@@ -84,6 +85,13 @@ export default async function AdminMicrositesPage({
           the domain to the Vercel project. Leads land in the normal queue,
           source-tagged.
         </p>
+        </div>
+        <Link
+          href="/dashboard/admin/microsites/stock"
+          className="text-sm font-medium text-brand-700 hover:underline"
+        >
+          Stock image library →
+        </Link>
       </div>
 
       <Card>

@@ -3,8 +3,9 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Field, Input, Textarea } from "@/components/ui/field";
+import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import type { MicrositeContent } from "@/lib/microsites";
+import { BRAND_FONTS, SERIF_FONTS, type MicrositeBrand } from "@/lib/microsite-brand";
 import { saveMicrositeContent } from "../actions";
 
 /**
@@ -58,6 +59,19 @@ export function MicrositeContentEditor({
       faq: d.faq.map((f, j) => (j === i ? { ...f, ...patch } : f)),
     }));
 
+  const setBrand = (patch: Partial<MicrositeBrand>) =>
+    setDraft((d) => ({
+      ...d,
+      brand: {
+        primary: "#0d9488",
+        accent: "#14b8a6",
+        heading_font: "Inter",
+        font_stack: "sans-serif" as const,
+        ...(d.brand ?? {}),
+        ...patch,
+      },
+    }));
+
   const move = (list: "sections" | "faq", i: number, dir: -1 | 1) =>
     setDraft((d) => {
       const arr = [...d[list]];
@@ -108,6 +122,69 @@ export function MicrositeContentEditor({
             maxLength={300}
           />
         </Field>
+      </div>
+
+      <div className="rounded-lg border border-slate-200 p-3">
+        <p className="text-sm font-medium text-slate-700">
+          Brand (extracted from the renderings; override anything)
+        </p>
+        <div className="mt-2 grid items-end gap-3 sm:grid-cols-4">
+          <Field label="Button colour (hex)" htmlFor="ed_brand_primary">
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                aria-label="Pick button colour"
+                value={draft.brand?.primary ?? "#0d9488"}
+                onChange={(e) => setBrand({ primary: e.target.value })}
+                className="h-9 w-10 cursor-pointer rounded border border-slate-200"
+              />
+              <Input
+                id="ed_brand_primary"
+                value={draft.brand?.primary ?? ""}
+                onChange={(e) => setBrand({ primary: e.target.value })}
+                placeholder="#0d9488"
+                maxLength={7}
+              />
+            </div>
+          </Field>
+          <Field label="Accent (hex)" htmlFor="ed_brand_accent">
+            <Input
+              id="ed_brand_accent"
+              value={draft.brand?.accent ?? ""}
+              onChange={(e) => setBrand({ accent: e.target.value })}
+              placeholder="#14b8a6"
+              maxLength={7}
+            />
+          </Field>
+          <Field label="Font" htmlFor="ed_brand_font">
+            <Select
+              id="ed_brand_font"
+              value={draft.brand?.heading_font ?? "Inter"}
+              onChange={(e) =>
+                setBrand({
+                  heading_font: e.target.value,
+                  font_stack: SERIF_FONTS.has(e.target.value)
+                    ? "serif"
+                    : "sans-serif",
+                })
+              }
+            >
+              {BRAND_FONTS.map((f) => (
+                <option key={f} value={f}>
+                  {f}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            onClick={() => setDraft((d) => ({ ...d, brand: null }))}
+          >
+            Reset to defaults
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
