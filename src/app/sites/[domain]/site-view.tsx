@@ -103,10 +103,14 @@ export function MicrositeSiteView({
         : stockImage("hero");
 
   const introImage = realQueue.shift() ?? stockImage("homes");
-  const sectionImages = c.sections.map(
-    (s) =>
-      realQueue.shift() ??
-      stockImage(SECTION_STOCK_THEME[s.key ?? ""] ?? "generic"),
+  // Evergreen explainers render as drop-downs, not full sections — they're
+  // reference material, not the pitch. They don't consume an image slot.
+  const collapsible = (key?: string) => key === "buying_process";
+  const sectionImages = c.sections.map((s) =>
+    collapsible(s.key)
+      ? null
+      : (realQueue.shift() ??
+        stockImage(SECTION_STOCK_THEME[s.key ?? ""] ?? "generic")),
   );
   const leftovers = realQueue.splice(0);
 
@@ -246,15 +250,17 @@ export function MicrositeSiteView({
       {/* Body */}
       <div className="mx-auto max-w-5xl px-6 py-12 sm:py-16">
         <div className="mx-auto max-w-3xl">
-          <p className="text-xl leading-relaxed text-slate-700">{c.subhead}</p>
           {price ? (
-            <p className="mt-3 text-sm font-semibold uppercase tracking-[0.14em] text-slate-400">
+            <p className="text-sm font-semibold uppercase tracking-[0.14em] text-slate-400">
               {price}
               {project.bedrooms_summary ? ` · ${project.bedrooms_summary}` : ""}
             </p>
           ) : null}
+          <p className="mt-3 text-2xl font-medium leading-snug tracking-tight text-ink">
+            {c.subhead}
+          </p>
           <div
-            className="mt-6"
+            className="mt-2"
             dangerouslySetInnerHTML={{ __html: renderMarkdown(c.intro_md) }}
           />
         </div>
@@ -273,6 +279,32 @@ export function MicrositeSiteView({
         {c.sections.map((s, i) => {
           const img = sectionImages[i];
           const imageLeft = i % 2 === 1;
+          if (collapsible(s.key)) {
+            return (
+              <section
+                key={s.title}
+                id={anchor(s.title)}
+                className="mx-auto mt-14 max-w-3xl scroll-mt-10"
+              >
+                <details className="group rounded-2xl border border-slate-200 px-6 py-5">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-3">
+                    <h2 className="text-xl font-semibold tracking-tight text-ink">
+                      {s.title}
+                    </h2>
+                    <span
+                      aria-hidden
+                      className="text-slate-400 transition-transform group-open:rotate-180"
+                    >
+                      ▾
+                    </span>
+                  </summary>
+                  <div
+                    dangerouslySetInnerHTML={{ __html: renderMarkdown(s.body_md) }}
+                  />
+                </details>
+              </section>
+            );
+          }
           return (
             <section
               key={s.title}
