@@ -17,14 +17,10 @@ import { MicrositeFooter } from "./subpage";
  * The microsite landing page itself, shared verbatim between the public
  * domain route and the admin preview — what you preview IS what ships.
  *
- * Format (founder-specified, The Valley pattern):
- *  - hero: location chip + the project NAME + the register form, above the
- *    fold. `context.hero_style = "colour"` swaps the photo for a branded
- *    gradient (for projects whose hero image is a placeholder graphic);
- *  - body: sections alternate text/image columns (left-right-left), never a
- *    plain linear stack; real renderings first, themed stock images fill
- *    the gaps (transit for getting-around, parks/cafés for amenities, …);
- *  - map with the address pin near the bottom; navigation in the footer.
+ * Format (founder-specified, The Valley pattern): hero is chip + NAME +
+ * register form above the fold; education sections alternate text/image
+ * columns with numbered eyebrows; evergreen explainers collapse; map with
+ * the address pin near the bottom; navigation in the dark footer.
  * Branding (palette + typography) comes from the project's own renderings.
  */
 
@@ -68,6 +64,7 @@ export function MicrositeSiteView({
   const c = config.content!;
   const brand = c.brand ?? null;
   const primary = brand?.primary ?? "#0d9488";
+  const accent = brand?.accent ?? primary;
   const fontFamily = brand
     ? `'${brand.heading_font}', ${brand.font_stack}`
     : undefined;
@@ -172,8 +169,19 @@ export function MicrositeSiteView({
       : null,
   ].filter(Boolean);
 
+  // 1-based numbering across the non-collapsible sections (the "01" eyebrows).
+  const visualIndices = c.sections.map((s, i) =>
+    collapsible(s.key)
+      ? null
+      : c.sections.slice(0, i + 1).filter((x) => !collapsible(x.key)).length,
+  );
+
   return (
-    <main className="min-h-screen bg-white" style={fontFamily ? { fontFamily } : undefined}>
+    <main
+      className="min-h-screen bg-white antialiased"
+      style={fontFamily ? { fontFamily } : undefined}
+    >
+      <style>{`html{scroll-behavior:smooth}`}</style>
       {fontHref ? (
         <>
           <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -213,17 +221,23 @@ export function MicrositeSiteView({
             className="absolute inset-0 h-full w-full object-cover object-center"
           />
         ) : null}
-        {heroImage ? <div className="absolute inset-0 bg-black/60" /> : null}
-        <div className="relative mx-auto max-w-md px-6 py-10 text-center sm:py-12">
+        {heroImage ? (
+          <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/45 to-black/70" />
+        ) : null}
+        <div className="relative mx-auto max-w-md px-6 py-12 text-center sm:py-16">
           {chip ? (
-            <span className="inline-flex items-center rounded-full bg-white/15 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] backdrop-blur">
+            <span className="inline-flex items-center rounded-full border border-white/25 bg-white/10 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] backdrop-blur">
               {chip}
             </span>
           ) : null}
-          <h1 className="mt-4 text-balance text-4xl font-semibold tracking-tight sm:text-5xl">
+          <h1 className="mt-5 text-balance text-5xl font-semibold tracking-tight sm:text-6xl">
             {project.project_name}
           </h1>
-          <div className="mt-6 rounded-2xl bg-white p-6 text-left shadow-2xl sm:p-7">
+          <div
+            className="mx-auto mt-5 h-0.5 w-12 rounded-full"
+            style={{ backgroundColor: accent }}
+          />
+          <div className="mt-7 rounded-3xl bg-white p-6 text-left shadow-2xl ring-1 ring-black/5 sm:p-7">
             <p
               className="text-center text-xl font-semibold"
               style={{ color: primary }}
@@ -233,7 +247,7 @@ export function MicrositeSiteView({
             <p className="mt-1 text-center text-sm text-slate-500">
               Get available floor plans, pricing and details.
             </p>
-            <div className="mt-4">
+            <div className="mt-5">
               <MicrositeLeadForm
                 idPrefix="hero"
                 compact
@@ -247,20 +261,23 @@ export function MicrositeSiteView({
         </div>
       </header>
 
-      {/* Body */}
-      <div className="mx-auto max-w-5xl px-6 py-12 sm:py-16">
+      {/* Lead-in */}
+      <div className="mx-auto max-w-5xl px-6 pt-16 sm:pt-20">
         <div className="mx-auto max-w-3xl">
           {price ? (
-            <p className="text-sm font-semibold uppercase tracking-[0.14em] text-slate-400">
+            <p
+              className="text-xs font-semibold uppercase tracking-[0.2em]"
+              style={{ color: primary }}
+            >
               {price}
               {project.bedrooms_summary ? ` · ${project.bedrooms_summary}` : ""}
             </p>
           ) : null}
-          <p className="mt-3 text-2xl font-medium leading-snug tracking-tight text-ink">
+          <p className="mt-4 text-balance text-2xl font-medium leading-snug tracking-tight text-ink sm:text-3xl">
             {c.subhead}
           </p>
           <div
-            className="mt-2"
+            className="mt-4"
             dangerouslySetInnerHTML={{ __html: renderMarkdown(c.intro_md) }}
           />
         </div>
@@ -271,22 +288,21 @@ export function MicrositeSiteView({
             src={introImage.url}
             alt={introImage.alt}
             loading="lazy"
-            className="mt-10 h-72 w-full rounded-2xl object-cover sm:h-96"
+            className="mt-12 h-72 w-full rounded-3xl object-cover shadow-sm ring-1 ring-black/5 sm:h-[28rem]"
           />
         ) : null}
 
         {/* Sections alternate text/image sides — never a linear stack. */}
         {c.sections.map((s, i) => {
           const img = sectionImages[i];
-          const imageLeft = i % 2 === 1;
           if (collapsible(s.key)) {
             return (
               <section
                 key={s.title}
                 id={anchor(s.title)}
-                className="mx-auto mt-14 max-w-3xl scroll-mt-10"
+                className="mx-auto mt-16 max-w-3xl scroll-mt-10"
               >
-                <details className="group rounded-2xl border border-slate-200 px-6 py-5">
+                <details className="group rounded-2xl border border-slate-200 px-6 py-5 transition-colors open:bg-slate-50/50 hover:border-slate-300">
                   <summary className="flex cursor-pointer list-none items-center justify-between gap-3">
                     <h2 className="text-xl font-semibold tracking-tight text-ink">
                       {s.title}
@@ -305,46 +321,51 @@ export function MicrositeSiteView({
               </section>
             );
           }
+          const n = visualIndices[i] ?? 1;
+          const eyebrow = String(n).padStart(2, "0");
+          const imageLeft = n % 2 === 0;
+          const textBlock = (
+            <div>
+              <p
+                className="text-xs font-semibold uppercase tracking-[0.2em]"
+                style={{ color: primary }}
+              >
+                {eyebrow}
+              </p>
+              <h2 className="mt-2 text-3xl font-semibold tracking-tight text-ink">
+                {s.title}
+              </h2>
+              <div dangerouslySetInnerHTML={{ __html: renderMarkdown(s.body_md) }} />
+            </div>
+          );
           return (
             <section
               key={s.title}
               id={anchor(s.title)}
-              className="mt-14 scroll-mt-10"
+              className="mt-16 scroll-mt-10 sm:mt-20"
             >
               {img ? (
-                <div className="grid items-center gap-8 sm:grid-cols-2">
+                <div className="grid items-center gap-8 sm:grid-cols-2 sm:gap-12">
                   <div className={imageLeft ? "sm:order-2" : undefined}>
-                    <h2 className="text-2xl font-semibold tracking-tight text-ink">
-                      {s.title}
-                    </h2>
-                    <div
-                      dangerouslySetInnerHTML={{ __html: renderMarkdown(s.body_md) }}
-                    />
+                    {textBlock}
                   </div>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={img.url}
                     alt={img.alt}
                     loading="lazy"
-                    className={`h-64 w-full rounded-2xl object-cover sm:h-full sm:min-h-80 ${imageLeft ? "sm:order-1" : ""}`}
+                    className={`h-64 w-full rounded-3xl object-cover shadow-sm ring-1 ring-black/5 sm:h-full sm:min-h-96 ${imageLeft ? "sm:order-1" : ""}`}
                   />
                 </div>
               ) : (
-                <div className="mx-auto max-w-3xl">
-                  <h2 className="text-2xl font-semibold tracking-tight text-ink">
-                    {s.title}
-                  </h2>
-                  <div
-                    dangerouslySetInnerHTML={{ __html: renderMarkdown(s.body_md) }}
-                  />
-                </div>
+                <div className="mx-auto max-w-3xl">{textBlock}</div>
               )}
             </section>
           );
         })}
 
         {leftovers.length ? (
-          <div className="mt-14 grid gap-4 sm:grid-cols-2">
+          <div className="mt-16 grid gap-4 sm:grid-cols-2">
             {leftovers.map((img) => (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -352,48 +373,75 @@ export function MicrositeSiteView({
                 src={img.url}
                 alt={img.alt}
                 loading="lazy"
-                className="h-64 w-full rounded-2xl object-cover"
+                className="h-64 w-full rounded-3xl object-cover shadow-sm ring-1 ring-black/5"
               />
             ))}
           </div>
         ) : null}
+      </div>
 
-        {subpages.length ? (
-          <section className="mt-14">
-            <h2 className="text-2xl font-semibold tracking-tight text-ink">
+      {/* Go deeper — full-bleed band */}
+      {subpages.length ? (
+        <section className="mt-16 bg-slate-50 py-14 sm:mt-20">
+          <div className="mx-auto max-w-5xl px-6">
+            <p
+              className="text-xs font-semibold uppercase tracking-[0.2em]"
+              style={{ color: primary }}
+            >
+              Explore
+            </p>
+            <h2 className="mt-2 text-3xl font-semibold tracking-tight text-ink">
               Go deeper
             </h2>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {subpages.map((p) => (
                 <a
                   key={p.slug}
                   href={`/${p.slug}`}
-                  className="rounded-xl border border-slate-200 p-4 transition-colors hover:bg-slate-50"
+                  className="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
                 >
-                  <p className="font-semibold text-ink">
-                    {project.project_name} {p.label.toLowerCase()}
-                  </p>
-                  <p className="mt-1 text-sm text-slate-500">
+                  <p className="font-semibold text-ink">{p.label}</p>
+                  <p className="mt-1.5 text-sm leading-relaxed text-slate-500">
                     {c.pages?.[p.key]?.meta_description}
+                  </p>
+                  <p
+                    className="mt-3 text-sm font-semibold opacity-0 transition-opacity group-hover:opacity-100"
+                    style={{ color: primary }}
+                  >
+                    Read more →
                   </p>
                 </a>
               ))}
             </div>
-          </section>
-        ) : null}
+          </div>
+        </section>
+      ) : null}
 
+      <div className="mx-auto max-w-5xl px-6 pb-16 sm:pb-20">
         {c.faq.length > 0 ? (
-          <section id="faq" className="mx-auto mt-14 max-w-3xl scroll-mt-10">
-            <h2 className="text-2xl font-semibold tracking-tight text-ink">
+          <section id="faq" className="mx-auto mt-16 max-w-3xl scroll-mt-10">
+            <p
+              className="text-xs font-semibold uppercase tracking-[0.2em]"
+              style={{ color: primary }}
+            >
+              Questions
+            </p>
+            <h2 className="mt-2 text-3xl font-semibold tracking-tight text-ink">
               Frequently asked questions
             </h2>
-            <div className="mt-4 divide-y divide-slate-100 rounded-2xl border border-slate-200">
+            <div className="mt-6 divide-y divide-slate-100 rounded-2xl border border-slate-200 shadow-sm">
               {c.faq.map((f) => (
-                <details key={f.question} className="group px-5 py-4">
-                  <summary className="cursor-pointer list-none font-medium text-slate-800">
+                <details key={f.question} className="group px-6 py-5">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-3 font-medium text-slate-800">
                     {f.question}
+                    <span
+                      aria-hidden
+                      className="text-slate-400 transition-transform group-open:rotate-180"
+                    >
+                      ▾
+                    </span>
                   </summary>
-                  <p className="mt-2 text-sm leading-relaxed text-slate-600">
+                  <p className="mt-3 text-sm leading-relaxed text-slate-600">
                     {f.answer}
                   </p>
                 </details>
@@ -402,21 +450,22 @@ export function MicrositeSiteView({
           </section>
         ) : null}
 
-        {/* Register — bottom */}
+        {/* Register — bottom, brand-tinted */}
         <section
           id="register"
-          className="mx-auto mt-14 max-w-3xl scroll-mt-10 rounded-2xl border border-slate-200 bg-slate-50/60 p-6 sm:p-8"
+          className="mx-auto mt-16 max-w-3xl scroll-mt-10 rounded-3xl border p-8 sm:p-10"
+          style={{ backgroundColor: `${primary}0d`, borderColor: `${primary}2e` }}
         >
           <h2
-            className="text-2xl font-semibold tracking-tight"
+            className="text-3xl font-semibold tracking-tight"
             style={{ color: primary }}
           >
             Register Now
           </h2>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1.5 text-sm text-slate-600">
             Get available floor plans, pricing and details.
           </p>
-          <div className="mt-5">
+          <div className="mt-6">
             <MicrositeLeadForm
               idPrefix="bottom"
               domain={config.domain}
@@ -428,24 +477,32 @@ export function MicrositeSiteView({
         </section>
 
         {/* Location map */}
-        <section id="map" className="mt-14 scroll-mt-10">
-          <h2 className="text-2xl font-semibold tracking-tight text-ink">
+        <section id="map" className="mt-16 scroll-mt-10">
+          <p
+            className="text-xs font-semibold uppercase tracking-[0.2em]"
+            style={{ color: primary }}
+          >
             Location
-          </h2>
-          <p className="mt-1 text-sm text-slate-500">
-            {project.address_full ?? chip}
           </p>
+          <h2 className="mt-2 text-3xl font-semibold tracking-tight text-ink">
+            {project.address_full ?? chip}
+          </h2>
           <iframe
             title={`Map of ${project.project_name}`}
             src={`https://maps.google.com/maps?q=${encodeURIComponent(mapQuery)}&z=14&output=embed`}
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
-            className="mt-4 h-80 w-full rounded-2xl border-0"
+            className="mt-6 h-96 w-full rounded-3xl border-0 shadow-sm ring-1 ring-black/5"
           />
         </section>
       </div>
 
-      <MicrositeFooter slug={project.slug} links={footerLinks} />
+      <MicrositeFooter
+        slug={project.slug}
+        links={footerLinks}
+        name={project.project_name}
+        primary={primary}
+      />
     </main>
   );
 }
