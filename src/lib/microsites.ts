@@ -1,6 +1,7 @@
 import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { fetchLinkContext } from "@/lib/email-intake/fetch-links";
 import type { PublicProject } from "@/lib/types";
 
 /**
@@ -334,7 +335,9 @@ const VOICE =
   "You write for a real estate landing page. Write like a real person helping a friend decide on a home. " +
   "Grade 6 to 8 reading level: short sentences, everyday words, active voice. Talk to the reader as 'you'. Contractions are fine. " +
   "NEVER use an em dash or en dash anywhere, in any field. Use a period, a comma, or the word 'and' instead. In headings use ' | ' as a divider only if you truly need one. " +
-  "Banned words and phrases: stunning, luxurious, luxury living, nestled, boasts, unparalleled, seamless, vibrant, prestigious, exquisite, look no further, dream home. No exclamation marks. No hype. " +
+  "Banned words and phrases: stunning, luxurious, luxury living, nestled, boasts, unparalleled, seamless, vibrant, prestigious, exquisite, look no further, dream home, priced out. No exclamation marks. No hype. " +
+  "Frame affordability POSITIVELY: buyers are getting more for their money, making a smart first move, finding real value close to the city. Never describe the reader or anyone as priced out, struggling, squeezed, or shut out of the market. " +
+  "NEVER narrate your own writing process or knowledge on the page. Never write things like 'that is the one fact we can confirm', 'we will not pad this out', 'claims we cannot back up', or 'check it yourself'. The page speaks with quiet authority: say what is known plainly, and simply OMIT what is unknown without commenting on the omission. " +
   "Never use markdown bold or italics (no ** or _). Numbers and names carry their own weight in plain sentences. Bullet lists are fine where they genuinely help. " +
   "Facts about THIS PROJECT come ONLY from the fact block. If a project detail is not released yet, say so in plain words, like 'The builder has not released this yet.' " +
   "You MAY use general knowledge about the city and region (real highways, transit lines, landmarks, how the area feels) when you are sure it is true. Never invent project details, prices, dates, sizes, or incentives. " +
@@ -441,9 +444,9 @@ const SECTION_DEFS: SectionDef[] = [
   },
   {
     key: "builder",
-    label: "About the builder",
+    label: "About the developer",
     brief:
-      "Write a short section about the builder. Name them and say only what you are sure of. If you know little about this builder, keep it to two or three sentences and add one practical line: in Ontario, buyers can look up any builder's history on the Tarion and HCRA public registries before they buy.",
+      "Write the developer profile. Use the SOURCE MATERIAL block (the builder's own copy or website text) plus solid general knowledge to write an authoritative short profile: who they are, what they build, where they build, and how they approach their communities. Weave it into OUR voice, never copy their marketing lines verbatim and never adopt their hype. If material is thin, write a confident two or three sentences about what the builder is delivering here and close with one useful line, like: buyers can review any Ontario builder's history on the Tarion and HCRA public registries. Never comment on how much or little information you have.",
     auto: (p) => Boolean(p.builder_name),
   },
   {
@@ -824,9 +827,31 @@ export async function generateMicrositeContent(
     (a, b) => orderOf(a.key) - orderOf(b.key),
   );
   const ctx = JSON.stringify(config.context ?? {}, null, 2);
+
+  // Standing practice: the context should always carry builder copy or a
+  // builder/sales URL. Any URL in the context gets fetched and fed to every
+  // writing call as SOURCE MATERIAL, so sections (the developer profile
+  // especially) weave real researched substance instead of hedging.
+  let sourceMaterial = "";
+  try {
+    const urls = [...new Set(ctx.match(/https?:\/\/[^\s"'\\)]+/g) ?? [])].slice(0, 2);
+    if (urls.length) {
+      const fetched = await fetchLinkContext(urls);
+      sourceMaterial = fetched.pages
+        .map((p) => `--- FROM ${p.url} ---\n${p.text.slice(0, 5000)}`)
+        .join("\n\n")
+        .slice(0, 9000);
+    }
+  } catch {
+    /* generation proceeds without source material */
+  }
+
   const base =
     `FACT BLOCK (the only source of project facts):\n${factBlock(project)}\n\n` +
-    `POSITIONING CONTEXT (founder questionnaire, may be sparse; steer emphasis with it):\n${ctx}\n\n`;
+    `POSITIONING CONTEXT (founder questionnaire, may be sparse; steer emphasis with it):\n${ctx}\n\n` +
+    (sourceMaterial
+      ? `SOURCE MATERIAL (builder/sales pages the founder supplied; weave into our voice, never copy verbatim, never adopt their hype):\n${sourceMaterial}\n\n`
+      : "");
 
   const [brand, copy] = await Promise.all([
     extractBrand(client, project),
