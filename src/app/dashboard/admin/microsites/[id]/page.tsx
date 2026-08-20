@@ -306,7 +306,7 @@ export default async function AdminMicrositeDetail({
             <input type="hidden" name="microsite_id" value={site.id} />
             <input type="hidden" name="status" value="live" />
             <Button type="submit" size="sm" disabled={site.status === "live"}>
-              Set live
+              {site.status === "live" ? "Live ✓" : "Set live"}
             </Button>
           </form>
           <form action={setMicrositeStatus}>
