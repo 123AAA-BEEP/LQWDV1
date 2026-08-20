@@ -30,6 +30,7 @@ import {
 } from "../actions";
 import { MicrositeContentEditor } from "./content-editor";
 import { BuilderLogoUploader } from "./logo-uploader";
+import { MicrositeImagesManager } from "./images-manager";
 
 export const metadata: Metadata = { title: "Microsite" };
 export const dynamic = "force-dynamic";
@@ -84,7 +85,7 @@ export default async function AdminMicrositeDetail({
 
   const { data: projData } = await supabase
     .from("public_projects_view")
-    .select("project_name, slug, city, builder_name")
+    .select("project_name, slug, city, builder_name, hero_image_url")
     .eq("project_id", site.project_id)
     .maybeSingle();
   const project = projData as {
@@ -92,7 +93,19 @@ export default async function AdminMicrositeDetail({
     slug: string;
     city: string | null;
     builder_name: string | null;
+    hero_image_url: string | null;
   } | null;
+
+  const { data: mediaData } = await supabase
+    .from("project_media")
+    .select("id, url, alt_text")
+    .eq("project_id", site.project_id)
+    .eq("is_public", true)
+    .neq("media_type", "floorplan")
+    .order("sort_order", { ascending: true });
+  const media =
+    (mediaData as { id: string; url: string; alt_text: string | null }[] | null) ??
+    [];
 
   const contextText =
     typeof site.context?.notes === "string"
@@ -115,6 +128,60 @@ export default async function AdminMicrositeDetail({
   const vercelOn = vercelDomainsConfigured();
   const attached = vercelOn ? await domainAttached(site.domain) : null;
   const check = vercelOn && attached === false ? await checkDomain(site.domain) : null;
+
+  // Launch checklist — what still needs attention before (and after) going
+  // live. ok: true = done, false = fix it, null = can't verify from here.
+  const subpageCount = c?.pages ? Object.keys(c.pages).length : 0;
+  const checklist: { ok: boolean | null; label: string; hint: string }[] = [
+    {
+      ok: /https?:\/\//.test(JSON.stringify(site.context ?? {})),
+      label: "Builder link in context",
+      hint: "Paste the builder's site URL below; it feeds the developer profile.",
+    },
+    {
+      ok: Boolean(project?.hero_image_url),
+      label: "Hero photo",
+      hint: "Upload a rendering in Images and hit Make hero.",
+    },
+    {
+      ok: media.length >= 5 ? true : media.length > 0 ? null : false,
+      label: `Photos (${media.length})`,
+      hint: "Aim for 5 or more so sections use real renderings, not stock.",
+    },
+    {
+      ok: Boolean(site.builder_logo_url),
+      label: "Developer logo",
+      hint: "Upload it or paste a URL in the logo card.",
+    },
+    {
+      ok: Boolean(c),
+      label: "Content generated",
+      hint: "Hit Generate (add context first for better copy).",
+    },
+    {
+      ok: c ? subpageCount >= 4 : false,
+      label: `Sub-pages (${subpageCount}/4)`,
+      hint: "Regenerate to create /floor-plans, /site-plan, /pricing, /neighbourhood.",
+    },
+    {
+      ok: c ? Boolean(c.brand) : false,
+      label: "Brand extracted",
+      hint: "Regenerate after setting a real hero, or set colours/font in the editor.",
+    },
+    {
+      ok: vercelOn ? attached === true : null,
+      label: "Domain attached to Vercel",
+      hint: vercelOn
+        ? "Use the Domain card below."
+        : "Can't verify from here; check the Vercel dashboard (or set VERCEL_TOKEN).",
+    },
+    {
+      ok: site.status === "live",
+      label: "Live",
+      hint: "Set live once the items above are green.",
+    },
+  ];
+  const openItems = checklist.filter((i) => i.ok !== true).length;
 
   return (
     <div className="space-y-6">
@@ -174,6 +241,47 @@ export default async function AdminMicrositeDetail({
           </Badge>
         </div>
       </div>
+
+      <Card>
+        <CardBody>
+          <div className="flex items-center justify-between gap-3">
+            <h3 className="font-semibold text-ink">Status</h3>
+            <Badge tone={openItems === 0 ? "success" : "warning"}>
+              {openItems === 0 ? "Ready" : `${openItems} to do`}
+            </Badge>
+          </div>
+          <ul className="mt-3 grid gap-x-8 gap-y-1.5 sm:grid-cols-2">
+            {checklist.map((item) => (
+              <li key={item.label} className="flex items-start gap-2 text-sm">
+                <span
+                  aria-hidden
+                  className={
+                    item.ok === true
+                      ? "mt-0.5 text-emerald-600"
+                      : item.ok === null
+                        ? "mt-0.5 text-slate-400"
+                        : "mt-0.5 text-amber-500"
+                  }
+                >
+                  {item.ok === true ? "✓" : item.ok === null ? "•" : "!"}
+                </span>
+                <span>
+                  <span
+                    className={
+                      item.ok === true ? "text-slate-500" : "font-medium text-slate-800"
+                    }
+                  >
+                    {item.label}
+                  </span>
+                  {item.ok !== true ? (
+                    <span className="block text-xs text-slate-400">{item.hint}</span>
+                  ) : null}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </CardBody>
+      </Card>
 
       <Card>
         <CardBody className="flex flex-wrap items-center gap-2">
@@ -300,6 +408,25 @@ export default async function AdminMicrositeDetail({
               micrositeId={site.id}
               projectId={site.project_id}
               currentUrl={site.builder_logo_url}
+            />
+          </div>
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardBody>
+          <h3 className="font-semibold text-ink">Images</h3>
+          <p className="mt-1 text-sm text-slate-500">
+            The photography this microsite pulls from (shared with the
+            project&apos;s media library). Upload renderings, make any of
+            them the hero, remove the weak ones.
+          </p>
+          <div className="mt-3">
+            <MicrositeImagesManager
+              micrositeId={site.id}
+              projectId={site.project_id}
+              heroUrl={project?.hero_image_url ?? null}
+              media={media}
             />
           </div>
         </CardBody>

@@ -22,6 +22,7 @@ import {
 } from "@/lib/vercel-domains";
 import { pingIndexNowForHost } from "@/lib/indexnow";
 import { cleanBrandInput } from "@/lib/microsite-brand";
+import { pathFromPublicUrl } from "@/lib/upload";
 
 /** Every indexable path a content payload yields — for IndexNow pings. */
 function livePaths(content: MicrositeContent | null): string[] {
@@ -324,6 +325,66 @@ export async function saveBuilderLogo(
     .update({ builder_logo_url: url, updated_at: new Date().toISOString() })
     .eq("id", id);
   if (error) return { error: `Couldn't save the logo: ${error.message}` };
+  revalidatePath(`${LIST}/${id}`);
+}
+
+/* ---------------- Microsite image management (project media) -------------- */
+
+/** Records a photo after direct-to-storage upload from the microsite screen. */
+export async function recordMicrositeImage(formData: FormData) {
+  const supabase = await createClient();
+  await assertAdmin(supabase);
+  const id = String(formData.get("microsite_id") ?? "");
+  const projectId = String(formData.get("project_id") ?? "");
+  const path = String(formData.get("path") ?? "");
+  if (!id || !projectId || !path) return;
+
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from("project-media").getPublicUrl(path);
+  await supabase.from("project_media").insert({
+    project_id: projectId,
+    media_type: "image",
+    url: publicUrl,
+    alt_text: String(formData.get("alt_text") ?? "").trim().slice(0, 200) || null,
+    is_public: true,
+  });
+  revalidatePath(`${LIST}/${id}`);
+}
+
+export async function deleteMicrositeImage(formData: FormData) {
+  const supabase = await createClient();
+  await assertAdmin(supabase);
+  const id = String(formData.get("microsite_id") ?? "");
+  const mediaId = String(formData.get("media_id") ?? "");
+  if (!id || !mediaId) return;
+
+  const { data: row } = await supabase
+    .from("project_media")
+    .select("url")
+    .eq("id", mediaId)
+    .maybeSingle();
+  if (row?.url) {
+    const path = pathFromPublicUrl(row.url, "project-media");
+    if (path) await supabase.storage.from("project-media").remove([path]);
+  }
+  await supabase.from("project_media").delete().eq("id", mediaId);
+  revalidatePath(`${LIST}/${id}`);
+}
+
+/** Makes any gallery image the hero photo (the microsite's backdrop). */
+export async function setMicrositeHeroImage(formData: FormData) {
+  const supabase = await createClient();
+  await assertAdmin(supabase);
+  const id = String(formData.get("microsite_id") ?? "");
+  const projectId = String(formData.get("project_id") ?? "");
+  const url = String(formData.get("url") ?? "");
+  if (!id || !projectId || !/^https:\/\/.+/.test(url)) return;
+
+  await supabase
+    .from("projects")
+    .update({ hero_image_url: url })
+    .eq("id", projectId);
   revalidatePath(`${LIST}/${id}`);
 }
 
