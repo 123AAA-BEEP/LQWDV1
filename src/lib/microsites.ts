@@ -91,6 +91,8 @@ export interface MicrositeConfig {
   details_url?: string | null;
   /** Developer logo (migration 0093) shown in About the developer. */
   builder_logo_url?: string | null;
+  /** GSC verification (migration 0094): meta token or "googleXXX.html". */
+  google_verification?: string | null;
 }
 
 /** Lowercase bare domain, or null when it doesn't look like one. */
@@ -171,7 +173,7 @@ export async function getMicrositeByDomain(
     const { data } = await admin
       .from("microsite_configs")
       .select(
-        "id, domain, project_id, skin, status, context, content, capture_key, auto_send_details, details_url, builder_logo_url",
+        "id, domain, project_id, skin, status, context, content, capture_key, auto_send_details, details_url, builder_logo_url, google_verification",
       )
       .eq("domain", domain.toLowerCase().replace(/^www\./, ""))
       .maybeSingle();
