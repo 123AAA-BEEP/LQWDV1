@@ -98,6 +98,23 @@ export async function handleMicrositeDirective(opts: {
   const detailUrl = `${listUrl}/${config.id}`;
   notes.push(`config ${config.status}`);
 
+  // Seed the positioning context with the email's links (builder page,
+  // sales page) so generation fetches them as SOURCE MATERIAL without the
+  // founder having to re-paste anything. Never overwrites existing URLs.
+  const emailUrls = [
+    ...new Set(opts.text?.match(/https?:\/\/[^\s"'>)]+/g) ?? []),
+  ]
+    .filter((u) => !u.includes(config.domain))
+    .slice(0, 2);
+  if (emailUrls.length && !/https?:\/\//.test(JSON.stringify(config.context ?? {}))) {
+    config.context = { ...(config.context ?? {}), source_urls: emailUrls };
+    await admin
+      .from("microsite_configs")
+      .update({ context: config.context, updated_at: new Date().toISOString() })
+      .eq("id", config.id);
+    notes.push("context seeded with email links");
+  }
+
   // Generate the page now when the project is publicly visible, so the
   // founder lands on a reviewable draft rather than an empty shell.
   if (!config.content) {
