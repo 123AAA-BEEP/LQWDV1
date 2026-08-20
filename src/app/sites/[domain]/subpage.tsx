@@ -13,6 +13,7 @@ import type { PublicProject } from "@/lib/types";
 import { recordPageEvent } from "@/lib/analytics";
 import { renderMarkdown } from "@/lib/markdown";
 import { MicrositeLeadForm } from "./lead-form";
+import { MS_BODY_CSS, decorateBody } from "./body-style";
 
 /**
  * Shared machinery for microsite sub-pages (/floor-plans, /pricing,
@@ -207,9 +208,14 @@ export function makeSubpage(pageKey: MicrositeSubPageKey) {
 
     return (
       <main
-        className="min-h-screen bg-white"
-        style={fontFamily ? { fontFamily } : undefined}
+        className="min-h-screen bg-white antialiased"
+        style={{
+          ...(fontFamily ? { fontFamily } : {}),
+          ["--msp" as string]: primary,
+          ["--msp-soft" as string]: `${primary}1a`,
+        }}
       >
+        <style>{`html{scroll-behavior:smooth}${MS_BODY_CSS}`}</style>
         {fontHref ? (
           <>
             <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -270,8 +276,8 @@ export function makeSubpage(pageKey: MicrositeSubPageKey) {
             {page.heading}
           </h1>
           <div
-            className="mt-4"
-            dangerouslySetInnerHTML={{ __html: renderMarkdown(page.intro_md) }}
+            className="ms-body mt-4"
+            dangerouslySetInnerHTML={{ __html: decorateBody(renderMarkdown(page.intro_md)) }}
           />
 
           {page.sections.map((s) => (
@@ -279,7 +285,10 @@ export function makeSubpage(pageKey: MicrositeSubPageKey) {
               <h2 className="text-2xl font-semibold tracking-tight text-ink">
                 {s.title}
               </h2>
-              <div dangerouslySetInnerHTML={{ __html: renderMarkdown(s.body_md) }} />
+              <div
+                className="ms-body"
+                dangerouslySetInnerHTML={{ __html: decorateBody(renderMarkdown(s.body_md)) }}
+              />
             </section>
           ))}
 

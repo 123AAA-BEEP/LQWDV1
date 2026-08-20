@@ -13,6 +13,7 @@ import { formatPriceBand } from "@/lib/types";
 import { renderMarkdown } from "@/lib/markdown";
 import { MicrositeLeadForm } from "./lead-form";
 import { MicrositeFooter } from "./subpage";
+import { MS_BODY_CSS, decorateBody } from "./body-style";
 
 /**
  * The microsite landing page itself, shared verbatim between the public
@@ -183,9 +184,13 @@ export function MicrositeSiteView({
   return (
     <main
       className="min-h-screen bg-white antialiased"
-      style={fontFamily ? { fontFamily } : undefined}
+      style={{
+        ...(fontFamily ? { fontFamily } : {}),
+        ["--msp" as string]: primary,
+        ["--msp-soft" as string]: `${primary}1a`,
+      }}
     >
-      <style>{`html{scroll-behavior:smooth}`}</style>
+      <style>{`html{scroll-behavior:smooth}${MS_BODY_CSS}`}</style>
       {fontHref ? (
         <>
           <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -281,8 +286,8 @@ export function MicrositeSiteView({
             {c.subhead}
           </p>
           <div
-            className="mt-4"
-            dangerouslySetInnerHTML={{ __html: renderMarkdown(c.intro_md) }}
+            className="ms-body mt-4"
+            dangerouslySetInnerHTML={{ __html: decorateBody(renderMarkdown(c.intro_md)) }}
           />
         </div>
 
@@ -293,7 +298,7 @@ export function MicrositeSiteView({
             src={introImage.url}
             alt={introImage.alt}
             loading="lazy"
-            className="mt-12 aspect-[21/9] w-full rounded-3xl object-cover shadow-sm ring-1 ring-black/5"
+            className="mt-12 aspect-[21/9] w-full rounded-3xl object-cover shadow-xl shadow-slate-900/10"
           />
         ) : null}
       </div>
@@ -324,7 +329,8 @@ export function MicrositeSiteView({
                       </span>
                     </summary>
                     <div
-                      dangerouslySetInnerHTML={{ __html: renderMarkdown(s.body_md) }}
+                      className="ms-body"
+                      dangerouslySetInnerHTML={{ __html: decorateBody(renderMarkdown(s.body_md)) }}
                     />
                   </details>
                 </div>
@@ -349,10 +355,13 @@ export function MicrositeSiteView({
               >
                 {pill}
               </span>
-              <h2 className="mt-3 text-3xl font-semibold tracking-tight text-ink">
+              <h2 className="mt-4 text-4xl font-semibold tracking-tight text-ink">
                 {s.title}
               </h2>
-              <div dangerouslySetInnerHTML={{ __html: renderMarkdown(s.body_md) }} />
+              <div
+                className="ms-body"
+                dangerouslySetInnerHTML={{ __html: decorateBody(renderMarkdown(s.body_md)) }}
+              />
             </div>
           );
           const visual = hasLogo(s.key) ? (
@@ -376,7 +385,7 @@ export function MicrositeSiteView({
               src={img.url}
               alt={img.alt}
               loading="lazy"
-              className={`aspect-[4/3] w-full self-center rounded-3xl object-cover shadow-sm ring-1 ring-black/5 ${imageLeft ? "sm:order-1" : ""}`}
+              className={`aspect-[4/3] w-full self-center rounded-3xl object-cover shadow-xl shadow-slate-900/10 ${imageLeft ? "sm:order-1" : ""}`}
             />
           ) : null;
           return (
@@ -385,7 +394,7 @@ export function MicrositeSiteView({
               id={anchor(s.title)}
               className={`scroll-mt-10 ${band ? "bg-slate-50" : "bg-white"}`}
             >
-              <div className="mx-auto max-w-5xl px-6 py-14 sm:py-20">
+              <div className="mx-auto max-w-5xl px-6 py-16 sm:py-24">
                 {visual ? (
                   <div className="grid items-center gap-8 sm:grid-cols-2 sm:gap-12">
                     <div className={imageLeft ? "sm:order-2" : undefined}>
@@ -412,7 +421,7 @@ export function MicrositeSiteView({
                 src={img.url}
                 alt={img.alt}
                 loading="lazy"
-                className="aspect-[4/3] w-full rounded-3xl object-cover shadow-sm ring-1 ring-black/5"
+                className="aspect-[4/3] w-full rounded-3xl object-cover shadow-xl shadow-slate-900/10"
               />
             ))}
           </div>
@@ -547,7 +556,7 @@ export function MicrositeSiteView({
             src={`https://maps.google.com/maps?q=${encodeURIComponent(mapQuery)}&z=14&output=embed`}
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
-            className="mt-6 h-96 w-full rounded-3xl border-0 shadow-sm ring-1 ring-black/5"
+            className="mt-6 h-96 w-full rounded-3xl border-0 shadow-xl shadow-slate-900/10"
           />
         </section>
       </div>
