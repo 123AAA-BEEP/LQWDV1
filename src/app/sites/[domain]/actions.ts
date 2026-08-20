@@ -1,5 +1,6 @@
 "use server";
 
+import { after } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getMicrositeByDomain, getMicrositeProject } from "@/lib/microsites";
 import { resolveLeadSteward } from "@/lib/rewards";
@@ -99,7 +100,7 @@ export async function submitMicrositeLead(
           ? `https://liqwd.ca/projects/${project.slug}`
           : null;
     if (detailsUrl) {
-      void sendEmail({
+      after(() => sendEmail({
         to: lead_email,
         subject: `${project?.project_name ?? "Your project"}: details inside`,
         html: brandedEmail({
@@ -114,13 +115,13 @@ export async function submitMicrositeLead(
             esc(config.domain) +
             ".",
         }),
-      });
+      }));
     }
   }
 
   // Ops copy — every microsite lead reaches the team inbox, source-tagged.
   const base = process.env.NEXT_PUBLIC_SITE_URL ?? "https://liqwd.ca";
-  void sendEmail({
+  after(() => sendEmail({
     to: process.env.LEADS_NOTIFY_EMAIL ?? "leads@getliqwd.com",
     replyTo: lead_email,
     subject: `Microsite lead (${config.domain}): ${lead_name}`,
@@ -138,5 +139,5 @@ export async function submitMicrositeLead(
       ctaUrl: `${base}/dashboard/admin/leads`,
       ctaLabel: "Open the leads queue",
     }),
-  });
+  }));
 }
