@@ -29,12 +29,9 @@ const BLANK: MicrositeContent = {
 export function MicrositeContentEditor({
   micrositeId,
   initial,
-  defaultSeoTitle,
 }: {
   micrositeId: string;
   initial: MicrositeContent | null;
-  /** What the renderer uses when the SEO title override is blank. */
-  defaultSeoTitle: string;
 }) {
   const router = useRouter();
   const [draft, setDraft] = useState<MicrositeContent>(initial ?? BLANK);
@@ -95,35 +92,6 @@ export function MicrositeContentEditor({
 
   return (
     <div className="space-y-5">
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Field
-          label="SEO title (browser tab + Google result)"
-          htmlFor="ed_seo_title"
-          hint={`Blank uses: ${defaultSeoTitle}`}
-        >
-          <Input
-            id="ed_seo_title"
-            value={draft.seo_title ?? ""}
-            onChange={(e) => set("seo_title", e.target.value || null)}
-            maxLength={120}
-            placeholder={defaultSeoTitle}
-          />
-        </Field>
-        <Field
-          label="Meta description"
-          htmlFor="ed_seo_desc"
-          hint="Blank uses the subhead."
-        >
-          <Textarea
-            id="ed_seo_desc"
-            className="min-h-10"
-            value={draft.seo_description ?? ""}
-            onChange={(e) => set("seo_description", e.target.value || null)}
-            maxLength={300}
-          />
-        </Field>
-      </div>
-
       <div className="rounded-lg border border-slate-200 p-3">
         <p className="text-sm font-medium text-slate-700">
           Brand (extracted from the renderings; override anything)
