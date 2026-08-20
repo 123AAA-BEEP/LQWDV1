@@ -11,6 +11,7 @@ import {
   normalizeDomain,
   MICROSITE_SECTIONS,
   MICROSITE_SUBPAGES,
+  stripDashes,
   type MicrositeConfig,
   type MicrositeContent,
 } from "@/lib/microsites";
@@ -133,6 +134,7 @@ export async function generateMicrosite(formData: FormData) {
   // Hand-set SEO overrides survive a regenerate; body copy is replaced.
   content.seo_title = config.content?.seo_title ?? null;
   content.seo_description = config.content?.seo_description ?? null;
+  content.focus_keywords = config.content?.focus_keywords ?? null;
   await supabase
     .from("microsite_configs")
     .update({ content, updated_at: new Date().toISOString() })
@@ -237,9 +239,10 @@ export async function saveMicrositeContent(input: {
     return { error: "Headline, subhead, and intro are required before saving." };
   }
 
-  // The editor covers the home page copy; keep the generated sub-pages
-  // intact. Brand: an explicit null clears it (Reset to defaults), a valid
-  // override wins, anything malformed falls back to what was stored.
+  // The editor covers the home page copy; keep the generated sub-pages and
+  // the Search-appearance fields (owned by the SEO card) intact. Brand: an
+  // explicit null clears it (Reset to defaults), a valid override wins,
+  // anything malformed falls back to what was stored.
   const { data: existing } = await supabase
     .from("microsite_configs")
     .select("content")
@@ -247,6 +250,9 @@ export async function saveMicrositeContent(input: {
     .maybeSingle();
   const prev = existing?.content as MicrositeContent | null;
   if (prev?.pages) clean.pages = prev.pages;
+  clean.seo_title = prev?.seo_title ?? null;
+  clean.seo_description = prev?.seo_description ?? null;
+  clean.focus_keywords = prev?.focus_keywords ?? null;
   clean.brand =
     c.brand === null ? null : (cleanBrandInput(c.brand) ?? prev?.brand ?? null);
 
@@ -326,6 +332,66 @@ export async function saveBuilderLogo(
     .eq("id", id);
   if (error) return { error: `Couldn't save the logo: ${error.message}` };
   revalidatePath(`${LIST}/${id}`);
+}
+
+/**
+ * Search appearance: meta titles, descriptions, sub-page H1s, and focus
+ * keywords for every page of the microsite, in one save. Only pages that
+ * exist in the content are touched.
+ */
+export async function saveMicrositeSeo(input: {
+  micrositeId: string;
+  home: {
+    seo_title: string;
+    seo_description: string;
+    focus_keywords: string;
+  };
+  pages: Record<
+    string,
+    { heading: string; seo_title: string; meta_description: string }
+  >;
+}): Promise<{ error?: string }> {
+  const supabase = await createClient();
+  await assertAdmin(supabase);
+  const id = String(input.micrositeId ?? "");
+  if (!id) return { error: "Missing microsite." };
+
+  const { data: existing } = await supabase
+    .from("microsite_configs")
+    .select("content")
+    .eq("id", id)
+    .maybeSingle();
+  const content = existing?.content as MicrositeContent | null;
+  if (!content) return { error: "Generate content first." };
+
+  const t = (v: unknown, max: number) =>
+    typeof v === "string" ? stripDashes(v.trim().slice(0, max), "title") : "";
+  const d = (v: unknown, max: number) =>
+    typeof v === "string" ? stripDashes(v.trim().slice(0, max), "body") : "";
+
+  content.seo_title = t(input.home?.seo_title, 120) || null;
+  content.seo_description = d(input.home?.seo_description, 300) || null;
+  content.focus_keywords = d(input.home?.focus_keywords, 300) || null;
+
+  if (content.pages) {
+    for (const key of Object.keys(content.pages) as (keyof typeof content.pages)[]) {
+      const edit = input.pages?.[key as string];
+      const page = content.pages[key];
+      if (!edit || !page) continue;
+      page.heading = t(edit.heading, 120) || page.heading;
+      page.seo_title = t(edit.seo_title, 120) || page.seo_title;
+      page.meta_description = d(edit.meta_description, 300) || page.meta_description;
+    }
+  }
+  content.edited_at = new Date().toISOString();
+
+  const { error } = await supabase
+    .from("microsite_configs")
+    .update({ content, updated_at: new Date().toISOString() })
+    .eq("id", id);
+  if (error) return { error: `Couldn't save: ${error.message}` };
+  revalidatePath(`${LIST}/${id}`);
+  return {};
 }
 
 /** Google Search Console verification: meta token or googleXXX.html file. */

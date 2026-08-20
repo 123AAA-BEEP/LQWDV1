@@ -74,6 +74,8 @@ export interface MicrositeContent {
   /** Admin overrides — survive regeneration; fall back to the template/subhead. */
   seo_title?: string | null;
   seo_description?: string | null;
+  /** Comma-separated focus keywords; steer generation, never emitted as a meta tag. */
+  focus_keywords?: string | null;
   edited_at?: string | null;
 }
 
@@ -848,9 +850,13 @@ export async function generateMicrositeContent(
     /* generation proceeds without source material */
   }
 
+  const focus = config.content?.focus_keywords?.trim();
   const base =
     `FACT BLOCK (the only source of project facts):\n${factBlock(project)}\n\n` +
     `POSITIONING CONTEXT (founder questionnaire, may be sparse; steer emphasis with it):\n${ctx}\n\n` +
+    (focus
+      ? `FOCUS KEYWORDS (work these phrases naturally into headings and copy where they fit; never stuff or force them):\n${focus}\n\n`
+      : "") +
     (sourceMaterial
       ? `SOURCE MATERIAL (builder/sales pages the founder supplied; weave into our voice, never copy verbatim, never adopt their hype):\n${sourceMaterial}\n\n`
       : "");

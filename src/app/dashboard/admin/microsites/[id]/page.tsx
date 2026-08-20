@@ -32,6 +32,7 @@ import {
 import { MicrositeContentEditor } from "./content-editor";
 import { BuilderLogoUploader } from "./logo-uploader";
 import { MicrositeImagesManager } from "./images-manager";
+import { MicrositeSeoEditor } from "./seo-editor";
 
 export const metadata: Metadata = { title: "Microsite" };
 export const dynamic = "force-dynamic";
@@ -594,11 +595,53 @@ export default async function AdminMicrositeDetail({
               : "Generate first (recommended), or write the page by hand from scratch."}
           </p>
           <div className="mt-4">
-            <MicrositeContentEditor
-              micrositeId={site.id}
-              initial={c}
-              defaultSeoTitle={defaultSeoTitle}
-            />
+            <MicrositeContentEditor micrositeId={site.id} initial={c} />
+          </div>
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardBody>
+          <h3 className="font-semibold text-ink">Search appearance</h3>
+          <p className="mt-1 text-sm text-slate-500">
+            Meta titles, descriptions, sub-page H1s, and the focus keywords
+            that steer generation — every page in one place. Counters follow
+            Google&apos;s display limits (about 60 / 160 characters).
+          </p>
+          <div className="mt-4">
+            {c ? (
+              <MicrositeSeoEditor
+                micrositeId={site.id}
+                domain={site.domain}
+                homeDefaults={{
+                  title: defaultSeoTitle,
+                  description: c.subhead,
+                }}
+                home={{
+                  seo_title: c.seo_title ?? "",
+                  seo_description: c.seo_description ?? "",
+                  focus_keywords: c.focus_keywords ?? "",
+                }}
+                pages={MICROSITE_SUBPAGES.filter((p) => c.pages?.[p.key]).map(
+                  (p) => {
+                    const page = c.pages![p.key]!;
+                    return {
+                      key: p.key,
+                      label: p.label,
+                      slug: p.slug,
+                      heading: page.heading,
+                      seo_title: page.seo_title,
+                      meta_description: page.meta_description,
+                    };
+                  },
+                )}
+              />
+            ) : (
+              <p className="text-sm text-slate-500">
+                Generate content first; the SEO fields appear here once the
+                pages exist.
+              </p>
+            )}
           </div>
         </CardBody>
       </Card>
