@@ -27,6 +27,7 @@ import {
   buyMicrositeDomain,
   attachMicrositeDomain,
   saveMicrositeLeadAutomation,
+  saveGoogleVerification,
 } from "../actions";
 import { MicrositeContentEditor } from "./content-editor";
 import { BuilderLogoUploader } from "./logo-uploader";
@@ -46,6 +47,7 @@ interface Row {
   auto_send_details: boolean;
   details_url: string | null;
   builder_logo_url: string | null;
+  google_verification: string | null;
 }
 
 const first = (v: unknown): string =>
@@ -76,7 +78,7 @@ export default async function AdminMicrositeDetail({
   const { data } = await supabase
     .from("microsite_configs")
     .select(
-      "id, domain, project_id, status, context, content, updated_at, auto_send_details, details_url, builder_logo_url",
+      "id, domain, project_id, status, context, content, updated_at, auto_send_details, details_url, builder_logo_url, google_verification",
     )
     .eq("id", id)
     .maybeSingle();
@@ -179,6 +181,13 @@ export default async function AdminMicrositeDetail({
       ok: site.status === "live",
       label: "Live",
       hint: "Set live once the items above are green.",
+    },
+    {
+      ok: site.google_verification ? null : false,
+      label: "Search Console",
+      hint: site.google_verification
+        ? "Token stored. Verify in GSC, then submit the sitemap."
+        : "Add the verification token below (or use a DNS TXT record in Vercel).",
     },
   ];
   const openItems = checklist.filter((i) => i.ok !== true).length;
@@ -410,6 +419,44 @@ export default async function AdminMicrositeDetail({
               currentUrl={site.builder_logo_url}
             />
           </div>
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardBody>
+          <h3 className="font-semibold text-ink">Google Search Console</h3>
+          <p className="mt-1 text-sm text-slate-500">
+            Fastest route: in Vercel &rarr; Domains &rarr;{" "}
+            <span className="font-medium">Manage DNS records</span>, add
+            GSC&apos;s TXT record for a Domain property (no field needed
+            here). Otherwise pick <span className="font-medium">URL prefix</span>{" "}
+            in GSC and paste its token or <code>googleXXX.html</code> filename
+            below, then hit Verify.
+          </p>
+          <form
+            action={saveGoogleVerification}
+            className="mt-3 flex flex-wrap items-end gap-2"
+          >
+            <input type="hidden" name="microsite_id" value={site.id} />
+            <div className="min-w-72 flex-1">
+              <Field
+                label="Verification token, meta tag, or filename"
+                htmlFor="ms_gsc"
+                hint="Blank clears it. The meta tag renders even before the site is live."
+              >
+                <Input
+                  id="ms_gsc"
+                  name="google_verification"
+                  defaultValue={site.google_verification ?? ""}
+                  placeholder="AbC123… or google1a2b3c.html"
+                  maxLength={200}
+                />
+              </Field>
+            </div>
+            <Button type="submit" variant="secondary">
+              Save
+            </Button>
+          </form>
         </CardBody>
       </Card>
 

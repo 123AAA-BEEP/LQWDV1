@@ -328,6 +328,47 @@ export async function saveBuilderLogo(
   revalidatePath(`${LIST}/${id}`);
 }
 
+/** Google Search Console verification: meta token or googleXXX.html file. */
+export async function saveGoogleVerification(formData: FormData) {
+  const supabase = await createClient();
+  await assertAdmin(supabase);
+  const id = String(formData.get("microsite_id") ?? "");
+  if (!id) redirectWithFlash(LIST, "Missing microsite.", "error");
+
+  // Accept the raw token, the whole meta tag (we pull the content), or the
+  // HTML filename GSC hands out.
+  const raw = String(formData.get("google_verification") ?? "").trim().slice(0, 200);
+  let value: string | null = null;
+  if (raw) {
+    const metaMatch = raw.match(/content=["']([^"']+)["']/i);
+    const candidate = metaMatch ? metaMatch[1] : raw;
+    if (/^google[a-z0-9]+\.html$/i.test(candidate)) {
+      value = candidate.toLowerCase();
+    } else if (/^[A-Za-z0-9_-]{20,100}$/.test(candidate)) {
+      value = candidate;
+    } else {
+      redirectWithFlash(
+        `${LIST}/${id}`,
+        "Paste the verification token, the whole meta tag, or the googleXXX.html filename.",
+        "error",
+      );
+    }
+  }
+  await supabase
+    .from("microsite_configs")
+    .update({ google_verification: value, updated_at: new Date().toISOString() })
+    .eq("id", id);
+  revalidatePath(`${LIST}/${id}`);
+  redirectWithFlash(
+    `${LIST}/${id}`,
+    value
+      ? /\.html$/i.test(value)
+        ? `Serving /${value} — hit Verify in Search Console.`
+        : "Meta tag added to the page — hit Verify in Search Console."
+      : "Verification cleared.",
+  );
+}
+
 /* ---------------- Microsite image management (project media) -------------- */
 
 /** Records a photo after direct-to-storage upload from the microsite screen. */

@@ -29,7 +29,16 @@ export async function generateMetadata({
   const { domain } = await params;
   const config = await getMicrositeByDomain(domain);
   if (!config || config.status !== "live" || !config.content) {
-    return { title: "Coming soon", robots: { index: false, follow: false } };
+    // Still noindex, but carry the GSC meta token so ownership can be
+    // verified BEFORE the site goes live.
+    const token = config?.google_verification;
+    return {
+      title: "Coming soon",
+      robots: { index: false, follow: false },
+      ...(token && !/\.html$/i.test(token)
+        ? { verification: { google: token } }
+        : {}),
+    };
   }
   const project = await getMicrositeProject(config.project_id);
   const name = project?.project_name ?? config.content.headline;
@@ -39,9 +48,14 @@ export async function generateMetadata({
     config.content.seo_title ||
     `${name}${project?.city ? ` in ${project.city}` : ""} | Homes, Prices & Floor Plans`;
   const description = config.content.seo_description || config.content.subhead;
+  // GSC meta-tag verification (the token form, not the .html file form).
+  const gsc = config.google_verification;
+  const verification =
+    gsc && !/\.html$/i.test(gsc) ? { google: gsc } : undefined;
   return {
     title,
     description,
+    ...(verification ? { verification } : {}),
     alternates: { canonical: `https://${config.domain}/` },
     openGraph: {
       title,
