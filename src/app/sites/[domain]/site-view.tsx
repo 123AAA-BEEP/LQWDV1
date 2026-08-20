@@ -286,18 +286,14 @@ export function MicrositeSiteView({
         </div>
 
         {introImage ? (
-          <div
-            className="mt-12 flex items-center justify-center rounded-3xl p-5 sm:p-10"
-            style={{ backgroundColor: `${primary}0a` }}
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={introImage.url}
-              alt={introImage.alt}
-              loading="lazy"
-              className="max-h-[30rem] w-auto max-w-full rounded-2xl object-contain shadow-sm"
-            />
-          </div>
+          // Full-width breaks are cinematic: 21:9, confident cover crop.
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={introImage.url}
+            alt={introImage.alt}
+            loading="lazy"
+            className="mt-12 aspect-[21/9] w-full rounded-3xl object-cover shadow-sm ring-1 ring-black/5"
+          />
         ) : null}
 
         {/* Sections alternate text/image sides — never a linear stack. */}
@@ -359,20 +355,16 @@ export function MicrositeSiteView({
               />
             </div>
           ) : img ? (
-            // Contained, never cropped: the full rendering sits centred on a
-            // soft brand-tinted panel (the founder's reference pattern).
-            <div
-              className={`flex min-h-64 items-center justify-center rounded-3xl p-5 sm:min-h-96 sm:p-8 ${imageLeft ? "sm:order-1" : ""}`}
-              style={{ backgroundColor: `${primary}0a` }}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={img.url}
-                alt={img.alt}
-                loading="lazy"
-                className="max-h-80 w-auto max-w-full rounded-2xl object-contain shadow-sm sm:max-h-[26rem]"
-              />
-            </div>
+            // Side-by-side visuals hold a FIXED 4:3 and self-centre beside
+            // the text: photography is cover-cropped with confidence, but
+            // never stretched to the text column's height (the v1 sin).
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={img.url}
+              alt={img.alt}
+              loading="lazy"
+              className={`aspect-[4/3] w-full self-center rounded-3xl object-cover shadow-sm ring-1 ring-black/5 ${imageLeft ? "sm:order-1" : ""}`}
+            />
           ) : null;
           return (
             <section
@@ -397,19 +389,14 @@ export function MicrositeSiteView({
         {leftovers.length ? (
           <div className="mt-16 grid gap-4 sm:grid-cols-2">
             {leftovers.map((img) => (
-              <div
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
                 key={img.url}
-                className="flex min-h-64 items-center justify-center rounded-3xl p-5"
-                style={{ backgroundColor: `${primary}0a` }}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={img.url}
-                  alt={img.alt}
-                  loading="lazy"
-                  className="max-h-72 w-auto max-w-full rounded-2xl object-contain shadow-sm"
-                />
-              </div>
+                src={img.url}
+                alt={img.alt}
+                loading="lazy"
+                className="aspect-[4/3] w-full rounded-3xl object-cover shadow-sm ring-1 ring-black/5"
+              />
             ))}
           </div>
         ) : null}
