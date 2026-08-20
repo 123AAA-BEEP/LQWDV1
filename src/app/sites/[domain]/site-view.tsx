@@ -1,4 +1,5 @@
 import {
+  MICROSITE_SECTIONS,
   MICROSITE_SUBPAGES,
   SECTION_STOCK_THEME,
   pickStock,
@@ -295,8 +296,11 @@ export function MicrositeSiteView({
             className="mt-12 aspect-[21/9] w-full rounded-3xl object-cover shadow-sm ring-1 ring-black/5"
           />
         ) : null}
+      </div>
 
-        {/* Sections alternate text/image sides — never a linear stack. */}
+      {/* Sections: full-bleed bands alternating white / light grey define
+          each content area; text and image alternate sides inside them. */}
+      <div className="mt-14 sm:mt-16">
         {c.sections.map((s, i) => {
           const img = sectionImages[i];
           if (collapsible(s.key)) {
@@ -304,39 +308,48 @@ export function MicrositeSiteView({
               <section
                 key={s.title}
                 id={anchor(s.title)}
-                className="mx-auto mt-16 max-w-3xl scroll-mt-10"
+                className="scroll-mt-10 bg-white"
               >
-                <details className="group rounded-2xl border border-slate-200 px-6 py-5 transition-colors open:bg-slate-50/50 hover:border-slate-300">
-                  <summary className="flex cursor-pointer list-none items-center justify-between gap-3">
-                    <h2 className="text-xl font-semibold tracking-tight text-ink">
-                      {s.title}
-                    </h2>
-                    <span
-                      aria-hidden
-                      className="text-slate-400 transition-transform group-open:rotate-180"
-                    >
-                      ▾
-                    </span>
-                  </summary>
-                  <div
-                    dangerouslySetInnerHTML={{ __html: renderMarkdown(s.body_md) }}
-                  />
-                </details>
+                <div className="mx-auto max-w-3xl px-6 py-8">
+                  <details className="group rounded-2xl border border-slate-200 px-6 py-5 transition-colors open:bg-slate-50/50 hover:border-slate-300">
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-3">
+                      <h2 className="text-xl font-semibold tracking-tight text-ink">
+                        {s.title}
+                      </h2>
+                      <span
+                        aria-hidden
+                        className="text-slate-400 transition-transform group-open:rotate-180"
+                      >
+                        ▾
+                      </span>
+                    </summary>
+                    <div
+                      dangerouslySetInnerHTML={{ __html: renderMarkdown(s.body_md) }}
+                    />
+                  </details>
+                </div>
               </section>
             );
           }
           const n = visualIndices[i] ?? 1;
-          const eyebrow = String(n).padStart(2, "0");
+          const pill =
+            MICROSITE_SECTIONS.find((x) => x.key === s.key)?.label ??
+            String(n).padStart(2, "0");
           const imageLeft = n % 2 === 0;
+          const band = n % 2 === 1;
           const textBlock = (
             <div>
-              <p
-                className="text-xs font-semibold uppercase tracking-[0.2em]"
-                style={{ color: primary }}
+              <span
+                className="inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold"
+                style={{
+                  color: primary,
+                  backgroundColor: `${primary}14`,
+                  borderColor: `${primary}33`,
+                }}
               >
-                {eyebrow}
-              </p>
-              <h2 className="mt-2 text-3xl font-semibold tracking-tight text-ink">
+                {pill}
+              </span>
+              <h2 className="mt-3 text-3xl font-semibold tracking-tight text-ink">
                 {s.title}
               </h2>
               <div dangerouslySetInnerHTML={{ __html: renderMarkdown(s.body_md) }} />
@@ -357,7 +370,7 @@ export function MicrositeSiteView({
           ) : img ? (
             // Side-by-side visuals hold a FIXED 4:3 and self-centre beside
             // the text: photography is cover-cropped with confidence, but
-            // never stretched to the text column's height (the v1 sin).
+            // never stretched to the text column's height.
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={img.url}
@@ -370,24 +383,28 @@ export function MicrositeSiteView({
             <section
               key={s.title}
               id={anchor(s.title)}
-              className="mt-16 scroll-mt-10 sm:mt-20"
+              className={`scroll-mt-10 ${band ? "bg-slate-50" : "bg-white"}`}
             >
-              {visual ? (
-                <div className="grid items-center gap-8 sm:grid-cols-2 sm:gap-12">
-                  <div className={imageLeft ? "sm:order-2" : undefined}>
-                    {textBlock}
+              <div className="mx-auto max-w-5xl px-6 py-14 sm:py-20">
+                {visual ? (
+                  <div className="grid items-center gap-8 sm:grid-cols-2 sm:gap-12">
+                    <div className={imageLeft ? "sm:order-2" : undefined}>
+                      {textBlock}
+                    </div>
+                    {visual}
                   </div>
-                  {visual}
-                </div>
-              ) : (
-                <div className="mx-auto max-w-3xl">{textBlock}</div>
-              )}
+                ) : (
+                  <div className="mx-auto max-w-3xl">{textBlock}</div>
+                )}
+              </div>
             </section>
           );
         })}
+      </div>
 
-        {leftovers.length ? (
-          <div className="mt-16 grid gap-4 sm:grid-cols-2">
+      {leftovers.length ? (
+        <div className="mx-auto max-w-5xl px-6 py-14">
+          <div className="grid gap-4 sm:grid-cols-2">
             {leftovers.map((img) => (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -399,22 +416,30 @@ export function MicrositeSiteView({
               />
             ))}
           </div>
-        ) : null}
-      </div>
+        </div>
+      ) : null}
 
-      {/* Go deeper — full-bleed band */}
+      {/* Go deeper — full-bleed band, centred header, contrasts the last band */}
       {subpages.length ? (
-        <section className="mt-16 bg-slate-50 py-14 sm:mt-20">
+        <section
+          className={`py-14 sm:py-16 ${(visualIndices.filter(Boolean).length as number) % 2 === 1 ? "bg-white" : "bg-slate-50"}`}
+        >
           <div className="mx-auto max-w-5xl px-6">
-            <p
-              className="text-xs font-semibold uppercase tracking-[0.2em]"
-              style={{ color: primary }}
-            >
-              Explore
-            </p>
-            <h2 className="mt-2 text-3xl font-semibold tracking-tight text-ink">
-              Go deeper
-            </h2>
+            <div className="text-center">
+              <span
+                className="inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold"
+                style={{
+                  color: primary,
+                  backgroundColor: `${primary}14`,
+                  borderColor: `${primary}33`,
+                }}
+              >
+                Explore
+              </span>
+              <h2 className="mt-3 text-3xl font-semibold tracking-tight text-ink">
+                Go deeper
+              </h2>
+            </div>
             <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {subpages.map((p) => (
                 <a
@@ -442,13 +467,17 @@ export function MicrositeSiteView({
       <div className="mx-auto max-w-5xl px-6 pb-16 sm:pb-20">
         {c.faq.length > 0 ? (
           <section id="faq" className="mx-auto mt-16 max-w-3xl scroll-mt-10">
-            <p
-              className="text-xs font-semibold uppercase tracking-[0.2em]"
-              style={{ color: primary }}
+            <span
+              className="inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold"
+              style={{
+                color: primary,
+                backgroundColor: `${primary}14`,
+                borderColor: `${primary}33`,
+              }}
             >
               Questions
-            </p>
-            <h2 className="mt-2 text-3xl font-semibold tracking-tight text-ink">
+            </span>
+            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-ink">
               Frequently asked questions
             </h2>
             <div className="mt-6 divide-y divide-slate-100 rounded-2xl border border-slate-200 shadow-sm">
@@ -500,12 +529,16 @@ export function MicrositeSiteView({
 
         {/* Location map */}
         <section id="map" className="mt-16 scroll-mt-10">
-          <p
-            className="text-xs font-semibold uppercase tracking-[0.2em]"
-            style={{ color: primary }}
+          <span
+            className="inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold"
+            style={{
+              color: primary,
+              backgroundColor: `${primary}14`,
+              borderColor: `${primary}33`,
+            }}
           >
             Location
-          </p>
+          </span>
           <h2 className="mt-2 text-3xl font-semibold tracking-tight text-ink">
             {project.address_full ?? chip}
           </h2>
