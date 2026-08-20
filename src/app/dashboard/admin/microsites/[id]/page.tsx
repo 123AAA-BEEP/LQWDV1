@@ -51,6 +51,7 @@ const first = (v: unknown): string =>
   Array.isArray(v) ? String(v[0] ?? "") : typeof v === "string" ? v : "";
 
 const CONTEXT_PLACEHOLDER = `Answer any of the staple questions (free text is fine — docs/microsite-context-questionnaire.md):
+• Builder website or sales page link, or paste their about copy — ALWAYS include this; any URL here gets fetched and woven into the developer profile
 • Who's the buyer? (young professionals / families / investors / downsizers…)
 • The one-line hook — why this project matters
 • Lead with… / avoid…

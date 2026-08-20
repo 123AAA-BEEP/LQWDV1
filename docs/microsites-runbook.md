@@ -49,7 +49,11 @@ why this is not a PBN, cannibalization guards, post-sellout pivot).
 3. **Add context** (optional but high-leverage) — paste answers to any of the
    staple questions from `docs/microsite-context-questionnaire.md` (buyer
    profile, hook, lead-with / avoid, local nuggets, deposit structure). Free
-   text or JSON both work.
+   text or JSON both work. **Standing practice: ALWAYS include the builder's
+   website or sales-page link (or paste their about copy).** Any URL in the
+   context is fetched at generation time and fed to every writing call as
+   source material, so the developer profile and overview weave real
+   researched substance in our voice instead of running thin.
 4. **Generate** — one click; review every fact in the preview. Regenerate
    after editing context whenever you want a different angle.
 5. **Set live** — blocked until content exists. From this moment the domain
