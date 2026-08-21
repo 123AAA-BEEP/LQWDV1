@@ -257,3 +257,7 @@ is the calibration source for this rail. What it proved:
 Configs generated before v3 have no sub-pages (links and sitemap entries
 simply don't appear; sub-page URLs redirect home) — hit Regenerate to create
 them.
+
+> Env note (2026-08-21): `VERCEL_TOKEN` + `VERCEL_PROJECT_ID` are configured
+> on the Vercel project — domain automation (price check, Buy & attach,
+> auto-attach on Set live) is active from this deploy forward.
