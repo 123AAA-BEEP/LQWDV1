@@ -184,7 +184,9 @@ export async function setMicrositeStatus(formData: FormData) {
   if (status === "live" && domain && vercelDomainsConfigured()) {
     const attached = await attachDomainToProject(domain);
     attachNote = attached.ok
-      ? " and the domain is attached to the Vercel project."
+      ? attached.error
+        ? ` and the domain is attached (${attached.error}).`
+        : " and the domain plus its www address are attached to the Vercel project."
       : ` (auto-attach failed: ${attached.error}; attach it in Vercel manually).`;
   }
   // Tell IndexNow-fed engines (Bing and friends) the moment it's live;
@@ -627,7 +629,9 @@ export async function buyMicrositeDomain(formData: FormData) {
   redirectWithFlash(
     `${LIST}/${id}`,
     attached.ok
-      ? `Bought ${domain} (US$${check.price}) and attached it to the Vercel project.`
+      ? attached.error
+        ? `Bought ${domain} (US$${check.price}) and attached it — ${attached.error}.`
+        : `Bought ${domain} (US$${check.price}); the domain and www both point at the project.`
       : `Bought ${domain} (US$${check.price}) — attach failed (${attached.error}); attach it in Vercel.`,
   );
 }
@@ -652,7 +656,9 @@ export async function attachMicrositeDomain(formData: FormData) {
   redirectWithFlash(
     `${LIST}/${id}`,
     attached.ok
-      ? `${domain} is attached to the Vercel project.`
+      ? attached.error
+        ? `${domain} is attached — ${attached.error}.`
+        : `${domain} and www.${domain} are attached to the Vercel project.`
       : `Attach failed: ${attached.error}`,
     attached.ok ? undefined : "error",
   );
