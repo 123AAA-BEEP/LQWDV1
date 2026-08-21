@@ -18,7 +18,7 @@ import type { PublicProject } from "@/lib/types";
 import {
   vercelDomainsConfigured,
   checkDomain,
-  domainAttached,
+  getDomainStatus,
   DOMAIN_MAX_USD,
 } from "@/lib/vercel-domains";
 import {
@@ -134,8 +134,10 @@ export default async function AdminMicrositeDetail({
   // Domain automation (only when Vercel env is configured): is the domain on
   // the project yet, and if not, can we buy it right here?
   const vercelOn = vercelDomainsConfigured();
-  const attached = vercelOn ? await domainAttached(site.domain) : null;
-  const check = vercelOn && attached === false ? await checkDomain(site.domain) : null;
+  const domainStatus = vercelOn ? await getDomainStatus(site.domain) : null;
+  // Attached-but-unverified means we do NOT own it: keep offering to buy.
+  const domainLive = domainStatus?.verified === true;
+  const check = vercelOn && !domainLive ? await checkDomain(site.domain) : null;
 
   // Launch checklist — what still needs attention before (and after) going
   // live. ok: true = done, false = fix it, null = can't verify from here.
@@ -177,10 +179,12 @@ export default async function AdminMicrositeDetail({
       hint: "Pin colours/font in Brand styling, or pull them from an image.",
     },
     {
-      ok: vercelOn ? attached === true : null,
-      label: "Domain attached to Vercel",
+      ok: vercelOn ? domainLive : null,
+      label: "Domain live on Vercel",
       hint: vercelOn
-        ? "Use the Domain card below."
+        ? domainStatus?.attached
+          ? "Attached but not verified — the domain isn't registered to you yet. Buy it in the Domain card."
+          : "Buy or attach it in the Domain card below."
         : "Can't verify from here; check the Vercel dashboard (or set VERCEL_TOKEN).",
     },
     {
@@ -546,53 +550,67 @@ export default async function AdminMicrositeDetail({
               <code className="rounded bg-slate-100 px-1">VERCEL_PROJECT_ID</code>{" "}
               in Vercel env.
             </p>
-          ) : attached ? (
+          ) : domainLive ? (
             <p className="mt-1 text-sm text-emerald-700">
-              {site.domain} is attached to the Vercel project — DNS is handled.
+              {site.domain} is registered, attached, and verified — DNS is
+              handled.
             </p>
           ) : (
-            <div className="mt-2 flex flex-wrap items-center gap-3">
-              {check?.available && check.price != null ? (
-                check.price > DOMAIN_MAX_USD ? (
-                  <p className="text-sm text-amber-700">
-                    Available at US${check.price}/yr, over the US$
-                    {DOMAIN_MAX_USD} cap. Pick a cheaper name for this
-                    project instead.
-                  </p>
+            <div className="mt-2 space-y-3">
+              {domainStatus?.attached ? (
+                <p className="text-sm text-amber-700">
+                  {site.domain} is listed on the Vercel project but{" "}
+                  <strong>not verified</strong>, so it can&apos;t load. Vercel
+                  accepts a domain nobody owns — it still has to be registered
+                  below.
+                </p>
+              ) : null}
+              <div className="flex flex-wrap items-center gap-3">
+                {check?.available && check.price != null ? (
+                  check.price > DOMAIN_MAX_USD ? (
+                    <p className="text-sm text-amber-700">
+                      Available at US${check.price}/yr, over the US$
+                      {DOMAIN_MAX_USD} cap. Pick a cheaper name for this
+                      project instead.
+                    </p>
+                  ) : (
+                    <>
+                      <p className="text-sm text-slate-600">
+                        Available to register for{" "}
+                        <span className="font-semibold text-ink">
+                          US${check.price}/yr
+                        </span>{" "}
+                        on the Vercel account.
+                      </p>
+                      <form action={buyMicrositeDomain}>
+                        <input type="hidden" name="microsite_id" value={site.id} />
+                        <Button type="submit" size="sm">
+                          Buy &amp; attach
+                        </Button>
+                      </form>
+                    </>
+                  )
                 ) : (
                   <>
                     <p className="text-sm text-slate-600">
-                      Available to register for{" "}
-                      <span className="font-semibold text-ink">
-                        US${check.price}/yr
-                      </span>{" "}
-                      on the Vercel account.
+                      {check && !check.available
+                        ? "Already registered by someone — if it's yours, attach it; otherwise pick another name."
+                        : "Couldn't read availability from Vercel right now."}
                     </p>
-                    <form action={buyMicrositeDomain}>
+                    <form action={attachMicrositeDomain}>
                       <input type="hidden" name="microsite_id" value={site.id} />
-                      <Button type="submit" size="sm">
-                        Buy &amp; attach
+                      <Button type="submit" size="sm" variant="secondary">
+                        Attach to Vercel project
                       </Button>
                     </form>
                   </>
-                )
-              ) : (
-                <>
-                  <p className="text-sm text-slate-600">
-                    Not attached to the Vercel project yet
-                    {check && !check.available
-                      ? " (already registered — if you own it, attach it)"
-                      : ""}
-                    .
-                  </p>
-                  <form action={attachMicrositeDomain}>
-                    <input type="hidden" name="microsite_id" value={site.id} />
-                    <Button type="submit" size="sm" variant="secondary">
-                      Attach to Vercel project
-                    </Button>
-                  </form>
-                </>
-              )}
+                )}
+              </div>
+              <p className="text-xs text-slate-400">
+                Buying registers it on the Vercel account (auto-renew on),
+                attaches it to this project, and handles DNS. Hard cap US$
+                {DOMAIN_MAX_USD}.
+              </p>
             </div>
           )}
         </CardBody>

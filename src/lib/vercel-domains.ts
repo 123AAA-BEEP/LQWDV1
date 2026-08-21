@@ -130,17 +130,31 @@ export async function attachDomainToProject(
   }
 }
 
-/** Is the domain already attached to the project? null = couldn't tell. */
-export async function domainAttached(domain: string): Promise<boolean | null> {
+export interface DomainStatus {
+  /** Listed on the Vercel project (possible even for a domain we don't own). */
+  attached: boolean;
+  /** Vercel has confirmed ownership + DNS. Only then does the site load. */
+  verified: boolean;
+}
+
+/**
+ * Attachment AND verification. The distinction matters: Vercel happily
+ * accepts a domain nobody owns, leaving it attached-but-unverified — the
+ * URL then dies with NXDOMAIN. Never report "DNS is handled" off
+ * attachment alone. null = couldn't tell (no token / API trouble).
+ */
+export async function getDomainStatus(
+  domain: string,
+): Promise<DomainStatus | null> {
   const { projectId } = env();
   if (!vercelDomainsConfigured()) return null;
   try {
     const res = await call(
       `/v9/projects/${encodeURIComponent(projectId)}/domains/${encodeURIComponent(domain)}`,
     );
-    if (res.status === 200) return true;
-    if (res.status === 404) return false;
-    return null;
+    if (res.status === 404) return { attached: false, verified: false };
+    if (res.status !== 200) return null;
+    return { attached: true, verified: res.body.verified === true };
   } catch {
     return null;
   }
