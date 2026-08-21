@@ -3,8 +3,6 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import {
   parseMicrositeDirective,
   domainCandidates,
-  getMicrositeProject,
-  generateMicrositeContent,
   type MicrositeConfig,
 } from "@/lib/microsites";
 import {
@@ -115,25 +113,11 @@ export async function handleMicrositeDirective(opts: {
     notes.push("context seeded with email links");
   }
 
-  // Generate the page now when the project is publicly visible, so the
-  // founder lands on a reviewable draft rather than an empty shell.
-  if (!config.content) {
-    const project = await getMicrositeProject(config.project_id);
-    if (project) {
-      const content = await generateMicrositeContent(config, project);
-      if (content) {
-        await admin
-          .from("microsite_configs")
-          .update({ content, updated_at: new Date().toISOString() })
-          .eq("id", config.id);
-        notes.push("content generated");
-      } else {
-        notes.push("generation failed");
-      }
-    } else {
-      notes.push("project not published yet — no content generated");
-    }
-  }
+  // Generation is deliberately NOT run here: the intake route has a 60s
+  // budget (Hobby plan) and a full page build (hero + 12 sections + 4
+  // sub-pages + brand vision) would blow it and get killed mid-flight.
+  // The config lands ready; the founder's first Generate click in admin
+  // builds the page, right where context and photos get added anyway.
 
   // Unattended domain purchase — three explicit gates (subject-line domain,
   // Vercel env, price cap) so a stray word in marketing copy can never spend.
@@ -164,7 +148,7 @@ export async function handleMicrositeDirective(opts: {
   }
 
   await ping(
-    `Microsite ready for review: ${d.domain}`,
+    `Microsite created: ${d.domain} — add context and hit Generate`,
     `${notes.join("; ")}. ${domainLine} Review the content, then Set live.`,
     detailUrl,
     "Review the microsite",
