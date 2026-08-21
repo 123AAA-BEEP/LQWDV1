@@ -2,7 +2,6 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/field";
 import { saveMicrositeImageSlots } from "../actions";
 
@@ -10,6 +9,7 @@ import { saveMicrositeImageSlots } from "../actions";
  * Founder-controlled image placement: pin any gallery image to any slot
  * (after the intro, or beside any section), force a slot empty, or leave it
  * on auto. Pins live on the config, so Regenerate never moves them.
+ * Every change AUTO-SAVES immediately — no separate save step to forget.
  */
 
 interface MediaOpt {
@@ -22,12 +22,15 @@ export function MicrositeImageSlots({
   media,
   sections,
   initial,
+  builderLogoUrl,
 }: {
   micrositeId: string;
   media: MediaOpt[];
   /** Generated sections (key + title); empty before first generation. */
   sections: { key: string; title: string }[];
   initial: { intro?: string; sections?: Record<string, string> };
+  /** When set, the builder section always shows the logo — slot locked. */
+  builderLogoUrl?: string | null;
 }) {
   const router = useRouter();
   const [intro, setIntro] = useState(initial.intro ?? "");
@@ -39,20 +42,32 @@ export function MicrositeImageSlots({
     null,
   );
 
-  const save = () =>
+  const persist = (nextIntro: string, nextSecs: Record<string, string>) =>
     startTransition(async () => {
       setNotice(null);
       const res = await saveMicrositeImageSlots({
         micrositeId,
-        intro,
-        sections: secs,
+        intro: nextIntro,
+        sections: nextSecs,
       });
       if (res?.error) setNotice({ text: res.error, error: true });
       else {
-        setNotice({ text: "Placement saved — the page uses it immediately.", error: false });
+        setNotice({ text: "Saved — refresh the preview to see it.", error: false });
         router.refresh();
       }
     });
+
+  const changeIntro = (v: string) => {
+    setIntro(v);
+    persist(v, secs);
+  };
+  const changeSection = (key: string, v: string) => {
+    const next = { ...secs };
+    if (v) next[key] = v;
+    else delete next[key];
+    setSecs(next);
+    persist(intro, next);
+  };
 
   const preview = (v: string) =>
     v && v !== "none" ? (
@@ -81,6 +96,7 @@ export function MicrositeImageSlots({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           className="mt-1"
+          disabled={pending}
         >
           <option value="">Auto (gallery, then stock)</option>
           <option value="none">No image</option>
@@ -96,15 +112,32 @@ export function MicrositeImageSlots({
 
   return (
     <div className="space-y-4">
-      {slotRow("After the intro", intro, setIntro)}
+      {slotRow("After the intro", intro, changeIntro)}
       {sections.map((s) =>
-        slotRow(s.title, secs[s.key] ?? "", (v) =>
-          setSecs((prev) => {
-            const next = { ...prev };
-            if (v) next[s.key] = v;
-            else delete next[s.key];
-            return next;
-          }),
+        s.key === "builder" && builderLogoUrl ? (
+          <div key={s.key} className="flex items-center gap-3">
+            <span className="flex h-12 w-16 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white p-1">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={builderLogoUrl}
+                alt="Developer logo"
+                className="max-h-10 w-auto max-w-full object-contain"
+              />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium text-slate-700">
+                {s.title}
+              </p>
+              <p className="mt-1 text-xs text-slate-400">
+                Always shows the developer logo (manage it in the logo card
+                above; remove the logo to use a photo here).
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div key={s.key}>
+            {slotRow(s.title, secs[s.key] ?? "", (v) => changeSection(s.key, v))}
+          </div>
         ),
       )}
       {sections.length === 0 ? (
@@ -112,17 +145,20 @@ export function MicrositeImageSlots({
           Section slots appear here after the first Generate.
         </p>
       ) : null}
-      {notice ? (
-        <p
-          role="status"
-          className={notice.error ? "text-sm text-red-600" : "text-sm text-emerald-700"}
-        >
-          {notice.text}
-        </p>
-      ) : null}
-      <Button type="button" variant="secondary" onClick={save} disabled={pending}>
-        {pending ? "Saving…" : "Save image placement"}
-      </Button>
+      <p
+        role="status"
+        className={
+          notice
+            ? notice.error
+              ? "text-sm text-red-600"
+              : "text-sm text-emerald-700"
+            : "text-xs text-slate-400"
+        }
+      >
+        {pending
+          ? "Saving…"
+          : (notice?.text ?? "Changes save automatically.")}
+      </p>
     </div>
   );
 }

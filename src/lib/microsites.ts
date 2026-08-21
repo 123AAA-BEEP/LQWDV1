@@ -412,6 +412,7 @@ const VOICE =
   "Never use markdown bold or italics (no ** or _). Numbers and names carry their own weight in plain sentences. Bullet lists are fine where they genuinely help. " +
   "Facts about THIS PROJECT come ONLY from the fact block. If a project detail is not released yet, say so in plain words, like 'The builder has not released this yet.' " +
   "You MAY use general knowledge about the city and region (real highways, transit lines, landmarks, how the area feels) when you are sure it is true. Never invent project details, prices, dates, sizes, or incentives. " +
+  "PLACE NAMES: when the project sits in a named community inside a larger city (like Woodbridge within Vaughan), anchor the relationship plainly the FIRST time ('in Woodbridge, on the north end of Vaughan'), then use both names naturally through the page. Never swap them as if they were the same place, and keep the official city in meta titles. " +
   "Never present the page as the builder's official site. " +
   "SECTION SHAPE (landing-page proportion): open with one short paragraph of 2 to 3 sentences, then 2 to 4 bullet points, each starting with a 2 to 4 word lead-in and a colon, like 'Deposit timing: paid in stages over months, not all at once.' Keep each section body between roughly 60 and 110 words. Page intros and FAQ answers are exempt from the bullet shape.";
 

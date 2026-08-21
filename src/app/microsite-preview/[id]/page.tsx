@@ -33,9 +33,14 @@ export default async function MicrositePreview({
   const { id } = await params;
 
   const admin = createAdminClient();
+  // Keep this select in lockstep with getMicrositeByDomain — a missing
+  // column here makes the preview lie (pins/logo absent from preview but
+  // present on the live domain).
   const { data } = await admin
     .from("microsite_configs")
-    .select("id, domain, project_id, skin, status, context, content, capture_key")
+    .select(
+      "id, domain, project_id, skin, status, context, content, capture_key, auto_send_details, details_url, builder_logo_url, google_verification, image_slots",
+    )
     .eq("id", id)
     .maybeSingle();
   const config = (data as MicrositeConfig | null) ?? null;
