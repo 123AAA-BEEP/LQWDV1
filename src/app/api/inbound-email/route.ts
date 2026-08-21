@@ -111,10 +111,31 @@ export async function POST(request: Request) {
               "Extraction returned nothing (API key unset or the model emitted no tool call).",
           };
 
+      // Log FIRST, then run the microsite directive — if the function's time
+      // budget dies mid-directive, the intake row still exists (the note is
+      // appended afterwards when the directive completes).
+      const { data: logRow } = await admin
+        .from("email_intake_log")
+        .insert({
+          from_email: from,
+          subject,
+          raw_text: mergedText,
+          raw_html: html,
+          attachment_count: mergedImages.length,
+          extracted: ex ?? null,
+          confidence: ex?.confidence ?? null,
+          action: result.action,
+          project_id: result.project_id,
+          published: result.published,
+          notes: result.notes,
+        })
+        .select("id")
+        .maybeSingle();
+
       // Founder directive: "microsite: somedomain.com" (or a bare
       // "microsite" mention) spins up the standalone landing-page rail for
-      // this project — config + generated draft + optional domain buy. See
-      // docs/microsites-runbook.md.
+      // this project — config + context seeding + optional domain buy.
+      // Generation stays in admin (one click). See docs/microsites-runbook.md.
       const micrositeNote = await handleMicrositeDirective({
         subject,
         text: mergedText,
@@ -122,20 +143,12 @@ export async function POST(request: Request) {
         projectName: ex?.project_name ?? null,
         city: ex?.city ?? null,
       });
-
-      await admin.from("email_intake_log").insert({
-        from_email: from,
-        subject,
-        raw_text: mergedText,
-        raw_html: html,
-        attachment_count: mergedImages.length,
-        extracted: ex ?? null,
-        confidence: ex?.confidence ?? null,
-        action: result.action,
-        project_id: result.project_id,
-        published: result.published,
-        notes: [result.notes, micrositeNote].filter(Boolean).join(" | "),
-      });
+      if (micrositeNote && logRow?.id) {
+        await admin
+          .from("email_intake_log")
+          .update({ notes: [result.notes, micrositeNote].filter(Boolean).join(" | ") })
+          .eq("id", logRow.id);
+      }
 
       // The owner asked to be pinged whenever an intake CAN'T go live on its
       // own (no geography / no corroboration / error) so a human can finish it.
