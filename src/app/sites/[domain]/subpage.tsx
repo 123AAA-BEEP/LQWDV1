@@ -156,7 +156,8 @@ export function makeSubpage(pageKey: MicrositeSubPageKey) {
 
     const { config, project } = live;
     const c = config.content!;
-    const brand = c.brand ?? null;
+    // Founder-pinned override wins over the generator's hero extraction.
+  const brand = config.brand_override ?? c.brand ?? null;
     const primary = brand?.primary ?? "#0d9488";
     const fontFamily = brand
       ? `'${brand.heading_font}', ${brand.font_stack}`

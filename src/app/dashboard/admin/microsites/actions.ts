@@ -12,9 +12,11 @@ import {
   MICROSITE_SECTIONS,
   MICROSITE_SUBPAGES,
   stripDashes,
+  extractBrandFromImages,
   type MicrositeConfig,
   type MicrositeContent,
 } from "@/lib/microsites";
+import type { MicrositeBrand } from "@/lib/microsite-brand";
 import {
   vercelDomainsConfigured,
   checkDomain,
@@ -434,6 +436,59 @@ export async function saveGoogleVerification(formData: FormData) {
         : "Meta tag added to the page — hit Verify in Search Console."
       : "Verification cleared.",
   );
+}
+
+/** Pins the brand by hand (colour pickers + font). null clears the override. */
+export async function saveMicrositeBrand(input: {
+  micrositeId: string;
+  brand: unknown | null;
+}): Promise<{ error?: string }> {
+  const supabase = await createClient();
+  await assertAdmin(supabase);
+  const id = String(input.micrositeId ?? "");
+  if (!id) return { error: "Missing microsite." };
+
+  const brand = input.brand === null ? null : cleanBrandInput(input.brand);
+  if (input.brand !== null && !brand) {
+    return { error: "Colours must be 6-digit hex and the font from the list." };
+  }
+  const { error } = await supabase
+    .from("microsite_configs")
+    .update({ brand_override: brand, updated_at: new Date().toISOString() })
+    .eq("id", id);
+  if (error) return { error: `Couldn't save: ${error.message}` };
+  revalidatePath(`${LIST}/${id}`);
+  return {};
+}
+
+/**
+ * Reads palette + typography off ANY chosen project image (logo, site map,
+ * rendering) and pins the result as the brand override.
+ */
+export async function extractMicrositeBrand(input: {
+  micrositeId: string;
+  imageUrl: string;
+}): Promise<{ error?: string; brand?: MicrositeBrand }> {
+  const supabase = await createClient();
+  await assertAdmin(supabase);
+  const id = String(input.micrositeId ?? "");
+  const url = String(input.imageUrl ?? "");
+  if (!id || !/^https:\/\/.+/.test(url)) return { error: "Bad request." };
+
+  const brand = await extractBrandFromImages([url]);
+  if (!brand) {
+    return {
+      error:
+        "Couldn't read a palette from that image (check ANTHROPIC_API_KEY, or try another image).",
+    };
+  }
+  const { error } = await supabase
+    .from("microsite_configs")
+    .update({ brand_override: brand, updated_at: new Date().toISOString() })
+    .eq("id", id);
+  if (error) return { error: `Couldn't save: ${error.message}` };
+  revalidatePath(`${LIST}/${id}`);
+  return { brand };
 }
 
 /**
