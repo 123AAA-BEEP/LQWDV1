@@ -111,16 +111,14 @@ export async function buyDomain(
   }
 }
 
-/** Points the domain at the LIQWD Vercel project. Already-attached = ok. */
-export async function attachDomainToProject(
-  domain: string,
+async function addDomain(
+  body: Record<string, unknown>,
 ): Promise<{ ok: boolean; error?: string }> {
   const { projectId } = env();
-  if (!vercelDomainsConfigured()) return { ok: false, error: "Vercel not configured" };
   try {
     const res = await call(`/v10/projects/${encodeURIComponent(projectId)}/domains`, {
       method: "POST",
-      body: JSON.stringify({ name: domain }),
+      body: JSON.stringify(body),
     });
     if (res.status === 200 || res.status === 201) return { ok: true };
     if (res.status === 409) return { ok: true }; // already attached
@@ -128,6 +126,36 @@ export async function attachDomainToProject(
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "network error" };
   }
+}
+
+/**
+ * Points the domain at the LIQWD Vercel project — BOTH hosts:
+ *   apex   (mybridgelands.com)        → serves the site
+ *   www.*  (www.mybridgelands.com)    → 308 redirect to the apex
+ *
+ * Attaching www matters twice over: without it the www address simply
+ * fails to resolve for anyone who types it, and if it resolved without the
+ * redirect we'd serve the same page on two hosts (duplicate content). One
+ * canonical host, one redirect. Already-attached = ok.
+ */
+export async function attachDomainToProject(
+  domain: string,
+): Promise<{ ok: boolean; error?: string }> {
+  if (!vercelDomainsConfigured()) return { ok: false, error: "Vercel not configured" };
+
+  const apex = await addDomain({ name: domain });
+  if (!apex.ok) return apex;
+
+  // Best effort: a www failure must not block the apex going live.
+  const www = await addDomain({
+    name: `www.${domain}`,
+    redirect: domain,
+    redirectStatusCode: 308,
+  });
+  if (!www.ok) {
+    return { ok: true, error: `www not attached (${www.error})` };
+  }
+  return { ok: true };
 }
 
 export interface DomainStatus {

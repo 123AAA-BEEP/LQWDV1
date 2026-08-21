@@ -22,8 +22,19 @@ export async function proxy(request: NextRequest) {
     host === "127.0.0.1" ||
     host === "";
   if (!isPrimary) {
+    // One canonical host per microsite: www.* permanently redirects to the
+    // apex. Vercel normally does this at the edge (attachDomainToProject
+    // adds www with a 308), but keep the app-level guard so a domain
+    // attached by hand can never serve the same page on two hosts.
+    if (host.startsWith("www.")) {
+      const url = request.nextUrl.clone();
+      url.host = host.slice(4);
+      url.protocol = "https";
+      url.port = "";
+      return NextResponse.redirect(url, 308);
+    }
     const url = request.nextUrl.clone();
-    url.pathname = `/sites/${host.replace(/^www\./, "")}${pathname === "/" ? "" : pathname}`;
+    url.pathname = `/sites/${host}${pathname === "/" ? "" : pathname}`;
     return NextResponse.rewrite(url);
   }
   // Primary-host robots.txt / sitemap.xml: pass straight through with ZERO
