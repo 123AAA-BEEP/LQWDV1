@@ -102,7 +102,7 @@ export default async function AdminMicrositesPage({
               <Field
                 label="Find the project it grounds in"
                 htmlFor="q"
-                hint="Search published projects by name or city."
+                hint="Search published projects by name or city. Project not in LIQWD yet? Forward the builder's page to the intake inbox with 'microsite: yourdomain.com' in the subject — the project AND this config get created together."
               >
                 <Input id="q" name="q" defaultValue={q} placeholder="e.g. Echo" />
               </Field>
