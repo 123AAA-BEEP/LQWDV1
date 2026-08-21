@@ -103,6 +103,9 @@ export async function handleMicrositeDirective(opts: {
     ...new Set(opts.text?.match(/https?:\/\/[^\s"'>)]+/g) ?? []),
   ]
     .filter((u) => !u.includes(config.domain))
+    // Pages only — asset files (renderings, tracking pixels, PDFs) carry no
+    // prose for the generator to weave.
+    .filter((u) => !/\.(png|jpe?g|gif|webp|svg|ico|pdf|css|js)(\?|$)/i.test(u))
     .slice(0, 2);
   if (emailUrls.length && !/https?:\/\//.test(JSON.stringify(config.context ?? {}))) {
     config.context = { ...(config.context ?? {}), source_urls: emailUrls };
