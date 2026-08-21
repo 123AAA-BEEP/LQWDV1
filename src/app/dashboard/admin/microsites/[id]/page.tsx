@@ -33,6 +33,7 @@ import {
 import { MicrositeContentEditor } from "./content-editor";
 import { BuilderLogoUploader } from "./logo-uploader";
 import { MicrositeImagesManager } from "./images-manager";
+import { MicrositeImageSlots } from "./image-slots";
 import { MicrositeSeoEditor } from "./seo-editor";
 
 export const metadata: Metadata = { title: "Microsite" };
@@ -50,6 +51,7 @@ interface Row {
   details_url: string | null;
   builder_logo_url: string | null;
   google_verification: string | null;
+  image_slots: { intro?: string; sections?: Record<string, string> } | null;
 }
 
 const first = (v: unknown): string =>
@@ -80,7 +82,7 @@ export default async function AdminMicrositeDetail({
   const { data } = await supabase
     .from("microsite_configs")
     .select(
-      "id, domain, project_id, status, context, content, updated_at, auto_send_details, details_url, builder_logo_url, google_verification",
+      "id, domain, project_id, status, context, content, updated_at, auto_send_details, details_url, builder_logo_url, google_verification, image_slots",
     )
     .eq("id", id)
     .maybeSingle();
@@ -477,6 +479,31 @@ export default async function AdminMicrositeDetail({
               heroUrl={project?.hero_image_url ?? null}
               media={media}
             />
+          </div>
+          <div className="mt-6 border-t border-slate-100 pt-4">
+            <h4 className="text-sm font-semibold text-ink">Image placement</h4>
+            <p className="mt-0.5 text-xs text-slate-500">
+              Pin any image to any slot, hide a slot, or leave it on auto.
+              Pins survive regeneration.
+            </p>
+            <div className="mt-3">
+              <MicrositeImageSlots
+                micrositeId={site.id}
+                media={media.map((m, i) => ({
+                  url: m.url,
+                  label: m.alt_text ?? `Image ${i + 1}`,
+                }))}
+                sections={(c?.sections ?? [])
+                  .map((s, i) => ({
+                    key: s.key ?? `i${i}`,
+                    title: s.title,
+                    skip: s.key === "buying_process",
+                  }))
+                  .filter((s) => !s.skip)
+                  .map(({ key, title }) => ({ key, title }))}
+                initial={site.image_slots ?? {}}
+              />
+            </div>
           </div>
         </CardBody>
       </Card>
