@@ -7,6 +7,13 @@ import { Badge } from "@/components/ui/badge";
 import { Field, Input } from "@/components/ui/field";
 import { FlashNotice } from "@/components/ui/flash-notice";
 import { createMicrosite } from "./actions";
+import { domainCandidates, marketFor } from "@/lib/microsites";
+import {
+  vercelDomainsConfigured,
+  checkDomain,
+  DOMAIN_MAX_USD,
+  type DomainCheck,
+} from "@/lib/vercel-domains";
 
 export const metadata: Metadata = { title: "Microsites" };
 export const dynamic = "force-dynamic";
@@ -57,17 +64,40 @@ export default async function AdminMicrositesPage({
       nameById.set(p.project_id, p.project_name);
     }
   }
-  let hits: { project_id: string; project_name: string; city: string | null }[] = [];
+  let hits: {
+    project_id: string;
+    project_name: string;
+    city: string | null;
+    province: string | null;
+  }[] = [];
   if (q) {
     const { data: hitData } = await supabase
       .from("public_projects_view")
-      .select("project_id, project_name, city")
+      .select("project_id, project_name, city, province")
       .or(`project_name.ilike.%${q}%,city.ilike.%${q}%`)
       .order("project_name")
       .limit(10);
     hits =
-      (hitData as { project_id: string; project_name: string; city: string | null }[] | null) ??
-      [];
+      (hitData as typeof hits | null) ?? [];
+  }
+
+  // Domain picker: founder chooses from 5 ranked branded candidates (with
+  // live availability + price when Vercel env is set), or spins up 5 more.
+  const suggestFor = first(sp.suggest);
+  const round = Math.max(0, Math.min(10, Number(first(sp.round)) || 0));
+  const suggestProject = hits.find((h) => h.project_id === suggestFor) ?? null;
+  let suggestions: { domain: string; check: DomainCheck | null }[] = [];
+  if (suggestProject) {
+    const candidates = domainCandidates(
+      suggestProject.project_name,
+      suggestProject.city,
+      marketFor(suggestProject.province),
+      round,
+    );
+    const checks = vercelDomainsConfigured()
+      ? await Promise.all(candidates.map((d) => checkDomain(d)))
+      : candidates.map(() => null);
+    suggestions = candidates.map((domain, i) => ({ domain, check: checks[i] }));
   }
 
   return (
@@ -115,28 +145,95 @@ export default async function AdminMicrositesPage({
             <p className="text-sm text-slate-500">No published projects match.</p>
           ) : null}
           {hits.map((h) => (
-            <form
+            <div
               key={h.project_id}
-              action={createMicrosite}
-              className="flex flex-wrap items-end gap-2 rounded-lg border border-slate-200 p-3"
+              className="space-y-3 rounded-lg border border-slate-200 p-3"
             >
-              <input type="hidden" name="project_id" value={h.project_id} />
-              <p className="w-full text-sm font-medium text-slate-800">
-                {h.project_name}
-                {h.city ? ` · ${h.city}` : ""}
-              </p>
-              <div className="min-w-64 flex-1">
-                <Field label="Domain" htmlFor={`d_${h.project_id}`}>
-                  <Input
-                    id={`d_${h.project_id}`}
-                    name="domain"
-                    placeholder="e.g. echotownswaterdown.com"
-                    required
-                  />
-                </Field>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-sm font-medium text-slate-800">
+                  {h.project_name}
+                  {h.city ? ` · ${h.city}` : ""}
+                </p>
+                <Link
+                  href={`/dashboard/admin/microsites?q=${encodeURIComponent(q)}&suggest=${h.project_id}&round=0`}
+                  className="text-sm font-medium text-brand-700 hover:underline"
+                >
+                  Suggest domains →
+                </Link>
               </div>
-              <Button type="submit">Create</Button>
-            </form>
+
+              {suggestProject?.project_id === h.project_id ? (
+                <div className="space-y-2 rounded-lg bg-slate-50 p-3">
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
+                    Pick one (round {round + 1}
+                    {marketFor(h.province) === "us" ? " · US market, .com only" : ""})
+                  </p>
+                  {suggestions.map((s) => {
+                    const available = s.check?.available ?? null;
+                    const price = s.check?.price ?? null;
+                    const overCap = price != null && price > DOMAIN_MAX_USD;
+                    return (
+                      <div
+                        key={s.domain}
+                        className="flex flex-wrap items-center justify-between gap-2 rounded-md bg-white px-3 py-2"
+                      >
+                        <p className="font-mono text-sm text-slate-800">{s.domain}</p>
+                        <div className="flex items-center gap-2">
+                          {available === false ? (
+                            <Badge tone="neutral">taken</Badge>
+                          ) : available === true ? (
+                            <Badge tone={overCap ? "warning" : "success"}>
+                              {price != null
+                                ? overCap
+                                  ? `US$${price} · over $${DOMAIN_MAX_USD} cap`
+                                  : `US$${price}/yr`
+                                : "available"}
+                            </Badge>
+                          ) : (
+                            <Badge tone="neutral">check manually</Badge>
+                          )}
+                          {available !== false ? (
+                            <form action={createMicrosite}>
+                              <input type="hidden" name="project_id" value={h.project_id} />
+                              <input type="hidden" name="domain" value={s.domain} />
+                              <Button type="submit" size="sm">
+                                Go with this
+                              </Button>
+                            </form>
+                          ) : null}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  <Link
+                    href={`/dashboard/admin/microsites?q=${encodeURIComponent(q)}&suggest=${h.project_id}&round=${round + 1}`}
+                    className="inline-block text-sm font-medium text-brand-700 hover:underline"
+                  >
+                    Spin up 5 more →
+                  </Link>
+                </div>
+              ) : null}
+
+              <form
+                action={createMicrosite}
+                className="flex flex-wrap items-end gap-2"
+              >
+                <input type="hidden" name="project_id" value={h.project_id} />
+                <div className="min-w-64 flex-1">
+                  <Field label="Or type a domain" htmlFor={`d_${h.project_id}`}>
+                    <Input
+                      id={`d_${h.project_id}`}
+                      name="domain"
+                      placeholder="e.g. echotownswaterdown.com"
+                      required
+                    />
+                  </Field>
+                </div>
+                <Button type="submit" variant="secondary">
+                  Create
+                </Button>
+              </form>
+            </div>
           ))}
         </CardBody>
       </Card>

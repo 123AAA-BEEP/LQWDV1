@@ -2,7 +2,7 @@ import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   parseMicrositeDirective,
-  suggestDomains,
+  domainCandidates,
   getMicrositeProject,
   generateMicrositeContent,
   type MicrositeConfig,
@@ -57,7 +57,7 @@ export async function handleMicrositeDirective(opts: {
 
   if (!d.domain) {
     const ideas = opts.projectName
-      ? suggestDomains(opts.projectName, opts.city)
+      ? domainCandidates(opts.projectName, opts.city, "ca", 0)
       : [];
     await ping(
       "Microsite requested — pick a domain",

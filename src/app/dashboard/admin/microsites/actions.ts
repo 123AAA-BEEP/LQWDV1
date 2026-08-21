@@ -20,6 +20,7 @@ import {
   checkDomain,
   buyDomain,
   attachDomainToProject,
+  DOMAIN_MAX_USD,
 } from "@/lib/vercel-domains";
 import { pingIndexNowForHost } from "@/lib/indexnow";
 import { cleanBrandInput } from "@/lib/microsite-brand";
@@ -518,6 +519,13 @@ export async function buyMicrositeDomain(formData: FormData) {
     redirectWithFlash(
       `${LIST}/${id}`,
       "The domain isn't available to buy through Vercel.",
+      "error",
+    );
+  }
+  if (check.price > DOMAIN_MAX_USD) {
+    redirectWithFlash(
+      `${LIST}/${id}`,
+      `US$${check.price} is over the US$${DOMAIN_MAX_USD} cap. Pick a cheaper candidate.`,
       "error",
     );
   }
