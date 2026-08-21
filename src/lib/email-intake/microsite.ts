@@ -96,6 +96,34 @@ export async function handleMicrositeDirective(opts: {
   const detailUrl = `${listUrl}/${config.id}`;
   notes.push(`config ${config.status}`);
 
+  // A microsite REQUIRES its project in the public view (facts, imagery,
+  // lead routing all read it). Ingest can leave a published project's page
+  // disabled or inactive (e.g. no hero passed the quality gate) — an
+  // explicit microsite request overrides that so Generate never dead-ends
+  // on "project not publicly visible" (the Bridgelands failure mode).
+  const { data: proj } = await admin
+    .from("projects")
+    .select("id, record_status, public_page_enabled")
+    .eq("id", config.project_id)
+    .maybeSingle();
+  if (proj?.record_status === "published") {
+    if (!proj.public_page_enabled) {
+      await admin
+        .from("projects")
+        .update({ public_page_enabled: true })
+        .eq("id", proj.id);
+    }
+    const { data: activated } = await admin
+      .from("public_project_pages")
+      .update({ is_active: true })
+      .eq("project_id", proj.id)
+      .eq("is_active", false)
+      .select("id");
+    if (!proj.public_page_enabled || activated?.length) {
+      notes.push("public page activated for the microsite");
+    }
+  }
+
   // Seed the positioning context with the email's links (builder page,
   // sales page) so generation fetches them as SOURCE MATERIAL without the
   // founder having to re-paste anything. Never overwrites existing URLs.
