@@ -95,6 +95,15 @@ export interface MicrositeConfig {
   builder_logo_url?: string | null;
   /** GSC verification (migration 0094): meta token or "googleXXX.html". */
   google_verification?: string | null;
+  /**
+   * Manual image placement (migration 0095): slot -> image URL, or "none"
+   * to suppress the slot. Absent slot = automatic pick. Section slots are
+   * keyed by section key, or "iN" (index) for hand-added sections.
+   */
+  image_slots?: {
+    intro?: string;
+    sections?: Record<string, string>;
+  };
 }
 
 /** Lowercase bare domain, or null when it doesn't look like one. */
@@ -233,7 +242,7 @@ export async function getMicrositeByDomain(
     const { data } = await admin
       .from("microsite_configs")
       .select(
-        "id, domain, project_id, skin, status, context, content, capture_key, auto_send_details, details_url, builder_logo_url, google_verification",
+        "id, domain, project_id, skin, status, context, content, capture_key, auto_send_details, details_url, builder_logo_url, google_verification, image_slots",
       )
       .eq("domain", domain.toLowerCase().replace(/^www\./, ""))
       .maybeSingle();

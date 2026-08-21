@@ -436,6 +436,40 @@ export async function saveGoogleVerification(formData: FormData) {
   );
 }
 
+/**
+ * Manual image placement: slot -> URL or "none"; missing = auto. Stored on
+ * the config so regeneration never disturbs the founder's choices.
+ */
+export async function saveMicrositeImageSlots(input: {
+  micrositeId: string;
+  intro: string;
+  sections: Record<string, string>;
+}): Promise<{ error?: string }> {
+  const supabase = await createClient();
+  await assertAdmin(supabase);
+  const id = String(input.micrositeId ?? "");
+  if (!id) return { error: "Missing microsite." };
+
+  const ok = (v: string) => v === "none" || /^https:\/\/.{5,2000}$/.test(v);
+  const slots: { intro?: string; sections?: Record<string, string> } = {};
+  if (input.intro && ok(input.intro)) slots.intro = input.intro;
+  const sections: Record<string, string> = {};
+  for (const [k, v] of Object.entries(input.sections ?? {}).slice(0, 24)) {
+    if (typeof k === "string" && k.length <= 40 && typeof v === "string" && v && ok(v)) {
+      sections[k] = v;
+    }
+  }
+  if (Object.keys(sections).length) slots.sections = sections;
+
+  const { error } = await supabase
+    .from("microsite_configs")
+    .update({ image_slots: slots, updated_at: new Date().toISOString() })
+    .eq("id", id);
+  if (error) return { error: `Couldn't save: ${error.message}` };
+  revalidatePath(`${LIST}/${id}`);
+  return {};
+}
+
 /* ---------------- Microsite image management (project media) -------------- */
 
 /** Records a photo after direct-to-storage upload from the microsite screen. */

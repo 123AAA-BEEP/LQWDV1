@@ -84,10 +84,27 @@ export function MicrositeSiteView({
     const base = s.alt_text ?? STOCK_ALT[s.theme];
     return { url: s.url, alt: s.city ? `${base} in ${s.city}` : base };
   };
-  const realQueue: PageImage[] = gallery.map((g, i) => ({
-    url: g.url,
-    alt: g.alt_text ?? `${project.project_name} new construction rendering ${i + 1}`,
-  }));
+  // Founder-pinned image slots override every automatic pick. "none"
+  // suppresses a slot; a pinned URL is pulled out of the auto rotation.
+  const slots = config.image_slots ?? {};
+  const slotKey = (s: { key?: string }, i: number) => s.key ?? `i${i}`;
+  const pinned = new Set(
+    [slots.intro, ...Object.values(slots.sections ?? {})].filter(
+      (v): v is string => Boolean(v) && v !== "none",
+    ),
+  );
+  const galleryAlt = (url: string) =>
+    gallery.find((g) => g.url === url)?.alt_text ??
+    `${project.project_name} community imagery`;
+  const resolveSlot = (v: string | undefined): PageImage | null | undefined =>
+    v === "none" ? null : v ? { url: v, alt: galleryAlt(v) } : undefined;
+
+  const realQueue: PageImage[] = gallery
+    .filter((g) => !pinned.has(g.url))
+    .map((g, i) => ({
+      url: g.url,
+      alt: g.alt_text ?? `${project.project_name} new construction rendering ${i + 1}`,
+    }));
 
   const heroStyle =
     config.context?.hero_style === "colour" ? "colour" : "image";
@@ -101,19 +118,24 @@ export function MicrositeSiteView({
           }
         : stockImage("hero");
 
-  const introImage = realQueue.shift() ?? stockImage("homes");
+  const introSlot = resolveSlot(slots.intro);
+  const introImage =
+    introSlot !== undefined ? introSlot : (realQueue.shift() ?? stockImage("homes"));
   // Evergreen explainers render as drop-downs, not full sections — they're
   // reference material, not the pitch. They don't consume an image slot.
   const collapsible = (key?: string) => key === "buying_process";
   // The developer's logo owns the builder section's visual slot when set.
   const hasLogo = (key?: string) =>
     key === "builder" && Boolean(config.builder_logo_url);
-  const sectionImages = c.sections.map((s) =>
-    collapsible(s.key) || hasLogo(s.key)
-      ? null
-      : (realQueue.shift() ??
-        stockImage(SECTION_STOCK_THEME[s.key ?? ""] ?? "generic")),
-  );
+  const sectionImages = c.sections.map((s, i) => {
+    if (collapsible(s.key) || hasLogo(s.key)) return null;
+    const pinnedSlot = resolveSlot(slots.sections?.[slotKey(s, i)]);
+    if (pinnedSlot !== undefined) return pinnedSlot;
+    return (
+      realQueue.shift() ??
+      stockImage(SECTION_STOCK_THEME[s.key ?? ""] ?? "generic")
+    );
+  });
   const leftovers = realQueue.splice(0);
 
   const price = formatPriceBand(project.price_from_public, project.price_to_public, {
