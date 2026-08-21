@@ -502,6 +502,7 @@ export default async function AdminMicrositeDetail({
                   .filter((s) => !s.skip)
                   .map(({ key, title }) => ({ key, title }))}
                 initial={site.image_slots ?? {}}
+                builderLogoUrl={site.builder_logo_url}
               />
             </div>
           </div>
