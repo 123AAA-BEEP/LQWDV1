@@ -32,10 +32,13 @@ export function vercelDomainsConfigured(): boolean {
   return Boolean(token && projectId);
 }
 
-/** Unattended-purchase cap in USD; 0 = auto-buy disabled. */
+/** Founder rule: no domain purchase over this, ever (one-click or unattended). */
+export const DOMAIN_MAX_USD = 15;
+
+/** Unattended-purchase cap in USD; 0 = auto-buy disabled. Never above the hard cap. */
 export function autoBuyMaxUsd(): number {
   const n = Number(process.env.MICROSITE_AUTO_BUY_MAX_USD ?? 0);
-  return Number.isFinite(n) && n > 0 ? n : 0;
+  return Number.isFinite(n) && n > 0 ? Math.min(n, DOMAIN_MAX_USD) : 0;
 }
 
 async function call(

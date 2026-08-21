@@ -139,20 +139,78 @@ export function parseMicrositeDirective(
   return { requested: tagged, domain: null, domainInSubject: false };
 }
 
-/** Brandable domain candidates for a project — shown in the intake ping. */
-export function suggestDomains(name: string, city?: string | null): string[] {
-  const slug = (s: string) =>
-    s
-      .toLowerCase()
-      .normalize("NFKD")
-      .replace(/[^a-z0-9]+/g, "")
-      .slice(0, 40);
-  const n = slug(name);
-  if (!n) return [];
-  const c = city ? slug(city) : "";
-  const out = [`${n}.com`, `${n}.ca`];
-  if (c && !n.includes(c)) out.push(`${n}${c}.com`);
-  return out;
+const CA_MARKERS = new Set([
+  "ontario", "on", "british columbia", "bc", "alberta", "ab", "quebec",
+  "qc", "manitoba", "mb", "saskatchewan", "sk", "nova scotia", "ns",
+  "new brunswick", "nb", "newfoundland and labrador", "nl",
+  "prince edward island", "pe", "yukon", "yt", "northwest territories",
+  "nt", "nunavut", "nu",
+]);
+
+/** Canadian project → .com first, .ca second; US project → .com only. */
+export function marketFor(province: string | null | undefined): "ca" | "us" {
+  if (!province) return "ca"; // Ontario-first platform default
+  return CA_MARKERS.has(province.trim().toLowerCase()) ? "ca" : "us";
+}
+
+const domainSlug = (s: string) =>
+  s
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[^a-z0-9]+/g, "")
+    .slice(0, 40);
+
+/**
+ * Ranked, brand-first domain candidates (founder rules): the branded term as
+ * close to bare as possible, then "{brand}{city}", "the{brand}",
+ * "my{brand}", "{brand}in{city}", and SEO-friendly suffixes. Canadian
+ * markets interleave .com (first) and .ca; US markets are .com only.
+ * `round` pages through the ranked list five at a time.
+ */
+export function domainCandidates(
+  name: string,
+  city: string | null | undefined,
+  market: "ca" | "us",
+  round = 0,
+  perRound = 5,
+): string[] {
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  const full = domainSlug(name);
+  // "Echo Stacked Towns" → "echotowns": first + last word reads most branded.
+  const compact =
+    words.length >= 3
+      ? domainSlug(words[0] + words[words.length - 1])
+      : full;
+  const c = city ? domainSlug(city) : "";
+
+  const bases: string[] = [];
+  const push = (b: string) => {
+    if (b && b.length >= 4 && !bases.includes(b)) bases.push(b);
+  };
+  push(compact);
+  push(full);
+  if (c) {
+    if (!compact.includes(c)) push(`${compact}${c}`);
+    if (!full.includes(c)) push(`${full}${c}`);
+  }
+  push(`the${compact}`);
+  push(`my${compact}`);
+  if (c && !compact.includes(c)) push(`${compact}in${c}`);
+  push(`${compact}homes`);
+  push(`${compact}living`);
+  push(`${compact}condos`);
+  if (c) push(`live${c}`);
+  push(`own${compact}`);
+
+  const tlds = market === "ca" ? [".com", ".ca"] : [".com"];
+  const all: string[] = [];
+  for (const b of bases) {
+    for (const t of tlds) {
+      const d = `${b}${t}`;
+      if (!all.includes(d)) all.push(d);
+    }
+  }
+  return all.slice(round * perRound, round * perRound + perRound);
 }
 
 /** Hosts that belong to the primary app — everything else is a microsite. */

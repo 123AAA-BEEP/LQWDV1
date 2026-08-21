@@ -19,6 +19,7 @@ import {
   vercelDomainsConfigured,
   checkDomain,
   domainAttached,
+  DOMAIN_MAX_USD,
 } from "@/lib/vercel-domains";
 import {
   saveMicrositeContext,
@@ -499,21 +500,29 @@ export default async function AdminMicrositeDetail({
           ) : (
             <div className="mt-2 flex flex-wrap items-center gap-3">
               {check?.available && check.price != null ? (
-                <>
-                  <p className="text-sm text-slate-600">
-                    Available to register for{" "}
-                    <span className="font-semibold text-ink">
-                      US${check.price}/yr
-                    </span>{" "}
-                    on the Vercel account.
+                check.price > DOMAIN_MAX_USD ? (
+                  <p className="text-sm text-amber-700">
+                    Available at US${check.price}/yr, over the US$
+                    {DOMAIN_MAX_USD} cap. Pick a cheaper name for this
+                    project instead.
                   </p>
-                  <form action={buyMicrositeDomain}>
-                    <input type="hidden" name="microsite_id" value={site.id} />
-                    <Button type="submit" size="sm">
-                      Buy &amp; attach
-                    </Button>
-                  </form>
-                </>
+                ) : (
+                  <>
+                    <p className="text-sm text-slate-600">
+                      Available to register for{" "}
+                      <span className="font-semibold text-ink">
+                        US${check.price}/yr
+                      </span>{" "}
+                      on the Vercel account.
+                    </p>
+                    <form action={buyMicrositeDomain}>
+                      <input type="hidden" name="microsite_id" value={site.id} />
+                      <Button type="submit" size="sm">
+                        Buy &amp; attach
+                      </Button>
+                    </form>
+                  </>
+                )
               ) : (
                 <>
                   <p className="text-sm text-slate-600">
