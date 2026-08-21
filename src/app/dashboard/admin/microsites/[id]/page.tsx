@@ -34,6 +34,7 @@ import { MicrositeContentEditor } from "./content-editor";
 import { BuilderLogoUploader } from "./logo-uploader";
 import { MicrositeImagesManager } from "./images-manager";
 import { MicrositeImageSlots } from "./image-slots";
+import { MicrositeBrandCard } from "./brand-card";
 import { MicrositeSeoEditor } from "./seo-editor";
 
 export const metadata: Metadata = { title: "Microsite" };
@@ -51,6 +52,7 @@ interface Row {
   details_url: string | null;
   builder_logo_url: string | null;
   google_verification: string | null;
+  brand_override: import("@/lib/microsite-brand").MicrositeBrand | null;
   image_slots: { intro?: string; sections?: Record<string, string> } | null;
 }
 
@@ -82,7 +84,7 @@ export default async function AdminMicrositeDetail({
   const { data } = await supabase
     .from("microsite_configs")
     .select(
-      "id, domain, project_id, status, context, content, updated_at, auto_send_details, details_url, builder_logo_url, google_verification, image_slots",
+      "id, domain, project_id, status, context, content, updated_at, auto_send_details, details_url, builder_logo_url, google_verification, image_slots, brand_override",
     )
     .eq("id", id)
     .maybeSingle();
@@ -170,9 +172,9 @@ export default async function AdminMicrositeDetail({
       hint: "Regenerate to create /floor-plans, /site-plan, /pricing, /neighbourhood.",
     },
     {
-      ok: c ? Boolean(c.brand) : false,
-      label: "Brand extracted",
-      hint: "Regenerate after setting a real hero, or set colours/font in the editor.",
+      ok: Boolean(site.brand_override) || (c ? Boolean(c.brand) : false),
+      label: "Brand set",
+      hint: "Pin colours/font in Brand styling, or pull them from an image.",
     },
     {
       ok: vercelOn ? attached === true : null,
@@ -461,6 +463,29 @@ export default async function AdminMicrositeDetail({
               Save
             </Button>
           </form>
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardBody>
+          <h3 className="font-semibold text-ink">Brand styling</h3>
+          <p className="mt-1 text-sm text-slate-500">
+            Colours and typeface for this microsite. Pin them by hand or pull
+            them off any image. What&apos;s pinned here beats generation and
+            survives every regenerate.
+          </p>
+          <div className="mt-4">
+            <MicrositeBrandCard
+              micrositeId={site.id}
+              pinned={site.brand_override}
+              generated={c?.brand ?? null}
+              logoUrl={site.builder_logo_url}
+              images={media.map((m, i) => ({
+                url: m.url,
+                label: m.alt_text ?? `Image ${i + 1}`,
+              }))}
+            />
+          </div>
         </CardBody>
       </Card>
 

@@ -104,6 +104,12 @@ export interface MicrositeConfig {
     intro?: string;
     sections?: Record<string, string>;
   };
+  /**
+   * Founder-pinned identity (migration 0096) — set by hand or extracted
+   * from any chosen image. Config-level, so regeneration never clobbers it;
+   * the renderer prefers it over the generator's hero extraction.
+   */
+  brand_override?: MicrositeBrand | null;
 }
 
 /** Lowercase bare domain, or null when it doesn't look like one. */
@@ -242,7 +248,7 @@ export async function getMicrositeByDomain(
     const { data } = await admin
       .from("microsite_configs")
       .select(
-        "id, domain, project_id, skin, status, context, content, capture_key, auto_send_details, details_url, builder_logo_url, google_verification, image_slots",
+        "id, domain, project_id, skin, status, context, content, capture_key, auto_send_details, details_url, builder_logo_url, google_verification, image_slots, brand_override",
       )
       .eq("domain", domain.toLowerCase().replace(/^www\./, ""))
       .maybeSingle();
@@ -785,15 +791,22 @@ async function fetchVisionImage(url: string): Promise<VisionImage | null> {
 }
 
 /**
- * Reads the palette + typography vibe off the project's own renderings so
- * the microsite dresses like the builder's marketing, not like LIQWD.
- * Null (no imagery, fetch failure, bad output) = renderer defaults.
+ * Reads the palette + typography vibe off chosen imagery (a logo, a site
+ * map, a rendering) so the microsite dresses like the builder's marketing,
+ * not like LIQWD. Exported for the admin's "extract brand from this image"
+ * control. Null (fetch failure, bad output, no key) = caller's default.
  */
+export async function extractBrandFromImages(
+  urls: string[],
+): Promise<MicrositeBrand | null> {
+  if (!process.env.ANTHROPIC_API_KEY) return null;
+  return extractBrand(new Anthropic(), urls.filter(Boolean).slice(0, 2));
+}
+
 async function extractBrand(
   client: Anthropic,
-  project: PublicProject,
+  urls: string[],
 ): Promise<MicrositeBrand | null> {
-  const urls = [project.hero_image_url].filter((u): u is string => Boolean(u));
   if (!urls.length) return null;
   const images = (await Promise.all(urls.map(fetchVisionImage))).filter(
     (i): i is VisionImage => i !== null,
@@ -812,7 +825,7 @@ async function extractBrand(
             ...images,
             {
               type: "text",
-              text: "This is the marketing rendering for a new-construction project. Extract a landing-page identity that mimics it: a primary colour for buttons (from the imagery, dark/saturated enough for white text), a secondary accent, and the closest-matching font. Call emit_brand exactly once.",
+              text: "This is marketing material for a new-construction project (a rendering, logo, or site map). Extract a landing-page identity that mimics its visual style: a primary colour for buttons drawn from the artwork's own palette (dark or saturated enough to carry white text — deepen a pale tint rather than returning it as-is), a secondary accent, and the closest-matching font. Call emit_brand exactly once.",
             },
           ],
         },
@@ -930,7 +943,14 @@ export async function generateMicrositeContent(
       : "");
 
   const [brand, copy] = await Promise.all([
-    extractBrand(client, project),
+    // Skip the hero read entirely when a founder brand override is pinned —
+    // the renderer would ignore the result anyway.
+    config.brand_override
+      ? Promise.resolve(null)
+      : extractBrand(
+          client,
+          [project.hero_image_url].filter((u): u is string => Boolean(u)),
+        ),
     Promise.all([
       callTool(client, T_HERO, `${base}${HERO_BRIEF}`, 400),
       callTool(client, T_SECTION, `${base}${INTRO_BRIEF}\nUse title "Intro" (it is not shown).`, 800),

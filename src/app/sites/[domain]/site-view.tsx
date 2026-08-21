@@ -64,7 +64,8 @@ export function MicrositeSiteView({
   previewNote?: string;
 }) {
   const c = config.content!;
-  const brand = c.brand ?? null;
+  // Founder-pinned override wins over the generator's hero extraction.
+  const brand = config.brand_override ?? c.brand ?? null;
   const primary = brand?.primary ?? "#0d9488";
   const accent = brand?.accent ?? primary;
   const fontFamily = brand
