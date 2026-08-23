@@ -345,6 +345,43 @@ export async function saveBuilderLogo(
 }
 
 /**
+ * Site icon (favicon): browser tab + the icon Google shows beside the
+ * listing in search results. Same contract as saveBuilderLogo — a storage
+ * path from a direct upload, a pasted https URL, or clear.
+ */
+export async function saveMicrositeFavicon(
+  formData: FormData,
+): Promise<{ error?: string } | void> {
+  const supabase = await createClient();
+  await assertAdmin(supabase);
+  const id = String(formData.get("microsite_id") ?? "");
+  if (!id) return { error: "Missing microsite." };
+
+  let url: string | null = null;
+  const path = String(formData.get("path") ?? "");
+  const pasted = String(formData.get("url") ?? "").trim().slice(0, 2000);
+  const clear = formData.get("clear") === "1";
+  if (!clear) {
+    if (path) {
+      url = supabase.storage.from("project-media").getPublicUrl(path).data.publicUrl;
+    } else if (pasted) {
+      if (!/^https:\/\/.+/.test(pasted)) {
+        return { error: "Paste a full https image URL." };
+      }
+      url = pasted;
+    } else {
+      return { error: "Upload a file or paste a URL." };
+    }
+  }
+  const { error } = await supabase
+    .from("microsite_configs")
+    .update({ favicon_url: url, updated_at: new Date().toISOString() })
+    .eq("id", id);
+  if (error) return { error: `Couldn't save the icon: ${error.message}` };
+  revalidatePath(`${LIST}/${id}`);
+}
+
+/**
  * Search appearance: meta titles, descriptions, sub-page H1s, and focus
  * keywords for every page of the microsite, in one save. Only pages that
  * exist in the content are touched.

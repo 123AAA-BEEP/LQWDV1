@@ -15,6 +15,10 @@
     {
       "path": "/api/cron/daily-content",
       "schedule": "47 10 * * *"
+    },
+    {
+      "path": "/api/cron/domain-heal",
+      "schedule": "9 * * * *"
     }
   ]
 }

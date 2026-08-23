@@ -112,6 +112,7 @@ export interface MicrositeConfig {
   brand_override?: MicrositeBrand | null;
   /** Map pin/heading override (migration 0097); blank = project address. */
   map_address?: string | null;
+  favicon_url?: string | null;
 }
 
 /** Lowercase bare domain, or null when it doesn't look like one. */
@@ -242,6 +243,15 @@ export function isPrimaryHost(host: string): boolean {
   );
 }
 
+/**
+ * Next Metadata `icons` for a microsite's favicon — one square image (at
+ * least 48x48 for Google, 512x512 recommended) reused for the tab icon,
+ * pinned shortcut, and the apple touch icon.
+ */
+export function micrositeIcons(url: string) {
+  return { icon: [{ url }], shortcut: [{ url }], apple: [{ url }] };
+}
+
 export async function getMicrositeByDomain(
   domain: string,
 ): Promise<MicrositeConfig | null> {
@@ -250,7 +260,7 @@ export async function getMicrositeByDomain(
     const { data } = await admin
       .from("microsite_configs")
       .select(
-        "id, domain, project_id, skin, status, context, content, capture_key, auto_send_details, details_url, builder_logo_url, google_verification, image_slots, brand_override, map_address",
+        "id, domain, project_id, skin, status, context, content, capture_key, auto_send_details, details_url, builder_logo_url, google_verification, image_slots, brand_override, map_address, favicon_url",
       )
       .eq("domain", domain.toLowerCase().replace(/^www\./, ""))
       .maybeSingle();
