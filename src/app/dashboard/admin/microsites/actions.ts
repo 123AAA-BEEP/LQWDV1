@@ -345,6 +345,55 @@ export async function saveBuilderLogo(
 }
 
 /**
+ * Swap the microsite onto a different domain — for when the name actually
+ * bought differs from the one the config was seeded with (liveatfiveoaks.ca
+ * → fiveoaksinoakville.com; origins2brampton.com → origins2homes.com).
+ * Content, images, brand, leads, and the capture key all ride along; only
+ * the host changes. The old domain stops serving immediately.
+ */
+export async function renameMicrositeDomain(formData: FormData) {
+  const supabase = await createClient();
+  await assertAdmin(supabase);
+  const id = String(formData.get("microsite_id") ?? "");
+  if (!id) redirectWithFlash(LIST, "Missing microsite.", "error");
+
+  const domain = normalizeDomain(String(formData.get("domain") ?? ""));
+  if (!domain) {
+    redirectWithFlash(
+      `${LIST}/${id}`,
+      "Enter a bare domain like origins2homes.com (no https, no www).",
+      "error",
+    );
+  }
+  const { data: clash } = await supabase
+    .from("microsite_configs")
+    .select("id")
+    .eq("domain", domain)
+    .neq("id", id)
+    .maybeSingle();
+  if (clash) {
+    redirectWithFlash(
+      `${LIST}/${id}`,
+      `${domain} is already used by another microsite.`,
+      "error",
+    );
+  }
+  const { error } = await supabase
+    .from("microsite_configs")
+    .update({ domain, updated_at: new Date().toISOString() })
+    .eq("id", id);
+  if (error) {
+    redirectWithFlash(`${LIST}/${id}`, `Couldn't change the domain: ${error.message}`, "error");
+  }
+  revalidatePath(LIST);
+  revalidatePath(`${LIST}/${id}`);
+  redirectWithFlash(
+    `${LIST}/${id}`,
+    `Domain changed to ${domain}. Everything carries over; the old domain stops serving. Check the card below — attach or buy if it isn't green.`,
+  );
+}
+
+/**
  * Site icon (favicon): browser tab + the icon Google shows beside the
  * listing in search results. Same contract as saveBuilderLogo — a storage
  * path from a direct upload, a pasted https URL, or clear.

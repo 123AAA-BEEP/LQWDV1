@@ -31,6 +31,7 @@ import {
   saveMicrositeLeadAutomation,
   saveGoogleVerification,
   saveMicrositeMapAddress,
+  renameMicrositeDomain,
 } from "../actions";
 import { MicrositeContentEditor } from "./content-editor";
 import { BuilderLogoUploader } from "./logo-uploader";
@@ -762,6 +763,30 @@ export default async function AdminMicrositeDetail({
               </p>
             </div>
           )}
+          <form
+            action={renameMicrositeDomain}
+            className="mt-4 flex flex-wrap items-end gap-2 border-t border-slate-100 pt-4"
+          >
+            <input type="hidden" name="microsite_id" value={site.id} />
+            <div className="min-w-64 flex-1">
+              <Field
+                label="Change domain"
+                htmlFor="ms_domain"
+                hint="Bought a different name? Swap it here — content, leads, and settings all carry over; the old domain stops serving."
+              >
+                <Input
+                  id="ms_domain"
+                  name="domain"
+                  defaultValue={site.domain}
+                  placeholder="origins2homes.com"
+                  maxLength={253}
+                />
+              </Field>
+            </div>
+            <Button type="submit" size="sm" variant="secondary">
+              Save
+            </Button>
+          </form>
         </div>
       </Section>
 
