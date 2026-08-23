@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -209,6 +210,7 @@ export default async function AdminMicrositeDetail({
     },
   ];
   const openItems = checklist.filter((i) => i.ok !== true).length;
+  const brandSet = Boolean(site.brand_override) || Boolean(c?.brand);
 
   return (
     <div className="space-y-6">
@@ -381,105 +383,131 @@ export default async function AdminMicrositeDetail({
         </CardBody>
       </Card>
 
-      <Card>
-        <CardBody>
-          <h3 className="font-semibold text-ink">Lead automation</h3>
+      <Section
+        title="Content"
+        hint={
+          c
+            ? `Generated ${new Date(c.generated_at).toLocaleDateString("en-CA")} · ${subpageCount}/4 sub-pages · context, copy, and SEO`
+            : "Nothing generated yet — add context, then hit Generate"
+        }
+        tone={c ? "ok" : "todo"}
+        defaultOpen={!c}
+      >
+        <div className="rounded-lg border border-slate-200 p-5">
+          <h3 className="font-semibold text-ink">Positioning context</h3>
           <p className="mt-1 text-sm text-slate-500">
-            Every microsite lead is assigned to the admin account (current
-            policy) and lands in the Leads queue, source-tagged with this
-            domain. Optionally auto-email each new lead the project details.
+            The questionnaire answers that steer generation — free text or
+            JSON. Save, then regenerate to apply.
           </p>
-          <form
-            action={saveMicrositeLeadAutomation}
-            className="mt-3 flex flex-wrap items-end gap-3"
-          >
+          <form action={saveMicrositeContext} className="mt-3 space-y-3">
             <input type="hidden" name="microsite_id" value={site.id} />
-            <label className="flex items-center gap-2 pb-2.5 text-sm font-medium text-slate-700">
-              <Checkbox
-                name="auto_send_details"
-                defaultChecked={site.auto_send_details}
+            <Field label="Context" htmlFor="ms_context">
+              <Textarea
+                id="ms_context"
+                name="context"
+                className="min-h-40 font-mono text-xs"
+                defaultValue={contextText}
+                placeholder={CONTEXT_PLACEHOLDER}
+                maxLength={8000}
               />
-              Auto-send details to new leads
-            </label>
-            <div className="min-w-72 flex-1">
-              <Field
-                label="Details link"
-                htmlFor="ms_details_url"
-                hint="A Google Drive package or any https link. Blank = the LIQWD listing."
-              >
-                <Input
-                  id="ms_details_url"
-                  name="details_url"
-                  defaultValue={site.details_url ?? ""}
-                  placeholder="https://drive.google.com/…"
-                  maxLength={2000}
-                />
-              </Field>
-            </div>
+            </Field>
+            <fieldset>
+              <legend className="text-sm font-medium text-slate-700">
+                Sections to generate
+              </legend>
+              <p className="mt-0.5 text-xs text-slate-400">
+                Each section has its own writing prompt. Leave your picks and
+                regenerate; none checked = auto based on the project facts.
+              </p>
+              <div className="mt-2 grid gap-1.5 sm:grid-cols-3">
+                {MICROSITE_SECTIONS.map((s) => (
+                  <label
+                    key={s.key}
+                    className="flex items-center gap-2 text-sm text-slate-600"
+                  >
+                    <Checkbox
+                      name="sections"
+                      value={s.key}
+                      defaultChecked={checkedSections.includes(s.key)}
+                    />
+                    {s.label}
+                  </label>
+                ))}
+              </div>
+            </fieldset>
             <Button type="submit" variant="secondary">
-              Save
+              Save context
             </Button>
           </form>
-        </CardBody>
-      </Card>
+        </div>
 
-      <Card>
-        <CardBody>
-          <h3 className="font-semibold text-ink">Developer logo</h3>
+        <div className="rounded-lg border border-slate-200 p-5">
+          <h3 className="font-semibold text-ink">Page content — every field is editable</h3>
           <p className="mt-1 text-sm text-slate-500">
-            Shown in the &quot;About the developer&quot; section. Upload it or
-            paste a URL (the builder&apos;s site almost always has one).
+            {c
+              ? "Rewrite anything the generator produced, then save. Regenerating replaces the body copy but keeps your SEO overrides."
+              : "Generate first (recommended), or write the page by hand from scratch."}
           </p>
-          <div className="mt-3">
-            <BuilderLogoUploader
-              micrositeId={site.id}
-              projectId={site.project_id}
-              currentUrl={site.builder_logo_url}
-            />
+          <div className="mt-4">
+            <MicrositeContentEditor micrositeId={site.id} initial={c} />
           </div>
-        </CardBody>
-      </Card>
+        </div>
 
-      <Card>
-        <CardBody>
-          <h3 className="font-semibold text-ink">Google Search Console</h3>
+        <div className="rounded-lg border border-slate-200 p-5">
+          <h3 className="font-semibold text-ink">Search appearance</h3>
           <p className="mt-1 text-sm text-slate-500">
-            Fastest route: in Vercel &rarr; Domains &rarr;{" "}
-            <span className="font-medium">Manage DNS records</span>, add
-            GSC&apos;s TXT record for a Domain property (no field needed
-            here). Otherwise pick <span className="font-medium">URL prefix</span>{" "}
-            in GSC and paste its token or <code>googleXXX.html</code> filename
-            below, then hit Verify.
+            Meta titles, descriptions, sub-page H1s, and the focus keywords
+            that steer generation — every page in one place. Counters follow
+            Google&apos;s display limits (about 60 / 160 characters).
           </p>
-          <form
-            action={saveGoogleVerification}
-            className="mt-3 flex flex-wrap items-end gap-2"
-          >
-            <input type="hidden" name="microsite_id" value={site.id} />
-            <div className="min-w-72 flex-1">
-              <Field
-                label="Verification token, meta tag, or filename"
-                htmlFor="ms_gsc"
-                hint="Blank clears it. The meta tag renders even before the site is live."
-              >
-                <Input
-                  id="ms_gsc"
-                  name="google_verification"
-                  defaultValue={site.google_verification ?? ""}
-                  placeholder="AbC123… or google1a2b3c.html"
-                  maxLength={200}
-                />
-              </Field>
-            </div>
-            <Button type="submit" variant="secondary">
-              Save
-            </Button>
-          </form>
-        </CardBody>
-      </Card>
+          <div className="mt-4">
+            {c ? (
+              <MicrositeSeoEditor
+                micrositeId={site.id}
+                domain={site.domain}
+                homeDefaults={{
+                  title: defaultSeoTitle,
+                  description: c.subhead,
+                }}
+                home={{
+                  seo_title: c.seo_title ?? "",
+                  seo_description: c.seo_description ?? "",
+                  focus_keywords: c.focus_keywords ?? "",
+                }}
+                pages={MICROSITE_SUBPAGES.filter((p) => c.pages?.[p.key]).map(
+                  (p) => {
+                    const page = c.pages![p.key]!;
+                    return {
+                      key: p.key,
+                      label: p.label,
+                      slug: p.slug,
+                      heading: page.heading,
+                      seo_title: page.seo_title,
+                      meta_description: page.meta_description,
+                    };
+                  },
+                )}
+              />
+            ) : (
+              <p className="text-sm text-slate-500">
+                Generate content first; the SEO fields appear here once the
+                pages exist.
+              </p>
+            )}
+          </div>
+        </div>
+      </Section>
 
-      <Card>
-        <CardBody>
+      <Section
+        title="Design &amp; images"
+        hint={`${media.length} photo${media.length === 1 ? "" : "s"} · brand ${brandSet ? "set" : "not set"} · logo ${site.builder_logo_url ? "added" : "missing"}`}
+        tone={
+          Boolean(project?.hero_image_url) && brandSet && Boolean(site.builder_logo_url)
+            ? "ok"
+            : "todo"
+        }
+      >
+        <div className="rounded-lg border border-slate-200 p-5">
           <h3 className="font-semibold text-ink">Brand styling</h3>
           <p className="mt-1 text-sm text-slate-500">
             Colours and typeface for this microsite. Pin them by hand or pull
@@ -498,11 +526,9 @@ export default async function AdminMicrositeDetail({
               }))}
             />
           </div>
-        </CardBody>
-      </Card>
+        </div>
 
-      <Card>
-        <CardBody>
+        <div className="rounded-lg border border-slate-200 p-5">
           <h3 className="font-semibold text-ink">Images</h3>
           <p className="mt-1 text-sm text-slate-500">
             The photography this microsite pulls from (shared with the
@@ -543,11 +569,73 @@ export default async function AdminMicrositeDetail({
               />
             </div>
           </div>
-        </CardBody>
-      </Card>
+        </div>
 
-      <Card>
-        <CardBody>
+        <div className="rounded-lg border border-slate-200 p-5">
+          <h3 className="font-semibold text-ink">Developer logo</h3>
+          <p className="mt-1 text-sm text-slate-500">
+            Shown in the &quot;About the developer&quot; section. Upload it or
+            paste a URL (the builder&apos;s site almost always has one).
+          </p>
+          <div className="mt-3">
+            <BuilderLogoUploader
+              micrositeId={site.id}
+              projectId={site.project_id}
+              currentUrl={site.builder_logo_url}
+            />
+          </div>
+        </div>
+      </Section>
+
+      <Section
+        title="Domain &amp; Google"
+        hint={`${
+          !vercelOn
+            ? "Manual domain mode (set VERCEL_TOKEN)"
+            : domainLive
+              ? "Domain serving"
+              : "Domain needs attention"
+        } · ${site.google_verification ? "GSC token stored" : "GSC not set"}`}
+        tone={vercelOn && domainLive ? "ok" : "todo"}
+        defaultOpen={vercelOn && !domainLive}
+      >
+        <div className="rounded-lg border border-slate-200 p-5">
+          <h3 className="font-semibold text-ink">Google Search Console</h3>
+          <p className="mt-1 text-sm text-slate-500">
+            Fastest route: in Vercel &rarr; Domains &rarr;{" "}
+            <span className="font-medium">Manage DNS records</span>, add
+            GSC&apos;s TXT record for a Domain property (no field needed
+            here). Otherwise pick <span className="font-medium">URL prefix</span>{" "}
+            in GSC and paste its token or <code>googleXXX.html</code> filename
+            below, then hit Verify.
+          </p>
+          <form
+            action={saveGoogleVerification}
+            className="mt-3 flex flex-wrap items-end gap-2"
+          >
+            <input type="hidden" name="microsite_id" value={site.id} />
+            <div className="min-w-72 flex-1">
+              <Field
+                label="Verification token, meta tag, or filename"
+                htmlFor="ms_gsc"
+                hint="Blank clears it. The meta tag renders even before the site is live."
+              >
+                <Input
+                  id="ms_gsc"
+                  name="google_verification"
+                  defaultValue={site.google_verification ?? ""}
+                  placeholder="AbC123… or google1a2b3c.html"
+                  maxLength={200}
+                />
+              </Field>
+            </div>
+            <Button type="submit" variant="secondary">
+              Save
+            </Button>
+          </form>
+        </div>
+
+        <div className="rounded-lg border border-slate-200 p-5">
           <h3 className="font-semibold text-ink">Domain</h3>
           {!vercelOn ? (
             <p className="mt-1 text-sm text-slate-500">
@@ -643,11 +731,55 @@ export default async function AdminMicrositeDetail({
               </p>
             </div>
           )}
-        </CardBody>
-      </Card>
+        </div>
+      </Section>
 
-      <Card>
-        <CardBody>
+      <Section
+        title="Leads &amp; map"
+        hint={`Auto-send ${site.auto_send_details ? "on" : "off"} · map pin ${site.map_address ? "override set" : "uses the project address"}`}
+        tone="ok"
+      >
+        <div className="rounded-lg border border-slate-200 p-5">
+          <h3 className="font-semibold text-ink">Lead automation</h3>
+          <p className="mt-1 text-sm text-slate-500">
+            Every microsite lead is assigned to the admin account (current
+            policy) and lands in the Leads queue, source-tagged with this
+            domain. Optionally auto-email each new lead the project details.
+          </p>
+          <form
+            action={saveMicrositeLeadAutomation}
+            className="mt-3 flex flex-wrap items-end gap-3"
+          >
+            <input type="hidden" name="microsite_id" value={site.id} />
+            <label className="flex items-center gap-2 pb-2.5 text-sm font-medium text-slate-700">
+              <Checkbox
+                name="auto_send_details"
+                defaultChecked={site.auto_send_details}
+              />
+              Auto-send details to new leads
+            </label>
+            <div className="min-w-72 flex-1">
+              <Field
+                label="Details link"
+                htmlFor="ms_details_url"
+                hint="A Google Drive package or any https link. Blank = the LIQWD listing."
+              >
+                <Input
+                  id="ms_details_url"
+                  name="details_url"
+                  defaultValue={site.details_url ?? ""}
+                  placeholder="https://drive.google.com/…"
+                  maxLength={2000}
+                />
+              </Field>
+            </div>
+            <Button type="submit" variant="secondary">
+              Save
+            </Button>
+          </form>
+        </div>
+
+        <div className="rounded-lg border border-slate-200 p-5">
           <h3 className="font-semibold text-ink">Map address</h3>
           <p className="mt-1 text-sm text-slate-500">
             What the Location map pins and its heading shows. Applies
@@ -675,119 +807,67 @@ export default async function AdminMicrositeDetail({
               Save
             </Button>
           </form>
-        </CardBody>
-      </Card>
-
-      <Card>
-        <CardBody>
-          <h3 className="font-semibold text-ink">Positioning context</h3>
-          <p className="mt-1 text-sm text-slate-500">
-            The questionnaire answers that steer generation — free text or
-            JSON. Save, then regenerate to apply.
-          </p>
-          <form action={saveMicrositeContext} className="mt-3 space-y-3">
-            <input type="hidden" name="microsite_id" value={site.id} />
-            <Field label="Context" htmlFor="ms_context">
-              <Textarea
-                id="ms_context"
-                name="context"
-                className="min-h-40 font-mono text-xs"
-                defaultValue={contextText}
-                placeholder={CONTEXT_PLACEHOLDER}
-                maxLength={8000}
-              />
-            </Field>
-            <fieldset>
-              <legend className="text-sm font-medium text-slate-700">
-                Sections to generate
-              </legend>
-              <p className="mt-0.5 text-xs text-slate-400">
-                Each section has its own writing prompt. Leave your picks and
-                regenerate; none checked = auto based on the project facts.
-              </p>
-              <div className="mt-2 grid gap-1.5 sm:grid-cols-3">
-                {MICROSITE_SECTIONS.map((s) => (
-                  <label
-                    key={s.key}
-                    className="flex items-center gap-2 text-sm text-slate-600"
-                  >
-                    <Checkbox
-                      name="sections"
-                      value={s.key}
-                      defaultChecked={checkedSections.includes(s.key)}
-                    />
-                    {s.label}
-                  </label>
-                ))}
-              </div>
-            </fieldset>
-            <Button type="submit" variant="secondary">
-              Save context
-            </Button>
-          </form>
-        </CardBody>
-      </Card>
-
-      <Card>
-        <CardBody>
-          <h3 className="font-semibold text-ink">Page content — every field is editable</h3>
-          <p className="mt-1 text-sm text-slate-500">
-            {c
-              ? "Rewrite anything the generator produced, then save. Regenerating replaces the body copy but keeps your SEO overrides."
-              : "Generate first (recommended), or write the page by hand from scratch."}
-          </p>
-          <div className="mt-4">
-            <MicrositeContentEditor micrositeId={site.id} initial={c} />
-          </div>
-        </CardBody>
-      </Card>
-
-      <Card>
-        <CardBody>
-          <h3 className="font-semibold text-ink">Search appearance</h3>
-          <p className="mt-1 text-sm text-slate-500">
-            Meta titles, descriptions, sub-page H1s, and the focus keywords
-            that steer generation — every page in one place. Counters follow
-            Google&apos;s display limits (about 60 / 160 characters).
-          </p>
-          <div className="mt-4">
-            {c ? (
-              <MicrositeSeoEditor
-                micrositeId={site.id}
-                domain={site.domain}
-                homeDefaults={{
-                  title: defaultSeoTitle,
-                  description: c.subhead,
-                }}
-                home={{
-                  seo_title: c.seo_title ?? "",
-                  seo_description: c.seo_description ?? "",
-                  focus_keywords: c.focus_keywords ?? "",
-                }}
-                pages={MICROSITE_SUBPAGES.filter((p) => c.pages?.[p.key]).map(
-                  (p) => {
-                    const page = c.pages![p.key]!;
-                    return {
-                      key: p.key,
-                      label: p.label,
-                      slug: p.slug,
-                      heading: page.heading,
-                      seo_title: page.seo_title,
-                      meta_description: page.meta_description,
-                    };
-                  },
-                )}
-              />
-            ) : (
-              <p className="text-sm text-slate-500">
-                Generate content first; the SEO fields appear here once the
-                pages exist.
-              </p>
-            )}
-          </div>
-        </CardBody>
-      </Card>
+        </div>
+      </Section>
 
     </div>
+  );
+}
+
+/**
+ * Collapsible settings group — native <details>, so it needs no client JS
+ * and server-action forms inside just work. The group that still needs
+ * work opens itself (defaultOpen); the dot mirrors the checklist tone.
+ */
+function Section({
+  title,
+  hint,
+  tone,
+  defaultOpen,
+  children,
+}: {
+  title: ReactNode;
+  hint: string;
+  tone: "ok" | "todo";
+  defaultOpen?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <details
+      open={defaultOpen}
+      className="group rounded-xl border border-slate-200 bg-white shadow-sm"
+    >
+      <summary className="flex cursor-pointer list-none select-none items-center justify-between gap-3 px-5 py-4 [&::-webkit-details-marker]:hidden">
+        <span className="flex min-w-0 items-center gap-3">
+          <span
+            aria-hidden
+            className={`h-2 w-2 shrink-0 rounded-full ${
+              tone === "ok" ? "bg-emerald-500" : "bg-amber-400"
+            }`}
+          />
+          <span className="min-w-0">
+            <span className="block font-semibold text-ink">{title}</span>
+            <span className="block truncate text-xs text-slate-400">{hint}</span>
+          </span>
+        </span>
+        <svg
+          viewBox="0 0 20 20"
+          fill="none"
+          aria-hidden
+          className="h-4 w-4 shrink-0 text-slate-400 transition-transform duration-200 group-open:rotate-180"
+        >
+          <path
+            d="M5 7.5 10 12.5 15 7.5"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </summary>
+      <div className="space-y-4 border-t border-slate-100 p-4 sm:p-5">
+        {children}
+      </div>
+    </details>
   );
 }
