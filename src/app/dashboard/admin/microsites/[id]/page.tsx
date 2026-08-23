@@ -186,11 +186,13 @@ export default async function AdminMicrositeDetail({
       ok: vercelOn ? domainLive : null,
       label: "Domain live on Vercel",
       hint: vercelOn
-        ? domainStatus?.owned
-          ? "Registered, but DNS isn't answering yet — usually propagation; recheck in an hour."
-          : domainStatus?.attached
-            ? "Attached but NOT registered — the URL can't load. Buy it in the Domain card."
-            : "Buy or attach it in the Domain card below."
+        ? domainStatus?.apexRedirects
+          ? "Redirect loop at the Vercel edge — hit Fix routing in the Domain card."
+          : domainStatus?.owned
+            ? "Registered, but DNS isn't answering yet — usually propagation; recheck in an hour."
+            : domainStatus?.attached
+              ? "Attached but NOT registered — the URL can't load. Buy it in the Domain card."
+              : "Buy or attach it in the Domain card below."
         : "Can't verify from here; check the Vercel dashboard (or set VERCEL_TOKEN).",
     },
     {
@@ -563,7 +565,16 @@ export default async function AdminMicrositeDetail({
             </p>
           ) : (
             <div className="mt-2 space-y-3">
-              {domainStatus?.owned ? (
+              {domainStatus?.apexRedirects ? (
+                <p className="text-sm font-medium text-red-700">
+                  {site.domain} is redirecting to www at the Vercel edge (the
+                  dashboard&apos;s &quot;recommended&quot; option) while the
+                  app redirects www back — that&apos;s a redirect loop
+                  (ERR_TOO_MANY_REDIRECTS). Click{" "}
+                  <strong>Fix routing</strong> below to rewire it: bare URL
+                  serves, www redirects.
+                </p>
+              ) : domainStatus?.owned ? (
                 <p className="text-sm font-medium text-amber-700">
                   {site.domain} is registered on the Vercel account, but DNS
                   isn&apos;t answering yet. Right after a purchase that&apos;s
@@ -607,15 +618,19 @@ export default async function AdminMicrositeDetail({
                   <>
                     <p className="text-sm text-slate-600">
                       {check && !check.available
-                        ? domainStatus?.owned
-                          ? "Registered on your Vercel account — attach it to the project."
-                          : "Already registered by someone — if it's yours, attach it; otherwise pick another name."
+                        ? domainStatus?.apexRedirects
+                          ? "One click rewires both hosts to the correct routing."
+                          : domainStatus?.owned
+                            ? "Registered on your Vercel account — attach it to the project."
+                            : "Already registered by someone — if it's yours, attach it; otherwise pick another name."
                         : "Couldn't read availability from Vercel right now."}
                     </p>
                     <form action={attachMicrositeDomain}>
                       <input type="hidden" name="microsite_id" value={site.id} />
                       <Button type="submit" size="sm" variant="secondary">
-                        Attach to Vercel project
+                        {domainStatus?.apexRedirects
+                          ? "Fix routing"
+                          : "Attach to Vercel project"}
                       </Button>
                     </form>
                   </>
