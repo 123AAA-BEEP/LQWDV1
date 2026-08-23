@@ -158,6 +158,124 @@ export async function attachDomainToProject(
   return { ok: true };
 }
 
+export interface DomainEnsure {
+  /**
+   * serving   — registered, attached (apex + www), verified: the URL loads.
+   * bought    — we just registered it (≤ maxUsd) and attached both hosts.
+   * over_cap  — available but above maxUsd: needs a human decision.
+   * needs_dns — registered (maybe elsewhere) but Vercel can't verify it yet.
+   * failed    — purchase or attach failed, or the TLD isn't sold by Vercel.
+   * unknown   — Vercel env missing or the API was unreachable.
+   */
+  state: "serving" | "bought" | "over_cap" | "needs_dns" | "failed" | "unknown";
+  price: number | null;
+  /** One human sentence — safe to show in a flash message or intake note. */
+  detail: string;
+}
+
+/**
+ * The one entry point for "make {domain} actually load" — used by Set live,
+ * the Buy button, and the email-intake directive so every path behaves the
+ * same. Checks registration, BUYS when available at or under `maxUsd`,
+ * attaches BOTH hosts (apex + www 308), and only ever reports success off
+ * Vercel's `verified` flag. Born from the mybridgelands/liveatfiveoaks
+ * failure: a site marked live while the domain was never registered, so the
+ * URL died with NXDOMAIN while everything looked green.
+ */
+export async function ensureDomainServing(
+  domain: string,
+  maxUsd: number = DOMAIN_MAX_USD,
+): Promise<DomainEnsure> {
+  if (!vercelDomainsConfigured()) {
+    return {
+      state: "unknown",
+      price: null,
+      detail:
+        "Vercel env not configured (VERCEL_TOKEN / VERCEL_PROJECT_ID) — buy and attach the domain in the Vercel dashboard.",
+    };
+  }
+
+  // Already ours and verified? Still re-run attach: it's idempotent and
+  // guarantees the www host + 308 exist even on domains attached by hand.
+  const before = await getDomainStatus(domain);
+  if (before?.verified) {
+    const att = await attachDomainToProject(domain);
+    return {
+      state: "serving",
+      price: null,
+      detail: att.error
+        ? `${domain} is registered and serving (${att.error}).`
+        : `${domain} and www.${domain} are registered, attached, and serving.`,
+    };
+  }
+
+  const check = await checkDomain(domain);
+  if (!check) {
+    return {
+      state: "unknown",
+      price: null,
+      detail: "Couldn't reach the Vercel domains API — check again in a minute.",
+    };
+  }
+
+  if (check.available) {
+    if (check.price == null) {
+      return {
+        state: "failed",
+        price: null,
+        detail: `Vercel doesn't sell this TLD — register ${domain} elsewhere, then attach it.`,
+      };
+    }
+    if (check.price > maxUsd) {
+      return {
+        state: "over_cap",
+        price: check.price,
+        detail: `${domain} is unregistered — available at US$${check.price}/yr, over the US$${maxUsd} cap, so it needs your click (or a cheaper name).`,
+      };
+    }
+    const bought = await buyDomain(domain, check.price);
+    if (!bought.ok) {
+      return {
+        state: "failed",
+        price: check.price,
+        detail: `Purchase failed (${bought.error}) — buy ${domain} manually.`,
+      };
+    }
+    const att = await attachDomainToProject(domain);
+    return {
+      state: "bought",
+      price: check.price,
+      detail: att.ok
+        ? `Bought ${domain} for US$${check.price} and attached it plus www${att.error ? ` (${att.error})` : ""}.`
+        : `Bought ${domain} for US$${check.price} — attach failed (${att.error}); attach it in Vercel.`,
+    };
+  }
+
+  // Registered — by us on another project, or by someone else. Attach and
+  // let `verified` decide; never report success without it.
+  const att = await attachDomainToProject(domain);
+  if (!att.ok) {
+    return {
+      state: "failed",
+      price: null,
+      detail: `${domain} is registered but attach failed (${att.error}).`,
+    };
+  }
+  const after = await getDomainStatus(domain);
+  if (after?.verified) {
+    return {
+      state: "serving",
+      price: null,
+      detail: `${domain} and www.${domain} are attached and serving.`,
+    };
+  }
+  return {
+    state: "needs_dns",
+    price: null,
+    detail: `${domain} is registered but NOT verified on this Vercel project — if you own it, point its DNS at Vercel (or verify with the TXT record Vercel shows); if not, pick another name.`,
+  };
+}
+
 export interface DomainStatus {
   /** Listed on the Vercel project (possible even for a domain we don't own). */
   attached: boolean;
