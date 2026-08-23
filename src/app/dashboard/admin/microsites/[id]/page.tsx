@@ -711,7 +711,9 @@ export default async function AdminMicrositeDetail({
                           : domainStatus?.owned
                             ? "Registered on your Vercel account — attach it to the project."
                             : "Already registered by someone — if it's yours, attach it; otherwise pick another name."
-                        : "Couldn't read availability from Vercel right now."}
+                        : check?.available
+                          ? `Available, but Vercel can't sell this ending (.${site.domain.split(".").pop()}). Register it at any registrar (e.g. GoDaddy, Namecheap, or a CIRA registrar for .ca), point its DNS to Vercel (A record @ → 216.150.1.1), then hit Attach.`
+                          : "Couldn't read availability from Vercel right now."}
                     </p>
                     <form action={attachMicrositeDomain}>
                       <input type="hidden" name="microsite_id" value={site.id} />
