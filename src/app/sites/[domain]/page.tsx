@@ -5,6 +5,7 @@ import {
   getMicrositeGallery,
   getMicrositeStock,
   isPrimaryHost,
+  micrositeIcons,
 } from "@/lib/microsites";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
@@ -35,6 +36,7 @@ export async function generateMetadata({
     return {
       title: "Coming soon",
       robots: { index: false, follow: false },
+      ...(config?.favicon_url ? { icons: micrositeIcons(config.favicon_url) } : {}),
       ...(token && !/\.html$/i.test(token)
         ? { verification: { google: token } }
         : {}),
@@ -57,7 +59,28 @@ export async function generateMetadata({
     description,
     ...(verification ? { verification } : {}),
     alternates: { canonical: `https://${config.domain}/` },
+    // max-image-preview:large is what lets Google show a big page image
+    // beside the listing (mobile especially); without it previews stay tiny.
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-image-preview": "large",
+        "max-snippet": -1,
+      },
+    },
+    ...(config.favicon_url ? { icons: micrositeIcons(config.favicon_url) } : {}),
     openGraph: {
+      title,
+      description,
+      url: `https://${config.domain}/`,
+      type: "website",
+      ...(project?.hero_image_url ? { images: [project.hero_image_url] } : {}),
+    },
+    twitter: {
+      card: "summary_large_image",
       title,
       description,
       ...(project?.hero_image_url ? { images: [project.hero_image_url] } : {}),

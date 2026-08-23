@@ -5,6 +5,7 @@ import {
   getMicrositeByDomain,
   getMicrositeProject,
   isPrimaryHost,
+  micrositeIcons,
   MICROSITE_SUBPAGES,
   type MicrositeConfig,
   type MicrositeSubPageKey,
@@ -125,7 +126,30 @@ export function subpageMetadata(pageKey: MicrositeSubPageKey) {
       title: page.seo_title,
       description: page.meta_description,
       alternates: { canonical: `https://${live.config.domain}/${def.slug}` },
+      robots: {
+        index: true,
+        follow: true,
+        googleBot: {
+          index: true,
+          follow: true,
+          "max-image-preview": "large",
+          "max-snippet": -1,
+        },
+      },
+      ...(live.config.favicon_url
+        ? { icons: micrositeIcons(live.config.favicon_url) }
+        : {}),
       openGraph: {
+        title: page.seo_title,
+        description: page.meta_description,
+        url: `https://${live.config.domain}/${def.slug}`,
+        type: "website",
+        ...(live.project.hero_image_url
+          ? { images: [live.project.hero_image_url] }
+          : {}),
+      },
+      twitter: {
+        card: "summary_large_image",
         title: page.seo_title,
         description: page.meta_description,
         ...(live.project.hero_image_url

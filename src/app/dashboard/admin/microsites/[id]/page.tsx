@@ -34,6 +34,7 @@ import {
 } from "../actions";
 import { MicrositeContentEditor } from "./content-editor";
 import { BuilderLogoUploader } from "./logo-uploader";
+import { FaviconUploader } from "./favicon-uploader";
 import { MicrositeImagesManager } from "./images-manager";
 import { MicrositeImageSlots } from "./image-slots";
 import { MicrositeBrandCard } from "./brand-card";
@@ -57,6 +58,7 @@ interface Row {
   brand_override: import("@/lib/microsite-brand").MicrositeBrand | null;
   image_slots: { intro?: string; sections?: Record<string, string> } | null;
   map_address: string | null;
+  favicon_url: string | null;
 }
 
 const first = (v: unknown): string =>
@@ -87,7 +89,7 @@ export default async function AdminMicrositeDetail({
   const { data } = await supabase
     .from("microsite_configs")
     .select(
-      "id, domain, project_id, status, context, content, updated_at, auto_send_details, details_url, builder_logo_url, google_verification, image_slots, brand_override, map_address",
+      "id, domain, project_id, status, context, content, updated_at, auto_send_details, details_url, builder_logo_url, google_verification, image_slots, brand_override, map_address, favicon_url",
     )
     .eq("id", id)
     .maybeSingle();
@@ -167,6 +169,11 @@ export default async function AdminMicrositeDetail({
       ok: Boolean(site.builder_logo_url),
       label: "Developer logo",
       hint: "Upload it or paste a URL in the logo card.",
+    },
+    {
+      ok: Boolean(site.favicon_url),
+      label: "Site icon",
+      hint: "Square icon for the browser tab and beside the Google listing — Design & images.",
     },
     {
       ok: Boolean(c),
@@ -500,9 +507,12 @@ export default async function AdminMicrositeDetail({
 
       <Section
         title="Design &amp; images"
-        hint={`${media.length} photo${media.length === 1 ? "" : "s"} · brand ${brandSet ? "set" : "not set"} · logo ${site.builder_logo_url ? "added" : "missing"}`}
+        hint={`${media.length} photo${media.length === 1 ? "" : "s"} · brand ${brandSet ? "set" : "not set"} · logo ${site.builder_logo_url ? "added" : "missing"} · icon ${site.favicon_url ? "set" : "missing"}`}
         tone={
-          Boolean(project?.hero_image_url) && brandSet && Boolean(site.builder_logo_url)
+          Boolean(project?.hero_image_url) &&
+          brandSet &&
+          Boolean(site.builder_logo_url) &&
+          Boolean(site.favicon_url)
             ? "ok"
             : "todo"
         }
@@ -582,6 +592,25 @@ export default async function AdminMicrositeDetail({
               micrositeId={site.id}
               projectId={site.project_id}
               currentUrl={site.builder_logo_url}
+            />
+          </div>
+        </div>
+
+        <div className="rounded-lg border border-slate-200 p-5">
+          <h3 className="font-semibold text-ink">Site icon (favicon)</h3>
+          <p className="mt-1 text-sm text-slate-500">
+            The little icon in the browser tab — and the one Google shows
+            beside this site&apos;s listing in search results. Use a{" "}
+            <span className="font-medium">square</span> image, ideally 512
+            &times; 512 (Google needs at least 48 &times; 48). The
+            builder&apos;s logo mark (the symbol, not the wordmark) usually
+            works well.
+          </p>
+          <div className="mt-3">
+            <FaviconUploader
+              micrositeId={site.id}
+              projectId={site.project_id}
+              currentUrl={site.favicon_url}
             />
           </div>
         </div>
