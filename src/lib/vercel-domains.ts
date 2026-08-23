@@ -195,10 +195,11 @@ export async function ensureDomainServing(
     };
   }
 
-  // Already ours and verified? Still re-run attach: it's idempotent and
-  // guarantees the www host + 308 exist even on domains attached by hand.
+  // Already serving (registered + DNS answers)? Still re-run attach: it's
+  // idempotent and guarantees the www host + 308 exist even on domains
+  // attached by hand.
   const before = await getDomainStatus(domain);
-  if (before?.verified) {
+  if (before?.serving) {
     const att = await attachDomainToProject(domain);
     return {
       state: "serving",
@@ -252,7 +253,7 @@ export async function ensureDomainServing(
   }
 
   // Registered — by us on another project, or by someone else. Attach and
-  // let `verified` decide; never report success without it.
+  // let the config check decide; never report success without DNS answering.
   const att = await attachDomainToProject(domain);
   if (!att.ok) {
     return {
@@ -262,7 +263,7 @@ export async function ensureDomainServing(
     };
   }
   const after = await getDomainStatus(domain);
-  if (after?.verified) {
+  if (after?.serving) {
     return {
       state: "serving",
       price: null,
@@ -272,22 +273,32 @@ export async function ensureDomainServing(
   return {
     state: "needs_dns",
     price: null,
-    detail: `${domain} is registered but NOT verified on this Vercel project — if you own it, point its DNS at Vercel (or verify with the TXT record Vercel shows); if not, pick another name.`,
+    detail: after?.owned
+      ? `${domain} is registered on the Vercel account and attached, but DNS isn't answering yet — usually just propagation; give it up to an hour.`
+      : `${domain} is registered by someone else — if it's yours, point its DNS at Vercel; if not, pick another name.`,
   };
 }
 
 export interface DomainStatus {
   /** Listed on the Vercel project (possible even for a domain we don't own). */
   attached: boolean;
-  /** Vercel has confirmed ownership + DNS. Only then does the site load. */
-  verified: boolean;
+  /** Registered on THIS Vercel account (the registrar actually has it). */
+  owned: boolean;
+  /** Attached AND DNS answers — the only state where the URL loads. */
+  serving: boolean;
 }
 
 /**
- * Attachment AND verification. The distinction matters: Vercel happily
- * accepts a domain nobody owns, leaving it attached-but-unverified — the
- * URL then dies with NXDOMAIN. Never report "DNS is handled" off
- * attachment alone. null = couldn't tell (no token / API trouble).
+ * The truth about a domain, from the endpoints that can't lie. Two flags
+ * that DON'T mean what they sound like: project-domain `verified: true`
+ * only means no OTHER Vercel account claims the name — it is true for a
+ * domain nobody has ever registered (the liveatfiveoaks.ca green-card
+ * bug), so it is deliberately not read here. Instead:
+ *   owned   — GET /v5/domains/{name}: 200 only when this account
+ *             registered it.
+ *   serving — GET /v6/domains/{name}/config: misconfigured === false,
+ *             i.e. DNS genuinely resolves to Vercel.
+ * null = couldn't tell (no token / API trouble).
  */
 export async function getDomainStatus(
   domain: string,
@@ -295,12 +306,19 @@ export async function getDomainStatus(
   const { projectId } = env();
   if (!vercelDomainsConfigured()) return null;
   try {
-    const res = await call(
+    const proj = await call(
       `/v9/projects/${encodeURIComponent(projectId)}/domains/${encodeURIComponent(domain)}`,
     );
-    if (res.status === 404) return { attached: false, verified: false };
-    if (res.status !== 200) return null;
-    return { attached: true, verified: res.body.verified === true };
+    if (proj.status !== 200 && proj.status !== 404) return null;
+    const attached = proj.status === 200;
+    const reg = await call(`/v5/domains/${encodeURIComponent(domain)}`);
+    const owned = reg.status === 200;
+    let serving = false;
+    if (attached) {
+      const cfg = await call(`/v6/domains/${encodeURIComponent(domain)}/config`);
+      serving = cfg.status === 200 && cfg.body.misconfigured === false;
+    }
+    return { attached, owned, serving };
   } catch {
     return null;
   }

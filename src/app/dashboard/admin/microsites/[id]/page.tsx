@@ -137,8 +137,10 @@ export default async function AdminMicrositeDetail({
   // the project yet, and if not, can we buy it right here?
   const vercelOn = vercelDomainsConfigured();
   const domainStatus = vercelOn ? await getDomainStatus(site.domain) : null;
-  // Attached-but-unverified means we do NOT own it: keep offering to buy.
-  const domainLive = domainStatus?.verified === true;
+  // Green ONLY when DNS actually answers. Vercel's `verified` flag is true
+  // even for a domain nobody ever registered — trusting it painted this
+  // card green while liveatfiveoaks.ca was NXDOMAIN.
+  const domainLive = domainStatus?.serving === true;
   const check = vercelOn && !domainLive ? await checkDomain(site.domain) : null;
 
   // Launch checklist — what still needs attention before (and after) going
@@ -184,9 +186,11 @@ export default async function AdminMicrositeDetail({
       ok: vercelOn ? domainLive : null,
       label: "Domain live on Vercel",
       hint: vercelOn
-        ? domainStatus?.attached
-          ? "Attached but not verified — the domain isn't registered to you yet. Buy it in the Domain card."
-          : "Buy or attach it in the Domain card below."
+        ? domainStatus?.owned
+          ? "Registered, but DNS isn't answering yet — usually propagation; recheck in an hour."
+          : domainStatus?.attached
+            ? "Attached but NOT registered — the URL can't load. Buy it in the Domain card."
+            : "Buy or attach it in the Domain card below."
         : "Can't verify from here; check the Vercel dashboard (or set VERCEL_TOKEN).",
     },
     {
@@ -554,18 +558,24 @@ export default async function AdminMicrositeDetail({
             </p>
           ) : domainLive ? (
             <p className="mt-1 text-sm text-emerald-700">
-              {site.domain} is registered, attached, and verified — DNS is
-              handled.
+              {site.domain} is registered, attached, and DNS answers — the URL
+              loads.
             </p>
           ) : (
             <div className="mt-2 space-y-3">
-              {domainStatus?.attached ? (
+              {domainStatus?.owned ? (
+                <p className="text-sm font-medium text-amber-700">
+                  {site.domain} is registered on the Vercel account, but DNS
+                  isn&apos;t answering yet. Right after a purchase that&apos;s
+                  normal propagation — give it up to an hour, then recheck.
+                </p>
+              ) : domainStatus?.attached ? (
                 <p className="text-sm font-medium text-red-700">
                   {site.domain} is listed on the Vercel project but{" "}
-                  <strong>not verified</strong> — this is exactly why the URL
+                  <strong>not registered</strong> — this is exactly why the URL
                   shows &quot;site can&apos;t be reached&quot; (NXDOMAIN).
                   Vercel accepts a domain nobody owns; it still has to be
-                  registered below.
+                  bought below.
                 </p>
               ) : null}
               <div className="flex flex-wrap items-center gap-3">
@@ -597,7 +607,9 @@ export default async function AdminMicrositeDetail({
                   <>
                     <p className="text-sm text-slate-600">
                       {check && !check.available
-                        ? "Already registered by someone — if it's yours, attach it; otherwise pick another name."
+                        ? domainStatus?.owned
+                          ? "Registered on your Vercel account — attach it to the project."
+                          : "Already registered by someone — if it's yours, attach it; otherwise pick another name."
                         : "Couldn't read availability from Vercel right now."}
                     </p>
                     <form action={attachMicrositeDomain}>
