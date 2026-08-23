@@ -128,32 +128,105 @@ async function addDomain(
   }
 }
 
+/** Where a project domain currently points. null = API unreachable. */
+async function getProjectDomain(
+  name: string,
+): Promise<{ exists: boolean; redirect: string | null } | null> {
+  const { projectId } = env();
+  try {
+    const res = await call(
+      `/v9/projects/${encodeURIComponent(projectId)}/domains/${encodeURIComponent(name)}`,
+    );
+    if (res.status === 404) return { exists: false, redirect: null };
+    if (res.status !== 200) return null;
+    const r = res.body.redirect;
+    return { exists: true, redirect: typeof r === "string" && r ? r : null };
+  } catch {
+    return null;
+  }
+}
+
+/** Rewrites an attached domain's redirect. null = serve, don't redirect. */
+async function setRedirect(
+  name: string,
+  redirect: string | null,
+): Promise<{ ok: boolean; error?: string }> {
+  const { projectId } = env();
+  try {
+    const res = await call(
+      `/v9/projects/${encodeURIComponent(projectId)}/domains/${encodeURIComponent(name)}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify(
+          redirect
+            ? { redirect, redirectStatusCode: 308 }
+            : { redirect: null, redirectStatusCode: null },
+        ),
+      },
+    );
+    if (res.status === 200) return { ok: true };
+    return { ok: false, error: errMessage(res.body) };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "network error" };
+  }
+}
+
 /**
- * Points the domain at the LIQWD Vercel project — BOTH hosts:
- *   apex   (mybridgelands.com)        → serves the site
- *   www.*  (www.mybridgelands.com)    → 308 redirect to the apex
+ * ENFORCES the microsite routing contract on the Vercel project:
+ *   apex   (mybridgelands.com)      → serves the site, NO edge redirect
+ *   www.*  (www.mybridgelands.com)  → 308 redirect to the apex
  *
- * Attaching www matters twice over: without it the www address simply
- * fails to resolve for anyone who types it, and if it resolved without the
- * redirect we'd serve the same page on two hosts (duplicate content). One
- * canonical host, one redirect. Already-attached = ok.
+ * Enforce, not just add: a domain connected by hand through the Vercel
+ * dashboard's "recommended" flow gets the OPPOSITE config (apex 308 → www),
+ * which fights the app's www→apex canonicalization and loops the site —
+ * echotownswaterdown.com died with ERR_TOO_MANY_REDIRECTS exactly this way.
+ * So existing hosts get their redirect rewritten, whatever it was. One
+ * canonical host, one redirect, every time.
  */
 export async function attachDomainToProject(
   domain: string,
 ): Promise<{ ok: boolean; error?: string }> {
   if (!vercelDomainsConfigured()) return { ok: false, error: "Vercel not configured" };
 
-  const apex = await addDomain({ name: domain });
-  if (!apex.ok) return apex;
+  // Apex: attach if missing, and strip any edge redirect it carries.
+  const apex = await getProjectDomain(domain);
+  if (!apex?.exists) {
+    const added = await addDomain({ name: domain });
+    if (!added.ok) return added;
+    // 409 = it existed after all (race, or the status call failed) — fall
+    // through to the redirect check below so a bad config still gets fixed.
+  }
+  const apexNow = apex?.exists ? apex : await getProjectDomain(domain);
+  if (apexNow?.redirect) {
+    const cleared = await setRedirect(domain, null);
+    if (!cleared.ok) {
+      return {
+        ok: false,
+        error: `${domain} is redirecting to ${apexNow.redirect} at the Vercel edge and clearing it failed (${cleared.error})`,
+      };
+    }
+  }
 
-  // Best effort: a www failure must not block the apex going live.
-  const www = await addDomain({
-    name: `www.${domain}`,
-    redirect: domain,
-    redirectStatusCode: 308,
-  });
-  if (!www.ok) {
-    return { ok: true, error: `www not attached (${www.error})` };
+  // www: attach if missing; rewrite its redirect unless it already points
+  // at the apex. Best effort — a www failure must not block the apex.
+  const wwwName = `www.${domain}`;
+  let wwwError: string | undefined;
+  const www = await getProjectDomain(wwwName);
+  if (!www?.exists) {
+    const added = await addDomain({
+      name: wwwName,
+      redirect: domain,
+      redirectStatusCode: 308,
+    });
+    if (!added.ok) wwwError = added.error;
+  }
+  const wwwNow = www?.exists ? www : await getProjectDomain(wwwName);
+  if (!wwwError && wwwNow?.exists && wwwNow.redirect !== domain) {
+    const fixed = await setRedirect(wwwName, domain);
+    if (!fixed.ok) wwwError = fixed.error;
+  }
+  if (wwwError) {
+    return { ok: true, error: `www not fully configured (${wwwError})` };
   }
   return { ok: true };
 }
@@ -284,8 +357,14 @@ export interface DomainStatus {
   attached: boolean;
   /** Registered on THIS Vercel account (the registrar actually has it). */
   owned: boolean;
-  /** Attached AND DNS answers — the only state where the URL loads. */
+  /** Attached AND DNS answers AND the apex actually serves — the URL loads. */
   serving: boolean;
+  /**
+   * The apex has an edge-level redirect (the dashboard's "recommended" add
+   * flow sets apex → www). Combined with the app's www → apex redirect
+   * that's an infinite loop — attachDomainToProject clears it.
+   */
+  apexRedirects: boolean;
 }
 
 /**
@@ -311,14 +390,16 @@ export async function getDomainStatus(
     );
     if (proj.status !== 200 && proj.status !== 404) return null;
     const attached = proj.status === 200;
+    const apexRedirects =
+      attached && typeof proj.body.redirect === "string" && proj.body.redirect !== "";
     const reg = await call(`/v5/domains/${encodeURIComponent(domain)}`);
     const owned = reg.status === 200;
     let serving = false;
-    if (attached) {
+    if (attached && !apexRedirects) {
       const cfg = await call(`/v6/domains/${encodeURIComponent(domain)}/config`);
       serving = cfg.status === 200 && cfg.body.misconfigured === false;
     }
-    return { attached, owned, serving };
+    return { attached, owned, serving, apexRedirects };
   } catch {
     return null;
   }

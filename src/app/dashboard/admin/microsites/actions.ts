@@ -693,7 +693,7 @@ export async function attachMicrositeDomain(formData: FormData) {
     attached.ok
       ? attached.error
         ? `${domain} is attached — ${attached.error}.`
-        : `${domain} and www.${domain} are attached to the Vercel project.`
+        : `Routing enforced: ${domain} serves the site, www.${domain} redirects to it. If your browser cached the old redirect, test in an incognito window.`
       : `Attach failed: ${attached.error}`,
     attached.ok ? undefined : "error",
   );
