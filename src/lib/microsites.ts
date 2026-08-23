@@ -110,6 +110,8 @@ export interface MicrositeConfig {
    * the renderer prefers it over the generator's hero extraction.
    */
   brand_override?: MicrositeBrand | null;
+  /** Map pin/heading override (migration 0097); blank = project address. */
+  map_address?: string | null;
 }
 
 /** Lowercase bare domain, or null when it doesn't look like one. */
@@ -248,7 +250,7 @@ export async function getMicrositeByDomain(
     const { data } = await admin
       .from("microsite_configs")
       .select(
-        "id, domain, project_id, skin, status, context, content, capture_key, auto_send_details, details_url, builder_logo_url, google_verification, image_slots, brand_override",
+        "id, domain, project_id, skin, status, context, content, capture_key, auto_send_details, details_url, builder_logo_url, google_verification, image_slots, brand_override, map_address",
       )
       .eq("domain", domain.toLowerCase().replace(/^www\./, ""))
       .maybeSingle();

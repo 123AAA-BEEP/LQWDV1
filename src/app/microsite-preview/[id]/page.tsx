@@ -39,7 +39,7 @@ export default async function MicrositePreview({
   const { data } = await admin
     .from("microsite_configs")
     .select(
-      "id, domain, project_id, skin, status, context, content, capture_key, auto_send_details, details_url, builder_logo_url, google_verification, image_slots",
+      "id, domain, project_id, skin, status, context, content, capture_key, auto_send_details, details_url, builder_logo_url, google_verification, image_slots, brand_override, map_address",
     )
     .eq("id", id)
     .maybeSingle();

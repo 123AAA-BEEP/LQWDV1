@@ -18,10 +18,10 @@ import {
 } from "@/lib/microsites";
 import type { MicrositeBrand } from "@/lib/microsite-brand";
 import {
-  vercelDomainsConfigured,
   checkDomain,
   buyDomain,
   attachDomainToProject,
+  ensureDomainServing,
   DOMAIN_MAX_USD,
 } from "@/lib/vercel-domains";
 import { pingIndexNowForHost } from "@/lib/indexnow";
@@ -178,30 +178,35 @@ export async function setMicrositeStatus(formData: FormData) {
     .update({ status, updated_at: new Date().toISOString() })
     .eq("id", id);
 
-  // Going live: best-effort auto-attach the domain to the Vercel project so
-  // the only manual step left is buying the domain.
-  let attachNote = " (attach it to the Vercel project if you haven't).";
-  if (status === "live" && domain && vercelDomainsConfigured()) {
-    const attached = await attachDomainToProject(domain);
-    attachNote = attached.ok
-      ? attached.error
-        ? ` and the domain is attached (${attached.error}).`
-        : " and the domain plus its www address are attached to the Vercel project."
-      : ` (auto-attach failed: ${attached.error}; attach it in Vercel manually).`;
+  // Going live runs the FULL domain pipeline, not just attach: check
+  // registration, buy when unregistered and at/under the US$15 cap, attach
+  // apex + www, and trust only Vercel's `verified` flag. Attach-only was the
+  // liveatfiveoaks.ca failure — Vercel accepts an unowned domain, the site
+  // reads "live" everywhere, and the URL dies with NXDOMAIN.
+  let domainOk = true;
+  let domainNote = "";
+  if (status === "live" && domain) {
+    const ensured = await ensureDomainServing(domain);
+    domainOk = ensured.state === "serving" || ensured.state === "bought";
+    domainNote = ensured.detail;
   }
   // Tell IndexNow-fed engines (Bing and friends) the moment it's live;
   // Google discovers via the per-domain sitemap + GSC.
-  if (status === "live" && domain) {
+  if (status === "live" && domain && domainOk) {
     await pingIndexNowForHost(domain, livePaths(content));
   }
   revalidatePath(LIST);
   revalidatePath(`${LIST}/${id}`);
-  redirectWithFlash(
-    `${LIST}/${id}`,
-    status === "live"
-      ? `Live — the domain now serves the page${attachNote}`
-      : `Moved to ${status}.`,
-  );
+  if (status === "live") {
+    redirectWithFlash(
+      `${LIST}/${id}`,
+      domainOk
+        ? `Live. ${domainNote}`
+        : `Live in the app, but the URL will NOT load yet: ${domainNote}`,
+      domainOk ? undefined : "error",
+    );
+  }
+  redirectWithFlash(`${LIST}/${id}`, `Moved to ${status}.`);
 }
 
 /** Full manual override of the page content, from the admin editor. */
@@ -437,6 +442,36 @@ export async function saveGoogleVerification(formData: FormData) {
         ? `Serving /${value} — hit Verify in Search Console.`
         : "Meta tag added to the page — hit Verify in Search Console."
       : "Verification cleared.",
+  );
+}
+
+/**
+ * Manual override for the Location map: what the Google Maps embed pins and
+ * the Location heading shows. An intersection ("Weston Rd & Teston Rd,
+ * Vaughan") often pins better than a civic address on a greenfield site.
+ * Config-level, so it applies instantly — no regeneration — and
+ * regeneration never touches it. Blank clears back to the project address.
+ */
+export async function saveMicrositeMapAddress(formData: FormData) {
+  const supabase = await createClient();
+  await assertAdmin(supabase);
+  const id = String(formData.get("microsite_id") ?? "");
+  if (!id) redirectWithFlash(LIST, "Missing microsite.", "error");
+
+  const raw = String(formData.get("map_address") ?? "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 200);
+  await supabase
+    .from("microsite_configs")
+    .update({ map_address: raw || null, updated_at: new Date().toISOString() })
+    .eq("id", id);
+  revalidatePath(`${LIST}/${id}`);
+  redirectWithFlash(
+    `${LIST}/${id}`,
+    raw
+      ? "Map address saved — the pin and Location heading use it now."
+      : "Map address cleared — back to the project address.",
   );
 }
 

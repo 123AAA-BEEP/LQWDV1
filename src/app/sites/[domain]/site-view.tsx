@@ -143,8 +143,11 @@ export function MicrositeSiteView({
     currency: project.price_currency,
   });
   const chip = [project.city, project.province].filter(Boolean).join(", ");
+  // Founder override first: an intersection often pins better than a civic
+  // address on a greenfield site, and needs no regeneration to change.
   const mapQuery =
-    project.address_full ??
+    config.map_address?.trim() ||
+    project.address_full ||
     [project.project_name, project.city, project.province]
       .filter(Boolean)
       .join(", ");
@@ -572,7 +575,7 @@ export function MicrositeSiteView({
             Location
           </span>
           <h2 className="mt-2 text-3xl font-semibold tracking-tight text-ink">
-            {project.address_full ?? chip}
+            {config.map_address?.trim() || project.address_full || chip}
           </h2>
           <iframe
             title={`Map of ${project.project_name}`}

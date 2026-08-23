@@ -8,9 +8,7 @@ import {
 import {
   vercelDomainsConfigured,
   autoBuyMaxUsd,
-  checkDomain,
-  buyDomain,
-  attachDomainToProject,
+  ensureDomainServing,
 } from "@/lib/vercel-domains";
 import { sendEmail, brandedEmail } from "@/lib/email";
 
@@ -152,30 +150,18 @@ export async function handleMicrositeDirective(opts: {
 
   // Unattended domain purchase — three explicit gates (subject-line domain,
   // Vercel env, price cap) so a stray word in marketing copy can never spend.
-  let domainLine = "Domain: buy it, then attach it to the Vercel project (or use the Buy button on the microsite screen).";
+  // Inside the gates it runs the SAME check-buy-attach-verify pipeline as
+  // Set live and the Buy button (apex + www, success only off `verified`).
+  let domainLine =
+    "Domain: NOT auto-bought (set MICROSITE_AUTO_BUY_MAX_USD in Vercel env, or use the Buy button on the microsite screen). The URL will not load until it's registered.";
   const cap = autoBuyMaxUsd();
   if (d.domainInSubject && cap > 0 && vercelDomainsConfigured()) {
-    const check = await checkDomain(d.domain);
-    if (check && !check.available) {
-      const attached = await attachDomainToProject(d.domain);
-      domainLine = attached.ok
-        ? "Domain: already registered — attached to the Vercel project."
-        : "Domain: already registered (attach it in Vercel if you own it).";
-      notes.push("domain already registered");
-    } else if (check?.available && check.price != null && check.price <= cap) {
-      const bought = await buyDomain(d.domain, check.price);
-      if (bought.ok) {
-        const attached = await attachDomainToProject(d.domain);
-        domainLine = `Domain: bought for US$${check.price}${attached.ok ? " and attached to the Vercel project" : " — attach it in Vercel (auto-attach failed)"}.`;
-        notes.push(`domain bought US$${check.price}`);
-      } else {
-        domainLine = `Domain: purchase failed (${bought.error}) — buy it manually.`;
-        notes.push("domain purchase failed");
-      }
-    } else if (check?.available && check.price != null) {
-      domainLine = `Domain: available at US$${check.price} — over the US$${cap} auto-buy cap, so it needs your click.`;
-      notes.push("domain over auto-buy cap");
-    }
+    const ensured = await ensureDomainServing(d.domain, cap);
+    domainLine = `Domain: ${ensured.detail}`;
+    notes.push(`domain ${ensured.state}${ensured.price != null ? ` US$${ensured.price}` : ""}`);
+  } else if (!d.domainInSubject) {
+    domainLine =
+      "Domain: auto-buy skipped — the domain wasn't in the SUBJECT line (only founder-typed subjects can spend). Buy it from the microsite screen.";
   }
 
   await ping(

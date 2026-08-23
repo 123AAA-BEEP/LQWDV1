@@ -29,6 +29,7 @@ import {
   attachMicrositeDomain,
   saveMicrositeLeadAutomation,
   saveGoogleVerification,
+  saveMicrositeMapAddress,
 } from "../actions";
 import { MicrositeContentEditor } from "./content-editor";
 import { BuilderLogoUploader } from "./logo-uploader";
@@ -54,6 +55,7 @@ interface Row {
   google_verification: string | null;
   brand_override: import("@/lib/microsite-brand").MicrositeBrand | null;
   image_slots: { intro?: string; sections?: Record<string, string> } | null;
+  map_address: string | null;
 }
 
 const first = (v: unknown): string =>
@@ -84,7 +86,7 @@ export default async function AdminMicrositeDetail({
   const { data } = await supabase
     .from("microsite_configs")
     .select(
-      "id, domain, project_id, status, context, content, updated_at, auto_send_details, details_url, builder_logo_url, google_verification, image_slots, brand_override",
+      "id, domain, project_id, status, context, content, updated_at, auto_send_details, details_url, builder_logo_url, google_verification, image_slots, brand_override, map_address",
     )
     .eq("id", id)
     .maybeSingle();
@@ -558,11 +560,12 @@ export default async function AdminMicrositeDetail({
           ) : (
             <div className="mt-2 space-y-3">
               {domainStatus?.attached ? (
-                <p className="text-sm text-amber-700">
+                <p className="text-sm font-medium text-red-700">
                   {site.domain} is listed on the Vercel project but{" "}
-                  <strong>not verified</strong>, so it can&apos;t load. Vercel
-                  accepts a domain nobody owns — it still has to be registered
-                  below.
+                  <strong>not verified</strong> — this is exactly why the URL
+                  shows &quot;site can&apos;t be reached&quot; (NXDOMAIN).
+                  Vercel accepts a domain nobody owns; it still has to be
+                  registered below.
                 </p>
               ) : null}
               <div className="flex flex-wrap items-center gap-3">
@@ -613,6 +616,38 @@ export default async function AdminMicrositeDetail({
               </p>
             </div>
           )}
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardBody>
+          <h3 className="font-semibold text-ink">Map address</h3>
+          <p className="mt-1 text-sm text-slate-500">
+            What the Location map pins and its heading shows. Applies
+            instantly — no regeneration. Blank uses the project&apos;s address.
+            Tip: an intersection often pins better than a civic address on a
+            site that isn&apos;t built yet.
+          </p>
+          <form
+            action={saveMicrositeMapAddress}
+            className="mt-3 flex flex-wrap items-end gap-2"
+          >
+            <input type="hidden" name="microsite_id" value={site.id} />
+            <div className="min-w-72 flex-1">
+              <Field label="Address or intersection" htmlFor="ms_map_address">
+                <Input
+                  id="ms_map_address"
+                  name="map_address"
+                  defaultValue={site.map_address ?? ""}
+                  placeholder="e.g. Weston Rd & Teston Rd, Vaughan, ON"
+                  maxLength={200}
+                />
+              </Field>
+            </div>
+            <Button type="submit" variant="secondary">
+              Save
+            </Button>
+          </form>
         </CardBody>
       </Card>
 
