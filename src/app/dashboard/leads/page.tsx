@@ -350,7 +350,11 @@ function LeadCard({
                 <Badge tone="brand" className="ml-2 align-middle">
                   Agent inquiry
                 </Badge>
-              ) : null}
+              ) : (
+                <Badge tone="neutral" className="ml-2 align-middle">
+                  Buyer
+                </Badge>
+              )}
             </p>
             <p className="text-xs text-slate-400">
               {new Date(lead.created_at).toLocaleString("en-CA")}

@@ -129,7 +129,7 @@ export async function submitMicrositeLead(
       heading: "New microsite lead",
       body:
         `<strong>${esc(lead_name)}</strong> · ${esc(lead_email)} · ${esc(lead_phone)}` +
-        `${isRealtorRaw === "yes" ? " · <strong>agent — recruit</strong>" : ""}` +
+        `<br><strong>Agent:</strong> ${isRealtorRaw === "yes" ? "<strong>Yes — recruit</strong>" : "No — buyer"}` +
         `<br><strong>Project:</strong> ${esc(project?.project_name ?? config.project_id)}` +
         `<br><strong>Source:</strong> ${esc(config.domain)}` +
         `${address ? `<br><strong>Address:</strong> ${esc(address)}` : ""}` +

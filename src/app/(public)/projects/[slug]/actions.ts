@@ -127,6 +127,7 @@ export async function submitLead(
     lead_email,
     lead_phone,
     message,
+    isRealtor,
     assignedRealtorId,
     referredById,
   });
@@ -147,6 +148,7 @@ export async function submitLead(
       lead_email,
       lead_phone,
       message,
+      isRealtor,
     });
   }
 }
@@ -165,6 +167,7 @@ async function sendLeadOpsCopyEmail(
     lead_email: string;
     lead_phone: string;
     message: string;
+    isRealtor: boolean;
     assignedRealtorId: string | null;
     referredById: string | null;
   },
@@ -203,6 +206,7 @@ async function sendLeadOpsCopyEmail(
     `<strong>Name:</strong> ${esc(opts.lead_name)}`,
     `<strong>Email:</strong> ${esc(opts.lead_email)}`,
     opts.lead_phone ? `<strong>Phone:</strong> ${esc(opts.lead_phone)}` : null,
+    `<strong>Agent:</strong> ${opts.isRealtor ? "Yes — recruit opportunity" : "No — buyer"}`,
     opts.message ? `<strong>Message:</strong> ${esc(opts.message)}` : null,
     `<strong>Routing:</strong> ${routedTo}`,
   ]
@@ -295,6 +299,7 @@ async function sendLeadAlertEmail(
     lead_email: string;
     lead_phone: string;
     message: string;
+    isRealtor: boolean;
   },
 ) {
   const { data: realtor } = await admin
@@ -322,6 +327,7 @@ async function sendLeadAlertEmail(
     `<strong>Name:</strong> ${esc(opts.lead_name)}`,
     `<strong>Email:</strong> ${esc(opts.lead_email)}`,
     opts.lead_phone ? `<strong>Phone:</strong> ${esc(opts.lead_phone)}` : null,
+    `<strong>Agent:</strong> ${opts.isRealtor ? "Yes — a fellow agent registered" : "No — buyer"}`,
     opts.message ? `<strong>Message:</strong> ${esc(opts.message)}` : null,
   ]
     .filter(Boolean)
@@ -330,7 +336,7 @@ async function sendLeadAlertEmail(
   await sendEmail({
     to: email,
     replyTo: opts.lead_email,
-    subject: `New buyer inquiry: ${projectName}`,
+    subject: `New ${opts.isRealtor ? "agent" : "buyer"} inquiry: ${projectName}`,
     html: brandedEmail({
       heading: `New buyer inquiry on ${esc(projectName)}`,
       body:
