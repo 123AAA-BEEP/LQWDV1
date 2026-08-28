@@ -79,8 +79,9 @@ export async function POST(request: Request) {
       // landing page. Follow up to two links, feed their text to the extractor,
       // and pull their hero renderings for the vision pass + gallery. Raced at
       // 22s so slow sites can't eat the webhook's 60s budget.
+      const candidateUrls = extractCandidateUrls(text, html);
       const linkCtx = await Promise.race([
-        fetchLinkContext(extractCandidateUrls(text, html)),
+        fetchLinkContext(candidateUrls),
         new Promise<{ pages: never[]; images: never[] }>((r) =>
           setTimeout(() => r({ pages: [], images: [] }), 22_000),
         ),
@@ -102,7 +103,12 @@ export async function POST(request: Request) {
         images: mergedImages,
       });
       const result = ex
-        ? await ingestExtractedProject(ex, { from, subject, images: mergedImages })
+        ? await ingestExtractedProject(ex, {
+            from,
+            subject,
+            images: mergedImages,
+            pageUrls: candidateUrls,
+          })
         : {
             action: "error" as const,
             project_id: null,

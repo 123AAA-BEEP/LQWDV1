@@ -163,7 +163,16 @@ async function attachCommission(
  */
 export async function ingestExtractedProject(
   ex: ExtractedProject,
-  ctx: { from: string | null; subject: string | null; images: InboundImage[] },
+  ctx: {
+    from: string | null;
+    subject: string | null;
+    images: InboundImage[];
+    /** Page URLs found in the email body — persisted to the project so the
+     *  hero/gallery backfill mines the FOUNDER'S link, not aggregator
+     *  guesses (the Navera Brampton failure: the provided site URL lived
+     *  only in the microsite context, so the image pipeline never saw it). */
+    pageUrls?: string[];
+  },
   opts: {
     /** What to do with a new project research can't corroborate. Email drops
      *  default to "draft" (a human sent it — worth admin review); scraped
@@ -188,6 +197,12 @@ export async function ingestExtractedProject(
     `email-intake | from=${ctx.from ?? "?"} | subject=${ctx.subject ?? "?"} | ` +
     `contact=${[ex.contact_name, ex.contact_phone, ex.contact_email].filter(Boolean).join(" / ") || "?"} | ` +
     `brokerage=${ex.brokerage_name ?? "?"}`;
+  // The founder-supplied project/sales page — the image backfill's first
+  // stop (knownPageUrls reads projects.website_url).
+  const websiteUrl =
+    (ctx.pageUrls ?? []).find(
+      (u) => !/liqwd\.ca|getliqwd\.com/i.test(u),
+    ) ?? null;
 
   try {
     // ---- UPDATE an existing project (non-destructive) ----------------------
@@ -211,7 +226,7 @@ export async function ingestExtractedProject(
       const { data: cur } = await admin
         .from("projects")
         .select(
-          "id, slug, builder_name, address_full, project_type, price_from_public, price_to_public, bedrooms_summary, occupancy_estimate_text, hero_image_url, external_source, import_notes, record_status",
+          "id, slug, builder_name, address_full, project_type, price_from_public, price_to_public, bedrooms_summary, occupancy_estimate_text, hero_image_url, external_source, import_notes, record_status, website_url",
         )
         .eq("id", match.id)
         .maybeSingle();
@@ -231,6 +246,7 @@ export async function ingestExtractedProject(
       fillNum("price_to_public", ex.price_to);
       fillStr("bedrooms_summary", fills.bedrooms_summary);
       fillStr("occupancy_estimate_text", fills.occupancy_estimate_text);
+      fillStr("website_url", websiteUrl);
       if (!cur.external_source) patch.external_source = "email_intake";
       patch.import_notes = `${cur.import_notes ? cur.import_notes + "\n" : ""}${provenance}`;
 
@@ -359,6 +375,7 @@ export async function ingestExtractedProject(
         bedrooms_summary: merged.bedrooms_summary,
         occupancy_estimate_text: merged.occupancy_estimate_text,
         record_status: "draft",
+        website_url: websiteUrl,
         external_source: "email_intake",
         external_source_url: ex.contact_email ? `mailto:${ex.contact_email}` : null,
         import_notes: provenance + researchNote,
