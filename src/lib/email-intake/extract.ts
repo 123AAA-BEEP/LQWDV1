@@ -148,7 +148,7 @@ export async function extractProjectFromEmail(opts: {
 
   const client = new Anthropic();
   const message = await client.messages.create({
-    model: "claude-opus-4-8",
+    model: "claude-sonnet-5",
     max_tokens: 1500,
     system: SYSTEM,
     tools: [TOOL],

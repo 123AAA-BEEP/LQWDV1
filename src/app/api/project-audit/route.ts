@@ -23,7 +23,10 @@ export const maxDuration = 300;
  * Auth: ?key=INBOUND_EMAIL_SECRET or Bearer CRON_SECRET.
  */
 
-const MODEL = "claude-opus-4-8";
+// Sonnet for the web-search fact audit (judgment, can unpublish listings);
+// Haiku for the yes/no gallery-image vet — classification needs no Opus.
+const MODEL = "claude-sonnet-5";
+const VISION_MODEL = "claude-haiku-4-5-20251001";
 // Every project still gets its FIRST audit (the sanity check) on publish
 // rotation; re-visits are semi-annual — the catalog is surface content that
 // moves slowly, and realtor-submitted updates carry the freshness instead.
@@ -260,7 +263,7 @@ async function vetGalleryImage(
   try {
     res = await anthropic.messages.create(
       {
-        model: MODEL,
+        model: VISION_MODEL,
         max_tokens: 200,
         system:
           "You audit a gallery image on a new-home listing. Junk (cars, headshots, textures, unrelated subjects) destroys buyer trust — be strict.",

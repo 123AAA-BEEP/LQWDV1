@@ -120,7 +120,7 @@ export async function editArticle(
     for (let round = 0; round < 4; round++) {
       const res = await client.messages.create(
         {
-          model: "claude-opus-4-8",
+          model: "claude-sonnet-5",
           max_tokens: 6000,
           cache_control: { type: "ephemeral" },
           system: SYSTEM,

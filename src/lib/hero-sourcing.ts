@@ -26,7 +26,7 @@ import { attachGalleryAndHero } from "@/lib/email-intake/media";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 const SOURCE_FN = `${SUPABASE_URL}/functions/v1/liqwd-source-hero`;
-const VISION_MODEL = "claude-opus-4-8";
+const VISION_MODEL = "claude-haiku-4-5-20251001";
 
 const PUBLISHABLE_KINDS = new Set([
   "exterior_rendering",

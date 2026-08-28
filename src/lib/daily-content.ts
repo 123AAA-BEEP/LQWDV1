@@ -319,7 +319,7 @@ async function generateMarketNote(admin: Admin): Promise<string | null> {
     for (let round = 0; round < 4; round++) {
       const res = await client.messages.create(
         {
-          model: "claude-opus-4-8",
+          model: "claude-sonnet-5",
           max_tokens: 4000,
           // Later rounds resend the search-heavy conversation — cache it.
           cache_control: { type: "ephemeral" },
