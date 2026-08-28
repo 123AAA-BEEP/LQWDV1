@@ -18,7 +18,7 @@ export const maxDuration = 300;
  * Auth: ?key=INBOUND_EMAIL_SECRET or Bearer CRON_SECRET.
  */
 
-const VISION_MODEL = "claude-opus-4-8";
+const VISION_MODEL = "claude-haiku-4-5-20251001";
 const AUDIT_MARKER = "[hero-audit";
 
 /** Hero-acceptable kinds mirror the sourcing ladder. */

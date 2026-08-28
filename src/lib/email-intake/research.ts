@@ -142,7 +142,7 @@ export async function researchProject(
 
       const res = await anthropic.messages.create(
         {
-          model: "claude-opus-4-8",
+          model: "claude-sonnet-5",
           max_tokens: 2000,
           // Rounds 2-3 resend the whole conversation (web-search results
           // included) — auto-cache the prefix so later rounds read it at

@@ -179,7 +179,7 @@ export async function generateCityHub(
 
   try {
     const message = await client().messages.create({
-      model: "claude-opus-4-8",
+      model: "claude-sonnet-5",
       max_tokens: 3500,
       system: CITY_SYSTEM,
       tools: [HUB_TOOL],
@@ -221,7 +221,7 @@ export async function generateBuilderHub(
 
   try {
     const message = await client().messages.create({
-      model: "claude-opus-4-8",
+      model: "claude-sonnet-5",
       max_tokens: 3000,
       system: BUILDER_SYSTEM,
       tools: [HUB_TOOL],

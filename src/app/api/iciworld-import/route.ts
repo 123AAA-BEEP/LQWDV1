@@ -101,7 +101,7 @@ async function llmExtract(pageText: string, title: string): Promise<LlmContact |
   try {
     const anthropic = new Anthropic();
     const res = await anthropic.messages.create({
-      model: "claude-opus-4-8",
+      model: "claude-haiku-4-5-20251001",
       max_tokens: 300,
       tool_choice: { type: "tool", name: "emit_contact" },
       tools: [

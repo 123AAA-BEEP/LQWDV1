@@ -416,7 +416,7 @@ export async function generateBrokeragePiece(
     for (let round = 0; round < 4; round++) {
       const res = await anthropic.messages.create(
         {
-          model: "claude-opus-4-8",
+          model: "claude-sonnet-5",
           max_tokens: 4000,
           cache_control: { type: "ephemeral" },
           system: SYSTEM,

@@ -43,9 +43,12 @@ Commission/commercials: `project_private_commercials` (broker-read, admin-write)
   (`public_realtor_cards`).
 
 ## AI SEO
-- `src/lib/seo.ts`: `generateSeoFields` (Claude **Opus 4.8**, forced tool use `emit_seo`, public-safe
+- `src/lib/seo.ts`: `generateSeoFields` (Claude **Sonnet 5**, forced tool use `emit_seo`, public-safe
   fields only) and `maybeGenerateSeoOnPublish` (fills only EMPTY seo fields, never overwrites, never
   throws/blocks publish).
+- Model policy (founder, 2026-08-28): **Opus 5 is for microsite copy only** (`MICROSITE_MODEL`).
+  All other writing/research/extraction runs Sonnet 5; pure image classification and lookup
+  calls (hero/gallery vetting, builder-website enrich, ICIWorld contacts) run Haiku 4.5.
 - Auto-runs on publish (`publishProject` + `bulkPublish`, capped 8/run); also a manual "Generate with AI"
   button on the admin project editor.
 - Prompt instructions are admin-editable + persisted in `seo_prompt_settings` (migration 0005, single row,

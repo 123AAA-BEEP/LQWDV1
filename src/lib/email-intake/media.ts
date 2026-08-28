@@ -12,7 +12,7 @@ type Admin = ReturnType<typeof createAdminClient>;
  * rendering beats the wordmark og:image every time.
  */
 
-const VISION_MODEL = "claude-opus-4-8";
+const VISION_MODEL = "claude-haiku-4-5-20251001";
 const MAX_GALLERY = 6;
 /** Default classification wall-clock — the webhook budget is shared. Backfill
  *  callers (no webhook cap) pass a longer deadline via opts. */

@@ -43,7 +43,7 @@ export async function extractRecoCertificate(
   try {
     const client = new Anthropic();
     const message = await client.messages.create({
-      model: "claude-opus-4-8",
+      model: "claude-sonnet-5",
       max_tokens: 512,
       system: SYSTEM,
       tools: [

@@ -211,7 +211,7 @@ export async function generateArticleDraft(
   try {
     const client = new Anthropic();
     const message = await client.messages.create({
-      model: "claude-opus-4-8",
+      model: "claude-sonnet-5",
       max_tokens: 4000,
       system,
       tools: [EMIT_ARTICLE],
