@@ -10,9 +10,9 @@ import { finishAndPublish } from "@/lib/editor-in-chief";
 import { sendEmail, brandedEmail } from "@/lib/email";
 
 /**
- * The daily content pipeline (cron: /api/cron/daily-content). Every morning
- * it drafts up to two pieces INTO THE REVIEW QUEUE — never straight to
- * publish:
+ * The content pipeline (cron: /api/cron/daily-content). The cron fires
+ * daily but generates ONE piece every TWO days (cadence gate in
+ * runDailyContent — founder cost call 2026-08-28), rotating between:
  *
  *   1. Project of the day — a spotlight on a published project no article
  *      has covered yet (grounded in public listing facts, via lib/articles).
@@ -394,15 +394,18 @@ export async function runDailyContent(admin: Admin): Promise<DailyContentResult>
 
   // Editor-in-chief finishing move: hero + edit + publish-or-hold. Skipped
   // (piece stays safely in the review queue) when the run is out of time —
-  // the gate fails closed, never open.
-  const finish = async (id: string | null) => {
+  // the gate fails closed, never open. Database-grounded pieces (spotlight,
+  // comparison — every fact from our own listings) skip the editor MODEL
+  // call entirely and publish directly (cost policy, founder 2026-08-28);
+  // web-search pieces always keep the gate.
+  const finish = async (id: string | null, skipEditor = false) => {
     if (!id) return;
     if (Date.now() - startedAt > RUN_BUDGET_MS) {
       result.heldForReview += 1;
       result.skipped.push("editor pass skipped (out of time) — piece held for review");
       return;
     }
-    const status = await finishAndPublish(admin, id);
+    const status = await finishAndPublish(admin, id, { skipEditor });
     if (status === "published") result.published += 1;
     else result.heldForReview += 1;
   };
@@ -416,11 +419,35 @@ export async function runDailyContent(admin: Admin): Promise<DailyContentResult>
     return result;
   }
 
-  // 1. Project of the day.
-  const projectId = await pickSpotlightProject(admin);
-  if (!projectId) {
-    result.skipped.push("spotlight: every eligible project already covered");
-  } else {
+  // Cadence (founder 2026-08-28): ONE post every TWO days. The cron still
+  // fires daily, but generation is gated on the age of the last AI draft —
+  // 45h rather than 48h so the daily 10:47 firing lands cleanly on every
+  // second day instead of slipping a day each cycle.
+  const { data: lastGen } = await admin
+    .from("articles")
+    .select("created_at")
+    .eq("generated_by_ai", true)
+    .order("created_at", { ascending: false })
+    .limit(1);
+  const lastGenAt = (lastGen as { created_at: string }[] | null)?.[0]?.created_at;
+  if (lastGenAt && Date.now() - new Date(lastGenAt).getTime() < 45 * 3_600_000) {
+    result.skipped.push(
+      "cadence: last AI post under 2 days old (1 post every 2 days)",
+    );
+    result.queued = queued;
+    return result;
+  }
+
+  // ONE piece per generation day. Priority: the monthly market note when
+  // due; otherwise alternate between the spotlight and the second-slot
+  // rotation (comparison / positioned backlog) by UTC date parity so the
+  // mix survives the lower cadence.
+  const trySpotlight = async () => {
+    const projectId = await pickSpotlightProject(admin);
+    if (!projectId) {
+      result.skipped.push("spotlight: every eligible project already covered");
+      return false;
+    }
     const draft = await generateArticleDraft(
       "project_spotlight",
       [projectId],
@@ -436,63 +463,50 @@ export async function runDailyContent(admin: Admin): Promise<DailyContentResult>
       });
       if (result.spotlight) queued += 1;
     }
-    if (!result.spotlight) result.skipped.push("spotlight: generation failed");
-    await finish(result.spotlight);
-  }
+    if (!result.spotlight) {
+      result.skipped.push("spotlight: generation failed");
+      return false;
+    }
+    await finish(result.spotlight, true); // database-grounded — no editor call
+    return true;
+  };
+  const tryComparison = async () => {
+    result.comparison = await generateComparisonPiece(admin);
+    if (!result.comparison) return false;
+    queued += 1;
+    await finish(result.comparison, true); // database-grounded — no editor call
+    return true;
+  };
+  const tryBacklog = async () => {
+    const [next] = await nextUncoveredPieces(admin, 1);
+    if (!next) return false;
+    const id = await generateBrokeragePiece(admin, next.kind, next.names);
+    if (id) {
+      result.brokeragePiece = id;
+      queued += 1;
+      await finish(id); // web-search-grounded — editor gate stays
+      return true;
+    }
+    result.skipped.push(
+      `backlog piece (${next.names.join(" vs ")}): generation failed or nothing corroborated`,
+    );
+    return false;
+  };
 
-  // 2. Market note — MONTHLY, timed to land after TRREB's Market Watch
-  // release (founder call 2026-08-11: daily market notes were overkill; one
-  // per month, citing fresh stats, beats thirty thin ones).
-  if (queued >= QUEUE_CAP) {
-    result.skipped.push("market note: queue at cap");
-  } else if (await marketNoteDue(admin)) {
+  if (await marketNoteDue(admin)) {
     result.marketNote = await generateMarketNote(admin);
-    if (result.marketNote) queued += 1;
-    else result.skipped.push("market note: generation failed");
-    await finish(result.marketNote);
+    if (result.marketNote) {
+      queued += 1;
+      await finish(result.marketNote); // web-search-grounded — editor gate stays
+    } else {
+      result.skipped.push("market note: generation failed");
+    }
   } else {
-    result.skipped.push("market note: not due (monthly cadence)");
-  }
-
-  // 3. Second post of the day — the cadence is TWO posts/day: the spotlight
-  // above plus one of these, weighted toward project comparisons. Even UTC
-  // days try a comparison first and fall back to the positioned backlog
-  // (brokerage/platform/toolkit/consumer); odd days the reverse. When the
-  // backlog is exhausted this slot becomes comparisons every day.
-  if (queued >= QUEUE_CAP) {
-    result.skipped.push("second post: queue at cap");
-  } else if (Date.now() - startedAt > 150_000) {
-    result.skipped.push("second post: out of time — tomorrow");
-  } else {
-    const preferComparison = new Date().getUTCDate() % 2 === 0;
-    const tryComparison = async () => {
-      result.comparison = await generateComparisonPiece(admin);
-      if (result.comparison) {
-        queued += 1;
-        await finish(result.comparison);
-        return true;
-      }
-      return false;
-    };
-    const tryBacklog = async () => {
-      const [next] = await nextUncoveredPieces(admin, 1);
-      if (!next) return false;
-      const id = await generateBrokeragePiece(admin, next.kind, next.names);
-      if (id) {
-        result.brokeragePiece = id;
-        queued += 1;
-        await finish(id);
-        return true;
-      }
-      result.skipped.push(
-        `backlog piece (${next.names.join(" vs ")}): generation failed or nothing corroborated`,
-      );
-      return false;
-    };
-    const done = preferComparison
-      ? (await tryComparison()) || (await tryBacklog())
-      : (await tryBacklog()) || (await tryComparison());
-    if (!done) result.skipped.push("second post: nothing available to generate");
+    const preferSpotlight = new Date().getUTCDate() % 2 === 0;
+    const done = preferSpotlight
+      ? (await trySpotlight()) || (await tryComparison()) || (await tryBacklog())
+      : (await tryComparison()) || (await tryBacklog()) || (await trySpotlight());
+    if (!done) result.skipped.push("nothing available to generate today");
   }
 
   result.queued = queued;

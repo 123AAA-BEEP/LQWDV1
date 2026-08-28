@@ -1,5 +1,6 @@
 import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
+import { downscaleBase64ForVision } from "@/lib/vision-image";
 
 /**
  * Email → structured project, via Claude Opus 4.8 with forced tool use
@@ -125,6 +126,22 @@ export async function extractProjectFromEmail(opts: {
     opts.text?.trim() ||
     (opts.html ? opts.html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim() : "");
 
+  // Images are READ for details here (prices, names on brochures), so
+  // downscale only to 1568px — the API's own processing cap — which trims
+  // payload and tokens without discarding anything the model would see.
+  const imageBlocks = await Promise.all(
+    opts.images.slice(0, 8).map(async (img) => {
+      const small = await downscaleBase64ForVision(img.data, 1568);
+      return {
+        type: "image",
+        source: {
+          type: "base64",
+          media_type: small?.mediaType ?? img.media_type,
+          data: small?.base64 ?? img.data,
+        },
+      } as const;
+    }),
+  );
   const content: Anthropic.MessageParam["content"] = [
     {
       type: "text",
@@ -133,17 +150,7 @@ export async function extractProjectFromEmail(opts: {
         `Email body text:\n${body || "(no text — see image(s))"}\n\n` +
         `Extract the project. Read any images below for the details.`,
     },
-    ...opts.images.slice(0, 8).map(
-      (img) =>
-        ({
-          type: "image",
-          source: {
-            type: "base64",
-            media_type: img.media_type,
-            data: img.data,
-          },
-        }) as const,
-    ),
+    ...imageBlocks,
   ];
 
   const client = new Anthropic();

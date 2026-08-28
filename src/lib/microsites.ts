@@ -2,6 +2,7 @@ import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { fetchLinkContext } from "@/lib/email-intake/fetch-links";
+import { downscaleForVision } from "@/lib/vision-image";
 import type { PublicProject } from "@/lib/types";
 
 /**
@@ -626,11 +627,20 @@ function factBlock(p: PublicProject): string {
     .join("\n");
 }
 
+/**
+ * cachedPrefix: the shared per-generation context (fact block + positioning
+ * + source material). Calls that pass it mark it as a cache breakpoint, so
+ * within a tool family (identical tools + system + tool_choice) the first
+ * call writes the prefix and every sibling reads it at ~0.1x input price.
+ * Callers must warm the cache (await ONE family call before fanning out the
+ * rest) — concurrent first calls all miss and all pay the write premium.
+ */
 async function callTool(
   client: Anthropic,
   tool: Anthropic.Messages.Tool,
   user: string,
   maxTokens: number,
+  cachedPrefix?: string,
 ): Promise<Record<string, unknown> | null> {
   try {
     const message = await client.messages.create({
@@ -639,7 +649,21 @@ async function callTool(
       system: VOICE,
       tools: [tool],
       tool_choice: { type: "tool", name: tool.name },
-      messages: [{ role: "user", content: user }],
+      messages: [
+        {
+          role: "user",
+          content: cachedPrefix
+            ? [
+                {
+                  type: "text",
+                  text: cachedPrefix,
+                  cache_control: { type: "ephemeral" },
+                },
+                { type: "text", text: user },
+              ]
+            : user,
+        },
+      ],
     });
     const block = message.content.find((b) => b.type === "tool_use");
     return block && block.type === "tool_use"
@@ -789,12 +813,15 @@ async function fetchVisionImage(url: string): Promise<VisionImage | null> {
     if (!VISION_TYPES.includes(mt)) return null;
     const buf = Buffer.from(await res.arrayBuffer());
     if (buf.byteLength === 0 || buf.byteLength > 8 * 1024 * 1024) return null;
+    // Palette + typography read fine at ~1100px; vision input is billed on
+    // pixel area, so never ship a multi-MB original.
+    const small = await downscaleForVision(buf);
     return {
       type: "image",
       source: {
         type: "base64",
-        media_type: mt as VisionImage["source"]["media_type"],
-        data: buf.toString("base64"),
+        media_type: (small?.mediaType ?? mt) as VisionImage["source"]["media_type"],
+        data: (small?.buf ?? buf).toString("base64"),
       },
     };
   } catch {
@@ -954,7 +981,47 @@ export async function generateMicrositeContent(
       ? `SOURCE MATERIAL (builder/sales pages the founder supplied; weave into our voice, never copy verbatim, never adopt their hype):\n${sourceMaterial}\n\n`
       : "");
 
-  const [brand, copy] = await Promise.all([
+  // Cost structure (2026-08-28): the ~17-call fan-out shares `base` (often
+  // several thousand tokens of context + source material) across every
+  // call. Within each tool family the first call WARMS a prompt cache on
+  // that prefix, then the siblings fan out and read it at ~0.1x — the intro
+  // warms the 10-12 section calls, the first sub-page warms the other 3.
+  // Hero and FAQ have unique tools (no siblings), so they stay uncached.
+  const runSections = async () => {
+    const intro = await callTool(
+      client,
+      T_SECTION,
+      `${INTRO_BRIEF}\nUse title "Intro" (it is not shown).`,
+      800,
+      base,
+    );
+    const rest = await Promise.all(
+      defs.map((d) =>
+        callTool(client, T_SECTION, `SECTION BRIEF:\n${d.brief}`, 1200, base),
+      ),
+    );
+    return { intro, sections: rest };
+  };
+  const SUBPAGE_PREAMBLE =
+    "This is a SUB-PAGE of the project's landing site (the home page covers the overview). PAGE BRIEF:\n";
+  const runPages = async () => {
+    const [p0, ...pRest] = MICROSITE_SUBPAGES;
+    const first = await callTool(
+      client,
+      T_PAGE,
+      `${SUBPAGE_PREAMBLE}${p0.brief}`,
+      2000,
+      base,
+    );
+    const rest = await Promise.all(
+      pRest.map((p) =>
+        callTool(client, T_PAGE, `${SUBPAGE_PREAMBLE}${p.brief}`, 2000, base),
+      ),
+    );
+    return [first, ...rest];
+  };
+
+  const [brand, hero, faq, sectionRun, subpageRaw] = await Promise.all([
     // Skip the hero read entirely when a founder brand override is pinned —
     // the renderer would ignore the result anyway.
     config.brand_override
@@ -963,31 +1030,12 @@ export async function generateMicrositeContent(
           client,
           [project.hero_image_url].filter((u): u is string => Boolean(u)),
         ),
-    Promise.all([
-      callTool(client, T_HERO, `${base}${HERO_BRIEF}`, 400),
-      callTool(client, T_SECTION, `${base}${INTRO_BRIEF}\nUse title "Intro" (it is not shown).`, 800),
-      callTool(client, T_FAQ, `${base}${FAQ_BRIEF}`, 1800),
-      ...defs.map((d) =>
-        callTool(
-          client,
-          T_SECTION,
-          `${base}SECTION BRIEF:\n${d.brief}`,
-          1200,
-        ),
-      ),
-      ...MICROSITE_SUBPAGES.map((p) =>
-        callTool(
-          client,
-          T_PAGE,
-          `${base}This is a SUB-PAGE of the project's landing site (the home page covers the overview). PAGE BRIEF:\n${p.brief}`,
-          2000,
-        ),
-      ),
-    ]),
+    callTool(client, T_HERO, `${base}${HERO_BRIEF}`, 400),
+    callTool(client, T_FAQ, `${base}${FAQ_BRIEF}`, 1800),
+    runSections(),
+    runPages(),
   ]);
-  const [hero, intro, faq, ...rest] = copy;
-  const sections = rest.slice(0, defs.length);
-  const subpageRaw = rest.slice(defs.length);
+  const { intro, sections } = sectionRun;
 
   if (!hero || typeof hero.headline !== "string" || !intro) return null;
 

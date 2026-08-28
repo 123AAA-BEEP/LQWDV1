@@ -2,6 +2,7 @@ import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
 import type { createAdminClient } from "@/lib/supabase/admin";
 import type { InboundImage } from "./extract";
+import { downscaleBase64ForVision } from "@/lib/vision-image";
 
 type Admin = ReturnType<typeof createAdminClient>;
 
@@ -126,6 +127,11 @@ async function classifyBase64(
   context?: { projectName?: string; city?: string | null },
 ): Promise<{ kind: string; promo: boolean }> {
   try {
+    // Downscale for the API call ONLY — `img` itself is what gets uploaded
+    // to storage later and must stay the original.
+    const small = await downscaleBase64ForVision(img.data);
+    const sendData = small?.base64 ?? img.data;
+    const sendMedia = small?.mediaType ?? img.media_type;
     const anthropic = new Anthropic();
     const res = await anthropic.messages.create(
       {
@@ -175,8 +181,8 @@ async function classifyBase64(
                 type: "image",
                 source: {
                   type: "base64",
-                  media_type: img.media_type,
-                  data: img.data,
+                  media_type: sendMedia,
+                  data: sendData,
                 },
               },
               {

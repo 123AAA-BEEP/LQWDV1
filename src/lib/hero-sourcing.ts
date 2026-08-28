@@ -7,6 +7,7 @@ import { primaryBuilderName } from "@/lib/types";
 import { builderNorm } from "@/lib/discovery/normalize";
 import { fetchLinkContext } from "@/lib/email-intake/fetch-links";
 import { attachGalleryAndHero } from "@/lib/email-intake/media";
+import { downscaleForVision } from "@/lib/vision-image";
 
 /**
  * Hands-off, high-quality hero sourcing.
@@ -97,11 +98,18 @@ async function classifyImage(
   if (!resp.ok) return { kind: "other", publishable: false, reason: `fetch ${resp.status}` };
   const ct = (resp.headers.get("content-type") || "image/jpeg").split(";")[0].trim();
   if (!ct.startsWith("image/")) return { kind: "other", publishable: false, reason: `not image (${ct})` };
-  const buf = Buffer.from(await resp.arrayBuffer());
+  let buf: Buffer = Buffer.from(await resp.arrayBuffer());
   if (buf.length < 2048) return { kind: "other", publishable: false, reason: "image too small" };
-  const media = ["image/jpeg", "image/png", "image/webp", "image/gif"].includes(ct)
+  let media = ["image/jpeg", "image/png", "image/webp", "image/gif"].includes(ct)
     ? ct
     : "image/jpeg";
+  // Classification needs ~1100px, not the multi-MB original — resized area
+  // is what vision input tokens are billed on.
+  const small = await downscaleForVision(buf);
+  if (small) {
+    buf = small.buf;
+    media = small.mediaType;
+  }
 
   const anthropic = new Anthropic();
   const message = await anthropic.messages.create({
