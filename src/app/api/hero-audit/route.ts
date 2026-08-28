@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { imageDims } from "@/lib/email-intake/media";
+import { downscaleForVision } from "@/lib/vision-image";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -71,9 +72,15 @@ async function vetHero(
       reason: `only ${dims.w}x${dims.h}px`,
     };
   }
-  const media = ["image/jpeg", "image/png", "image/webp", "image/gif"].includes(ct)
+  let media = ["image/jpeg", "image/png", "image/webp", "image/gif"].includes(ct)
     ? ct
     : "image/jpeg";
+  let sendBuf: Buffer = buf;
+  const small = await downscaleForVision(buf);
+  if (small) {
+    sendBuf = small.buf;
+    media = small.mediaType;
+  }
 
   const anthropic = new Anthropic();
   const res = await anthropic.messages.create(
@@ -128,7 +135,7 @@ async function vetHero(
               source: {
                 type: "base64",
                 media_type: media as "image/jpeg",
-                data: buf.toString("base64"),
+                data: sendBuf.toString("base64"),
               },
             },
             {

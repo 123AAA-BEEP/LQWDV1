@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { downscaleForVision } from "@/lib/vision-image";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -254,9 +255,14 @@ async function vetGalleryImage(
   if (!resp.ok) return { kind: "unreachable", junk: true, reason: `fetch ${resp.status}` };
   const ct = (resp.headers.get("content-type") || "image/jpeg").split(";")[0].trim();
   if (!ct.startsWith("image/")) return { kind: "not_image", junk: true, reason: `content-type ${ct}` };
-  const buf = Buffer.from(await resp.arrayBuffer());
+  let buf: Buffer = Buffer.from(await resp.arrayBuffer());
   if (buf.length < 2048) return { kind: "too_small", junk: true, reason: "under 2KB" };
-  const media = ["image/jpeg", "image/png", "image/webp", "image/gif"].includes(ct) ? ct : "image/jpeg";
+  let media = ["image/jpeg", "image/png", "image/webp", "image/gif"].includes(ct) ? ct : "image/jpeg";
+  const small = await downscaleForVision(buf);
+  if (small) {
+    buf = small.buf;
+    media = small.mediaType;
+  }
 
   const anthropic = new Anthropic();
   let res: Anthropic.Messages.Message;

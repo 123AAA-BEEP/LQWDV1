@@ -219,10 +219,16 @@ export async function pickHeroImage(
  * editor, then publish (verdict=publish) or hold in the review queue with
  * the editor's notes (anything else — the gate fails closed). Returns the
  * final status.
+ *
+ * skipEditor (cost policy, founder 2026-08-28): database-grounded pieces
+ * (spotlights, comparisons — every fact comes from our own listings, no web
+ * claims to spot-check) publish directly without the editor model call.
+ * Web-search-grounded pieces (market notes, brokerage) ALWAYS keep the gate.
  */
 export async function finishAndPublish(
   admin: SupabaseClient,
   articleId: string,
+  opts?: { skipEditor?: boolean },
 ): Promise<"published" | "in_review"> {
   const { data } = await admin
     .from("articles")
@@ -235,6 +241,25 @@ export async function finishAndPublish(
   if (!article) return "in_review";
 
   const hero = await pickHeroImage(admin, article);
+
+  if (opts?.skipEditor && !article.article_type.startsWith("brokerage_")) {
+    await admin
+      .from("articles")
+      .update({
+        editor_notes:
+          "Editor pass skipped — database-grounded piece (cost policy 2026-08-28).",
+        ...(hero ? { hero_image_url: hero } : {}),
+        status: "published",
+        published_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", articleId);
+    if (article.slug) {
+      void pingIndexNow([`/insights/${article.slug}`, "/insights"]);
+    }
+    return "published";
+  }
+
   const result = await editArticle(article);
 
   if (!result) {
