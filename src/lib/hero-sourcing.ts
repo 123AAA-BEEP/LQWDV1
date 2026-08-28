@@ -271,7 +271,9 @@ async function knownPageUrls(
   const out: string[] = [];
   for (const raw of urls) {
     try {
-      const u = new URL(raw);
+      // Broker-portal rows are often stored scheme-less ("portal.com") —
+      // without the prefix, new URL() throws and the page silently drops.
+      const u = new URL(/^https?:\/\//i.test(raw) ? raw : `https://${raw}`);
       if (/liqwd\.ca|getliqwd\.com/i.test(u.hostname)) continue;
       if (seen.has(u.hostname)) continue;
       seen.add(u.hostname);
