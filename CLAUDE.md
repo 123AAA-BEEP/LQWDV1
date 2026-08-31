@@ -72,6 +72,15 @@ Overview shows live pending counts per queue.
   `PublicFooter` (no broker-portal CTAs; "For agents →" cross-link). Shows only published projects.
 - `/dashboard/*` → authenticated app (gated). No subdomains — separation is by path + layout.
 
+## Playbook System (agentic marketing/ops suite — in progress)
+- `playbook-system/` holds the founder's authoritative specs: 82 dissected Search Atlas/OTTO
+  playbooks → 53 LIQWD-native tools (README + `docs/BUILD-ORDER.md` + 9 blueprints). Read its
+  README before touching anything there; architecture invariants (Vault grounding, approval
+  queue, four-phase spine, caps, ledgers, compliance deviations) are FINAL — do not relitigate.
+- Proposed schema goes to `playbook-system/migrations-spec/` for founder review BEFORE any
+  migration is written. Compliance rules live in `playbook-system/compliance/rulebook-v1.md`
+  (versioned, rule IDs stable). Prompts land in `playbook-system/prompts/<suite>/`.
+
 ## Conventions / gotchas
 - Develop on `claude/peaceful-carson-jwbehu`; ship via PR → merge to `main` (Vercel auto-deploys).
 - Run `npx tsc --noEmit` and `npm run lint` before committing.
