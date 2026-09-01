@@ -23,7 +23,7 @@ import { requestConnect, withdrawConnect } from "./connect-actions";
 type ConnectStatus = "requested" | "accepted" | "declined" | "withdrawn";
 type Contact = { email: string | null; phone: string | null };
 
-export const metadata: Metadata = { title: "Buyer mandates" };
+export const metadata: Metadata = { title: "Buyer wants" };
 export const dynamic = "force-dynamic";
 
 const STATUS_TONE = {
@@ -390,7 +390,7 @@ function Header({ isPro, canCreate }: { isPro: boolean; canCreate: boolean }) {
     <div className="flex flex-wrap items-start justify-between gap-3">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight text-ink">
-          Buyer mandates
+          Buyer wants
         </h1>
         <p className="mt-1 text-slate-500">
           Submit a hard-to-match buyer and let matching inventory surface to you.

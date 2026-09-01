@@ -26,9 +26,7 @@ import {
   Inbox,
   Rocket,
   Link2,
-  Magnet,
   EyeOff,
-  BookOpen,
   Menu,
   X,
   Globe,
@@ -63,77 +61,76 @@ type NavSection = {
 
 const HOME: NavItem = {
   href: "/dashboard",
-  label: "Dashboard",
+  label: "Home",
   icon: LayoutDashboard,
   exact: true,
 };
 
-// ---- Realtor: grouped by intent (start / earn / explore / manage) ----------
+// ---- Realtor: six nouns, named for jobs (agent-panel UX reorg, Phase 1) ----
+// Home / Projects / Leads & clients / Marketing / Deal room / Account.
+// Onboarding (Get started, Get free leads, Learn) lives on Home — the
+// banner, trail, and callout already link there — so it no longer eats
+// permanent rail slots. Routes are unchanged; labels and page titles now
+// agree (no more "Developer Deals" → /deal-desk → "Deal Desk" drift).
 const REALTOR_SECTIONS: NavSection[] = [
   {
-    // One home for onboarding — previously split across Earn and Account.
-    accent: "brand",
-    label: "Start here",
-    description: "Set up & learn the ropes",
-    icon: Rocket,
-    items: [
-      { href: "/dashboard/start", label: "Get started", icon: Rocket },
-      { href: "/dashboard/get-free-leads", label: "Get free leads", icon: Magnet },
-      { href: "/dashboard/learn", label: "Playbook", icon: BookOpen },
-    ],
-  },
-  {
-    accent: "emerald",
-    label: "Earn",
-    description: "Commissions, referrals & rewards",
-    icon: Coins,
-    items: [
-      {
-        href: "/dashboard/off-market",
-        label: "Off-Market",
-        icon: EyeOff,
-      },
-      { href: "/dashboard/assignments", label: "Assignment Desk", icon: Repeat2 },
-      { href: "/dashboard/quick-wins", label: "Quick Wins", icon: Coins },
-      { href: "/dashboard/deal-desk", label: "Developer Deals", icon: Handshake, ultra: true },
-      { href: "/dashboard/buyer-mandates", label: "Buyer Matching", icon: ClipboardList },
-      { href: "/dashboard/proposals", label: "Negotiate Terms", icon: FileText },
-      { href: "/dashboard/my-page", label: "My Public Page", icon: Globe },
-      { href: "/dashboard/shortlists", label: "Shortlists", icon: FolderHeart },
-      { href: "/dashboard/refer", label: "Refer & earn", icon: Gift },
-    ],
-  },
-  {
     accent: "sky",
-    label: "New Homes",
-    description: "Browse projects & broker portals",
-    icon: Compass,
+    label: "Projects",
+    description: "Browse, portals & contribute",
+    icon: Building2,
     items: [
-      { href: "/dashboard/projects", label: "Projects", icon: Building2 },
-      { href: "/dashboard/broker-portals", label: "Broker Portals", icon: DoorOpen },
-      { href: "/dashboard/lead-pages", label: "Lead Pages", icon: Link2 },
-      { href: "/dashboard/leads", label: "Leads", icon: Inbox },
+      { href: "/dashboard/projects", label: "Browse projects", icon: Building2 },
+      { href: "/dashboard/broker-portals", label: "Broker portals", icon: DoorOpen },
+      { href: "/dashboard/submit", label: "Submit a project", icon: PlusCircle, realtorOnly: true },
+      { href: "/dashboard/updates", label: "My update requests", icon: Bell, realtorOnly: true },
     ],
   },
   {
     accent: "emerald",
-    label: "Clients",
-    description: "Your database & outreach",
-    icon: Users,
+    label: "Leads & clients",
+    description: "Inbox → contacts → outreach",
+    icon: Inbox,
     items: [
-      { href: "/dashboard/crm", label: "Clients", icon: Users },
-      { href: "/dashboard/newsletter", label: "Newsletter", icon: Send },
+      { href: "/dashboard/leads", label: "Leads", icon: Inbox },
+      { href: "/dashboard/crm", label: "Clients", icon: Users, realtorOnly: true },
+      { href: "/dashboard/newsletter", label: "Newsletter", icon: Send, realtorOnly: true },
+    ],
+  },
+  {
+    accent: "amber",
+    label: "Marketing",
+    description: "Your public presence & links",
+    icon: Megaphone,
+    items: [
+      { href: "/dashboard/my-page", label: "My public page", icon: Globe, realtorOnly: true },
+      { href: "/dashboard/lead-pages", label: "Project links", icon: Link2 },
+      { href: "/dashboard/shortlists", label: "Client shortlists", icon: FolderHeart, realtorOnly: true },
+    ],
+  },
+  {
+    accent: "brand",
+    label: "Deal room",
+    description: "Trade with agents & developers",
+    icon: Handshake,
+    items: [
+      { href: "/dashboard/assignments", label: "Assignments", icon: Repeat2 },
+      { href: "/dashboard/off-market", label: "Off-market", icon: EyeOff },
+      { href: "/dashboard/buyer-mandates", label: "Buyer wants", icon: ClipboardList },
+      { href: "/dashboard/deal-desk", label: "Developer deals", icon: Handshake, ultra: true },
+      { href: "/dashboard/proposals", label: "My offers", icon: FileText },
+      { href: "/dashboard/quick-wins", label: "Rental referrals", icon: Coins },
     ],
   },
   {
     accent: "slate",
     label: "Account",
-    description: "Profile, submissions & updates",
+    description: "Profile, verification & plan",
     icon: Settings2,
     items: [
-      { href: "/dashboard/submit", label: "Submit project", icon: PlusCircle },
-      { href: "/dashboard/updates", label: "Update Requests", icon: Bell },
-      { href: "/dashboard/profile", label: "Profile", icon: UserCircle },
+      { href: "/dashboard/profile", label: "Profile & brand", icon: UserCircle },
+      { href: "/dashboard/verify", label: "Verification", icon: ShieldCheck, realtorOnly: true },
+      { href: "/dashboard/upgrade", label: "Plan & upgrade", icon: Zap, realtorOnly: true },
+      { href: "/dashboard/refer", label: "Refer & earn", icon: Gift, realtorOnly: true },
     ],
   },
 ];
@@ -161,7 +158,7 @@ const ADMIN_SECTIONS: NavSection[] = [
     items: [
       { href: "/dashboard/projects", label: "Projects", icon: Building2 },
       { href: "/dashboard/broker-portals", label: "Broker Portals", icon: DoorOpen },
-      { href: "/dashboard/lead-pages", label: "Lead Pages", icon: Link2 },
+      { href: "/dashboard/lead-pages", label: "Project links", icon: Link2 },
       { href: "/dashboard/leads", label: "Leads", icon: Inbox },
     ],
   },

@@ -33,7 +33,7 @@ export function NextStepCard({
     : rejected
       ? "Resubmit with your RECO registration number and current brokerage — approvals usually happen the same day."
       : underReview
-        ? "We'll email you the moment you're approved (usually same day). Meanwhile you can read the playbook or add a project you know."
+        ? "We'll email you the moment you're approved (usually same day). Meanwhile you can read the guide or add a project you know."
         : "Takes about 2 minutes. Unlocks project browsing, commission details, and buyer leads routed to you — free, from your current brokerage.";
 
   return (
@@ -62,7 +62,7 @@ export function NextStepCard({
             {underReview ? (
               <>
                 <ButtonLink href="/dashboard/learn" variant="secondary" size="sm">
-                  Open the playbook
+                  Open the guide
                 </ButtonLink>
                 <ButtonLink href="/dashboard/submit" size="sm">
                   Add a project

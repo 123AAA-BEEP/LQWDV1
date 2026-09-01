@@ -15,7 +15,7 @@ import {
   PRECON_EXPLAINER,
 } from "@/lib/training";
 
-export const metadata: Metadata = { title: "Pre-construction playbook" };
+export const metadata: Metadata = { title: "Learn: the pre-construction guide" };
 
 function Section({
   title,
@@ -49,7 +49,7 @@ export default function PlaybookPage() {
         </span>
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-ink">
-            Pre-construction playbook
+            Learn: the pre-construction guide
           </h1>
           <p className="mt-1 text-slate-500">
             A simple, practical guide for resale agents — understand a project,

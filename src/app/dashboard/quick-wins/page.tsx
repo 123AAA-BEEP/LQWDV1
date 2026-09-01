@@ -15,7 +15,7 @@ import { ButtonLink } from "@/components/ui/button";
 import { Notice } from "@/components/ui/notice";
 import { RENTAL_REFERRAL_STATUS, type RentalReferralStatus } from "@/lib/status";
 
-export const metadata: Metadata = { title: "Quick Wins" };
+export const metadata: Metadata = { title: "Rental referrals" };
 export const dynamic = "force-dynamic";
 
 interface Terms {
@@ -162,7 +162,7 @@ export default async function QuickWins({
             <Coins className="size-3" strokeWidth={2} aria-hidden /> Earn
           </span>
           <h1 className="mt-3 text-2xl font-semibold tracking-tight text-ink">
-            Quick Wins — get paid to refer renters
+            Rental referrals — get paid to refer renters
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600">
             Refer a client to a purpose-built rental and earn a fee when they

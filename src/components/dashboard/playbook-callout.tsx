@@ -19,7 +19,7 @@ export function PlaybookCallout() {
               New to pre-construction? You don&apos;t need to be an expert.
             </p>
             <p className="mt-1 max-w-xl text-sm leading-relaxed text-slate-600">
-              Mostly sold resale? The playbook walks you through qualifying,
+              Mostly sold resale? The guide walks you through qualifying,
               positioning, handling objections, and following up — and every
               project page hands you the facts to do it.
             </p>
@@ -29,7 +29,7 @@ export function PlaybookCallout() {
           href="/dashboard/learn"
           className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-700"
         >
-          Open the playbook
+          Open the guide
           <ArrowRight className="size-4" aria-hidden />
         </Link>
       </div>
