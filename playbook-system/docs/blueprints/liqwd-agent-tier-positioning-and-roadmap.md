@@ -46,16 +46,24 @@ executing must feel like an easy win. Rules:
 
 1. **Benefit-first naming.** The card headline is the outcome in realtor
    language ("Get your own website", "Show up on Google Maps", "Never miss a
-   review"), never the mechanism. The playbook's internal name (W1, G2…)
-   never appears in agent UX.
+   review"), never the mechanism. The playbook's internal codename (W1, G2…)
+   never appears in agent UX, period.
 2. **One sentence, one number.** Card copy: one plain sentence on what they
    get + one concrete anchor (time-to-value or effort: "ready in 10
    minutes", "about 90 seconds of your time", "runs weekly on its own").
 3. **Three-line anatomy, max:** What you get → What it costs you (time/money,
    free vs paid labeled) → What happens next. Nothing else above the fold.
-4. **Jargon ban** (extends the Smart Ads translation rules): SEO, CTR, CPA,
-   match types, schema, indexing never appear in agent UX. Currency is leads,
-   calls, dollars, and "showing up when people search."
+4. **Jargon never leads — but it can ride along** (founder refinement,
+   2026-09-01). Headlines and CTAs stay jargon-free, always. The body copy,
+   subtitle, or metadata MAY name the standard industry term once ("Your
+   Google Business Profile, tuned and kept fresh") — some agents know the
+   vocabulary, it makes modules findable by the term they'd search, and it
+   signals substance to the ones who know what a GBP is. Three layers:
+   **headline** = pure benefit · **body/subtitle/meta** = one industry-term
+   mention allowed · **Pro mode / expandable details** = full practitioner
+   vocabulary (CTR, match types, schema…). Deep jargon never appears in the
+   first two layers. Currency everywhere stays leads, calls, dollars, and
+   "showing up when people search."
 5. **Easy-win framing.** Every module leads with the fastest visible result
    it can honestly promise. If a module can't show the agent something
    within its first run, it isn't ready for the agent tier.

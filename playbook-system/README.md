@@ -2,7 +2,7 @@
 
 Agentic marketing/ops tool suite for **LIQWD** — a three-sided pre-construction real-estate marketplace (GTA, Mississauga depth-first) with a resale lead-gen module. Stack: **Supabase** (project "LIQWD DB V1") + **Next.js**, server-rendered. This repo turns 82 dissected Search Atlas/OTTO playbooks into **53 LIQWD-native tools**: Claude API system prompts orchestrating typed tool contracts against Supabase and platform APIs.
 
-**Read `docs/BUILD-ORDER.md` first for what to build next. The 10 docs in `docs/blueprints/` are the authoritative specs** — each contains full per-playbook dissection, the consolidated tool specs, safety mechanics, and cross-suite wiring. Do not re-derive decisions already made there. `liqwd-agent-tier-positioning-and-roadmap.md` (founder, 2026-08-29) governs agent-tier packaging: free tier = LIQWD-branded everything (distribution), paid tier = own domain + ad spend (revenue); benefit-first card copy, jargon ban, and the guided roadmap with light guardrails bind every agent-facing tool.
+**Read `docs/BUILD-ORDER.md` first for what to build next. The 10 docs in `docs/blueprints/` are the authoritative specs** — each contains full per-playbook dissection, the consolidated tool specs, safety mechanics, and cross-suite wiring. Do not re-derive decisions already made there. `liqwd-agent-tier-positioning-and-roadmap.md` (founder, 2026-08-29) governs agent-tier packaging: free tier = LIQWD-branded everything (distribution), paid tier = own domain + ad spend (revenue); benefit-first card copy (jargon never leads; one industry-term mention allowed in body/meta), and the guided roadmap with light guardrails bind every agent-facing tool.
 
 ## Architecture invariants (never violate)
 
