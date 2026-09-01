@@ -92,7 +92,7 @@ const REALTOR_SECTIONS: NavSection[] = [
     items: [
       { href: "/dashboard/my-page", label: "My public page", icon: Globe },
       { href: "/dashboard/lead-pages", label: "Lead pages", icon: Link2 },
-      { href: "/dashboard/shortlists", label: "Client shortlists", icon: FolderHeart },
+      { href: "/dashboard/shortlists", label: "Client hubs", icon: FolderHeart },
     ],
   },
   {

@@ -28,7 +28,7 @@ import {
 } from "./actions";
 import { MaterialUpload } from "./material-upload";
 
-export const metadata: Metadata = { title: "Shortlists" };
+export const metadata: Metadata = { title: "Client hubs" };
 export const dynamic = "force-dynamic";
 
 const SITE_URL = (
@@ -36,13 +36,13 @@ const SITE_URL = (
 ).replace(/\/+$/, "");
 
 const MESSAGES: Record<string, string> = {
-  created: "Shortlist created — add projects below, then send your client the link.",
+  created: "Client hub created — add the homes you've picked below, then send your client the link.",
   added: "Project added.",
   removed: "Removed.",
   revoked: "Link revoked — the page no longer loads for anyone.",
   restored: "Link restored.",
-  deleted: "Shortlist deleted.",
-  "details-saved": "Details saved — they'll show in every shortlist with this project.",
+  deleted: "Client hub deleted.",
+  "details-saved": "Details saved — they'll show in every client hub with this project.",
   "file-added": "File attached.",
   "file-removed": "File removed.",
 };
@@ -93,11 +93,11 @@ export default async function CollectionsPage({
     return (
       <div className="space-y-6">
         <h1 className="text-2xl font-semibold tracking-tight text-ink">
-          Shortlists
+          Client hubs
         </h1>
         <Card>
           <CardBody className="text-center text-sm text-slate-500">
-            Shortlists are for realtor accounts.
+            Client hubs are for realtor accounts.
           </CardBody>
         </Card>
       </div>
@@ -196,7 +196,7 @@ export default async function CollectionsPage({
       {/* Create */}
       <Card>
         <CardBody>
-          <h2 className="font-semibold text-ink">New shortlist</h2>
+          <h2 className="font-semibold text-ink">New client hub</h2>
           <form action={createCollection} className="mt-4 space-y-3">
             <div className="grid gap-3 sm:grid-cols-2">
               <Field
@@ -222,7 +222,7 @@ export default async function CollectionsPage({
               </Field>
             </div>
             <Button type="submit" variant="secondary">
-              <Plus aria-hidden className="mr-1 size-4" /> Create shortlist
+              <Plus aria-hidden className="mr-1 size-4" /> Create hub
             </Button>
           </form>
         </CardBody>
@@ -286,7 +286,7 @@ export default async function CollectionsPage({
                     <div className="mt-5 border-t border-slate-100 pt-4">
                       {items.length === 0 ? (
                         <p className="text-sm text-slate-500">
-                          No projects yet — search below to add your shortlist.
+                          No homes yet — search below to add the ones you&apos;ve picked.
                         </p>
                       ) : (
                         <ul className="divide-y divide-slate-100">
@@ -317,7 +317,7 @@ export default async function CollectionsPage({
                                     <button
                                       type="submit"
                                       className="rounded-md p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600"
-                                      aria-label="Remove from shortlist"
+                                      aria-label="Remove from hub"
                                     >
                                       <Trash2 aria-hidden className="size-4" />
                                     </button>
@@ -331,7 +331,7 @@ export default async function CollectionsPage({
                                   <p className="text-xs text-slate-500">
                                     What you add here shows in{" "}
                                     <span className="font-medium text-slate-600">
-                                      every shortlist you share
+                                      every client hub you share
                                     </span>{" "}
                                     that includes this project.
                                   </p>
@@ -386,7 +386,7 @@ export default async function CollectionsPage({
                                     <p className="mt-0.5 text-xs text-slate-500">
                                       Floor plans and brochures live with the
                                       project — every LIQWD agent can use them,
-                                      and they show on any shortlist with this
+                                      and they show on any client hub with this
                                       project. You can add up to 10 of your own.
                                     </p>
                                     {detailFiles.length > 0 ? (
@@ -514,9 +514,10 @@ export default async function CollectionsPage({
       ) : (
         <Card>
           <CardBody className="text-center text-sm text-slate-500">
-            No shortlists yet. Create one above — it replaces the list of
-            links you&apos;d otherwise paste into an email, and every inquiry
-            from it routes to you.
+            No client hubs yet. Create one above — a personal page per
+            client with the homes you&apos;ve picked for them, replacing the
+            list of links you&apos;d otherwise paste into an email. Every
+            inquiry from it routes to you.
           </CardBody>
         </Card>
       )}
@@ -528,12 +529,13 @@ function Header() {
   return (
     <div>
       <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-ink">
-        <FolderHeart aria-hidden className="size-6 text-brand-600" /> Shortlists
+        <FolderHeart aria-hidden className="size-6 text-brand-600" /> Client hubs
       </h1>
       <p className="mt-1 text-sm text-slate-500">
-        Curate a shortlist for a specific client and send one link. Your name
-        and photo sit on top, and every inquiry from the page is attributed to
-        you — even if it gets forwarded around the family.
+        Build a personal hub for one client: the homes you&apos;ve picked for
+        them, your note, your name and photo on top. Send one link — every
+        inquiry from the page is attributed to you, even if it gets forwarded
+        around the family.
       </p>
     </div>
   );
