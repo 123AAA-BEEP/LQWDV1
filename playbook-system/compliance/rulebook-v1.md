@@ -13,9 +13,13 @@ Machine twin: `compliance_rules` table (migrations-spec 0001 §3).
 ## RECO advertising (realtor-facing output)
 
 - **RECO-AD-1 · block** — Registrant name must appear exactly as registered
-  (`realtor_vault.name_as_registered`, verified). No nicknames in advertising.
-- **RECO-AD-2 · block** — Brokerage identification present on every
-  advertisement (page, ad, post, flyer, email footer).
+  (`realtor_vault.trade_name`, falling back to `name_as_registered`,
+  verified). No nicknames in advertising.
+- **RECO-AD-2 · block** — Identification block present and complete on every
+  advertisement (page, ad, post, flyer, email footer): trade name · title
+  (Salesperson / Broker / Broker of Record) · phone number · brokerage name ·
+  brokerage address where the jurisdiction requires it · agent email.
+  (Founder spec 2026-08-29.)
 - **RECO-AD-3 · block** — No misleading claims; superlatives ("#1", "top
   producer") require a substantiating source in the claims manifest.
 - **RECO-AD-4 · warn** — Team/trade names accompanied by registrant + brokerage

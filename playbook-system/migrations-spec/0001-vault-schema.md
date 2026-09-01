@@ -24,16 +24,27 @@ identity layer. Playbooks may only cite fields whose `*_verified_at` is set.
 | column | type | notes |
 |---|---|---|
 | profile_id | uuid PK → profiles | |
-| name_as_registered | text | RECO registration name — the only name ads may use |
+| name_as_registered | text | RECO registration name |
+| trade_name | text | usually identical to the full name; when set, this is the advertised name (founder spec 2026-08-29) |
+| title | text | registered title: Salesperson \| Broker \| Broker of Record — required on advertising |
 | name_verified_at | timestamptz | set when matched against the approved verification_request |
 | reco_number | text | |
 | reco_verified_at | timestamptz | |
-| brokerage_name | text | as registered |
+| brokerage_name | text | as registered — required on advertising |
+| brokerage_address | text | nullable; REQUIRED where the jurisdiction mandates it (rulebook RECO-AD-2 carries the per-jurisdiction flag) |
 | brokerage_verified_at | timestamptz | |
+| phone | text | required in the advertising identification block |
+| email | text | agent email — required in the advertising identification block |
 | service_neighbourhoods | text[] | slugs into the neighbourhood objects |
 | review_sources | jsonb | [{platform, url, verified: bool}] — cite verified only |
 | voice | jsonb | {tagline, bio_short, bio_long, signoff, tone} |
 | updated_at | timestamptz | |
+
+The advertising **identification block** (founder spec, RECO compliance):
+trade name + title + phone + brokerage name (+ brokerage address where the
+jurisdiction requires it) + agent email. This is the fixed E-E-A-T block the
+page builders position-lock, and RECO-AD-2's lint checks for its presence and
+completeness on every advertising surface.
 
 RLS: owner read/write on unverified fields; `*_verified_at` columns admin-only
 writes (verification approval sets them). All playbook reads go through the
