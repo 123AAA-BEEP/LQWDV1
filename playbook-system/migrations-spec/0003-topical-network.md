@@ -2,6 +2,31 @@
 
 **Status: PROPOSED — founder review required before any migration is written.**
 
+## In plain English
+
+This is the **master content map** — every topic we could ever write about
+(neighbourhoods, projects, buyer questions, market themes), stored as
+connected dots in the database instead of someone's spreadsheet. Each dot
+knows three things: what it is, whether it's been written yet, and which
+other topics it connects to.
+
+Why it matters:
+
+1. **The new writing engine works FROM the map, never freestyles.** An
+   article only gets drafted once its topic has keywords, a category, and a
+   brief filled in. No more "the AI picked something random today."
+2. **The map records what's covered, so duplicates get caught** — before
+   drafting, the engine checks the map for overlap; every new piece has to
+   fill a real gap.
+3. **It catches self-competition.** If two of our pages are fighting over the
+   same Google search, the map records it so we fix it instead of
+   rediscovering it every quarter.
+
+The ~65 articles the daily engine already wrote get imported as "done" dots,
+and once the map ships, the existing daily engine stamps its articles onto
+the map too (match-or-create) — so the map stays truthful even before the
+old engine is retired.
+
 The Content blueprint's core structure: the topical map as a stateful graph in
 Supabase, not a spreadsheet. C1 tends it; C2 drafts only metadata-complete
 nodes; G7 and E2 read and feed it.
@@ -28,6 +53,9 @@ nodes; G7 and E2 read and feed it.
 
 Metadata-before-generation gate = `state` may only move to `queued` when
 keywords, category, slug, description are all non-empty (DB check constraint).
+Overlap gate = before inserting a node or moving one to `queued`, C1/C2 query
+existing nodes + edges for topical overlap; a node with an unresolved
+`cannibalization_risk` edge cannot be queued.
 
 ## 2. `topic_edges` — non-tree relations
 
@@ -37,8 +65,10 @@ chasing one query" is a queryable fact, not a rediscovery.
 
 ## 3. Wiring to existing tables
 
-`articles` gains `topic_node_id uuid` (nullable — existing daily-content
-pieces predate the graph; C2 sets it going forward) and the content grader
+`articles` gains `topic_node_id uuid` (nullable only for pre-graph rows —
+once the graph ships, BOTH engines stamp it: C2 natively, and the legacy
+daily-content pipeline match-or-creates a node at publish so nothing writes
+outside the map) and the content grader
 adds `article_grades` (article_id, version, rubric_version, score, breakdown
 jsonb, created_at) — grader itself is a foundation ticket (versioned rubric),
 this is just where its numbers land so C2/C3's grade-revise loops and decay
