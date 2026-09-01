@@ -1,6 +1,6 @@
 # LIQWD Agent Panel — UX Reorg Blueprint
 
-**Status: PROPOSED — founder reaction wanted before implementation.**
+**Status: Phase 1 SHIPPED 2026-09-01 (six-noun rail, label/title alignment, Verification in nav, guide renamed Learn; "Deal room" confirmed by founder). Phases 2–4 proposed.**
 Source: full IA audit of the live agent panel + pattern study of Shopify,
 Canva, HubSpot, Stripe, Linear, Follow Up Boss, GoDaddy, QuickBooks, Airbnb
 host, Meta Business Suite, Google Business Profile, Luxury Presence, kvCORE
@@ -97,10 +97,9 @@ The realtor rail is **22 destinations across 5 sections**. Specific findings:
 | 3 | **Leads & clients** | Leads inbox → contact book → newsletter (one funnel) | Leads, Clients/CRM, Newsletter |
 | 4 | **Marketing** | My public page · client links (Lead Pages + Shortlists merged) · **the playbook roadmap when it ships** · per-project Promote surfaced here | My Public Page, Lead Pages, Shortlists, /promote |
 | 5 | **Deal room** | One agent marketplace with tabs (Assignments / Off-market / Buyer wants) · Developer deals · My proposals | Off-Market, Assignment Desk, Buyer Matching, Negotiate Terms, Developer Deals, Quick Wins → "Rental referrals" tab |
-| 6 | **Settings** | Profile · verification status (finally in nav) · plan & upgrade · notifications · Refer & earn | Profile, /verify, /upgrade, Refer & earn |
+| 6 | **Account** | Profile & brand · verification (finally in nav) · plan & upgrade · notifications (the "settings" tab lives here) · Refer & earn | Profile, /verify, /upgrade, Refer & earn |
 
-Plus: **Learn** (the renamed education guide) demoted to a Home card /
-Settings link, and later **one search box** in the header.
+Plus: **Learn** (the renamed education guide) demoted to a Home card, and later **one search box** in the header.
 
 **Rules that ride along:** one numeric badge total (the decision inbox);
 every item's label = route = page title (fix the drift in the same pass);
@@ -110,7 +109,7 @@ show sample output + one CTA + honest time-to-value.
 ## Part 4 — Phasing (each shippable alone)
 
 1. **Regroup + rename** (data edit in sidebar.tsx): the 6-noun rail, merge
-   labels/routes/titles, Verification into Settings, rename Learn. Cheapest,
+   labels/routes/titles, Verification into Account, rename Learn. Cheapest,
    biggest felt win.
 2. **Home rebuild:** next-best-action cards computed from state, setup ring,
    3-tile scoreboard. Kills the permanent onboarding slots.

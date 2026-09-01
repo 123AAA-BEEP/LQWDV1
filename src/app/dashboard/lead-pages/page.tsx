@@ -13,7 +13,7 @@ import { VerificationRequired } from "@/components/dashboard/locked";
 import { formatPriceBand } from "@/lib/types";
 import { CopyLinkButton } from "./copy-link-button";
 
-export const metadata: Metadata = { title: "Lead Pages" };
+export const metadata: Metadata = { title: "Project links" };
 export const dynamic = "force-dynamic";
 
 /** The public-safe project shape from `public_projects_view`. */
@@ -288,7 +288,7 @@ function Header() {
   return (
     <div>
       <h1 className="text-2xl font-semibold tracking-tight text-ink">
-        Lead Pages
+        Project links
       </h1>
       <p className="mt-1 text-slate-500">
         Your project landing pages and the direct referral links you can hand to

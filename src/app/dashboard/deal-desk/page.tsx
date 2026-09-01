@@ -18,7 +18,7 @@ import type { RfpStatus, RfpProposalStatus } from "@/lib/status";
 import { formatPriceBand } from "@/lib/types";
 import { withdrawRfpProposal } from "./actions";
 
-export const metadata: Metadata = { title: "Deal Desk" };
+export const metadata: Metadata = { title: "Developer deals" };
 export const dynamic = "force-dynamic";
 
 // Illustrative deal requests shown (blurred) behind the Ultra teaser for
@@ -270,7 +270,7 @@ function Header() {
   return (
     <div>
       <h1 className="text-2xl font-semibold tracking-tight text-ink">
-        Deal Desk
+        Developer deals
       </h1>
       <p className="mt-1 text-slate-500">
         Developer deal requests — Requests for Proposals (RFPs) — for LIQWD

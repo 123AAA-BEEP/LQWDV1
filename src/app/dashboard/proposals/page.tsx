@@ -11,7 +11,7 @@ import type { ProposalStatus } from "@/lib/status";
 import { formatPriceBand } from "@/lib/types";
 import { withdrawProposal } from "./actions";
 
-export const metadata: Metadata = { title: "My proposals" };
+export const metadata: Metadata = { title: "My offers" };
 export const dynamic = "force-dynamic";
 
 interface Row {
@@ -69,7 +69,7 @@ export default async function MyProposalsPage({
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight text-ink">
-          My proposals
+          My offers
         </h1>
         <p className="mt-1 text-slate-500">
           Counter-offers you’ve sent and where each one stands.

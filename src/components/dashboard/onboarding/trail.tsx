@@ -20,7 +20,7 @@ const STEPS: {
     label: "Get free leads",
     icon: Magnet,
   },
-  { key: "playbook", href: "/dashboard/learn", label: "Playbook", icon: BookOpen },
+  { key: "playbook", href: "/dashboard/learn", label: "Learn", icon: BookOpen },
 ];
 
 export type TrailStep = "start" | "leads" | "playbook";
