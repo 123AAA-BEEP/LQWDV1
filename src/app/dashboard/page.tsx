@@ -5,11 +5,9 @@ import {
   Handshake,
   FileText,
   ClipboardCheck,
-  PlusCircle,
   UserCircle,
   ShieldCheck,
   TrendingUp,
-  MapPin,
   ArrowRight,
   Sparkles,
   Zap,
@@ -18,10 +16,10 @@ import {
   Megaphone,
   Mail,
   BarChart3,
-  Gift,
-  Coins,
-  Link2,
   Inbox,
+  Globe,
+  Link2,
+  Clock,
   Magnet,
   type LucideIcon,
 } from "lucide-react";
@@ -43,22 +41,20 @@ import type { Profile } from "@/lib/types";
 import { cn } from "@/lib/cn";
 import type { ReactNode } from "react";
 import { SECTION_ACCENT, type SectionAccent } from "@/lib/section-accents";
-import { GetStartedBanner } from "@/components/dashboard/onboarding/get-started-banner";
 import { Notice } from "@/components/ui/notice";
 import {
   ActivationTracker,
   type ActivationStep,
 } from "@/components/dashboard/activation-tracker";
 import { ConfettiBurst } from "@/components/dashboard/confetti-burst";
+import { NeedsYou, type ActionItem } from "@/components/dashboard/home/needs-you";
+import { Scoreboard } from "@/components/dashboard/home/scoreboard";
 import {
   markVerificationCelebrated,
   markFirstLeadCelebrated,
 } from "./celebration-actions";
-import { PlaybookCallout } from "@/components/dashboard/playbook-callout";
-import { LeadPathStatus } from "@/components/dashboard/lead-path-status";
-import { NextStepCard } from "@/components/dashboard/next-step-card";
 
-export const metadata: Metadata = { title: "Dashboard" };
+export const metadata: Metadata = { title: "Home" };
 export const dynamic = "force-dynamic";
 
 const VISIBLE = ["approved", "published"];
@@ -89,19 +85,17 @@ export default async function DashboardHome() {
 
   const supabase = await createClient();
 
-  // Live stats + a recently-added rail, for approved realtors only (RLS gates
-  // broker_projects_view to approved users).
+  // Agent-panel UX reorg, Phase 2: Home is "today's plan", not a directory.
+  // Three zones — Needs you (next-best-action stack) · Setup progress (until
+  // 100%) · Your numbers (three tiles about the agent's business) — plus a
+  // small new-homes rail. Everything is computed from CURRENT state.
   // eslint-disable-next-line react-hooks/purity -- async Server Component, runs per request.
-  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-  let projectCount = 0;
-  let newThisWeek = 0;
-  let cityCount = 0;
-  let matchedPages = 0;
-  let buyerInquiries = 0;
-  let recent: RailProject[] = [];
+  const now = Date.now();
+  const weekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const monthAgo = new Date(now - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const quarterAgo = new Date(now - 90 * 24 * 60 * 60 * 1000).toISOString();
 
-  // Unverified: has the agent already submitted their RECO check? Drives the
-  // "your next step" hero (verify now vs. under review).
+  // Unverified: has the agent already submitted their RECO check?
   let hasSubmittedVerification = false;
   if (!approved) {
     const { count } = await supabase
@@ -112,9 +106,7 @@ export default async function DashboardHome() {
     hasSubmittedVerification = (count ?? 0) > 0;
   }
 
-  // Activation tracker signals + steps. Derived purely from CURRENT data —
-  // never from an assumed order: auto-verification can complete several steps
-  // in one moment, and profile/project steps can precede verification.
+  // Setup signals — derived purely from CURRENT data, never an assumed order.
   const [anyVerReq, subCount, pickCount] = await Promise.all([
     supabase
       .from("verification_requests")
@@ -181,71 +173,179 @@ export default async function DashboardHome() {
       href: approved ? "/dashboard/my-page" : "/dashboard/projects",
     },
   ];
-  // The first incomplete, unblocked step gets the "in progress" treatment —
-  // waiting-on-review reads as alive, not stalled.
   const firstOpen = rawSteps.find((s) => s.state === "todo" || s.state === "blocked");
   const trackerSteps = rawSteps.map((s) =>
     s === firstOpen && s.state === "todo" ? { ...s, state: "active" as const } : s,
   );
   const allDone = rawSteps.every((s) => s.state === "done");
 
-  // The big once-ever "you're verified" moment — fires on the TRANSITION to
-  // approved regardless of path (manual review discovered on a later login,
-  // or instant auto-verification). The DB flag is the cross-device guard.
   const celebrateApproval =
     approved &&
     (profile as { verification_celebrated_at?: string | null })
       .verification_celebrated_at == null;
-
-  // Confetti #3 — the first buyer lead (the real magic moment). Never fires
-  // the same visit as the approval burst; it keeps for the next load.
   const firstLeadPending =
     approved &&
     (profile as { first_lead_celebrated_at?: string | null })
       .first_lead_celebrated_at == null;
 
+  // The agent's numbers (approved only — RLS gates the views).
+  let matchedPages = 0;
+  let buyerInquiries = 0;
+  let newLeads = 0;
+  let leads30 = 0;
+  let medianResponseHours: number | null = null;
+  let recent: RailProject[] = [];
   if (approved) {
-    const [pc, ntw, cityRows, matched, leads, rec] = await Promise.all([
-      supabase
-        .from("broker_projects_view")
-        .select("id", { count: "exact", head: true })
-        .in("record_status", VISIBLE),
-      supabase
-        .from("broker_projects_view")
-        .select("id", { count: "exact", head: true })
-        .in("record_status", VISIBLE)
-        .gte("created_at", weekAgo),
-      supabase
-        .from("broker_projects_view")
-        .select("city")
-        .in("record_status", VISIBLE)
-        .not("city", "is", null),
-      // Public pages where this realtor is the assigned agent (the lead path).
+    const [matched, leads, fresh, month, responded, rec] = await Promise.all([
       supabase
         .from("public_projects_view")
         .select("public_page_id", { count: "exact", head: true })
         .eq("assigned_realtor_profile_id", profile.id),
-      // Buyer inquiries attributed to them (organic steward + referral-link).
       supabase
         .from("project_leads")
         .select("id", { count: "exact", head: true })
         .eq("assigned_realtor_profile_id", profile.id),
+      supabase
+        .from("project_leads")
+        .select("id", { count: "exact", head: true })
+        .eq("assigned_realtor_profile_id", profile.id)
+        .eq("status", "new"),
+      supabase
+        .from("project_leads")
+        .select("id", { count: "exact", head: true })
+        .eq("assigned_realtor_profile_id", profile.id)
+        .gte("created_at", monthAgo),
+      supabase
+        .from("project_leads")
+        .select("created_at, first_responded_at")
+        .eq("assigned_realtor_profile_id", profile.id)
+        .not("first_responded_at", "is", null)
+        .gte("created_at", quarterAgo)
+        .limit(300),
       supabase
         .from("broker_projects_view")
         .select(
           "id, slug, project_name, builder_name, city, sales_status, price_from_public, price_to_public, hero_image_url",
         )
         .in("record_status", VISIBLE)
+        .gte("created_at", weekAgo)
         .order("created_at", { ascending: false })
         .limit(3),
     ]);
-    projectCount = pc.count ?? 0;
-    newThisWeek = ntw.count ?? 0;
-    cityCount = new Set((cityRows.data ?? []).map((r) => r.city as string)).size;
     matchedPages = matched.count ?? 0;
     buyerInquiries = leads.count ?? 0;
+    newLeads = fresh.count ?? 0;
+    leads30 = month.count ?? 0;
+    const hours = ((responded.data as { created_at: string; first_responded_at: string }[] | null) ?? [])
+      .map((r) => (new Date(r.first_responded_at).getTime() - new Date(r.created_at).getTime()) / 3_600_000)
+      .filter((h) => Number.isFinite(h) && h >= 0)
+      .sort((a, b) => a - b);
+    if (hours.length) medianResponseHours = hours[Math.floor(hours.length / 2)];
     recent = (rec.data as RailProject[] | null) ?? [];
   }
+
+  // ---- Needs you: ranked, one button each -----------------------------------
+  const publicPageOn =
+    (profile as { is_public_profile_enabled?: boolean | null }).is_public_profile_enabled === true;
+  const needs: ActionItem[] = [];
+  if (!approved) {
+    const suspended = status === "suspended";
+    const rejected = status === "rejected";
+    const underReview = status === "pending" && hasSubmittedVerification;
+    needs.push({
+      key: "verify",
+      icon: underReview ? Clock : ShieldCheck,
+      tone: suspended ? "red" : "brand",
+      title: suspended
+        ? "Your account is suspended"
+        : rejected
+          ? "Your verification needs another look"
+          : underReview
+            ? "Verification submitted — under review"
+            : "Verify your RECO registration",
+      body: suspended
+        ? "Broker tools are paused. If you think this is a mistake, reply to any LIQWD email and we'll take a look."
+        : rejected
+          ? "Resubmit with your RECO registration number and current brokerage — approvals usually happen the same day."
+          : underReview
+            ? "We'll email you the moment you're approved, usually the same day. Meanwhile, finish your profile so your page is ready."
+            : "About 2 minutes. Unlocks broker pricing, buyer leads routed to you, and every tool in the rail.",
+      href: underReview ? "/dashboard/profile" : "/dashboard/verify",
+      cta: suspended ? "Contact support" : rejected ? "Resubmit" : underReview ? "Finish profile" : "Verify now",
+    });
+  }
+  if (approved && newLeads > 0) {
+    needs.push({
+      key: "leads",
+      icon: Inbox,
+      tone: "emerald",
+      title: newLeads === 1 ? "1 new lead is waiting" : `${newLeads} new leads are waiting`,
+      body: "Fast replies convert best — buyers who hear back within the hour book the most appointments.",
+      href: "/dashboard/leads?status=new",
+      cta: "Reply now",
+    });
+  }
+  if (approved && !profileDone) {
+    needs.push({
+      key: "profile",
+      icon: UserCircle,
+      tone: "amber",
+      title: "Finish your profile",
+      body: "Your name, brokerage, and a photo sit on top of every page and link you share. Two minutes.",
+      href: "/dashboard/profile",
+      cta: "Complete profile",
+    });
+  }
+  if (approved && profileDone && !publicPageOn) {
+    needs.push({
+      key: "public",
+      icon: Globe,
+      tone: "amber",
+      title: "Your public page is off",
+      body: "Turn it on to appear as a verified agent on LIQWD and start receiving buyer inquiries.",
+      href: "/dashboard/my-page",
+      cta: "Turn it on",
+    });
+  }
+  if (approved && !firstActionDone) {
+    needs.push({
+      key: "first",
+      icon: Magnet,
+      tone: "brand",
+      title: "Set up your first lead page",
+      body: "Become the agent on a project page and its buyer inquiries route to you — free, no referral fee.",
+      href: "/dashboard/get-free-leads",
+      cta: "Get free leads",
+    });
+  }
+  const caughtUp =
+    matchedPages === 0
+      ? {
+          title: "Grow your lead pages.",
+          body: "The more project pages you're the agent on, the more inquiries route to you.",
+          href: "/dashboard/lead-pages",
+          cta: "Add a lead page",
+        }
+      : !pro
+        ? {
+            title: "Try a client hub.",
+            body: "A personal page for one buyer with the homes you've picked — one link, every inquiry yours.",
+            href: "/dashboard/shortlists",
+            cta: "Build a client hub",
+          }
+        : {
+            title: "Sharpen your pitch.",
+            body: "The pre-construction guide covers qualifying, objections, and closing.",
+            href: "/dashboard/learn",
+            cta: "Open the guide",
+          };
+
+  const responseLabel =
+    medianResponseHours == null
+      ? "—"
+      : medianResponseHours < 1
+        ? `${Math.max(1, Math.round(medianResponseHours * 60))} min`
+        : `${medianResponseHours.toFixed(medianResponseHours < 10 ? 1 : 0)} h`;
 
   return (
     <div className="space-y-8">
@@ -256,12 +356,12 @@ export default async function DashboardHome() {
           </h1>
           <p className="mt-1 text-slate-500">
             {approved
-              ? "Turn new-home project updates into buyer inquiries — free, no referral fees, no brokerage change."
-              : "Get verified to unlock broker-only project tools."}
+              ? "Here's what needs you today."
+              : "One step from unlocking everything."}
           </p>
         </div>
-        <ButtonLink href={approved ? "/dashboard/projects" : "/dashboard/verify"}>
-          {approved ? "Browse projects" : "Start verification"}
+        <ButtonLink href={approved ? "/dashboard/leads" : "/dashboard/verify"}>
+          {approved ? "Open leads" : "Start verification"}
         </ButtonLink>
       </div>
 
@@ -295,174 +395,56 @@ export default async function DashboardHome() {
         </>
       ) : null}
 
+      <NeedsYou items={needs} caughtUp={caughtUp} />
+
       {profile.role === "realtor" && !allDone ? (
         <ActivationTracker steps={trackerSteps} />
       ) : null}
 
       {approved ? (
-        <LeadPathStatus
-          matchedPages={matchedPages}
-          buyerInquiries={buyerInquiries}
+        <Scoreboard
+          tiles={[
+            {
+              icon: Inbox,
+              label: "Leads, last 30 days",
+              value: String(leads30),
+              hint: buyerInquiries > 0 ? `${buyerInquiries} all time` : "none yet — add a lead page",
+              href: "/dashboard/leads",
+            },
+            {
+              icon: Clock,
+              label: "Your reply time",
+              value: responseLabel,
+              hint:
+                medianResponseHours == null
+                  ? "median of your first replies"
+                  : medianResponseHours <= 1
+                    ? "under an hour — that's the winning zone"
+                    : "aim for under an hour",
+              href: "/dashboard/leads",
+            },
+            {
+              icon: Link2,
+              label: "Pages sending you leads",
+              value: String(matchedPages),
+              hint: matchedPages > 0 ? "you're the agent" : "become the agent on a project",
+              href: "/dashboard/lead-pages",
+            },
+          ]}
         />
-      ) : (
-        <NextStepCard
-          status={profile.verification_status}
-          hasSubmitted={hasSubmittedVerification}
-        />
-      )}
-
-      <GetStartedBanner />
-
-      {approved ? (
-        <div className="grid gap-4 sm:grid-cols-3">
-          <Stat icon={Building2} label="Active projects" value={projectCount} />
-          <Stat icon={TrendingUp} label="New this week" value={newThisWeek} />
-          <Stat icon={MapPin} label="Cities covered" value={cityCount} />
-        </div>
       ) : null}
-
-      <PlaybookCallout />
-
-      <HomeSection
-        label="Earn"
-        accent="emerald"
-        zone
-        description="Commissions, referrals & rewards"
-      >
-        <ActionCard
-          icon={Magnet}
-          title="Get free leads"
-          body="Add or update a new-home project to get matched as its agent — newer, active projects tend to draw the most buyer interest. Here's how to set up."
-          href="/dashboard/get-free-leads"
-          cta="Start getting leads"
-          enabled
-        />
-        <ActionCard
-          icon={Coins}
-          title="Quick Wins"
-          body="Get paid to refer renters to purpose-built rentals — the building's team handles the rest."
-          href="/dashboard/quick-wins"
-          cta="See who's paying"
-          enabled={approved}
-          lockedHint="Available after verification"
-        />
-        <ActionCard
-          icon={Handshake}
-          title="Developer Deals"
-          body={
-            ultra
-              ? "Respond to developer deal requests — bulk buys, listing mandates, and full developments."
-              : "Developer deal requests — bulk buys, listing mandates, full developments. Unlock with Ultra."
-          }
-          href="/dashboard/deal-desk"
-          cta={ultra ? "Open Deal Desk" : "See what's inside"}
-          enabled
-          ultra={!ultra}
-        />
-        <ActionCard
-          icon={ClipboardCheck}
-          title="Buyer Matching"
-          body={
-            pro
-              ? "Submit a hard-to-match buyer — matching inventory surfaces to you automatically."
-              : "A Pro feature: submit a buyer mandate and let matching inventory come to you."
-          }
-          href={pro ? "/dashboard/buyer-mandates/new" : "/dashboard/upgrade"}
-          cta={pro ? "New mandate" : "Unlock with Pro"}
-          enabled={approved}
-          lockedHint="Available after verification"
-        />
-        <ActionCard
-          icon={FileText}
-          title="Negotiate Terms"
-          body="Ask developers for the commission, price, or incentive terms you need to close — and track every request."
-          href="/dashboard/proposals"
-          cta="Request terms"
-          enabled={approved}
-          lockedHint="Available after verification"
-        />
-        <ActionCard
-          icon={Gift}
-          title="Refer & earn"
-          body="Invite a realtor — you both get a free month of Pro when they join."
-          href="/dashboard/refer"
-          cta="Get your invite link"
-          enabled
-        />
-      </HomeSection>
-
-      <HomeSection
-        label="New Homes"
-        accent="sky"
-        description="Browse projects & broker portals"
-      >
-        <ActionCard
-          icon={Building2}
-          title="Browse projects"
-          body="Search active new-home projects across Ontario."
-          href="/dashboard/projects"
-          cta="View projects"
-          enabled={approved}
-          lockedHint="Available after verification"
-        />
-        <ActionCard
-          icon={Link2}
-          title="Lead Pages"
-          body="See the project pages you're bound to and copy a direct referral link to hand a buyer — every lead it captures is attributed to you."
-          href="/dashboard/lead-pages"
-          cta="Open Lead Pages"
-          enabled={approved}
-          lockedHint="Available after verification"
-        />
-        <ActionCard
-          icon={Inbox}
-          title="Leads"
-          body="Every buyer inquiry routed to you, in one inbox — contact details, the page it came from, and a pipeline to work each lead from first touch to deal closed."
-          href="/dashboard/leads"
-          cta="Open your leads"
-          enabled={approved}
-          lockedHint="Available after verification"
-        />
-      </HomeSection>
-
-      <HomeSection
-        label="Account"
-        accent="slate"
-        description="Profile, submissions & updates"
-      >
-        <ActionCard
-          icon={PlusCircle}
-          title="Submit a project"
-          body="Add a new project for admin review."
-          href="/dashboard/submit"
-          cta="Submit project"
-          enabled
-        />
-        <ActionCard
-          icon={approved ? UserCircle : ShieldCheck}
-          title={approved ? "Your profile" : "Get verified"}
-          body={
-            approved
-              ? "Update your details and brokerage info."
-              : "Submit your RECO registration details to verify."
-          }
-          href={approved ? "/dashboard/profile" : "/dashboard/verify"}
-          cta={approved ? "Edit profile" : "Start verification"}
-          enabled
-        />
-      </HomeSection>
 
       {approved && recent.length > 0 ? (
         <div>
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
-              Recently added
+            <h2 className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
+              <Building2 className="size-3.5" aria-hidden /> New homes this week
             </h2>
             <Link
               href="/dashboard/projects"
               className="inline-flex items-center gap-1 text-sm font-medium text-brand-700 hover:underline"
             >
-              View all <ArrowRight className="size-3.5" aria-hidden />
+              Browse all <ArrowRight className="size-3.5" aria-hidden />
             </Link>
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
