@@ -15,20 +15,22 @@ realtors understand.**
 **Free tier — "branded through LIQWD."** Anything a realtor does on the free
 tier carries LIQWD branding and lives on LIQWD property:
 
-- Their own website, set up through LIQWD (on a LIQWD-owned address — the
-  existing `liqwd.ca/@handle` vanity surface is the natural home), in their
-  chosen flavour, with their Agent Brand assets — but visibly Powered by
-  LIQWD.
-- Free-tier content and pages route leads and traffic through LIQWD
-  attribution.
+- Their own website, set up through LIQWD (on the `liqwd.ca/@yourname`
+  address we already serve), in their chosen flavour, with their Agent Brand
+  assets — but visibly Powered by LIQWD.
+- **Leads from a free agent's own page still go to that agent** — that's the
+  hook that makes free worth pushing. LIQWD keeps the lead record and the
+  attribution (same ownership guarantee as today: every lead is in our
+  database, source-tagged). "Turn on leads" in the roadmap means *paid
+  ad-generated lead volume*, not lead delivery — delivery is never paywalled.
 - **What LIQWD gets:** traffic, user growth, agents actively pushing
   LIQWD-branded surfaces into their own networks. Every free agent is a
   distribution channel.
 
 **Paid tier — "make it yours + turn on leads."**
 
-- Buy their own domain (the microsite domain rail already built — purchase,
-  attach, DNS, all automated).
+- Buy their own domain (the domain machinery built for microsites already
+  does this — buying, connecting, and pointing the domain are automated).
 - Add money as ad spend: managed campaigns (L1 + monitors + the Smart Ads
   audits on LIQWD-managed accounts) generating leads for them.
 - Premium modules as they prove out: GBP managed service, AI-visibility
@@ -72,9 +74,14 @@ executing must feel like an easy win. Rules:
 
 ## Part 3 — The roadmap: a guided path with light guardrails
 
-Agents follow a simple, visible journey. Guardrails are **recommendations
-with warnings, not locks** — except where a step genuinely cannot work
-without another (those few stay hard, and say why in plain language).
+Agents follow a simple, visible journey. **Roadmap-step guardrails (the
+"Best after" ordering) are recommendations with warnings, not locks** —
+except where a step genuinely cannot work without another (those few stay
+hard, and say why in plain language). To be explicit about terminology: the
+*safety* guardrails defined elsewhere — compliance lint, spend caps,
+approval checkpoints, paused-first publishing (Experience Modes: "guardrails
+are mode-invariant") — are a different thing and are untouched by this doc.
+They stay hard everywhere, always.
 
 **The path (free steps first, paid steps clearly marked):**
 
@@ -83,7 +90,11 @@ without another (those few stay hard, and say why in plain language).
    the progress bar.*
 2. **Get your website — free** (LIQWD-branded personal page on liqwd.ca).
    *The first visible win; minutes from signup.*
-3. **Show up on Google** (GBP connect → profile fix-up → weekly posts).
+3. **Show up on Google — free taste, paid service.** Free: connect your
+   Google Business Profile and get a one-time fix-up report (what's wrong,
+   what it's costing you). Paid: LIQWD applies the fixes and runs the weekly
+   posts — that ongoing layer IS the priced GBP managed service (Local
+   blueprint), so it is never bundled free.
 4. **Market a listing / feed your socials** (R2 listing kit, R3 social
    calendar). *The recurring visible value.*
 5. **Go pro — paid:** your own domain (bought and wired automatically).
@@ -91,8 +102,10 @@ without another (those few stay hard, and say why in plain language).
    a HARD guardrail: no campaign launches without an approved landing page
    and working lead tracking — "ads with nowhere good to send people burn
    money", stated exactly that plainly in the UI.*
-7. **Watch it work:** the monthly story — what you spent, what you got, what
-   we fixed, what's next.
+7. **Watch it work:** the monthly story. Paid tier: what you spent, what you
+   got, what we fixed, what's next (the managed-tier retention artifact).
+   Free tier gets its own honest version: what your page and posts did this
+   month — never a spend report for someone who spent nothing.
 
 **Guardrail mechanics:**
 
@@ -108,11 +121,11 @@ without another (those few stay hard, and say why in plain language).
 
 ## Part 4 — Build implications
 
-- The **vanity-handle site** (`liqwd.ca/@handle`) is the free-tier website
-  target; the **microsite/domain rail** (already live) is the paid-tier
-  website target. Same page builders, same flavours, same approval queue —
-  branding and domain differ. This reuse is the whole point: the free tier
-  costs LIQWD almost nothing marginal.
+- The **`liqwd.ca/@yourname` page** is the free-tier website target; the
+  **microsite/domain machinery** (already live) is the paid-tier website
+  target. Same page builders, same flavours, same approval queue — branding
+  and domain differ. This reuse is the whole point: each additional free
+  agent costs LIQWD almost nothing.
 - Card copy for every agent-facing tool gets rewritten against Part 2 before
   the agent tier launches; the blueprints' internal names stay internal.
 - The roadmap is data, not hardcode: a `roadmap_steps` structure (step,
