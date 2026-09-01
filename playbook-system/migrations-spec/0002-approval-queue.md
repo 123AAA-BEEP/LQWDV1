@@ -2,6 +2,27 @@
 
 **Status: PROPOSED — founder review required before any migration is written.**
 
+## In plain English
+
+This is the **outbox with a lock on it**. Every single thing the AI tools
+produce — a page, an article, an ad, a social post, a review reply, an email —
+lands here as a draft first. Nothing goes public without a human tapping
+approve. Three guarantees:
+
+1. **Every draft arrives explained.** Not a wall of settings — one plain
+   sentence ("Pause 2 ads that spent $211 with 0 leads?") plus a list of every
+   factual claim in the draft and where each one came from.
+2. **Compliance beats everyone, including you.** If a draft fails a
+   block-level compliance rule (missing brokerage ID, an unsourced stat), the
+   approve button literally cannot publish it. Even an accidental approve
+   can't ship a violation.
+3. **Everything is on the record.** Every change the system makes out in the
+   world (an ad edited, a post published, an email sent) is written to a
+   permanent log — who, what, why, and how to undo it. The log can never be
+   edited or deleted, by anyone.
+
+The tables below are just the boxes that hold all that.
+
 Every suite stages into one queue; nothing publishes without passing through
 it. LQWDV1 already runs several implicit approval flows (project submissions,
 update requests, verification queue, microsite draft→live) — this spec adds

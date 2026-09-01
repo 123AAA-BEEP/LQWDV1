@@ -2,6 +2,28 @@
 
 **Status: PROPOSED — founder review required before any migration is written.**
 
+## In plain English
+
+This is the **master content map** — every topic we could ever write about
+(neighbourhoods, projects, buyer questions, market themes), stored as
+connected dots in the database instead of someone's spreadsheet. Each dot
+knows three things: what it is, whether it's been written yet, and which
+other topics it connects to.
+
+Why it matters:
+
+1. **The writing machine works FROM the map, never freestyles.** An article
+   only gets drafted once its topic has keywords, a category, and a brief
+   filled in. No more "the AI picked something random today."
+2. **It never writes the same thing twice** — the map knows what's covered,
+   so every new piece fills a real gap.
+3. **It catches self-competition.** If two of our pages are fighting over the
+   same Google search, the map records it so we fix it instead of
+   rediscovering it every quarter.
+
+The ~65 articles the daily engine already wrote get imported as "done" dots,
+so the map starts truthful, not empty.
+
 The Content blueprint's core structure: the topical map as a stateful graph in
 Supabase, not a spreadsheet. C1 tends it; C2 drafts only metadata-complete
 nodes; G7 and E2 read and feed it.

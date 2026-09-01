@@ -1,5 +1,21 @@
 # LIQWD Compliance Rulebook — v1.0 (SKELETON — human review required)
 
+## In plain English
+
+This is the **list of lines the AI is never allowed to cross**, written as
+individual numbered rules so every tool checks the same list instead of each
+having its own vague idea of "be compliant." Two severity levels:
+
+- **block** = the draft physically cannot publish until fixed (e.g. missing
+  brokerage ID, a stat with no source, a review reply that reveals someone
+  was a client).
+- **warn** = flagged for a human to look at, but a human can accept it.
+
+Rules keep their numbers forever, so when a draft gets blocked the record
+says exactly which rule fired and why. When RECO or CASL guidance changes, we
+update the rule text and bump the version — every tool inherits the change
+instantly.
+
 Versioned, lintable rule set. Guardrail nodes reference rule IDs; IDs are
 stable forever (rules deactivate, never renumber). Severity: **block** (hard-
 stops publish regardless of approval) or **warn** (surfaced, human may accept).
