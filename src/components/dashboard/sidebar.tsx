@@ -48,8 +48,6 @@ type NavItem = {
   icon: LucideIcon;
   exact?: boolean;
   ultra?: boolean;
-  /** Realtor-only entry — hidden from admins (developers use a separate nav). */
-  realtorOnly?: boolean;
 };
 type NavSection = {
   accent: SectionAccent;
@@ -67,24 +65,14 @@ const HOME: NavItem = {
 };
 
 // ---- Realtor: six nouns, named for jobs (agent-panel UX reorg, Phase 1) ----
-// Home / Projects / Leads & clients / Marketing / Deal room / Account.
-// Onboarding (Get started, Get free leads, Learn) lives on Home — the
-// banner, trail, and callout already link there — so it no longer eats
-// permanent rail slots. Routes are unchanged; labels and page titles now
-// agree (no more "Developer Deals" → /deal-desk → "Deal Desk" drift).
+// Home / Leads & clients / Marketing / Deal room / New homes / Account.
+// Order follows the three-sided thesis (positioning blueprint, Part 0): the
+// realtor platform leads with the daily surface and the tools; new homes
+// is ONE offering among several, named honestly and placed fourth — never
+// overstated. Lead pages are source-agnostic (resale, blanket agent leads,
+// IDX/VOW sites), not a new-homes feature. Onboarding lives on Home.
+// Routes are unchanged; labels and page titles agree.
 const REALTOR_SECTIONS: NavSection[] = [
-  {
-    accent: "sky",
-    label: "Projects",
-    description: "Browse, portals & contribute",
-    icon: Building2,
-    items: [
-      { href: "/dashboard/projects", label: "Browse projects", icon: Building2 },
-      { href: "/dashboard/broker-portals", label: "Broker portals", icon: DoorOpen },
-      { href: "/dashboard/submit", label: "Submit a project", icon: PlusCircle, realtorOnly: true },
-      { href: "/dashboard/updates", label: "My update requests", icon: Bell, realtorOnly: true },
-    ],
-  },
   {
     accent: "emerald",
     label: "Leads & clients",
@@ -92,19 +80,19 @@ const REALTOR_SECTIONS: NavSection[] = [
     icon: Inbox,
     items: [
       { href: "/dashboard/leads", label: "Leads", icon: Inbox },
-      { href: "/dashboard/crm", label: "Clients", icon: Users, realtorOnly: true },
-      { href: "/dashboard/newsletter", label: "Newsletter", icon: Send, realtorOnly: true },
+      { href: "/dashboard/crm", label: "Clients", icon: Users },
+      { href: "/dashboard/newsletter", label: "Newsletter", icon: Send },
     ],
   },
   {
     accent: "amber",
     label: "Marketing",
-    description: "Your public presence & links",
+    description: "Website, lead pages & links",
     icon: Megaphone,
     items: [
-      { href: "/dashboard/my-page", label: "My public page", icon: Globe, realtorOnly: true },
-      { href: "/dashboard/lead-pages", label: "Project links", icon: Link2 },
-      { href: "/dashboard/shortlists", label: "Client shortlists", icon: FolderHeart, realtorOnly: true },
+      { href: "/dashboard/my-page", label: "My public page", icon: Globe },
+      { href: "/dashboard/lead-pages", label: "Lead pages", icon: Link2 },
+      { href: "/dashboard/shortlists", label: "Client shortlists", icon: FolderHeart },
     ],
   },
   {
@@ -122,53 +110,49 @@ const REALTOR_SECTIONS: NavSection[] = [
     ],
   },
   {
+    accent: "sky",
+    label: "New homes",
+    description: "Pre-construction catalog & portals",
+    icon: Building2,
+    items: [
+      { href: "/dashboard/projects", label: "Browse projects", icon: Building2 },
+      { href: "/dashboard/broker-portals", label: "Broker portals", icon: DoorOpen },
+      { href: "/dashboard/submit", label: "Submit a project", icon: PlusCircle },
+      { href: "/dashboard/updates", label: "My update requests", icon: Bell },
+    ],
+  },
+  {
     accent: "slate",
     label: "Account",
     description: "Profile, verification & plan",
     icon: Settings2,
     items: [
       { href: "/dashboard/profile", label: "Profile & brand", icon: UserCircle },
-      { href: "/dashboard/verify", label: "Verification", icon: ShieldCheck, realtorOnly: true },
-      { href: "/dashboard/upgrade", label: "Plan & upgrade", icon: Zap, realtorOnly: true },
-      { href: "/dashboard/refer", label: "Refer & earn", icon: Gift, realtorOnly: true },
+      { href: "/dashboard/verify", label: "Verification", icon: ShieldCheck },
+      { href: "/dashboard/upgrade", label: "Plan & upgrade", icon: Zap },
+      { href: "/dashboard/refer", label: "Refer & earn", icon: Gift },
     ],
   },
 ];
 
-// ---- Admin: the queues first, the realtor product second -------------------
-const ADMIN_SECTIONS: NavSection[] = [
-  {
-    accent: "brand",
-    label: "Admin",
-    description: "Queues, publishing & settings",
-    icon: ShieldCheck,
-    items: [
-      { href: "/dashboard/admin", label: "Admin console", icon: ShieldCheck, exact: true },
-      { href: "/dashboard/admin/verifications", label: "Verifications", icon: ClipboardList },
-      { href: "/dashboard/admin/projects", label: "Projects", icon: Building2 },
-      { href: "/dashboard/admin/discovery", label: "Discovery", icon: Compass },
-      { href: "/dashboard/admin/settings", label: "Settings", icon: Settings2 },
-    ],
-  },
-  {
-    accent: "sky",
-    label: "New Homes",
-    description: "The product, as realtors see it",
-    icon: Compass,
-    items: [
-      { href: "/dashboard/projects", label: "Projects", icon: Building2 },
-      { href: "/dashboard/broker-portals", label: "Broker Portals", icon: DoorOpen },
-      { href: "/dashboard/lead-pages", label: "Project links", icon: Link2 },
-      { href: "/dashboard/leads", label: "Leads", icon: Inbox },
-    ],
-  },
-  {
-    accent: "slate",
-    label: "Account",
-    icon: Settings2,
-    items: [{ href: "/dashboard/profile", label: "Profile", icon: UserCircle }],
-  },
-];
+// ---- Admin: the queues first, then the FULL realtor rail -------------------
+// Founder rule (2026-09-01): admin accounts see exactly what realtors see,
+// plus the admin section, so the realtor experience can be tested from an
+// admin login without a second account.
+const ADMIN_CORE: NavSection = {
+  accent: "brand",
+  label: "Admin",
+  description: "Queues, publishing & settings",
+  icon: ShieldCheck,
+  items: [
+    { href: "/dashboard/admin", label: "Admin console", icon: ShieldCheck, exact: true },
+    { href: "/dashboard/admin/verifications", label: "Verifications", icon: ClipboardList },
+    { href: "/dashboard/admin/projects", label: "Projects", icon: Building2 },
+    { href: "/dashboard/admin/playbooks", label: "Playbooks", icon: Compass },
+    { href: "/dashboard/admin/settings", label: "Settings", icon: Settings2 },
+  ],
+};
+const ADMIN_SECTIONS: NavSection[] = [ADMIN_CORE, ...REALTOR_SECTIONS];
 
 // ---- Developer: grouped by core return (transact / promote / research) -------
 const DEVELOPER_SECTIONS: NavSection[] = [
