@@ -1,6 +1,6 @@
 # LIQWD Agent Panel — UX Reorg Blueprint
 
-**Status: Phase 1 SHIPPED 2026-09-01 (six-noun rail, label/title alignment, Verification in nav, guide renamed Learn; "Deal room" confirmed by founder). Phases 2–4 proposed.**
+**Status: Phase 1 SHIPPED 2026-09-01 (six-noun rail, label/title alignment, Verification in nav, guide renamed Learn; "Deal room" confirmed by founder). Phase 2 SHIPPED 2026-09-01 (Home = "Needs you" next-best-action stack · setup progress until 100% · three-tile scoreboard · "New homes this week" rail; the permanent onboarding slots and the quick-link card wall are gone). Phases 3–4 proposed.**
 Source: full IA audit of the live agent panel + pattern study of Shopify,
 Canva, HubSpot, Stripe, Linear, Follow Up Boss, GoDaddy, QuickBooks, Airbnb
 host, Meta Business Suite, Google Business Profile, Luxury Presence, kvCORE
