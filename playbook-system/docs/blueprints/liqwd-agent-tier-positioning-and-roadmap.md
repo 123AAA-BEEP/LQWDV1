@@ -10,6 +10,28 @@ realtors understand.**
 
 ---
 
+## Part 0 — The three-sided thesis (founder, 2026-09-01; governs all UX)
+
+LIQWD is a **three-sided marketplace**, built in this order:
+
+1. **The public** gets LIQWD's new-homes marketplace. Its job is to generate
+   as many free leads as possible — the fuel that feeds realtor growth.
+2. **Realtors** get two things: (a) the tool suite — branded website (paid;
+   attach their own resale IDX/VOW feed, LIQWD hosts and manages it), lead
+   pages for ANY source (resale, blanket "real estate agent" leads, not just
+   new homes), the playbook modules — and (b) leads, primarily from the
+   new-homes/off-market side. Goal: a ton of realtors on the platform.
+3. **Developers** — the high-income phase, exploited once sides 1 and 2 are
+   established: LIQWD's network of realtors across North America becomes a
+   real referral channel developers pay for.
+
+**UX consequence, binding:** the realtor interface must NOT over-state new
+homes. New homes is one offering among several; the rail leads with the
+daily surface and the tools, and "New homes" is named honestly as one
+section. Lead pages and websites are source-agnostic. Anything that makes
+the realtor panel read as "a new-homes catalog with extras" contradicts the
+thesis.
+
 ## Part 1 — The business model: Free is the funnel, Paid is the upgrade
 
 **Free tier — "branded through LIQWD."** Anything a realtor does on the free

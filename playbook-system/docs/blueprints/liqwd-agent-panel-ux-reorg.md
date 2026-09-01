@@ -90,14 +90,23 @@ The realtor rail is **22 destinations across 5 sections**. Specific findings:
 
 ## Part 3 — The proposed IA (6 nouns)
 
+Order and naming follow the three-sided thesis (positioning blueprint,
+Part 0): the daily surface and the tools lead; **new homes is one offering
+among several and must not be over-stated** — so it is named honestly and
+placed fourth, not first.
+
 | # | Noun | Contains | Today's items absorbed |
 |---|---|---|---|
 | 1 | **Home** | Next-best-action stack · setup ring (until 100%) · 3-tile scoreboard · "Running now" | Get started, Get free leads, activation banners |
-| 2 | **Projects** | Browse + portals + submit a project + my update requests | Projects, Broker Portals, Submit project, Update Requests |
-| 3 | **Leads & clients** | Leads inbox → contact book → newsletter (one funnel) | Leads, Clients/CRM, Newsletter |
-| 4 | **Marketing** | My public page · client links (Lead Pages + Shortlists merged) · **the playbook roadmap when it ships** · per-project Promote surfaced here | My Public Page, Lead Pages, Shortlists, /promote |
-| 5 | **Deal room** | One agent marketplace with tabs (Assignments / Off-market / Buyer wants) · Developer deals · My proposals | Off-Market, Assignment Desk, Buyer Matching, Negotiate Terms, Developer Deals, Quick Wins → "Rental referrals" tab |
+| 2 | **Leads & clients** | Leads inbox → contact book → newsletter (one funnel) | Leads, Clients/CRM, Newsletter |
+| 3 | **Marketing** | My public page · **Lead pages (source-agnostic: resale, blanket agent leads, any campaign — not a new-homes feature)** · client shortlists · **branded website with IDX/VOW (paid, hosted + managed) when it ships** · the playbook roadmap · per-project Promote surfaced here | My Public Page, Lead Pages, Shortlists, /promote |
+| 4 | **Deal room** | One agent marketplace with tabs (Assignments / Off-market / Buyer wants) · Developer deals · My offers · Rental referrals | Off-Market, Assignment Desk, Buyer Matching, Negotiate Terms, Developer Deals, Quick Wins |
+| 5 | **New homes** | The pre-construction catalog: browse + portals + submit a project + my update requests | Projects, Broker Portals, Submit project, Update Requests |
 | 6 | **Account** | Profile & brand · verification (finally in nav) · plan & upgrade · notifications (the "settings" tab lives here) · Refer & earn | Profile, /verify, /upgrade, Refer & earn |
+
+**Admin parity (founder rule):** admin accounts see the entire realtor rail
+plus the Admin section, so the realtor experience is testable from an admin
+login. No reduced "realtor mirror" for admins.
 
 Plus: **Learn** (the renamed education guide) demoted to a Home card, and later **one search box** in the header.
 
