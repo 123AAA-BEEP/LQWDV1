@@ -88,6 +88,50 @@ tier carries LIQWD branding and lives on LIQWD property:
 the paid tier. Every free surface carries a tasteful upgrade path; every paid
 feature is the same engine with the branding swapped and spend attached.
 
+### The packaging test (founder, 2026-09-02 — binding on every tier decision)
+
+Every feature is agent value. The question is what it pays LIQWD in.
+
+- **Free pays LIQWD in distribution, data, or network.** A free feature
+  must do at least one of: put a LIQWD-branded surface in front of a buyer
+  the agent brought (distribution); make leads or agents more measurable
+  and the Vault richer (data); or add agents, listings, wants, or buyers
+  to the marketplace whose density is what the developer side buys
+  (network). If a candidate feature does none of the three, it is not
+  free — no matter how nice it is for the agent.
+- **Paid pays LIQWD in dollars because it takes something from LIQWD.**
+  Three kinds of taking, all priced: **brand subtraction** — the agent's
+  brand replaces ours in front of the buyer (own domain, own colours, PR
+  in their name); **cost subtraction** — real per-unit or pass-through
+  cost (SMS, ad spend, GBP API volume, VOW board fees, a mailbox); and
+  **attention subtraction** — the agent's clients are served somewhere a
+  LIQWD page never appears. Revenue substitutes for what we gave up.
+
+Four guardrails so the test can't be gamed in either direction:
+
+1. **Free is never crippled to force an upgrade.** If a free feature is
+   what makes an agent share more LIQWD links, it has to stay good; a
+   worse free tier is a worse distribution engine. Upgrade paths are
+   tasteful, never nagging (Part 2).
+2. **Lead delivery is never paywalled** — the free tier's hook (Part 1).
+3. **Paid still pays a little distribution unless it pays more.** Proposed:
+   Pro sites carry a discreet "Site by LIQWD" footer credit (a link, the
+   way site builders do it); Premium can switch it off. Brand subtraction
+   is priced by degree, not given away at the first tier.
+4. **Paid never opts out of data.** Results, attribution, and ledgers from
+   paid tiers flow into the Vault like everything else (aggregated,
+   privacy-compliant). Nobody buys their way out of making the engine
+   smarter.
+
+Applied to today's ladder: the LIQWD-look site, "every link you share is
+yours", free lead pages, client hubs, the free audit, the marketplace
+boards, verification, and the lead spine (email acknowledgement + call
+task) are all free and all pay in distribution, data, or network. The
+branded website, IDX/VOW, SMS, sequences, managed ads, GBP managed, PR in
+the agent's name, and the conversational nurture are all paid and all
+subtract brand, cost, or attention. Free-tier agents are, quite literally,
+the inventory the developer tier pays for.
+
 ## Part 2 — Module UX doctrine (binding on every agent-facing card)
 
 Agents must understand the benefit of each module **in seconds**, and
