@@ -322,7 +322,9 @@ with every paid signup — do it before the first paid customer, not after.
 4. **Entitlements become data**, not scattered `isPro()` checks: a
    `plan_entitlements` table (plan, feature, limit) read by one helper, so
    the founder can move a feature between tiers or change a cap without a
-   deploy. Spec to follow in migrations-spec 0005 once the tiers are set.
+   deploy. Spec to follow in migrations-spec 0006 once the tiers are set
+   (0005 is the lead-automation spine: the bare-bones CRM wiring and
+   follow-up sequences behind "Reply to every lead in seconds").
 5. Rewrite `/dashboard/upgrade` against this ladder (three columns, the
    lanes as a picker, add-ons as a row of chips, the domain-portability
    promise in the footer).
