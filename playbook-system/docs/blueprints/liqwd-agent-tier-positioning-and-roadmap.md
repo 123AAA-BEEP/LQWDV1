@@ -38,8 +38,14 @@ thesis.
 tier carries LIQWD branding and lives on LIQWD property:
 
 - Their own website, set up through LIQWD (on the `liqwd.ca/@yourname`
-  address we already serve), in their chosen flavour, with their Agent Brand
-  assets — but visibly Powered by LIQWD.
+  address we already serve), **in LIQWD's look** — the agent's identity on
+  it (name, photo, bio, brokerage, neighbourhoods, contact form), LIQWD's
+  palette and design around it, visibly LIQWD. (Founder refinement,
+  2026-09-02: the free site is on-brand with LIQWD by design. Own colours,
+  own design, own domain are what the paid website is *for*. The Vault's
+  `flavour` / `brand_mode` / `brand_colors` are therefore paid-tier fields.)
+  It must still be good enough that agents want to share it — it is the
+  distribution engine, not a demo.
 - **Leads from a free agent's own page still go to that agent** — that's the
   hook that makes free worth pushing. LIQWD keeps the lead record and the
   attribution (same ownership guarantee as today: every lead is in our
@@ -51,8 +57,14 @@ tier carries LIQWD branding and lives on LIQWD property:
 
 **Paid tier — "make it yours + turn on leads."**
 
-- Buy their own domain (the domain machinery built for microsites already
-  does this — buying, connecting, and pointing the domain are automated).
+- **A branded website that is theirs:** their colours, their design, their
+  own web address, hosted and managed by LIQWD, with resale IDX/VOW as an
+  add-on once the data-vendor path (migrations-spec 0004) exists. The
+  **domain is included in the subscription** — never sold or priced on its
+  own (founder, 2026-09-02). Wholesale cost is roughly CA$10–15/yr for a
+  standard .ca/.com; the subscription prices the website, the domain rides
+  along. The microsite domain machinery (buy under cap, attach apex + www,
+  hourly self-heal) does the wiring automatically.
 - Add money as ad spend: managed campaigns (L1 + monitors + the Smart Ads
   audits on LIQWD-managed accounts) generating leads for them.
 - Premium modules as they prove out: GBP managed service, AI-visibility
@@ -119,8 +131,11 @@ They stay hard everywhere, always.
    blueprint), so it is never bundled free.
 4. **Market a listing / feed your socials** (R2 listing kit, R3 social
    calendar). *The recurring visible value.*
-5. **Go pro — paid:** your own domain (bought and wired automatically).
-6. **Turn on leads — paid:** landing page first, then ads. *This ordering is
+5. **Get your own branded website — paid:** own colours, own design, own
+   domain (included in the plan, wired automatically), resale listings
+   when ready.
+6. **Turn on leads — paid:** landing page first, then ads on Google and
+   Meta (Facebook / Instagram — Smart Ads L1 + L2). *This ordering is
    a HARD guardrail: no campaign launches without an approved landing page
    and working lead tracking — "ads with nowhere good to send people burn
    money", stated exactly that plainly in the UI.*
@@ -145,8 +160,9 @@ They stay hard everywhere, always.
 
 - The **`liqwd.ca/@yourname` page** is the free-tier website target; the
   **microsite/domain machinery** (already live) is the paid-tier website
-  target. Same page builders, same flavours, same approval queue — branding
-  and domain differ. This reuse is the whole point: each additional free
+  target. Same page builders, same approval queue — the free site renders
+  in LIQWD's single flavour; the paid site unlocks the agent's flavours,
+  palette, and domain. This reuse is the whole point: each additional free
   agent costs LIQWD almost nothing.
 - Card copy for every agent-facing tool gets rewritten against Part 2 before
   the agent tier launches; the blueprints' internal names stay internal.
