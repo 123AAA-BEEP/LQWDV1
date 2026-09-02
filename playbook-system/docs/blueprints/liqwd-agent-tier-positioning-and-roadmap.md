@@ -51,6 +51,19 @@ tier carries LIQWD branding and lives on LIQWD property:
   attribution (same ownership guarantee as today: every lead is in our
   database, source-tagged). "Turn on leads" in the roadmap means *paid
   ad-generated lead volume*, not lead delivery — delivery is never paywalled.
+- **Every link an agent shares is theirs — free (founder question,
+  2026-09-02).** Mechanic: any LIQWD page with `?ref=CODE` sets a 30-day
+  first-party cookie; any inquiry anywhere on the consumer site inside
+  that window routes to the sharer, who beats the page's assigned agent
+  (built: `proxy.ts` + the lead actions; last link shared wins). The
+  **visible half** is the same mechanic made visible and is to build: the
+  sharer's name, photo, title, brokerage and contact ride along on every
+  consumer page the buyer visits, the lead form says "your inquiry goes to
+  John", and the confirmation email is in John's name with his RECO
+  identification block. LIQWD stays the brand of the site; John is the
+  agent of record on it. Free by design — it is the exact reason an agent
+  pushes LIQWD links into their network. Paid inverts it: John's brand
+  primary, LIQWD invisible, on his own domain.
 - **What LIQWD gets:** traffic, user growth, agents actively pushing
   LIQWD-branded surfaces into their own networks. Every free agent is a
   distribution channel.

@@ -119,6 +119,17 @@ export const MODULES: PlaybookModule[] = [
     todayHref: "/dashboard/my-page",
   },
   {
+    tool: "W-follow",
+    suite: "Your brand & website",
+    headline: "Every link you share is yours",
+    body: "Send any LIQWD page with your link and every inquiry from it routes to you for 30 days. Next: your name and photo ride along on every page they visit.",
+    anchor: "30 days of attribution",
+    tier: "free",
+    status: "building",
+    bestAfter: "website",
+    todayHref: "/dashboard/lead-pages",
+  },
+  {
     tool: "W-domain",
     suite: "Your brand & website",
     headline: "Get your own branded website",
