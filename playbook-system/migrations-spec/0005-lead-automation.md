@@ -187,6 +187,34 @@ email plus a task cost us nothing.
 - **Account:** notification preferences (channels, quiet hours, phone
   verification) — the "settings" the reorg blueprint parked there.
 
+## Intake sources — what may create a lead (founder question, 2026-09-02)
+
+A lead enters this spine only from a source where **the person asked and
+the consent is ours to record**:
+
+1. **LIQWD-owned forms** — project pages, microsites, lead pages, client
+   hubs, the resale lanes, the free audit. Consent captured at the form,
+   `lead_consents` written at creation. The public marketplace's own
+   demand, organic or ad-driven, is the intake that fuels free leads.
+2. **Builder / developer registrations** — only under a contract that
+   states the registrant was told their inquiry would be shared with a
+   LIQWD agent, with the builder's consent record attached to ours.
+3. **An agent's own contacts** — CSV import into Clients with a consent
+   basis the agent attests to per row (`consent_email` exists; add
+   `consent_source` + `consent_attested_at`). These become contacts, not
+   leads; nothing is sent until the basis is recorded.
+
+**Never an intake: purchased or rented lists** (e.g. bulk "70,000 real
+estate leads" databases, aged or resold form-fills). CASL consent does not
+transfer with a list; the rulebook's CASL-1 (consent basis recorded per
+recipient) blocks every send to them; PIPEDA has no basis for LIQWD to
+hold the data; and injecting people who never asked about anything into
+an agent's inbox poisons the reply-time and conversion metrics the whole
+product is built on. A per-lead vendor that generates exclusive inquiries
+through its own ads is a different thing — a possible *partner channel*
+later, priced and consented, never "free leads" and never routed through
+this spine without its own consent record.
+
 ## Open decisions (founder)
 
 1. Follow-up cadence: day 1 / 3 / 7 / 14 as above, or shorter?
