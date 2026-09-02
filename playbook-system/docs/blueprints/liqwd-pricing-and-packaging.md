@@ -126,6 +126,10 @@ features that are cheap for us and feel expensive to them.
 - Monthly market snapshot in your brand
 - Buyer wants (today's Pro feature)
 - Social calendar, lite — 4 posts/month drafted for approval
+- **Your blog, written for you** — 2 posts/month; the agent picks topics
+  and voice from a suggested plan, approves each post. Technical SEO
+  (schema, sitemaps, indexing, freshness) runs silently on the site — a
+  line in the website card's body, never a card of its own
 
 ### Premium — "All in, done for you"  ·  $249 / mo (proposed; room to $299)
 
@@ -141,6 +145,11 @@ when LIQWD is running the marketing for them.
 - Listing presentations, full social calendar, monthly "what worked" story
 - Developer deals (today's Ultra feature)
 - "What does AI say about you" monthly
+- Blog weekly + neighbourhood guides (the agent's own topical network on
+  their domain)
+- **Get quoted in the news** — journalist-request matching with a
+  Vault-grounded draft answer the agent sends, plus press-style posts for
+  real announcements only (new brokerage, verified award, market report)
 - Priority support, first access to new modules
 
 ### Add-ons (any tier where the base exists)
@@ -152,6 +161,33 @@ when LIQWD is running the marketing for them.
 | Extra lead-page pack | +5 pages for $19/mo | lets Pro grow without forcing Premium |
 | Full mailbox on your domain | pass-through (~$8–10/user/mo) | third-party cost |
 | Team seats | $29/seat/mo | Placester/Sierra/Real Geeks all charge per seat |
+
+## Part 2b — SEO & PR: cards versus plumbing (founder question, 2026-09-02)
+
+The dissected suites hold a lot of SEO and PR machinery. The rule for
+keeping the plan clean: **an agent gets a card only for something they
+decide about. Everything else is plumbing under the website.** Nobody buys
+"schema retrofit"; everybody buys "your blog, written for you".
+
+| From the dissection | Becomes | Why |
+|---|---|---|
+| C1 topical network + C2 production line, per agent | **Card: "Your blog, written for you"** (Pro 2/mo, Premium weekly + neighbourhood guides) | The agent curates topics, neighbourhoods and voice from a suggested plan and approves each post. Their own topical network on their own domain is the SEO asset that compounds. |
+| P3 press studio + P1 earned editorial, adapted for agents | **Card: "Get quoted in the news"** (Premium) | Two honest mechanics: (1) journalist-request matching — when a reporter needs a real-estate source, draft a Vault-grounded answer the agent sends; (2) press-style posts for *real* announcements only (P3's rule). No wire-service spend by default; distribution = their site, LIQWD's newsroom, GBP post, socials, and a P1-style pitch to local outlets. |
+| O1 page optimizer, O2 schema, O3 indexing, C3 freshness/decay, C4 link weaver, V2 llms.txt | **Plumbing** — one line in the website card's body ("search-ready underneath") | Runs automatically on every LIQWD-rendered page. Surfacing it as cards would be the kvCORE failure mode. |
+| E1–E5 Explorer (GSC-driven), V3 gap/trophy | **Folded into "Watch it work"** — the monthly story | "What's working on your site, what we changed, what's next" in plain language. The Explorer tools are the engine; the story is the product. |
+| P2 recruitment outreach, C5 authority pages, P4/E6 authority plan | **Stay admin-only** | These grow LIQWD itself. Not agent-facing. |
+| Deployed link networks, cloud stacks, paid placements, gray-area indexers | **Refused** (README invariant 7) | Not relitigated. |
+
+Net effect on the plan: **two new cards, not eight.** Blog under "Listings &
+content", Get quoted under "The edge". Both added to the catalog the same
+day.
+
+Compliance notes that ride with them: blog posts inherit CLAIM-1/2 (every
+number sourced; not-an-appraisal); quotes and announcements inherit CLAIM-3
+(no invented awards or transactions — a "verified award" means one in the
+Vault); outreach to journalists follows the Authority blueprint's CASL and
+value-first rules; the machine never converses with a journalist on its
+own.
 
 ## Part 3 — Lead-gen lanes (the founder's "stack all of that together")
 

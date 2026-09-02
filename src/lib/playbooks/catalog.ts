@@ -122,7 +122,7 @@ export const MODULES: PlaybookModule[] = [
     tool: "W-domain",
     suite: "Your brand & website",
     headline: "Get your own branded website",
-    body: "Your colours, your design, your own web address — hosted and managed by us, with your domain included in the plan. Add resale listings when you're ready.",
+    body: "Your colours, your design, your own web address — hosted and managed by us, domain included, search-ready underneath. Add resale listings when you're ready.",
     anchor: "domain included, live in a day",
     tier: "paid",
     status: "building",
@@ -210,6 +210,16 @@ export const MODULES: PlaybookModule[] = [
     status: "building",
     bestAfter: "content",
   },
+  {
+    tool: "C2-agent",
+    suite: "Listings & content",
+    headline: "Your blog, written for you",
+    body: "Neighbourhood guides and market notes on your site, in your voice — you pick the topics, we draft, you approve. Search-ready (SEO) underneath and kept fresh.",
+    anchor: "2 posts a month, weekly on Premium",
+    tier: "paid",
+    status: "building",
+    bestAfter: "website",
+  },
   // Leads
   {
     tool: "W1",
@@ -261,6 +271,16 @@ export const MODULES: PlaybookModule[] = [
     tier: "premium",
     status: "building",
     bestAfter: "story",
+  },
+  {
+    tool: "P3-agent",
+    suite: "The edge",
+    headline: "Get quoted in the news",
+    body: "When local reporters need a real estate source, we draft your answer from real numbers and you send it. Real announcements — a new brokerage, an award, your market report — go out as press-style posts.",
+    anchor: "replies drafted within the hour",
+    tier: "premium",
+    status: "building",
+    bestAfter: "content",
   },
 ];
 
