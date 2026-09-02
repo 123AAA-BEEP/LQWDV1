@@ -26,15 +26,14 @@ import {
   Inbox,
   Rocket,
   Link2,
-  EyeOff,
   Menu,
   X,
   Globe,
-  FolderHeart,
-  Repeat2,
   Users,
   Send,
   KeyRound,
+  Store,
+  ClipboardCheck,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
@@ -48,6 +47,10 @@ type NavItem = {
   icon: LucideIcon;
   exact?: boolean;
   ultra?: boolean;
+  /** Extra route prefixes that count as "here" (tabbed siblings of one surface). */
+  match?: string[];
+  /** The ONE numeric badge in the rail — the decision inbox (Phase 4). */
+  badge?: "approvals";
 };
 type NavSection = {
   accent: SectionAccent;
@@ -72,6 +75,11 @@ const HOME: NavItem = {
 // overstated. Lead pages are source-agnostic (resale, blanket agent leads,
 // IDX/VOW sites), not a new-homes feature. Onboarding lives on Home.
 // Routes are unchanged; labels and page titles agree.
+// Phase 3 consolidated the Deal room's three boards into one tabbed
+// "Marketplace" and folded Client hubs under Lead pages ("pages that send
+// you leads"). Phase 4 landed the playbook tier inside Marketing: the
+// guided plan plus Approvals — the single decision inbox and the only
+// numeric badge in the rail.
 const REALTOR_SECTIONS: NavSection[] = [
   {
     accent: "emerald",
@@ -87,12 +95,23 @@ const REALTOR_SECTIONS: NavSection[] = [
   {
     accent: "amber",
     label: "Marketing",
-    description: "Website, lead pages & links",
+    description: "Website, lead pages & your plan",
     icon: Megaphone,
     items: [
       { href: "/dashboard/my-page", label: "My public page", icon: Globe },
-      { href: "/dashboard/lead-pages", label: "Lead pages", icon: Link2 },
-      { href: "/dashboard/shortlists", label: "Client hubs", icon: FolderHeart },
+      {
+        href: "/dashboard/lead-pages",
+        label: "Lead pages",
+        icon: Link2,
+        match: ["/dashboard/shortlists"],
+      },
+      { href: "/dashboard/marketing", label: "Marketing plan", icon: Compass },
+      {
+        href: "/dashboard/approvals",
+        label: "Approvals",
+        icon: ClipboardCheck,
+        badge: "approvals",
+      },
     ],
   },
   {
@@ -101,9 +120,12 @@ const REALTOR_SECTIONS: NavSection[] = [
     description: "Trade with agents & developers",
     icon: Handshake,
     items: [
-      { href: "/dashboard/assignments", label: "Assignments", icon: Repeat2 },
-      { href: "/dashboard/off-market", label: "Off-market", icon: EyeOff },
-      { href: "/dashboard/buyer-mandates", label: "Buyer wants", icon: ClipboardList },
+      {
+        href: "/dashboard/marketplace",
+        label: "Marketplace",
+        icon: Store,
+        match: ["/dashboard/assignments", "/dashboard/off-market", "/dashboard/buyer-mandates"],
+      },
       { href: "/dashboard/deal-desk", label: "Developer deals", icon: Handshake, ultra: true },
       { href: "/dashboard/proposals", label: "My offers", icon: FileText },
       { href: "/dashboard/quick-wins", label: "Rental referrals", icon: Coins },
@@ -218,6 +240,7 @@ export function Sidebar({
   isDeveloper = false,
   planBadge = null,
   statusBadge = null,
+  approvalsPending = 0,
 }: {
   name: string;
   email: string | null;
@@ -230,6 +253,8 @@ export function Sidebar({
   planBadge?: ReactNode;
   /** Verification status chip shown in the mobile top bar. */
   statusBadge?: ReactNode;
+  /** Drafts waiting on this user's OK — the rail's only numeric badge. */
+  approvalsPending?: number;
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -258,8 +283,10 @@ export function Sidebar({
     const a = SECTION_ACCENT[accent];
     const active = item.exact
       ? pathname === item.href
-      : pathname.startsWith(item.href);
+      : pathname.startsWith(item.href) ||
+        (item.match ?? []).some((m) => pathname.startsWith(m));
     const Icon = item.icon;
+    const count = item.badge === "approvals" ? approvalsPending : 0;
     return (
       <Link
         key={item.href}
@@ -277,6 +304,14 @@ export function Sidebar({
           aria-hidden
         />
         <span className="flex-1">{item.label}</span>
+        {count > 0 ? (
+          <span
+            className="min-w-5 rounded-full bg-brand-600 px-1.5 py-0.5 text-center text-[10px] font-semibold leading-none text-white"
+            aria-label={`${count} waiting`}
+          >
+            {count > 99 ? "99+" : count}
+          </span>
+        ) : null}
         {item.ultra && !isUltra ? (
           <Sparkles className="size-3.5 text-amber-400" aria-hidden />
         ) : null}

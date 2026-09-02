@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { Notice } from "@/components/ui/notice";
 import { VerificationRequired } from "@/components/dashboard/locked";
+import { MarketplaceTabs } from "@/components/dashboard/surface-tabs";
 import { formatPriceBand, isMandateVerified, mandateChecklist } from "@/lib/types";
 import type { BuyerMandate } from "@/lib/types";
 import { requestConnect, withdrawConnect } from "./connect-actions";
@@ -387,20 +388,23 @@ function DeveloperMandateCard({
 
 function Header({ isPro, canCreate }: { isPro: boolean; canCreate: boolean }) {
   return (
-    <div className="flex flex-wrap items-start justify-between gap-3">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-ink">
-          Buyer wants
-        </h1>
-        <p className="mt-1 text-slate-500">
-          Submit a hard-to-match buyer and let matching inventory surface to you.
-        </p>
+    <div className="space-y-4">
+      <MarketplaceTabs active="buyer-wants" />
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-ink">
+            Buyer wants
+          </h1>
+          <p className="mt-1 text-slate-500">
+            Submit a hard-to-match buyer and let matching inventory surface to you.
+          </p>
+        </div>
+        {canCreate && isPro ? (
+          <ButtonLink href="/dashboard/buyer-mandates/new" size="sm">
+            <Plus className="size-4" aria-hidden /> New buyer want
+          </ButtonLink>
+        ) : null}
       </div>
-      {canCreate && isPro ? (
-        <ButtonLink href="/dashboard/buyer-mandates/new" size="sm">
-          <Plus className="size-4" aria-hidden /> New mandate
-        </ButtonLink>
-      ) : null}
     </div>
   );
 }

@@ -5,6 +5,7 @@ import {
   isUltra,
   isDeveloper,
 } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { VerificationBannerGate } from "@/components/dashboard/verification-banner-gate";
 import { RecoExpiryBanner } from "@/components/dashboard/reco-expiry-banner";
@@ -28,6 +29,21 @@ export default async function DashboardLayout({
   const pro = isPro(profile);
   const ultra = isUltra(profile);
   const developer = isDeveloper(profile);
+
+  // The rail's one numeric badge: drafts waiting on THIS user's approval
+  // (RLS: realtors read their own subject rows; admins see their own here
+  // too — the all-agents queue lives in the admin console).
+  let approvalsPending = 0;
+  if (!developer) {
+    const supabase = await createClient();
+    const { count } = await supabase
+      .from("approval_items")
+      .select("id", { count: "exact", head: true })
+      .eq("subject_kind", "realtor")
+      .eq("subject_id", profile.id)
+      .in("status", ["staged", "triaged"]);
+    approvalsPending = count ?? 0;
+  }
 
   // Plan / role + verification chips — shown in the desktop context bar and,
   // on mobile, handed to the Sidebar's top bar.
@@ -61,6 +77,7 @@ export default async function DashboardLayout({
         isDeveloper={developer}
         planBadge={planBadge}
         statusBadge={statusBadge}
+        approvalsPending={approvalsPending}
       />
       <div className="flex min-w-0 flex-1 flex-col bg-slate-50">
         {/* Slim context bar — role / plan state. Desktop only; on mobile these

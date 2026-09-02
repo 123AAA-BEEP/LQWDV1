@@ -29,7 +29,7 @@ export async function createCollection(formData: FormData) {
   if (!title) fail("Give the shortlist a name — usually your client's.");
 
   const { profile } = await requireUserProfile();
-  if (profile.role !== "realtor") redirect("/dashboard");
+  if (profile.role === "developer") redirect("/dashboard");
   const supabase = await createClient();
 
   const { count } = await supabase

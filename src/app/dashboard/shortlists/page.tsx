@@ -17,6 +17,7 @@ import { CopyField } from "@/components/ui/copy-field";
 import { Field, Input, Textarea } from "@/components/ui/field";
 import { Notice } from "@/components/ui/notice";
 import { VerificationRequired } from "@/components/dashboard/locked";
+import { LeadPageTabs } from "@/components/dashboard/surface-tabs";
 import {
   createCollection,
   addCollectionItem,
@@ -89,7 +90,9 @@ export default async function CollectionsPage({
   const { profile } = await requireUserProfile();
   const { c, q, item, message, error } = await searchParams;
 
-  if (profile.role !== "realtor") {
+  // Realtors and admins (admin parity: the realtor view is testable from an
+  // admin login; client_collections RLS is owner-scoped either way).
+  if (profile.role === "developer") {
     return (
       <div className="space-y-6">
         <h1 className="text-2xl font-semibold tracking-tight text-ink">
@@ -527,16 +530,19 @@ export default async function CollectionsPage({
 
 function Header() {
   return (
-    <div>
-      <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-ink">
-        <FolderHeart aria-hidden className="size-6 text-brand-600" /> Client hubs
-      </h1>
-      <p className="mt-1 text-sm text-slate-500">
-        Build a personal hub for one client: the homes you&apos;ve picked for
-        them, your note, your name and photo on top. Send one link — every
-        inquiry from the page is attributed to you, even if it gets forwarded
-        around the family.
-      </p>
+    <div className="space-y-4">
+      <LeadPageTabs active="client-hubs" />
+      <div>
+        <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-ink">
+          <FolderHeart aria-hidden className="size-6 text-brand-600" /> Client hubs
+        </h1>
+        <p className="mt-1 text-sm text-slate-500">
+          Build a personal hub for one client: the homes you&apos;ve picked for
+          them, your note, your name and photo on top. Send one link — every
+          inquiry from the page is attributed to you, even if it gets forwarded
+          around the family.
+        </p>
+      </div>
     </div>
   );
 }

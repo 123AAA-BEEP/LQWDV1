@@ -23,6 +23,12 @@ export interface PlaybookModule {
   tier: ModuleTier;
   status: ModuleStatus;
   bestAfter?: string; // roadmap step id
+  /**
+   * Where an agent can do today's version of this module right now (the
+   * realtor-facing Marketing plan renders an "Open" button). Absent = the
+   * card is visible but shows "Coming soon" — never a bare padlock.
+   */
+  todayHref?: string;
 }
 
 export interface RoadmapStep {
@@ -99,6 +105,7 @@ export const MODULES: PlaybookModule[] = [
     tier: "free",
     status: "building",
     bestAfter: undefined,
+    todayHref: "/dashboard/profile",
   },
   {
     tool: "W-personal",
@@ -109,6 +116,7 @@ export const MODULES: PlaybookModule[] = [
     tier: "free",
     status: "building",
     bestAfter: "brand",
+    todayHref: "/dashboard/my-page",
   },
   {
     tool: "W-domain",
