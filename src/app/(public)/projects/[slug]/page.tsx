@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { cookies } from "next/headers";
 import { after } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -60,12 +61,20 @@ async function getRealtorCard(
  * (submitLead), so the buyer should see THAT agent's face — showing the page
  * steward while the sharer collects the lead would be quietly dishonest.
  * Falls back to the steward when the ref doesn't resolve to a public card.
+ * After the landing click the `?ref=` is gone from the URL but the 30-day
+ * cookie still routes the lead to the sharer — so the cookie is honoured
+ * here too, or the second project the buyer opens would show a different
+ * face from the one collecting the inquiry.
  */
 async function getDisplayRealtor(
   ref: string | undefined,
   stewardProfileId: string | null,
 ): Promise<RealtorCard | null> {
-  const code = (ref ?? "").trim().toUpperCase();
+  let code = (ref ?? "").trim().toUpperCase();
+  if (!code) {
+    const jar = await cookies();
+    code = (jar.get("liqwd_ref")?.value ?? "").trim().toUpperCase();
+  }
   if (code) {
     const supabase = await createClient();
     const { data } = await supabase
@@ -849,6 +858,11 @@ export default async function PublicProjectPage({
                   ctaText={ctaLabel}
                   refCode={ref}
                   rental={rental}
+                  agentName={
+                    realtor
+                      ? [realtor.first_name, realtor.last_name].filter(Boolean).join(" ")
+                      : undefined
+                  }
                 />
               </div>
             </CardBody>
