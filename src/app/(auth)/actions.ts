@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { safeRelativePath } from "@/lib/safe-redirect";
 
@@ -30,8 +30,21 @@ export async function signIn(formData: FormData) {
 export async function signUp(formData: FormData) {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
-  const firstName = String(formData.get("first_name") ?? "").trim();
-  const lastName = String(formData.get("last_name") ?? "").trim();
+  // Three-field signup (ad landing, 2026-09): a single "Full name" is split
+  // on the last space. The older two-field form still works unchanged.
+  const fullName = String(formData.get("full_name") ?? "").trim().replace(/\s+/g, " ");
+  const splitAt = fullName.lastIndexOf(" ");
+  const firstName =
+    String(formData.get("first_name") ?? "").trim() ||
+    (splitAt > 0 ? fullName.slice(0, splitAt) : fullName);
+  const lastName =
+    String(formData.get("last_name") ?? "").trim() ||
+    (splitAt > 0 ? fullName.slice(splitAt + 1) : "");
+  // Everything below is OPTIONAL at signup now: the RECO certificate upload
+  // on the very next screen supplies the registration number and expiry, and
+  // brokerage / phone / title are collected on the profile. Fewer fields
+  // between an ad click and an account; nothing lost — verification still
+  // requires the certificate or a manual review.
   const phone = String(formData.get("phone") ?? "").trim();
   const brokerageName = String(formData.get("brokerage_name") ?? "").trim();
   const reco = String(formData.get("reco_registration_number") ?? "").trim();
@@ -44,13 +57,24 @@ export async function signUp(formData: FormData) {
   const fail = (msg: string) =>
     redirect(`/signup?error=${encodeURIComponent(msg)}`);
 
-  if (!firstName || !lastName) fail("First and last name are required.");
+  if (!firstName || !lastName) fail("Please enter your first and last name.");
   if (!email) fail("Email is required.");
-  if (!phone) fail("Phone number is required.");
-  if (!brokerageName) fail("Brokerage is required.");
-  if (!reco) fail("RECO registration number is required.");
-  if (!["sales_representative", "broker", "broker_of_record"].includes(title)) {
+  if (title && !["sales_representative", "broker", "broker_of_record"].includes(title)) {
     fail("Please select your title.");
+  }
+
+  // First-touch ad attribution captured by the proxy (liqwd_attr, httpOnly).
+  // Carried as auth metadata so it survives email confirmation, then stamped
+  // on the profile at bootstrap (migration 0103). Never anything personal.
+  let attribution: Record<string, unknown> | null = null;
+  try {
+    const raw = (await cookies()).get("liqwd_attr")?.value;
+    if (raw && raw.length <= 2000) {
+      const parsed = JSON.parse(raw) as unknown;
+      if (parsed && typeof parsed === "object") attribution = parsed as Record<string, unknown>;
+    }
+  } catch {
+    attribution = null;
   }
 
   const supabase = await createClient();
@@ -65,12 +89,13 @@ export async function signUp(formData: FormData) {
       data: {
         first_name: firstName,
         last_name: lastName,
-        phone,
-        brokerage_name: brokerageName,
-        reco_registration_number: reco,
-        title,
+        phone: phone || null,
+        brokerage_name: brokerageName || null,
+        reco_registration_number: reco || null,
+        title: title || null,
         // Referrer's code, carried until the profile is created on first load.
         referral_code_used: referralCode || null,
+        attribution,
       },
     },
   });

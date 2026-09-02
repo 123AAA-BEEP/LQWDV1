@@ -160,7 +160,17 @@ infrastructure. No superlatives, no "#1", no "best".
 
 ## 5 · Landing pages
 
-- **`/compare` (to build, conquest):** Part 1's table from the pricing
+- **`/start` (built 2026-09-03, the ad landing — a NEW page; the existing
+  `/agents` stays as-is by founder direction):** one promise, one button
+  ("Create your free account" → `/signup?next=/dashboard/verify`), product
+  shown immediately, three steps ending in "verified in minutes", live proof
+  numbers only, pricing with Free live and Pro/Premium labelled coming, five
+  straight answers, sticky mobile CTA. `?v=supply` and `?v=brand` swap the
+  hero for message match; `?v=default` is the links-and-leads promise. Free-
+  tier campaigns (Brand defense, Supply, a no-price Category variant) land
+  here; Conquest and the priced Category ads wait for `/compare` and live Pro
+  pricing.
+- **`/compare` (built, PR #292 pending founder review, conquest):** Part 1's table from the pricing
   blueprint with a LIQWD column, public sources linked, one CTA "Start
   free", one secondary "Run the free audit". Above the fold: the three
   sentences — no setup fee, cancel anytime, your domain is yours.

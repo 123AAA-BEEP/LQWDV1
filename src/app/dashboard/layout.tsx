@@ -7,6 +7,7 @@ import {
 } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Sidebar } from "@/components/dashboard/sidebar";
+import { SignupConversion } from "@/components/dashboard/signup-conversion";
 import { VerificationBannerGate } from "@/components/dashboard/verification-banner-gate";
 import { RecoExpiryBanner } from "@/components/dashboard/reco-expiry-banner";
 import { ToastProvider } from "@/components/ui/toast";
@@ -45,6 +46,19 @@ export default async function DashboardLayout({
     approvalsPending = count ?? 0;
   }
 
+  // Google Ads signup conversion — once per account, only for accounts created
+  // in the last 3 days (so switching the tag on never fires for the backlog),
+  // and only when the Ads id + label are configured (campaign plan §6).
+  const adsId = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID ?? "";
+  const adsLabel = process.env.NEXT_PUBLIC_GOOGLE_ADS_SIGNUP_LABEL ?? "";
+  const conv = profile as { signup_conversion_fired_at?: string | null; created_at: string };
+  // eslint-disable-next-line react-hooks/purity -- async Server Component, runs per request.
+  const isNew = Date.now() - new Date(conv.created_at).getTime() < 3 * 24 * 60 * 60 * 1000;
+  const conversionSendTo =
+    !developer && adsId && adsLabel && conv.signup_conversion_fired_at == null && isNew
+      ? `${adsId}/${adsLabel}`
+      : null;
+
   // Plan / role + verification chips — shown in the desktop context bar and,
   // on mobile, handed to the Sidebar's top bar.
   const planBadge = developer ? (
@@ -66,6 +80,9 @@ export default async function DashboardLayout({
 
   return (
     <ToastProvider>
+    {conversionSendTo ? (
+      <SignupConversion sendTo={conversionSendTo} transactionId={profile.id} />
+    ) : null}
     <div className="flex min-h-full flex-col lg:flex-row">
       <Sidebar
         name={name}

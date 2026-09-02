@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Inter_Tight } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
+import { GoogleAdsTag } from "@/components/marketing/google-ads-tag";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -51,6 +52,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         {children}
         <Analytics />
+        <GoogleAdsTag />
       </body>
     </html>
   );

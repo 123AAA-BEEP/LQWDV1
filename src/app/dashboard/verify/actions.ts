@@ -75,6 +75,9 @@ export async function verifyRecoCertificate(formData: FormData) {
       reco_expiry: ex.expiry_date,
       reco_verified_at: new Date().toISOString(),
       reco_verification_method: "certificate",
+      // Self-serve: the public page is on the moment they're verified — the
+      // free tier's whole point is a page in their name (they can turn it off).
+      is_public_profile_enabled: true,
     })
     .eq("id", userId)
     .select("id")
@@ -168,6 +171,7 @@ export async function submitVerification(formData: FormData) {
         verification_status: "approved",
         reco_verified_at: new Date().toISOString(),
         reco_verification_method: "manual",
+        is_public_profile_enabled: true,
       })
       .eq("id", userId)
       .select("id")

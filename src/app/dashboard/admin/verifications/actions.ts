@@ -42,7 +42,13 @@ export async function decideVerification(formData: FormData) {
 
   await supabase
     .from("profiles")
-    .update({ verification_status: decision })
+    .update(
+      decision === "approved"
+        ? // Same as instant verification: the public page is on at approval
+          // (the free tier's whole point); the agent can switch it off.
+          { verification_status: decision, is_public_profile_enabled: true }
+        : { verification_status: decision },
+    )
     .eq("id", profileId);
 
   // If this agent was referred, pay the referral verification bonus to both
