@@ -33,7 +33,7 @@ sits.
 | Sierra Interactive | Team platform | $300–725 | annual discount | AI texting $199, dialer $100, PPC **10% of spend, $500 min**, FB $75–200 |
 | BoldTrail (kvCORE) | Brokerage-grade platform | $499–750 solo | setup, quote-only | mostly bought by brokerages, not agents |
 | CINC | Lead-gen platform | $899–1,299 solo | + $75/user dialer | the top of the market |
-| Luxury Presence | Designed site + marketing services | $300–1,500 (Launch / Brand / Scale / All In), quote-only | **$3,500–5,000 setup**, 12-month agreement | "All In" = 6 blog posts/mo, retargeting, dedicated human specialists; first-year $7k–23k before ad spend |
+| Luxury Presence | Designed site + marketing services | **Launch+ $225 · Brand+ $500 · Leads Pro $1,700 (ad budget included)** — quoted to the founder in a written proposal | **$1,500 / $2,500 / $3,500 setup**, 12-month agreement, annual prepay 15% off | Brand+ = branded SEO + 2 blogs/mo + GBP + "lead intelligence"; Leads Pro adds ads + AI SMS nurture. Public estimates run $300–1,500; the quoted numbers are the ones to price against |
 
 Two things fall out of the table:
 
@@ -69,6 +69,54 @@ Two Canada-specific facts that sharpen it:
   compliance-native, done-for-you marketing engine for Canadian agents does
   not exist at any price. Add the new-homes marketplace as a lead *source*
   no competitor has, and the positioning writes itself.
+
+## Part 1b — The Luxury Presence proposal, line by line (primary source)
+
+The founder holds a written Luxury Presence proposal (Jan 2025 tiers) and
+their 2026 "what's new" pitch. It is the best single benchmark we have,
+because it is what a Toronto agent is actually quoted, and because their
+three tiers are *our* three tiers with a zero added:
+
+| Theirs | Price | Ours | Price |
+|---|---|---|---|
+| Launch+ — the website, managed | $225/mo + $1,500 setup | Pro — branded website, domain included | $99/mo, no setup |
+| Brand+ — branded SEO, 2 blogs/mo, GBP, lead intelligence | $500/mo + $2,500 setup | Pro (same list: 2 blogs/mo, GBP report, site SEO underneath) | $99/mo |
+| Leads Pro — ads with budget included, AI SMS nurture | $1,700/mo + $3,500 setup | Premium + managed ad spend (transparent) | $499/mo + spend + 15% |
+
+**Positioning sentence that falls out: "Brand+ at the Launch+ price, with no
+setup fee and your domain in your name."**
+
+Their 2026 feature list, mapped to what we have and what we're missing:
+
+| Luxury Presence 2026 | LIQWD equivalent | Status |
+|---|---|---|
+| SEO + AI-search optimization, weekly blog | Your blog (C1/C2 per agent), llms.txt, AI-visibility tracker | In plan (Pro 2/mo, Premium weekly) |
+| GBP optimization + monthly posts | Show up on Google Maps (G2+G5), weekly | In plan (Premium); ours posts weekly |
+| Hyperlocal + listing ads with branded seller reports | L1/L2 lanes, Market a listing kit, R6 market report | In plan |
+| Retargeting across Google and Meta | A-suite monitors + L2 | In plan — name it on the L2 card body |
+| Done-for-you social, weekly, for approval | Feed your socials (R3) | In plan |
+| AI lead scoring, daily action plan, message drafts | Home's "Needs you" is the daily plan; scoring = later | Partial |
+| **AI lead nurturing via SMS** — replies, qualifies, hands off | **Nothing.** We measure reply time on Home and leave the reply to the agent | **Gap — closed in this doc: "Reply to every lead in seconds"** |
+| Homeowner dashboard with automated home-value updates | R5 past-client nurture + R6 monthly market numbers | Partial — and deliberately *not* a home-value estimate (CLAIM-2 not-an-appraisal; AVM liability). A monthly "your neighbourhood" update from sourced datasets instead |
+| Mobile app | Responsive web app; PWA install is a day's work | Not a card |
+| "I ran a quick digital audit of your presence" (the sales opener) | "See what Google thinks of you" free report | **Make it public** — see Part 6 |
+
+Two conclusions:
+
+1. **Speed-to-lead is the one feature we can't ship without.** Their AI SMS
+   nurture is the headline of their top tier; our Home already scores the
+   agent on reply time, which is an odd thing to measure without offering
+   the fix. Add the card (Part 2, Pro: instant text + email reply with three
+   qualifying questions; Premium: the conversation continues until handoff).
+   CASL: consent captured at the lead form; unsubscribe honoured at the
+   infrastructure layer, same suppression list as everything else. Needs a
+   Canadian SMS number and carrier registration.
+2. **Bundled ad budget is how they get to $1,700 and how they hide the
+   split.** Keep our rule (pass-through + fee), but show a *suggested
+   starter budget* on the upgrade page so the comparison reads as one
+   number: "Premium + $500/mo ads ≈ $1,075 all-in, every dollar itemized" —
+   still well under Leads Pro's $1,700 plus $3,500 setup, and the agent
+   knows exactly where each dollar went.
 
 ## Part 2 — What we're actually selling at each tier
 
@@ -130,11 +178,24 @@ features that are cheap for us and feel expensive to them.
   and voice from a suggested plan, approves each post. Technical SEO
   (schema, sitemaps, indexing, freshness) runs silently on the site — a
   line in the website card's body, never a card of its own
+- **Reply to every lead in seconds** — instant text + email in the agent's
+  voice, three qualifying questions, a heads-up to the agent. Consent at
+  the form, CASL suppression shared
 
-### Premium — "All in, done for you"  ·  $249 / mo (proposed; room to $299)
+### Premium — "All in, done for you"  ·  $499 / mo (founder: don't underprice; floor $399)
 
 Everything on, the caps opened wide, and the modules that only make sense
 when LIQWD is running the marketing for them.
+
+**Why not cheaper (founder, 2026-09-02):** Luxury Presence proves agents
+pay US$500/mo plus a $2,500 setup for two blogs, a Google profile and
+"lead intelligence". An "all in, done for you" tier at $249 reads as thin
+next to that, and price is a quality signal in this category. The margin
+also has to fund the parts that cost real money — SMS, the journalist
+feed, GBP API volume, ad monitoring. At CA$499 we sit roughly a quarter
+under Brand+ before their setup fee, with several times the output, and
+the gap to Pro at $99 makes Pro the obvious entry and Premium the serious
+tier rather than "Pro plus a bit".
 
 - Everything in Pro
 - **25** lead pages (vs 10) — the number that makes the tier feel like a
@@ -150,6 +211,12 @@ when LIQWD is running the marketing for them.
 - **Get quoted in the news** — journalist-request matching with a
   Vault-grounded draft answer the agent sends, plus press-style posts for
   real announcements only (new brokerage, verified award, market report)
+- **Lead nurture by text until handoff** — the instant reply keeps the
+  conversation going (availability, timeline, budget band) and hands the
+  lead to the agent the moment it's warm; every message logged, every
+  claim Vault-grounded
+- Past-client "your neighbourhood this month" update from sourced
+  datasets — never a home-value estimate
 - Priority support, first access to new modules
 
 ### Add-ons (any tier where the base exists)
@@ -280,6 +347,12 @@ absurd:
 - **"Leads you can't get anywhere else."** The new-homes marketplace feeds
   agents leads no competitor has a source for. Named honestly as one lane
   among several (three-sided thesis), but it is the moat.
+- **Steal their opener.** Luxury Presence's rep leads with "I ran a quick
+  digital audit of your internet presence." That is our free "See what
+  Google thinks of you" report — so put it on the public marketing site as
+  the agent-acquisition hook: enter your name and brokerage, get the
+  report, create a free account to fix it. It feeds P2 recruitment outreach
+  with a warm list and costs one Haiku call per run.
 - **Conquest the comparison searches** once Smart Ads is live on LIQWD's own
   account: "luxury presence pricing", "real geeks alternative", "agentlocator
   alternative", "web4realty vs". The incumbents already do this to each
@@ -291,7 +364,8 @@ absurd:
 
 ## Open decisions (founder)
 
-1. Pro at $99 — confirmed? Premium at $249 or $299?
+1. Pro at $99 — confirmed? Premium at $499 (floor $399, per founder: not
+   too cheap)?
 2. Ad management fee: 15% with a $300 minimum spend, or a flat monthly fee
    per active campaign?
 3. Grandfathering window for the $9.99 / $19.99 subscribers: 12 months, or
