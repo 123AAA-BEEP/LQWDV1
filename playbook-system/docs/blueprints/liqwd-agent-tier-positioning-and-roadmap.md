@@ -114,10 +114,16 @@ Four guardrails so the test can't be gamed in either direction:
    worse free tier is a worse distribution engine. Upgrade paths are
    tasteful, never nagging (Part 2).
 2. **Lead delivery is never paywalled** — the free tier's hook (Part 1).
-3. **Paid still pays a little distribution unless it pays more.** Proposed:
-   Pro sites carry a discreet "Site by LIQWD" footer credit (a link, the
-   way site builders do it); Premium can switch it off. Brand subtraction
-   is priced by degree, not given away at the first tier.
+3. **Paid still pays a little distribution unless it pays more.**
+   **Decided 2026-09-02:** Pro sites carry a discreet "Site by LIQWD"
+   footer credit (small text link, footer only, the way site builders and
+   Luxury Presence itself do it); on Premium it is simply gone, with an
+   opt-in to keep it. It is a **tier attribute disclosed on the pricing
+   page** ("Pro sites carry a small Site by LIQWD credit; Premium removes
+   it") — **never a separate "remove branding" fee, never a nag, never a
+   modal.** A standalone removal charge is the Wix move agents mock, and
+   it would break guardrail 1's "tasteful, never nagging". Brand
+   subtraction is priced by degree through the tiers, not sold à la carte.
 4. **Paid never opts out of data.** Results, attribution, and ledgers from
    paid tiers flow into the Vault like everything else (aggregated,
    privacy-compliant). Nobody buys their way out of making the engine
