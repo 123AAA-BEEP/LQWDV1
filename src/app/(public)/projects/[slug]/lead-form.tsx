@@ -11,6 +11,7 @@ export function LeadForm({
   ctaText,
   refCode,
   rental = false,
+  agentName,
 }: {
   projectId: string;
   publicPageId: string;
@@ -19,6 +20,8 @@ export function LeadForm({
   refCode?: string;
   /** Rental buildings ask renter questions (move-in, beds) instead of buyer ones. */
   rental?: boolean;
+  /** The agent this inquiry routes to (the link sharer, else the page's agent) — named so the buyer knows. */
+  agentName?: string;
 }) {
   const [status, setStatus] = useState<"idle" | "sending" | "done" | "error">(
     "idle",
@@ -133,8 +136,19 @@ export function LeadForm({
         {status === "sending" ? "Sending…" : ctaText}
       </Button>
       <p className="text-xs leading-relaxed text-slate-500">
-        Your details go only to this project&apos;s representative — no spam,
-        ever. See our{" "}
+        {agentName ? (
+          <>
+            Your inquiry goes to{" "}
+            <span className="font-medium text-slate-700">{agentName}</span> — no
+            spam, ever.
+          </>
+        ) : (
+          <>
+            Your details go only to this project&apos;s representative — no spam,
+            ever.
+          </>
+        )}{" "}
+        See our{" "}
         <a href="/privacy" className="underline hover:text-slate-700">
           privacy policy
         </a>{" "}

@@ -146,6 +146,14 @@ export default function PrivacyPolicyPage() {
           control cookies through their settings; blocking essential cookies may
           prevent you from signing in.
         </p>
+        <p>
+          If you open LIQWD through a link shared by a real estate agent, we set
+          a first-party cookie for 30 days that remembers that agent. While it is
+          active, that agent is shown as your representative on our pages and
+          any inquiry you send through the Service is delivered to them. The
+          cookie contains only the agent&apos;s referral code, never information
+          about you, and deleting it ends the association.
+        </p>
       </LegalSection>
 
       <LegalSection heading="6. Data storage and location">

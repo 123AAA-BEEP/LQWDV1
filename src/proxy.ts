@@ -66,6 +66,17 @@ export async function proxy(request: NextRequest) {
   // runtime quirk) must never 500 the entire site — public pages don't need a
   // session at all, and /dashboard falls through to requireUserProfile, which
   // redirects to /login server-side. Availability beats a perfect session.
+  // Referral attribution survives navigation: an agent's shared ?ref= link
+  // sets a 30-day cookie, so the buyer can browse before submitting and the
+  // sharer still gets the lead (submitLead falls back to this cookie). It is
+  // set on the REQUEST as well, before the session response is built, so the
+  // landing request's own server components (the project page's "your
+  // representative", the agent-follow strip) already see it.
+  const rawRef = request.nextUrl.searchParams.get("ref");
+  const ref =
+    rawRef && /^[A-Za-z0-9]{4,16}$/.test(rawRef) ? rawRef.toUpperCase() : null;
+  if (ref) request.cookies.set("liqwd_ref", ref);
+
   let response: NextResponse;
   try {
     response = await updateSession(request);
@@ -74,12 +85,8 @@ export async function proxy(request: NextRequest) {
     response = NextResponse.next({ request });
   }
 
-  // Referral attribution survives navigation: an agent's shared ?ref= link
-  // sets a 30-day cookie, so the buyer can browse before submitting and the
-  // sharer still gets the lead (submitLead falls back to this cookie).
-  const ref = request.nextUrl.searchParams.get("ref");
-  if (ref && /^[A-Za-z0-9]{4,16}$/.test(ref)) {
-    response.cookies.set("liqwd_ref", ref.toUpperCase(), {
+  if (ref) {
+    response.cookies.set("liqwd_ref", ref, {
       maxAge: 60 * 60 * 24 * 30,
       path: "/",
       sameSite: "lax",
