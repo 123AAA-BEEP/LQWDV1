@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Input } from "@/components/ui/field";
 import { VerificationRequired } from "@/components/dashboard/locked";
+import { LeadPageTabs } from "@/components/dashboard/surface-tabs";
 import { formatPriceBand } from "@/lib/types";
 import { CopyLinkButton } from "./copy-link-button";
 
@@ -286,19 +287,22 @@ export default async function LeadPagesPage({
 
 function Header() {
   return (
-    <div>
-      <h1 className="text-2xl font-semibold tracking-tight text-ink">
-        Lead pages
-      </h1>
-      <p className="mt-1 text-slate-500">
-        Your project landing pages and the direct referral links you can hand to
-        a buyer. Every lead from your link is attributed to you and lands in
-        your{" "}
-        <Link href="/dashboard/leads" className="font-medium text-brand-700 hover:underline">
-          Leads inbox
-        </Link>
-        .
-      </p>
+    <div className="space-y-4">
+      <LeadPageTabs active="lead-pages" />
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight text-ink">
+          Lead pages
+        </h1>
+        <p className="mt-1 text-slate-500">
+          Your project landing pages and the direct referral links you can hand to
+          a buyer. Every lead from your link is attributed to you and lands in
+          your{" "}
+          <Link href="/dashboard/leads" className="font-medium text-brand-700 hover:underline">
+            Leads inbox
+          </Link>
+          .
+        </p>
+      </div>
     </div>
   );
 }

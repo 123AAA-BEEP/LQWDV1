@@ -7,13 +7,14 @@ import { Button, ButtonLink } from "@/components/ui/button";
 import { Input } from "@/components/ui/field";
 import { Notice } from "@/components/ui/notice";
 import { VerificationRequired } from "@/components/dashboard/locked";
+import { MarketplaceTabs } from "@/components/dashboard/surface-tabs";
 import { ListingCard } from "@/components/dashboard/off-market/listing-card";
 import { cn } from "@/lib/cn";
 import { claimUrlFor } from "@/lib/off-market";
 import { signListingImages } from "@/lib/off-market-media";
 import type { OffMarketListing } from "@/lib/types";
 
-export const metadata: Metadata = { title: "Off-Market" };
+export const metadata: Metadata = { title: "Off-market" };
 export const dynamic = "force-dynamic";
 
 const KINDS = [
@@ -55,8 +56,9 @@ export default async function OffMarketPage({
 
     return (
       <div className="space-y-6">
+        <MarketplaceTabs active="off-market" />
         <h1 className="text-2xl font-semibold tracking-tight text-ink">
-          Off-Market
+          Off-market
         </h1>
         {held.length > 0 ? (
           <div className="rounded-lg border border-brand-200 bg-brand-50 px-4 py-3">
@@ -158,10 +160,11 @@ export default async function OffMarketPage({
 
   return (
     <div className="space-y-6">
+      <MarketplaceTabs active="off-market" />
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-ink">
-            Off-Market
+            Off-market
           </h1>
           <p className="mt-1 max-w-2xl text-slate-500">
             A private board for verified agents to share and find off-market

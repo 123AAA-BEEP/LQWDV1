@@ -52,12 +52,18 @@ export default async function AdminPlaybooksPage() {
             number, free/paid labeled.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Link
             href="/dashboard/admin/playbooks/queue"
             className="inline-flex h-9 items-center rounded-lg bg-ink px-4 text-sm font-semibold text-white hover:bg-slate-700"
           >
             Approval queue{queued ? ` (${queued})` : ""}
+          </Link>
+          <Link
+            href="/dashboard/marketing"
+            className="inline-flex h-9 items-center rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+          >
+            See it as a realtor
           </Link>
           <Badge tone="neutral">{rules ?? 0} compliance rules active</Badge>
         </div>

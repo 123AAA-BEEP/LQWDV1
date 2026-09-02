@@ -7,6 +7,7 @@ import { Button, ButtonLink } from "@/components/ui/button";
 import { Input } from "@/components/ui/field";
 import { Notice } from "@/components/ui/notice";
 import { VerificationRequired } from "@/components/dashboard/locked";
+import { MarketplaceTabs } from "@/components/dashboard/surface-tabs";
 import { AssignmentCard } from "@/components/dashboard/assignments/assignment-card";
 import type { AssignmentListing } from "@/lib/types";
 
@@ -31,6 +32,7 @@ export default async function AssignmentsPage({
   if (!canView) {
     return (
       <div className="space-y-6">
+        <MarketplaceTabs active="assignments" />
         <h1 className="text-2xl font-semibold tracking-tight text-ink">
           Assignments
         </h1>
@@ -55,10 +57,11 @@ export default async function AssignmentsPage({
 
   return (
     <div className="space-y-6">
+      <MarketplaceTabs active="assignments" />
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-ink">
-            Assignment Desk
+            Assignments
           </h1>
           <p className="mt-1 max-w-2xl text-slate-500">
             A private board for verified agents to list and find pre-construction
