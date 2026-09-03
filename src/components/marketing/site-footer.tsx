@@ -29,6 +29,12 @@ export function SiteFooter() {
           </p>
         </div>
         <nav className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-slate-600">
+          <Link href="/compare" className="hover:text-ink">
+            Compare
+          </Link>
+          <Link href="/audit" className="hover:text-ink">
+            Free audit
+          </Link>
           <Link href="/login" className="hover:text-ink">
             Log in
           </Link>

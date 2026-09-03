@@ -1,6 +1,19 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
+/** Query params that identify a paid click or a tagged link (first touch). */
+const ATTR_KEYS = [
+  "utm_source",
+  "utm_medium",
+  "utm_campaign",
+  "utm_term",
+  "utm_content",
+  "gclid",
+  "gbraid",
+  "wbraid",
+  "fbclid",
+] as const;
+
 // Next.js 16 "proxy" convention (formerly "middleware").
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -77,6 +90,31 @@ export async function proxy(request: NextRequest) {
     rawRef && /^[A-Za-z0-9]{4,16}$/.test(rawRef) ? rawRef.toUpperCase() : null;
   if (ref) request.cookies.set("liqwd_ref", ref);
 
+  // First-touch ad attribution (campaign plan §6): the click's utm_* and
+  // platform click ids land in a 90-day httpOnly cookie, ONLY when none is
+  // set yet (first touch wins). Signup carries it into auth metadata and the
+  // profile bootstrap stamps it on profiles.acquisition — so a signup can be
+  // tied to the campaign that paid for it. Contains nothing about the person.
+  const sp = request.nextUrl.searchParams;
+  let attrCookie: string | null = null;
+  if (!request.cookies.get("liqwd_attr") && ATTR_KEYS.some((k) => sp.get(k))) {
+    const attr: Record<string, string> = {};
+    for (const k of ATTR_KEYS) {
+      const v = sp.get(k);
+      if (v) attr[k] = v.slice(0, 200);
+    }
+    attr.landing = pathname.slice(0, 200);
+    try {
+      const referer = request.headers.get("referer");
+      if (referer) attr.referrer = new URL(referer).hostname.slice(0, 100);
+    } catch {
+      /* malformed referer — skip */
+    }
+    attr.ts = new Date().toISOString();
+    attrCookie = JSON.stringify(attr);
+    request.cookies.set("liqwd_attr", attrCookie);
+  }
+
   let response: NextResponse;
   try {
     response = await updateSession(request);
@@ -90,6 +128,14 @@ export async function proxy(request: NextRequest) {
       maxAge: 60 * 60 * 24 * 30,
       path: "/",
       sameSite: "lax",
+    });
+  }
+  if (attrCookie) {
+    response.cookies.set("liqwd_attr", attrCookie, {
+      maxAge: 60 * 60 * 24 * 90,
+      path: "/",
+      sameSite: "lax",
+      httpOnly: true,
     });
   }
 

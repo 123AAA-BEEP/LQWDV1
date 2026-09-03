@@ -140,11 +140,21 @@ export default function PrivacyPolicyPage() {
 
       <LegalSection heading="5. Cookies and similar technologies">
         <p>
-          We use only the cookies necessary to operate the Service, including to
-          keep you signed in and to maintain session security. We do not use
-          third-party advertising or analytics cookies. Most browsers let you
-          control cookies through their settings; blocking essential cookies may
-          prevent you from signing in.
+          We use the cookies necessary to operate the Service, including to keep
+          you signed in and to maintain session security. Our page analytics are
+          first-party and cookieless. Most browsers let you control cookies
+          through their settings; blocking essential cookies may prevent you from
+          signing in.
+        </p>
+        <p>
+          If you reach LIQWD from one of our advertisements or a tagged link, we
+          set a first-party cookie for 90 days that records the campaign that
+          brought you (for example the ad platform and campaign name). It contains
+          nothing about you. When a person who arrived that way creates an
+          account, we may report to the advertising platform that the ad led to a
+          signup, identified only by an anonymous account number, so we can tell
+          which ads work. We do not build advertising audiences from your use of
+          the Service.
         </p>
         <p>
           If you open LIQWD through a link shared by a real estate agent, we set

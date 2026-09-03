@@ -35,6 +35,12 @@ export async function ensureProfile(
     title && ["sales_representative", "broker", "broker_of_record"].includes(title)
       ? title
       : null;
+  // First-touch ad attribution captured by the proxy cookie and carried
+  // through signUp() as metadata (migration 0103). Small, no personal data.
+  const attribution =
+    meta.attribution && typeof meta.attribution === "object"
+      ? (meta.attribution as Record<string, unknown>)
+      : null;
 
   const { data: inserted } = await supabase
     .from("profiles")
@@ -49,6 +55,7 @@ export async function ensureProfile(
       brokerage_name: str("brokerage_name"),
       reco_registration_number: str("reco_registration_number"),
       title: validTitle,
+      acquisition: attribution,
     })
     .select("*")
     .maybeSingle();

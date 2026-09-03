@@ -1,9 +1,8 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { SubmitButton } from "@/components/ui/submit-button";
-import { Field, Input, Select } from "@/components/ui/field";
+import { Field, Input } from "@/components/ui/field";
 import { Notice } from "@/components/ui/notice";
-import { TITLE_LABELS } from "@/lib/types";
 import { signUp } from "../actions";
 
 export const metadata: Metadata = { title: "Sign up" };
@@ -20,6 +19,10 @@ export default async function SignupPage({
     typeof next === "string" && next.startsWith("/") && !next.startsWith("//")
       ? next
       : "";
+  // Self-serve by default: verification is step one for every new agent, so
+  // the account lands on the certificate upload unless a flow (claims, ref
+  // links) asked for somewhere specific.
+  const effectiveNext = safeNext || "/dashboard/verify";
   // Claim handoffs: off-market listings (/claim/{token}) and prospect agent
   // pages (/realtors/{slug}/claim) both route back after account creation.
   const claiming =
@@ -43,7 +46,8 @@ export default async function SignupPage({
         Create your LIQWD account
       </h1>
       <p className="mt-1 text-sm text-slate-500">
-        Free for verified realtors. RECO verification is reviewed after signup.
+        Free for verified realtors. Next step: verify in minutes with your RECO
+        certificate.
       </p>
 
       {referralCode ? (
@@ -62,73 +66,22 @@ export default async function SignupPage({
         {referralCode ? (
           <input type="hidden" name="ref" value={referralCode} />
         ) : null}
-        {safeNext ? <input type="hidden" name="next" value={safeNext} /> : null}
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="First name" htmlFor="first_name">
-            <Input
-              id="first_name"
-              name="first_name"
-              required
-              autoComplete="given-name"
-            />
-          </Field>
-          <Field label="Last name" htmlFor="last_name">
-            <Input
-              id="last_name"
-              name="last_name"
-              required
-              autoComplete="family-name"
-            />
-          </Field>
-        </div>
+        <input type="hidden" name="next" value={effectiveNext} />
+        {/* Three fields. Brokerage, phone, title and the RECO number are
+            collected by the certificate upload and the profile, not here. */}
+        <Field label="Full name, as registered with RECO" htmlFor="full_name">
+          <Input
+            id="full_name"
+            name="full_name"
+            required
+            autoComplete="name"
+            placeholder="Jane Smith"
+          />
+        </Field>
 
         <Field label="Email" htmlFor="email">
           <Input id="email" name="email" type="email" required autoComplete="email" />
         </Field>
-
-        <Field label="Phone" htmlFor="phone">
-          <Input
-            id="phone"
-            name="phone"
-            type="tel"
-            required
-            autoComplete="tel"
-          />
-        </Field>
-
-        <Field label="Brokerage" htmlFor="brokerage_name">
-          <Input
-            id="brokerage_name"
-            name="brokerage_name"
-            required
-            autoComplete="organization"
-          />
-        </Field>
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Title" htmlFor="title">
-            <Select id="title" name="title" required defaultValue="">
-              <option value="" disabled>
-                Select…
-              </option>
-              {Object.entries(TITLE_LABELS).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </Select>
-          </Field>
-          <Field
-            label="RECO registration #"
-            htmlFor="reco_registration_number"
-          >
-            <Input
-              id="reco_registration_number"
-              name="reco_registration_number"
-              required
-            />
-          </Field>
-        </div>
 
         <Field
           label="Password"
@@ -158,6 +111,7 @@ export default async function SignupPage({
               ? `/login?redirect=${encodeURIComponent(safeNext)}`
               : "/login"
           }
+          prefetch={false}
           className="text-brand-700 hover:underline"
         >
           Log in
