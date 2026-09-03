@@ -55,7 +55,9 @@ const getCounts = unstable_cache(
     const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
     const [projects, cities, leads] = await Promise.all([
       admin.from("public_projects_view").select("project_id", { count: "exact", head: true }),
-      admin.from("public_projects_view").select("city").not("city", "is", null),
+      // Explicit range: the client caps at 1,000 rows by default, which would
+      // undercount cities once the catalogue passed that size.
+      admin.from("public_projects_view").select("city").not("city", "is", null).range(0, 9999),
       admin
         .from("project_leads")
         .select("id", { count: "exact", head: true })
